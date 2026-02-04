@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HEGEMON v8 - Global Intelligence Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #050508; color: #fff; overflow: hidden; height: 100vh; }
+    .app { display: flex; height: 100vh; }
+    .globe-container { flex: 1; position: relative; }
+    #globe { width: 100%; height: 100%; }
+
+    .header { position: absolute; top: 0; left: 0; right: 320px; z-index: 10; padding: 16px 20px; background: linear-gradient(to bottom, #050508 0%, #050508dd 70%, transparent 100%); }
+    .header-content { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 26px; font-weight: 800; color: #06b6d4; letter-spacing: 2px; }
+    .logo-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; letter-spacing: 3px; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .live { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #22c55e; font-weight: 600; }
+    .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #22c55e; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .date { font-size: 11px; color: #6b7280; }
+
+    .watchlist { position: absolute; top: 80px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 14px; border-radius: 10px; border: 1px solid #1f2937; width: 200px; max-height: 320px; overflow-y: auto; }
+    .watchlist::-webkit-scrollbar { width: 4px; }
+    .watchlist::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    .watchlist-title { font-size: 9px; color: #ef4444; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .watchlist-title::before { content:''; width:6px; height:6px; background:#ef4444; border-radius:50%; animation: pulse 1s infinite; }
+    .watchlist-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1f293766; cursor: pointer; font-size: 10px; transition: all 0.15s; }
+    .watchlist-item:hover { padding-left: 6px; background: #1f293733; }
+    .wl-country { color: #e5e7eb; }
+    .wl-risk { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
+
+    .legend { position: absolute; bottom: 16px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 12px 14px; border-radius: 10px; border: 1px solid #1f2937; }
+    .legend-title { font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; }
+    .legend-items { display: flex; flex-direction: column; gap: 4px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #d1d5db; text-transform: uppercase; font-weight: 500; }
+    .legend-icon { width: 10px; height: 10px; border-radius: 50%; }
+
+    .stats { position: absolute; bottom: 16px; left: 230px; z-index: 10; display: flex; gap: 8px; }
+    .stat-card { background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 10px 14px; border-radius: 10px; border: 1px solid #1f2937; text-align: center; min-width: 70px; cursor: pointer; transition: all 0.2s; }
+    .stat-card:hover { border-color: #374151; transform: translateY(-2px); }
+
+    .stat-popup { position: absolute; bottom: 80px; left: 230px; z-index: 25; background: rgba(10,10,15,0.98); backdrop-filter: blur(12px); padding: 16px; border-radius: 12px; border: 1px solid #1f2937; width: 300px; max-height: 350px; overflow-y: auto; display: none; }
+    .stat-popup.active { display: block; }
+    .stat-popup::-webkit-scrollbar { width: 4px; }
+    .stat-popup::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    .stat-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1f2937; }
+    .stat-popup-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .stat-popup-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 18px; }
+    .stat-popup-close:hover { color: #fff; }
+    .stat-popup-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f293755; cursor: pointer; font-size: 10px; transition: all 0.15s; }
+    .stat-popup-item:hover { padding-left: 6px; background: #1f293733; }
+    .stat-value { font-size: 18px; font-weight: 700; }
+    .stat-label { font-size: 7px; color: #6b7280; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    .country-tooltip { position: fixed; z-index: 1000; background: rgba(10,10,15,0.98); backdrop-filter: blur(12px); padding: 10px 14px; border-radius: 8px; border: 1px solid #374151; pointer-events: none; display: none; max-width: 250px; }
+    .tooltip-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .tooltip-risk { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
+    .tooltip-hint { font-size: 9px; color: #6b7280; margin-top: 4px; }
+    .tooltip-region { font-size: 9px; color: #9ca3af; margin-top: 2px; }
+
+    .sidebar { width: 320px; background: #0a0a0d; border-left: 1px solid #1f2937; display: flex; flex-direction: column; }
+    .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid #1f2937; }
+    .tab { flex: 1; min-width: 16%; padding: 10px 2px; font-size: 8px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
+    .tab:hover { color: #9ca3af; }
+    .tab.active { color: #06b6d4; border-bottom-color: #06b6d4; }
+    .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
+    .sidebar-content::-webkit-scrollbar { width: 5px; }
+    .sidebar-content::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    .card { background: #0d0d12; border: 1px solid #1f293755; border-radius: 8px; padding: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; }
+    .card:hover { border-color: #374151; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .card-cat { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 500; text-transform: uppercase; }
+    .card-cat.high { background: #7f1d1d; color: #fca5a5; }
+    .card-cat.medium { background: #374151; color: #9ca3af; }
+    .card-time { font-size: 8px; color: #6b7280; }
+    .card-headline { font-size: 10px; color: #e5e7eb; line-height: 1.4; }
+    .card-source { font-size: 8px; color: #6b7280; margin-top: 4px; }
+    .card-source a { color: #06b6d4; text-decoration: none; }
+
+    .event-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .event-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .event-country { font-size: 11px; font-weight: 600; color: #f3f4f6; }
+    .event-risk { font-size: 8px; padding: 2px 5px; border-radius: 3px; margin-left: auto; font-weight: 600; text-transform: uppercase; }
+    .event-title { font-size: 9px; color: #9ca3af; margin-left: 12px; }
+
+    .forecast-card { background: linear-gradient(135deg, #0d1117 0%, #0f0f18 100%); border: 1px solid #1f293777; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .forecast-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .forecast-icon { font-size: 24px; }
+    .forecast-region { font-size: 11px; font-weight: 700; color: #e5e7eb; }
+    .forecast-risk { font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; text-transform: uppercase; }
+    .forecast-current { font-size: 10px; color: #9ca3af; line-height: 1.5; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #1f293755; }
+    .forecast-prediction { background: #0a0a0f; border-radius: 6px; padding: 10px; border-left: 3px solid #f97316; }
+    .forecast-prediction-title { font-size: 8px; color: #f97316; font-weight: 600; margin-bottom: 4px; letter-spacing: 1px; }
+    .forecast-prediction-text { font-size: 10px; color: #d1d5db; line-height: 1.5; }
+    .forecast-indicators { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .forecast-indicator { font-size: 8px; padding: 2px 6px; border-radius: 4px; background: #1f293755; color: #9ca3af; }
+    .forecast-indicator.up { background: #7f1d1d33; color: #fca5a5; }
+    .forecast-indicator.down { background: #14532d33; color: #86efac; }
+    .forecast-indicator.stable { background: #1e3a5f33; color: #93c5fd; }
+
+    .election-card { background: #0d0d14; border: 1px solid #1f293755; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+    .election-card:hover { border-color: #374151; }
+    .election-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .election-flag { font-size: 18px; }
+    .election-country { font-size: 12px; font-weight: 600; color: #e5e7eb; }
+    .election-date { font-size: 9px; color: #06b6d4; margin-left: auto; font-weight: 600; }
+    .election-type { font-size: 10px; color: #9ca3af; margin-bottom: 4px; }
+    .election-stakes { font-size: 10px; color: #6b7280; line-height: 1.4; }
+
+    .risk-catastrophic { background: #7f1d1d; color: #fca5a5; }
+    .risk-extreme { background: #78350f; color: #fcd34d; }
+    .risk-severe { background: #713f12; color: #fde047; }
+    .risk-stormy { background: #5b21b6; color: #c4b5fd; }
+    .risk-cloudy { background: #1e3a5f; color: #93c5fd; }
+    .risk-clear { background: #14532d; color: #86efac; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal { background: #0a0a0f; border: 1px solid #1f2937; border-radius: 16px; width: 90%; max-width: 600px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal-header { padding: 20px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 12px; }
+    .modal-flag { font-size: 32px; }
+    .modal-titles { flex: 1; }
+    .modal-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .modal-risk { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+    .modal-subtitle { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+    .modal-close { background: none; border: none; color: #6b7280; font-size: 24px; cursor: pointer; padding: 8px; }
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-body::-webkit-scrollbar { width: 5px; }
+    .modal-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    .section-title { font-size: 10px; color: #06b6d4; font-weight: 600; letter-spacing: 1px; margin: 16px 0 10px; text-transform: uppercase; }
+    .section-title:first-child { margin-top: 0; }
+    .facts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .fact { background: #0d0d14; padding: 10px; border-radius: 8px; border: 1px solid #1f293755; }
+    .fact-label { font-size: 9px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; }
+    .fact-value { font-size: 12px; color: #e5e7eb; font-weight: 600; }
+
+    .analysis-block { background: #0d0d14; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 3px solid #374151; }
+    .analysis-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .analysis-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+    .analysis-num.n1 { background: #7f1d1d; color: #fca5a5; }
+    .analysis-num.n2 { background: #1e3a5f; color: #93c5fd; }
+    .analysis-num.n3 { background: #713f12; color: #fde047; }
+    .analysis-title { font-size: 11px; font-weight: 600; color: #e5e7eb; }
+    .analysis-text { font-size: 11px; color: #9ca3af; line-height: 1.6; }
+
+    .news-item { background: #0d0d14; border-radius: 8px; padding: 10px; margin-bottom: 8px; border: 1px solid #1f293755; }
+    .news-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .news-bias { width: 8px; height: 8px; border-radius: 50%; }
+    .news-source { font-size: 10px; font-weight: 600; color: #e5e7eb; }
+    .news-time { font-size: 9px; color: #6b7280; margin-left: auto; }
+    .news-headline { font-size: 11px; color: #d1d5db; line-height: 1.5; }
+    .news-link { font-size: 9px; color: #06b6d4; text-decoration: none; display: inline-block; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="globe-container">
+    <div id="globe"></div>
+    <div class="header">
+      <div class="header-content">
+        <div>
+          <div class="logo">HEGEMON</div>
+          <div class="logo-sub">GLOBAL INTELLIGENCE NETWORK</div>
+        </div>
+        <div class="header-right">
+          <div class="live"><div class="live-dot"></div>LIVE</div>
+          <div class="date" id="currentDate"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="watchlist" id="watchlist"></div>
+
+    <div class="legend">
+      <div class="legend-title">RISK LEVELS</div>
+      <div class="legend-items">
+        <div class="legend-item"><div class="legend-icon" style="background:#dc2626"></div>Catastrophic</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#f97316"></div>Extreme</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#eab308"></div>Severe</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#8b5cf6"></div>Stormy</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#3b82f6"></div>Cloudy</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#22c55e"></div>Clear</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card" onclick="showStatPopup('critical')"><div class="stat-value" style="color:#ef4444" id="statCritical">0</div><div class="stat-label">Critical</div></div>
+      <div class="stat-card" onclick="showStatPopup('high')"><div class="stat-value" style="color:#f97316" id="statHigh">0</div><div class="stat-label">High Risk</div></div>
+      <div class="stat-card" onclick="showStatPopup('stable')"><div class="stat-value" style="color:#22c55e" id="statStable">0</div><div class="stat-label">Stable</div></div>
+      <div class="stat-card" onclick="showStatPopup('all')"><div class="stat-value" style="color:#06b6d4" id="statTotal">0</div><div class="stat-label">Countries</div></div>
+    </div>
+
+    <div class="stat-popup" id="statPopup">
+      <div class="stat-popup-header">
+        <span class="stat-popup-title" id="statPopupTitle">Countries</span>
+        <button class="stat-popup-close" onclick="closeStatPopup()">&times;</button>
+      </div>
+      <div id="statPopupContent"></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="tabs">
+      <button class="tab active" data-tab="daily">Daily</button>
+      <button class="tab" data-tab="forecast">Forecast</button>
+      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="elections">Elections</button>
+      <button class="tab" data-tab="regions">Regions</button>
+      <button class="tab" data-tab="search">Search</button>
+    </div>
+    <div class="sidebar-content" id="sidebarContent"></div>
+  </div>
+</div>
+
+<div class="country-tooltip" id="tooltip"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-flag" id="modalFlag"></span>
+      <div class="modal-titles">
+        <div class="modal-title"><span id="modalTitle"></span><span class="modal-risk" id="modalRisk"></span></div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Risk colors
+const RISK_COLORS = {
+  catastrophic: { hex: '#dc2626', glow: 0xff3333 },
+  extreme: { hex: '#f97316', glow: 0xff6600 },
+  severe: { hex: '#eab308', glow: 0xffcc00 },
+  stormy: { hex: '#8b5cf6', glow: 0x8855ff },
+  cloudy: { hex: '#3b82f6', glow: 0x3388ff },
+  clear: { hex: '#22c55e', glow: 0x22cc55 }
+};
+
+const BIAS_COLORS = { 'left': '#3b82f6', 'center-left': '#60a5fa', 'center': '#a3a3a3', 'center-right': '#f97316', 'right': '#ef4444' };
+
+// COMPREHENSIVE COUNTRY DATABASE
+const COUNTRIES = {
+  // CATASTROPHIC
+  'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', region: 'Eastern Europe', pop: '37M', gdp: '$160B', leader: 'Volodymyr Zelenskyy', title: 'Active War Zone', analysis: { what: 'Russia launched a full-scale invasion in February 2022, marking the largest military conflict in Europe since World War II. The war has evolved into a grinding war of attrition, with both sides suffering hundreds of thousands of casualties. Ukraine has lost approximately 20% of its territory, including Crimea (annexed in 2014) and portions of the Donbas region. Western nations have provided over $200 billion in military and economic aid, including advanced weapons systems like HIMARS, Patriot missiles, and F-16 fighter jets. Critical infrastructure has been systematically targeted, causing widespread power outages and civilian displacement, with millions of Ukrainians becoming refugees across Europe.', why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO, prompting Finland and Sweden to join the alliance. Global energy markets were thrown into chaos as Europe scrambled to reduce dependence on Russian gas, accelerating the green energy transition. Food security became a global concern as Ukraine—one of the world\\'s largest grain exporters—saw its agricultural output disrupted, affecting food prices in Africa and the Middle East. The war has also exposed the limits of economic sanctions as a deterrent and raised serious questions about nuclear escalation risks. The outcome will define the international order for decades: whether territorial conquest through military force remains viable in the 21st century.', next: 'Multiple scenarios remain possible: a frozen conflict similar to Korea, with a ceasefire but no peace treaty; a negotiated settlement involving territorial compromises; continued attritional warfare lasting years; or potential escalation involving NATO directly. Key factors to watch include: Western political will (especially after US elections), ammunition production capacity on both sides, Ukrainian mobilization challenges, Russian economic resilience, and any shifts in Chinese support for Russia. Spring and summer offensives will be critical. Diplomatic initiatives may emerge as both sides face exhaustion, but significant territorial concessions remain politically toxic for both Kyiv and Moscow.' }, news: [{ source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Fighting intensifies in eastern regions', url: '#' }, { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Winter energy crisis tests Ukrainian resilience', url: '#' }, { source: 'WSJ', bias: 'center-right', time: '8h ago', headline: 'Pentagon announces new aid package', url: '#' }] },
+  'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', region: 'Eastern Europe', pop: '144M', gdp: '$1.78T', leader: 'Vladimir Putin', title: 'Active Aggressor', analysis: { what: 'Russia is conducting the largest military operation since World War II, deploying hundreds of thousands of troops in Ukraine. The country faces unprecedented Western sanctions—over 16,000 individual measures—targeting its financial system, energy exports, technology imports, and oligarch assets. Despite predictions of economic collapse, Russia has adapted through shadow fleet oil sales, trade rerouting via China and India, and massive military-industrial mobilization. Domestically, Putin has consolidated authoritarian control, crushing opposition (Navalny died in prison), suppressing independent media, and criminalizing anti-war speech. Wagner Group mutiny in 2023 briefly challenged Putin\\'s authority but was resolved. Military casualties are estimated at 300,000+ killed and wounded.', why: 'Russia possesses the world\\'s largest nuclear arsenal and a permanent UN Security Council seat, making it a critical player in global security. The invasion has shattered the post-Cold War European security order and demonstrated that major powers can still wage wars of territorial conquest. Russia\\'s energy leverage over Europe (now diminished) reshaped global energy markets. The conflict has pushed Russia into deeper partnership with China, Iran, and North Korea, potentially forming a new axis challenging Western hegemony. Russian disinformation and election interference continue to destabilize democracies worldwide. How the war ends will determine whether authoritarian aggression is rewarded or deterred.', next: 'Russia appears committed to a long war, having shifted to a war economy with 40% of the budget dedicated to defense. Putin likely calculates that Western resolve will fade, particularly if political changes occur in the US or Europe. Potential scenarios include: continued slow territorial gains through attrition; a negotiated settlement that legitimizes some conquests; domestic instability if casualties become unsustainable; or dangerous escalation including tactical nuclear threats. Watch for: economic strain indicators, elite defections, military morale, and any signs of succession planning. Relations with China will be crucial—Beijing\\'s support is essential but comes with strings attached.' }, news: [{ source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Russian economy shows resilience despite sanctions', url: '#' }, { source: 'FT', bias: 'center', time: '6h ago', headline: 'Moscow increases military production targets', url: '#' }] },
+  'Gaza': { lat: 31.35, lng: 34.31, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '2.1M', gdp: '$1.7B', leader: 'Hamas', title: 'Humanitarian Crisis', analysis: { what: 'Following Hamas\\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza. The operation has resulted in catastrophic destruction, with over 30,000 Palestinians killed according to Gaza health authorities, and vast swathes of the territory reduced to rubble. Nearly 2 million people have been displaced, with most of Gaza\\'s population facing severe food insecurity. The UN has warned of imminent famine conditions. Critical infrastructure including hospitals, schools, and water systems has been devastated. International humanitarian access remains severely restricted. Hostage negotiations have produced limited exchanges but most captives remain in Gaza.', why: 'This conflict has the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting global trade routes. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. The conflict tests American diplomatic influence and its ability to balance support for Israel with humanitarian concerns. It has also exposed deep divisions within Western societies and universities. The long-term governance of Gaza—and the broader Israeli-Palestinian conflict—remains unresolved.', next: 'Multiple trajectories are possible: expanded regional war if Israel strikes Iran or Hezbollah launches major attacks; a fragile ceasefire that leaves Hamas weakened but not eliminated; prolonged low-intensity conflict; or international intervention for post-war governance. Key variables include: hostage negotiations, Hezbollah\\'s calculations, Iranian decision-making, US election dynamics, Israeli domestic politics, and humanitarian conditions. Watch for: escalation triggers, ceasefire negotiations, and any shifts in US policy. Post-conflict Gaza governance is a critical unresolved question—neither Israel, Hamas, nor the Palestinian Authority has a viable plan.' }, news: [{ source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns of famine conditions spreading', url: '#' }, { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'Ceasefire talks resume in Cairo', url: '#' }] },
+  'Sudan': { lat: 12.86, lng: 30.22, flag: '🇸🇩', risk: 'catastrophic', region: 'Africa', pop: '46M', gdp: '$34B', leader: 'Disputed', title: 'Civil War', analysis: { what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General Abdel Fattah al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Mohamed Hamdan Dagalo (Hemedti). Fighting has devastated the capital Khartoum and spread across the country, particularly in Darfur where ethnic violence has resurged. Over 12,000 people have been killed and 10+ million displaced—the world\\'s largest displacement crisis. Atrocities including mass killings, sexual violence, and ethnic cleansing have been documented. Critical infrastructure is destroyed, hospitals are non-functional, and famine conditions are spreading. International mediation efforts have repeatedly failed as both sides pursue military victory.', why: 'Sudan\\'s collapse threatens to destabilize the entire Horn of Africa and Sahel region. Neighboring countries face massive refugee flows. The RSF has links to Wagner Group/Russia and receives support from UAE, while SAF has Egyptian and Iranian backing—making this a proxy battlefield. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The humanitarian catastrophe rivals Yemen and Gaza in severity but receives far less international attention. Weapons flowing into Sudan risk spreading across Africa\\'s conflict zones.', next: 'Neither side appears capable of decisive military victory, suggesting prolonged conflict. The country may fragment into competing zones of control. Watch for: famine declarations, regional spillover, international intervention proposals, and any negotiation breakthroughs. The rainy season affects military operations. Without sustained international pressure and humanitarian access, mass starvation is likely. Long-term scenarios include partition, failed state status, or exhaustion-driven negotiations—but peace remains distant.' }, news: [{ source: 'UN News', bias: 'center', time: '3h ago', headline: 'Famine warning issued for Darfur', url: '#' }] },
+  'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil Resistance War' },
+  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Ongoing Civil War' },
+  'Haiti': { lat: 18.97, lng: -72.29, flag: '🇭🇹', risk: 'catastrophic', region: 'Caribbean', pop: '11.6M', gdp: '$20B', leader: 'Transitional', title: 'Gang Violence Crisis' },
+  'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'catastrophic', region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Taliban', title: 'Humanitarian Crisis' },
+  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'catastrophic', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict' },
+  'Somalia': { lat: 5.15, lng: 46.20, flag: '🇸🇴', risk: 'catastrophic', region: 'Africa', pop: '18M', gdp: '$8B', leader: 'Hassan Sheikh', title: 'Al-Shabaab Threat' },
+
+  // EXTREME
+  'Israel': { lat: 31.05, lng: 34.85, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict' },
+  'Taiwan': { lat: 23.70, lng: 120.96, flag: '🇹🇼', risk: 'extreme', region: 'East Asia', pop: '24M', gdp: '$790B', leader: 'Lai Ching-te', title: 'Cross-Strait Tensions', analysis: { what: 'Cross-strait tensions have reached their highest level in decades. China has dramatically increased military activity around Taiwan, with near-daily incursions into Taiwan\\'s air defense identification zone and regular naval exercises simulating blockade scenarios. President Lai Ching-te of the Democratic Progressive Party (DPP) took office in 2024, continuing the pro-sovereignty stance Beijing considers provocative. Taiwan has accelerated defense spending and military reforms, extending conscription and acquiring advanced weapons from the US including F-16s and Harpoon missiles. TSMC, headquartered in Taiwan, manufactures over 90% of the world\\'s most advanced semiconductors, making the island critical to global technology supply chains.', why: 'Taiwan represents the most dangerous potential flashpoint for great-power conflict in the world. A Chinese invasion or blockade would likely trigger US military intervention, risking war between nuclear powers. The global economy would face catastrophic disruption—semiconductor shortages would halt production of everything from smartphones to automobiles to weapons systems. Japan, South Korea, and the Philippines would be directly affected. The outcome would determine whether the US-led order in Asia survives or China achieves regional hegemony. Taiwan also represents an ideological contest: a prosperous Chinese democracy versus the CCP\\'s authoritarian model.', next: 'Most analysts believe a full-scale invasion is unlikely before 2027 at earliest, as China builds military capability for such an operation. However, "gray zone" coercion—blockades, cyber attacks, economic pressure—could occur sooner. Key indicators: Chinese military exercises and rhetoric, US arms sales and diplomatic signals, Taiwanese defense preparations, and any changes in Japan\\'s posture. The 2027-2030 window is considered particularly dangerous as Xi Jinping may feel pressure to achieve "reunification" as a legacy. Economic decoupling and semiconductor supply chain diversification efforts (CHIPS Act, new fabs in US/Japan) aim to reduce leverage but will take years.' }, news: [{ source: 'Nikkei', bias: 'center', time: '2h ago', headline: 'Chinese military exercises near Taiwan intensify', url: '#' }] },
+  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Regional Proxy Conflicts', analysis: { what: 'Iran stands at the center of Middle Eastern tensions, orchestrating a network of proxy forces including Hezbollah in Lebanon, Hamas and Palestinian Islamic Jihad in Gaza, the Houthis in Yemen, and various militias in Iraq and Syria. The nuclear program has advanced significantly—Iran now enriches uranium to 60% purity, just below weapons-grade, with enough material for multiple bombs if further enriched. International negotiations (JCPOA) collapsed after US withdrawal in 2018, and diplomatic efforts have stalled. Domestically, the regime brutally suppressed the "Woman, Life, Freedom" protests in 2022-2023, killing hundreds and arresting thousands. Supreme Leader Khamenei (85 years old) faces succession questions. The economy struggles under sanctions despite oil sales to China.', why: 'Iran\\'s nuclear threshold status poses an existential concern for Israel and Gulf states, and could trigger regional nuclear proliferation (Saudi Arabia, Turkey, Egypt). Iranian proxies can strike Israel, disrupt Gulf oil shipping, and destabilize Arab governments. Houthi attacks on Red Sea shipping have disrupted 12% of global trade. Iran\\'s alliance with Russia (providing drones for Ukraine) and China challenges Western interests. Any direct Israel-Iran conflict could draw in the US and trigger oil price spikes that shock the global economy. Iran is the linchpin of the "Axis of Resistance" opposing US/Israeli regional influence.', next: 'The regime faces a difficult succession as Khamenei ages, with hardliners likely to maintain control. Nuclear "breakout" remains possible if Iran decides the strategic benefits outweigh costs—particularly if it feels an Israeli strike is imminent. Watch for: IAEA reports on enrichment levels, proxy escalation in Lebanon/Iraq, oil smuggling enforcement, and succession maneuvering. Israel has conducted covert sabotage operations and may strike nuclear facilities if diplomacy fails. The risk of direct Iran-Israel war has never been higher. Regional dynamics depend heavily on whether Gaza conflict expands or contains.' }, news: [{ source: 'Reuters', bias: 'center', time: '4h ago', headline: 'IAEA reports further uranium enrichment progress', url: '#' }] },
+  'North Korea': { lat: 40.34, lng: 127.51, flag: '🇰🇵', risk: 'extreme', region: 'East Asia', pop: '26M', gdp: '$18B', leader: 'Kim Jong Un', title: 'Nuclear Threats' },
+  'Syria': { lat: 34.80, lng: 38.99, flag: '🇸🇾', risk: 'extreme', region: 'Middle East', pop: '22M', gdp: '$9B', leader: 'Bashar al-Assad', title: 'Fragmented State' },
+  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'State Collapse' },
+  'Mali': { lat: 17.57, lng: -4.00, flag: '🇲🇱', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Military Junta', title: 'Wagner/Jihadi Conflict' },
+  'Burkina Faso': { lat: 12.24, lng: -1.56, flag: '🇧🇫', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Ibrahim Traoré', title: 'Jihadi Violence' },
+  'Niger': { lat: 17.61, lng: 8.08, flag: '🇳🇪', risk: 'extreme', region: 'Africa', pop: '26M', gdp: '$15B', leader: 'Military Junta', title: 'Coup Government' },
+
+  // SEVERE
+  'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'severe', region: 'East Asia', pop: '1.4B', gdp: '$17.7T', leader: 'Xi Jinping', title: 'Economic Slowdown', analysis: { what: 'China faces its most serious economic challenges in decades. The property sector—which accounts for roughly 30% of GDP—is in crisis, with major developers like Evergrande and Country Garden defaulting on hundreds of billions in debt. Youth unemployment reached record highs above 20% before authorities stopped publishing the data. Consumer confidence has collapsed, with households hoarding savings rather than spending. Deflation concerns have emerged as prices fall. Local government debt has ballooned to dangerous levels after years of infrastructure spending. Xi Jinping has consolidated power to an unprecedented degree, removing term limits and purging rivals, while cracking down on tech giants, private education, and civil society. US-China tensions have intensified with sweeping semiconductor export controls and growing military competition in the South China Sea and Taiwan Strait.', why: 'As the world\\'s second-largest economy and largest trading nation, China\\'s slowdown ripples across global markets. Commodity exporters from Australia to Brazil depend on Chinese demand. Supply chains for everything from iPhones to solar panels run through China. A hard landing could trigger global recession. Geopolitically, China\\'s ambitions to dominate advanced technologies (AI, semiconductors, quantum computing) and its military modernization pose the primary strategic challenge to US hegemony. Taiwan—which produces 90% of advanced chips—remains the most dangerous flashpoint. China\\'s support for Russia, ties to Iran, and growing influence in the Global South are reshaping the international order toward multipolarity.', next: 'Beijing faces difficult choices: aggressive stimulus risks inflating debt bubbles further, while allowing deflation could trigger social unrest. Expect continued gradual stimulus measures rather than a "bazooka" response. The property sector will remain a drag for years as excess inventory is absorbed. Watch for: social stability indicators, policy shifts toward consumption, technology self-sufficiency progress, and Taiwan Strait military activity. US-China relations will likely remain contentious regardless of election outcomes. The risk of accidental military escalation in the South China Sea or Taiwan Strait remains elevated. Demographic decline (shrinking workforce, aging population) poses long-term structural challenges.' }, news: [{ source: 'FT', bias: 'center', time: '2h ago', headline: 'Beijing announces new stimulus measures', url: '#' }, { source: 'Bloomberg', bias: 'center-right', time: '5h ago', headline: 'Property sector woes deepen despite support', url: '#' }, { source: 'Reuters', bias: 'center', time: '8h ago', headline: 'US expands chip export restrictions', url: '#' }] },
+  'Venezuela': { lat: 6.42, lng: -66.59, flag: '🇻🇪', risk: 'severe', region: 'South America', pop: '28M', gdp: '$92B', leader: 'Nicolás Maduro', title: 'Political Crisis' },
+  'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'severe', region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Economic & Political Crisis' },
+  'Bangladesh': { lat: 23.68, lng: 90.36, flag: '🇧🇩', risk: 'severe', region: 'South Asia', pop: '170M', gdp: '$460B', leader: 'Muhammad Yunus', title: 'Post-Revolution' },
+  'Turkey': { lat: 38.96, lng: 35.24, flag: '🇹🇷', risk: 'severe', region: 'Middle East', pop: '85M', gdp: '$906B', leader: 'Recep Erdoğan', title: 'Economic Crisis' },
+  'Egypt': { lat: 26.82, lng: 30.80, flag: '🇪🇬', risk: 'severe', region: 'North Africa', pop: '105M', gdp: '$387B', leader: 'Abdel Fattah el-Sisi', title: 'Economic Crisis' },
+  'Argentina': { lat: -38.42, lng: -63.62, flag: '🇦🇷', risk: 'severe', region: 'South America', pop: '46M', gdp: '$641B', leader: 'Javier Milei', title: 'Economic Crisis' },
+  'Nigeria': { lat: 9.08, lng: 8.68, flag: '🇳🇬', risk: 'severe', region: 'Africa', pop: '223M', gdp: '$477B', leader: 'Bola Tinubu', title: 'Security Crisis' },
+  'Ethiopia': { lat: 9.15, lng: 40.49, flag: '🇪🇹', risk: 'severe', region: 'Africa', pop: '126M', gdp: '$126B', leader: 'Abiy Ahmed', title: 'Post-War Tensions' },
+  'Iraq': { lat: 33.22, lng: 43.68, flag: '🇮🇶', risk: 'severe', region: 'Middle East', pop: '44M', gdp: '$270B', leader: 'Mohammed al-Sudani', title: 'Fragile Stability' },
+  'Libya': { lat: 26.34, lng: 17.23, flag: '🇱🇾', risk: 'severe', region: 'North Africa', pop: '7M', gdp: '$41B', leader: 'Divided', title: 'Civil Conflict' },
+  'Tunisia': { lat: 33.89, lng: 9.54, flag: '🇹🇳', risk: 'severe', region: 'North Africa', pop: '12M', gdp: '$47B', leader: 'Kais Saied', title: 'Democratic Backsliding' },
+  'Ecuador': { lat: -1.83, lng: -78.18, flag: '🇪🇨', risk: 'severe', region: 'South America', pop: '18M', gdp: '$107B', leader: 'Daniel Noboa', title: 'Gang Violence Surge' },
+  'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'severe', region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Salome Zourabichvili', title: 'Pro-Russia Turn' },
+  'Armenia': { lat: 40.07, lng: 45.04, flag: '🇦🇲', risk: 'severe', region: 'Caucasus', pop: '2.8M', gdp: '$20B', leader: 'Nikol Pashinyan', title: 'Post-Karabakh Crisis' },
+  'Belarus': { lat: 53.71, lng: 27.95, flag: '🇧🇾', risk: 'severe', region: 'Eastern Europe', pop: '9M', gdp: '$73B', leader: 'Lukashenko', title: 'Russian Ally' },
+  'Moldova': { lat: 47.41, lng: 28.37, flag: '🇲🇩', risk: 'severe', region: 'Eastern Europe', pop: '2.6M', gdp: '$15B', leader: 'Maia Sandu', title: 'Russia Pressure' },
+  'Cuba': { lat: 21.52, lng: -77.78, flag: '🇨🇺', risk: 'severe', region: 'Caribbean', pop: '11M', gdp: '$107B', leader: 'Díaz-Canel', title: 'Economic Crisis' },
+  'Nicaragua': { lat: 12.87, lng: -85.21, flag: '🇳🇮', risk: 'severe', region: 'Central America', pop: '7M', gdp: '$15B', leader: 'Daniel Ortega', title: 'Authoritarian Rule' },
+  'Cameroon': { lat: 7.37, lng: 12.35, flag: '🇨🇲', risk: 'severe', region: 'Africa', pop: '28M', gdp: '$45B', leader: 'Paul Biya', title: 'Anglophone Crisis' },
+  'Chad': { lat: 15.45, lng: 18.73, flag: '🇹🇩', risk: 'severe', region: 'Africa', pop: '18M', gdp: '$12B', leader: 'Mahamat Déby', title: 'Regional Instability' },
+  'Eritrea': { lat: 15.18, lng: 39.78, flag: '🇪🇷', risk: 'severe', region: 'Africa', pop: '3.6M', gdp: '$2B', leader: 'Isaias Afwerki', title: 'Isolated Dictatorship' },
+  'Mozambique': { lat: -18.67, lng: 35.53, flag: '🇲🇿', risk: 'severe', region: 'Africa', pop: '33M', gdp: '$18B', leader: 'Disputed', title: 'Election Crisis' },
+  'Zimbabwe': { lat: -19.02, lng: 29.15, flag: '🇿🇼', risk: 'severe', region: 'Africa', pop: '16M', gdp: '$28B', leader: 'Mnangagwa', title: 'Economic Collapse' },
+
+  // STORMY
+  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$25.5T', leader: 'Current Admin', title: 'Political Polarization', analysis: { what: 'America remains deeply polarized, with partisan divisions affecting nearly every aspect of governance and society. The economy has shown remarkable resilience—avoiding predicted recession, with low unemployment and cooling inflation—but high interest rates and housing costs strain middle-class households. Immigration has surged at the southern border, becoming a central political flashpoint. Foreign policy is stretched across multiple crises: supporting Ukraine while managing escalation risks, navigating Middle East turmoil, competing with China, and maintaining alliance commitments. Congress remains gridlocked on major legislation, with narrow margins and partisan warfare blocking immigration reform, budget deals, and foreign aid packages. Trust in institutions continues to erode across the political spectrum.', why: 'As the world\\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance system, American decisions reverberate globally. US commitment to Ukraine is essential for European security. The US-China relationship will shape the 21st-century order. Dollar hegemony underpins the global financial system. American technology companies dominate AI development. Domestic political instability directly impacts allies who depend on US security guarantees and adversaries who probe for weakness. Immigration policy affects Latin America; energy policy affects climate outcomes; trade policy affects global supply chains.', next: 'The 2026 midterm elections will determine control of Congress and set the trajectory for 2028 presidential politics. Key issues include: economy/inflation, immigration, abortion rights, and foreign policy. Watch for: changes in Ukraine aid commitment, China policy escalation, potential government shutdowns, and Supreme Court decisions. Allies are hedging against potential policy reversals. Adversaries may test American resolve during political transitions. The fundamental question is whether US democracy can overcome polarization to address long-term challenges like debt, infrastructure, and great-power competition—or whether gridlock and division will accelerate relative decline.' }, news: [{ source: 'AP', bias: 'center', time: '1h ago', headline: 'Congress debates foreign aid package', url: '#' }, { source: 'NYT', bias: 'center-left', time: '4h ago', headline: 'Border encounters reach new highs', url: '#' }, { source: 'WSJ', bias: 'center-right', time: '7h ago', headline: 'Fed signals cautious rate path ahead', url: '#' }] },
+  'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'stormy', region: 'Western Europe', pop: '68M', gdp: '$2.8T', leader: 'Emmanuel Macron', title: 'Political Fragmentation' },
+  'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'stormy', region: 'Western Europe', pop: '84M', gdp: '$4.2T', leader: 'Olaf Scholz', title: 'Economic Transition' },
+  'Brazil': { lat: -14.24, lng: -51.93, flag: '🇧🇷', risk: 'stormy', region: 'South America', pop: '215M', gdp: '$1.9T', leader: 'Lula da Silva', title: 'Amazon & Politics' },
+  'Mexico': { lat: 23.63, lng: -102.55, flag: '🇲🇽', risk: 'stormy', region: 'North America', pop: '130M', gdp: '$1.3T', leader: 'Claudia Sheinbaum', title: 'Cartel Violence' },
+  'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'stormy', region: 'South Asia', pop: '1.4B', gdp: '$3.4T', leader: 'Narendra Modi', title: 'Rising Power' },
+  'South Korea': { lat: 35.91, lng: 127.77, flag: '🇰🇷', risk: 'stormy', region: 'East Asia', pop: '52M', gdp: '$1.7T', leader: 'Yoon Suk Yeol', title: 'Political Crisis' },
+  'Saudi Arabia': { lat: 23.89, lng: 45.08, flag: '🇸🇦', risk: 'stormy', region: 'Middle East', pop: '36M', gdp: '$1.1T', leader: 'MBS', title: 'Vision 2030' },
+  'South Africa': { lat: -30.56, lng: 22.94, flag: '🇿🇦', risk: 'stormy', region: 'Africa', pop: '60M', gdp: '$399B', leader: 'Ramaphosa', title: 'Coalition Government' },
+  'Kenya': { lat: -0.02, lng: 37.91, flag: '🇰🇪', risk: 'stormy', region: 'Africa', pop: '54M', gdp: '$113B', leader: 'William Ruto', title: 'Protests & Debt' },
+  'Colombia': { lat: 4.57, lng: -74.30, flag: '🇨🇴', risk: 'stormy', region: 'South America', pop: '52M', gdp: '$314B', leader: 'Gustavo Petro', title: 'Peace Process' },
+  'Peru': { lat: -9.19, lng: -75.02, flag: '🇵🇪', risk: 'stormy', region: 'South America', pop: '34M', gdp: '$242B', leader: 'Dina Boluarte', title: 'Political Instability' },
+  'Thailand': { lat: 15.87, lng: 100.99, flag: '🇹🇭', risk: 'stormy', region: 'Southeast Asia', pop: '70M', gdp: '$495B', leader: 'Paetongtarn', title: 'Political Uncertainty' },
+  'Philippines': { lat: 12.88, lng: 121.77, flag: '🇵🇭', risk: 'stormy', region: 'Southeast Asia', pop: '115M', gdp: '$404B', leader: 'Marcos Jr', title: 'China Tensions' },
+  'Hungary': { lat: 47.16, lng: 19.50, flag: '🇭🇺', risk: 'stormy', region: 'Eastern Europe', pop: '10M', gdp: '$188B', leader: 'Viktor Orbán', title: 'Democratic Backsliding' },
+  'Serbia': { lat: 44.02, lng: 21.01, flag: '🇷🇸', risk: 'stormy', region: 'Balkans', pop: '7M', gdp: '$63B', leader: 'Aleksandar Vučić', title: 'Kosovo Tensions' },
+  'Kosovo': { lat: 42.60, lng: 20.90, flag: '🇽🇰', risk: 'stormy', region: 'Balkans', pop: '1.8M', gdp: '$9B', leader: 'Albin Kurti', title: 'Serbia Tensions' },
+  'Bosnia': { lat: 43.92, lng: 17.68, flag: '🇧🇦', risk: 'stormy', region: 'Balkans', pop: '3.2M', gdp: '$24B', leader: 'Rotating', title: 'Ethnic Divisions' },
+  'Jordan': { lat: 30.59, lng: 36.24, flag: '🇯🇴', risk: 'stormy', region: 'Middle East', pop: '11M', gdp: '$47B', leader: 'King Abdullah II', title: 'Regional Pressure' },
+  'Algeria': { lat: 28.03, lng: 1.66, flag: '🇩🇿', risk: 'stormy', region: 'North Africa', pop: '45M', gdp: '$187B', leader: 'Tebboune', title: 'Morocco Rivalry' },
+  'Azerbaijan': { lat: 40.14, lng: 47.58, flag: '🇦🇿', risk: 'stormy', region: 'Caucasus', pop: '10M', gdp: '$79B', leader: 'Ilham Aliyev', title: 'Karabakh Victory' },
+  'Kazakhstan': { lat: 48.02, lng: 66.92, flag: '🇰🇿', risk: 'stormy', region: 'Central Asia', pop: '20M', gdp: '$220B', leader: 'Tokayev', title: 'Russia Balancing' },
+  'Turkmenistan': { lat: 38.97, lng: 59.56, flag: '🇹🇲', risk: 'stormy', region: 'Central Asia', pop: '6M', gdp: '$45B', leader: 'Berdimuhamedow', title: 'Isolated Autocracy' },
+  'Tajikistan': { lat: 38.86, lng: 71.28, flag: '🇹🇯', risk: 'stormy', region: 'Central Asia', pop: '10M', gdp: '$11B', leader: 'Rahmon', title: 'Afghanistan Border' },
+  'Sri Lanka': { lat: 7.87, lng: 80.77, flag: '🇱🇰', risk: 'stormy', region: 'South Asia', pop: '22M', gdp: '$75B', leader: 'Anura Kumara', title: 'Economic Recovery' },
+  'Cambodia': { lat: 12.57, lng: 104.99, flag: '🇰🇭', risk: 'stormy', region: 'Southeast Asia', pop: '17M', gdp: '$30B', leader: 'Hun Manet', title: 'Authoritarian Succession' },
+  'Laos': { lat: 19.86, lng: 102.50, flag: '🇱🇦', risk: 'stormy', region: 'Southeast Asia', pop: '7M', gdp: '$19B', leader: 'Thongloun', title: 'Debt Crisis' },
+  'Uganda': { lat: 1.37, lng: 32.29, flag: '🇺🇬', risk: 'stormy', region: 'Africa', pop: '48M', gdp: '$46B', leader: 'Museveni', title: 'Long-term Rule' },
+  'Angola': { lat: -11.20, lng: 17.87, flag: '🇦🇴', risk: 'stormy', region: 'Africa', pop: '36M', gdp: '$117B', leader: 'João Lourenço', title: 'Oil Dependency' },
+  'Ghana': { lat: 7.95, lng: -1.02, flag: '🇬🇭', risk: 'stormy', region: 'Africa', pop: '33M', gdp: '$77B', leader: 'John Mahama', title: 'Economic Recovery' },
+  'Slovakia': { lat: 48.67, lng: 19.70, flag: '🇸🇰', risk: 'stormy', region: 'Eastern Europe', pop: '5M', gdp: '$115B', leader: 'Robert Fico', title: 'Pro-Russia Shift' },
+  'Guatemala': { lat: 15.78, lng: -90.23, flag: '🇬🇹', risk: 'stormy', region: 'Central America', pop: '17M', gdp: '$95B', leader: 'Bernardo Arévalo', title: 'Democratic Transition' },
+  'Honduras': { lat: 15.20, lng: -86.24, flag: '🇭🇳', risk: 'stormy', region: 'Central America', pop: '10M', gdp: '$31B', leader: 'Xiomara Castro', title: 'Gang Violence' },
+  'El Salvador': { lat: 13.79, lng: -88.90, flag: '🇸🇻', risk: 'stormy', region: 'Central America', pop: '6.5M', gdp: '$33B', leader: 'Nayib Bukele', title: 'Gang Crackdown' },
+  'Bolivia': { lat: -16.29, lng: -63.59, flag: '🇧🇴', risk: 'stormy', region: 'South America', pop: '12M', gdp: '$44B', leader: 'Luis Arce', title: 'Political Divisions' },
+  'Guyana': { lat: 4.86, lng: -58.93, flag: '🇬🇾', risk: 'stormy', region: 'South America', pop: '0.8M', gdp: '$15B', leader: 'Irfaan Ali', title: 'Oil Boom' },
+  'Papua New Guinea': { lat: -6.31, lng: 143.96, flag: '🇵🇬', risk: 'stormy', region: 'Oceania', pop: '10M', gdp: '$31B', leader: 'James Marape', title: 'Tribal Violence' },
+  'Solomon Islands': { lat: -9.43, lng: 160.02, flag: '🇸🇧', risk: 'stormy', region: 'Oceania', pop: '0.7M', gdp: '$1.6B', leader: 'Jeremiah Manele', title: 'China Pivot' },
+  'Madagascar': { lat: -18.77, lng: 46.87, flag: '🇲🇬', risk: 'stormy', region: 'Africa', pop: '29M', gdp: '$15B', leader: 'Rajoelina', title: 'Political Tensions' },
+
+  // CLOUDY
+  'United Kingdom': { lat: 55.38, lng: -3.44, flag: '🇬🇧', risk: 'cloudy', region: 'Western Europe', pop: '67M', gdp: '$3.1T', leader: 'Keir Starmer', title: 'Post-Brexit Adjustment' },
+  'Italy': { lat: 41.87, lng: 12.57, flag: '🇮🇹', risk: 'cloudy', region: 'Western Europe', pop: '59M', gdp: '$2.1T', leader: 'Giorgia Meloni', title: 'Right-Wing Government' },
+  'Spain': { lat: 40.46, lng: -3.75, flag: '🇪🇸', risk: 'cloudy', region: 'Western Europe', pop: '48M', gdp: '$1.4T', leader: 'Pedro Sánchez', title: 'Coalition Politics' },
+  'Netherlands': { lat: 52.13, lng: 5.29, flag: '🇳🇱', risk: 'cloudy', region: 'Western Europe', pop: '18M', gdp: '$991B', leader: 'Dick Schoof', title: 'Right-Wing Shift' },
+  'Poland': { lat: 51.92, lng: 19.15, flag: '🇵🇱', risk: 'cloudy', region: 'Eastern Europe', pop: '38M', gdp: '$688B', leader: 'Donald Tusk', title: 'Democratic Recovery' },
+  'Romania': { lat: 45.94, lng: 24.97, flag: '🇷🇴', risk: 'cloudy', region: 'Eastern Europe', pop: '19M', gdp: '$301B', leader: 'Klaus Iohannis', title: 'NATO Frontline' },
+  'Greece': { lat: 39.07, lng: 21.82, flag: '🇬🇷', risk: 'cloudy', region: 'Southern Europe', pop: '10M', gdp: '$219B', leader: 'Mitsotakis', title: 'Economic Recovery' },
+  'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Karl Nehammer', title: 'Far-Right Gains' },
+  'Sweden': { lat: 60.13, lng: 18.64, flag: '🇸🇪', risk: 'cloudy', region: 'Northern Europe', pop: '10M', gdp: '$585B', leader: 'Ulf Kristersson', title: 'NATO Member' },
+  'Finland': { lat: 61.92, lng: 25.75, flag: '🇫🇮', risk: 'cloudy', region: 'Northern Europe', pop: '6M', gdp: '$281B', leader: 'Petteri Orpo', title: 'New NATO Member' },
+  'Bulgaria': { lat: 42.73, lng: 25.49, flag: '🇧🇬', risk: 'cloudy', region: 'Eastern Europe', pop: '7M', gdp: '$89B', leader: 'Rumen Radev', title: 'Political Deadlock' },
+  'Estonia': { lat: 58.60, lng: 25.01, flag: '🇪🇪', risk: 'cloudy', region: 'Baltic', pop: '1.4M', gdp: '$38B', leader: 'Kaja Kallas', title: 'Russia Border' },
+  'Latvia': { lat: 56.88, lng: 24.60, flag: '🇱🇻', risk: 'cloudy', region: 'Baltic', pop: '1.9M', gdp: '$41B', leader: 'Evika Siliņa', title: 'NATO Frontline' },
+  'Lithuania': { lat: 55.17, lng: 23.88, flag: '🇱🇹', risk: 'cloudy', region: 'Baltic', pop: '2.8M', gdp: '$70B', leader: 'Ingrida Šimonytė', title: 'Belarus Border' },
+  'Cyprus': { lat: 35.13, lng: 33.43, flag: '🇨🇾', risk: 'cloudy', region: 'Mediterranean', pop: '1.2M', gdp: '$28B', leader: 'Christodoulides', title: 'Division Continues' },
+  'Indonesia': { lat: -0.79, lng: 113.92, flag: '🇮🇩', risk: 'cloudy', region: 'Southeast Asia', pop: '277M', gdp: '$1.3T', leader: 'Prabowo', title: 'New Leadership' },
+  'Malaysia': { lat: 4.21, lng: 101.98, flag: '🇲🇾', risk: 'cloudy', region: 'Southeast Asia', pop: '34M', gdp: '$407B', leader: 'Anwar Ibrahim', title: 'Coalition Politics' },
+  'Vietnam': { lat: 14.06, lng: 108.28, flag: '🇻🇳', risk: 'cloudy', region: 'Southeast Asia', pop: '100M', gdp: '$409B', leader: 'Tô Lâm', title: 'Manufacturing Hub' },
+  'Morocco': { lat: 31.79, lng: -7.09, flag: '🇲🇦', risk: 'cloudy', region: 'North Africa', pop: '37M', gdp: '$132B', leader: 'King Mohammed VI', title: 'Western Sahara' },
+  'Chile': { lat: -35.68, lng: -71.54, flag: '🇨🇱', risk: 'cloudy', region: 'South America', pop: '19M', gdp: '$301B', leader: 'Gabriel Boric', title: 'Constitutional Reform' },
+  'Dominican Republic': { lat: 18.74, lng: -70.16, flag: '🇩🇴', risk: 'cloudy', region: 'Caribbean', pop: '11M', gdp: '$114B', leader: 'Luis Abinader', title: 'Growing Economy' },
+  'Jamaica': { lat: 18.11, lng: -77.30, flag: '🇯🇲', risk: 'cloudy', region: 'Caribbean', pop: '3M', gdp: '$17B', leader: 'Andrew Holness', title: 'Crime Concerns' },
+  'Panama': { lat: 8.54, lng: -80.78, flag: '🇵🇦', risk: 'cloudy', region: 'Central America', pop: '4.4M', gdp: '$77B', leader: 'José Mulino', title: 'Canal Tensions' },
+  'Nepal': { lat: 28.39, lng: 84.12, flag: '🇳🇵', risk: 'cloudy', region: 'South Asia', pop: '30M', gdp: '$40B', leader: 'KP Sharma Oli', title: 'Political Instability' },
+  'Maldives': { lat: 3.20, lng: 73.22, flag: '🇲🇻', risk: 'cloudy', region: 'South Asia', pop: '0.5M', gdp: '$6B', leader: 'Mohamed Muizzu', title: 'India-China Rivalry' },
+  'Kyrgyzstan': { lat: 41.20, lng: 74.77, flag: '🇰🇬', risk: 'cloudy', region: 'Central Asia', pop: '7M', gdp: '$10B', leader: 'Sadyr Japarov', title: 'Democracy Struggles' },
+  'Uzbekistan': { lat: 41.38, lng: 64.59, flag: '🇺🇿', risk: 'cloudy', region: 'Central Asia', pop: '35M', gdp: '$80B', leader: 'Mirziyoyev', title: 'Opening Up' },
+  'Senegal': { lat: 14.50, lng: -14.45, flag: '🇸🇳', risk: 'cloudy', region: 'Africa', pop: '18M', gdp: '$28B', leader: 'Bassirou Faye', title: 'Democratic Transition' },
+  'Côte d\'Ivoire': { lat: 7.54, lng: -5.55, flag: '🇨🇮', risk: 'cloudy', region: 'Africa', pop: '28M', gdp: '$70B', leader: 'Ouattara', title: 'Economic Hub' },
+  'Tanzania': { lat: -6.37, lng: 34.89, flag: '🇹🇿', risk: 'cloudy', region: 'Africa', pop: '65M', gdp: '$76B', leader: 'Samia Hassan', title: 'Stable Growth' },
+  'Rwanda': { lat: -1.94, lng: 29.87, flag: '🇷🇼', risk: 'cloudy', region: 'Africa', pop: '14M', gdp: '$14B', leader: 'Paul Kagame', title: 'DRC Involvement' },
+  'Zambia': { lat: -13.13, lng: 27.85, flag: '🇿🇲', risk: 'cloudy', region: 'Africa', pop: '20M', gdp: '$29B', leader: 'Hichilema', title: 'Debt Recovery' },
+  'Montenegro': { lat: 42.71, lng: 19.37, flag: '🇲🇪', risk: 'cloudy', region: 'Balkans', pop: '0.6M', gdp: '$6B', leader: 'Jakov Milatović', title: 'EU Path' },
+  'North Macedonia': { lat: 41.51, lng: 21.75, flag: '🇲🇰', risk: 'cloudy', region: 'Balkans', pop: '2M', gdp: '$14B', leader: 'Mickoski', title: 'EU Candidate' },
+  'Albania': { lat: 41.15, lng: 20.17, flag: '🇦🇱', risk: 'cloudy', region: 'Balkans', pop: '2.8M', gdp: '$19B', leader: 'Edi Rama', title: 'EU Candidate' },
+  'Fiji': { lat: -17.71, lng: 178.07, flag: '🇫🇯', risk: 'cloudy', region: 'Oceania', pop: '0.9M', gdp: '$5B', leader: 'Sitiveni Rabuka', title: 'Democratic Recovery' },
+  'Timor-Leste': { lat: -8.87, lng: 125.73, flag: '🇹🇱', risk: 'cloudy', region: 'Southeast Asia', pop: '1.3M', gdp: '$2B', leader: 'Xanana Gusmão', title: 'Young Democracy' },
+  'Paraguay': { lat: -23.44, lng: -58.44, flag: '🇵🇾', risk: 'cloudy', region: 'South America', pop: '7M', gdp: '$42B', leader: 'Santiago Peña', title: 'Stable' },
+  'Kuwait': { lat: 29.31, lng: 47.48, flag: '🇰🇼', risk: 'cloudy', region: 'Middle East', pop: '4M', gdp: '$184B', leader: 'Sheikh Meshal', title: 'Political Deadlock' },
+  'Bahrain': { lat: 26.07, lng: 50.56, flag: '🇧🇭', risk: 'cloudy', region: 'Middle East', pop: '1.5M', gdp: '$44B', leader: 'King Hamad', title: 'US Naval Base' },
+  'Puerto Rico': { lat: 18.22, lng: -66.59, flag: '🇵🇷', risk: 'cloudy', region: 'Caribbean', pop: '3.2M', gdp: '$117B', leader: 'US Territory', title: 'Economic Recovery' },
+
+  // CLEAR
+  'Canada': { lat: 56.13, lng: -106.35, flag: '🇨🇦', risk: 'clear', region: 'North America', pop: '40M', gdp: '$2.1T', leader: 'Justin Trudeau', title: 'Stable Democracy' },
+  'Japan': { lat: 36.20, lng: 138.25, flag: '🇯🇵', risk: 'clear', region: 'East Asia', pop: '125M', gdp: '$4.2T', leader: 'Shigeru Ishiba', title: 'Defense Buildup' },
+  'Australia': { lat: -25.27, lng: 133.78, flag: '🇦🇺', risk: 'clear', region: 'Oceania', pop: '26M', gdp: '$1.7T', leader: 'Anthony Albanese', title: 'AUKUS Partner' },
+  'New Zealand': { lat: -40.90, lng: 174.89, flag: '🇳🇿', risk: 'clear', region: 'Oceania', pop: '5M', gdp: '$247B', leader: 'Christopher Luxon', title: 'Stable' },
+  'Singapore': { lat: 1.35, lng: 103.82, flag: '🇸🇬', risk: 'clear', region: 'Southeast Asia', pop: '6M', gdp: '$424B', leader: 'Lawrence Wong', title: 'Leadership Transition' },
+  'Switzerland': { lat: 46.82, lng: 8.23, flag: '🇨🇭', risk: 'clear', region: 'Western Europe', pop: '9M', gdp: '$808B', leader: 'Federal Council', title: 'Neutral & Stable' },
+  'Norway': { lat: 60.47, lng: 8.47, flag: '🇳🇴', risk: 'clear', region: 'Northern Europe', pop: '5M', gdp: '$579B', leader: 'Jonas Støre', title: 'Energy Superpower' },
+  'Denmark': { lat: 56.26, lng: 9.50, flag: '🇩🇰', risk: 'clear', region: 'Northern Europe', pop: '6M', gdp: '$395B', leader: 'Mette Frederiksen', title: 'Greenland Focus' },
+  'Iceland': { lat: 64.96, lng: -19.02, flag: '🇮🇸', risk: 'clear', region: 'Northern Europe', pop: '0.4M', gdp: '$27B', leader: 'Bjarni Benediktsson', title: 'Volcanic Activity' },
+  'Ireland': { lat: 53.14, lng: -7.69, flag: '🇮🇪', risk: 'clear', region: 'Western Europe', pop: '5M', gdp: '$533B', leader: 'Simon Harris', title: 'Tech Hub' },
+  'Belgium': { lat: 50.50, lng: 4.47, flag: '🇧🇪', risk: 'clear', region: 'Western Europe', pop: '12M', gdp: '$582B', leader: 'Alexander De Croo', title: 'EU Capital' },
+  'Portugal': { lat: 39.40, lng: -8.22, flag: '🇵🇹', risk: 'clear', region: 'Western Europe', pop: '10M', gdp: '$252B', leader: 'Luís Montenegro', title: 'Stable' },
+  'Czech Republic': { lat: 49.82, lng: 15.47, flag: '🇨🇿', risk: 'clear', region: 'Eastern Europe', pop: '10M', gdp: '$290B', leader: 'Petr Fiala', title: 'Stable' },
+  'Slovenia': { lat: 46.15, lng: 14.99, flag: '🇸🇮', risk: 'clear', region: 'Southern Europe', pop: '2M', gdp: '$62B', leader: 'Robert Golob', title: 'Stable' },
+  'Croatia': { lat: 45.10, lng: 15.20, flag: '🇭🇷', risk: 'clear', region: 'Southern Europe', pop: '4M', gdp: '$71B', leader: 'Andrej Plenković', title: 'Eurozone Member' },
+  'Luxembourg': { lat: 49.82, lng: 6.13, flag: '🇱🇺', risk: 'clear', region: 'Western Europe', pop: '0.7M', gdp: '$87B', leader: 'Luc Frieden', title: 'Financial Hub' },
+  'Malta': { lat: 35.94, lng: 14.38, flag: '🇲🇹', risk: 'clear', region: 'Mediterranean', pop: '0.5M', gdp: '$18B', leader: 'Robert Abela', title: 'Stable' },
+  'Mongolia': { lat: 46.86, lng: 103.85, flag: '🇲🇳', risk: 'clear', region: 'East Asia', pop: '3.4M', gdp: '$17B', leader: 'Khürelsükh', title: 'Stable Democracy' },
+  'Bhutan': { lat: 27.51, lng: 90.43, flag: '🇧🇹', risk: 'clear', region: 'South Asia', pop: '0.8M', gdp: '$3B', leader: 'Tshering Tobgay', title: 'Stable Kingdom' },
+  'Brunei': { lat: 4.54, lng: 114.73, flag: '🇧🇳', risk: 'clear', region: 'Southeast Asia', pop: '0.4M', gdp: '$14B', leader: 'Sultan Bolkiah', title: 'Oil Wealth' },
+  'UAE': { lat: 23.42, lng: 53.85, flag: '🇦🇪', risk: 'clear', region: 'Middle East', pop: '10M', gdp: '$509B', leader: 'Mohamed bin Zayed', title: 'Regional Hub' },
+  'Qatar': { lat: 25.35, lng: 51.18, flag: '🇶🇦', risk: 'clear', region: 'Middle East', pop: '3M', gdp: '$221B', leader: 'Sheikh Tamim', title: 'Diplomatic Hub' },
+  'Oman': { lat: 21.47, lng: 55.98, flag: '🇴🇲', risk: 'clear', region: 'Middle East', pop: '5M', gdp: '$104B', leader: 'Sultan Haitham', title: 'Neutral Mediator' },
+  'Uruguay': { lat: -32.52, lng: -55.77, flag: '🇺🇾', risk: 'clear', region: 'South America', pop: '3.5M', gdp: '$71B', leader: 'Lacalle Pou', title: 'Stable Democracy' },
+  'Costa Rica': { lat: 9.75, lng: -83.75, flag: '🇨🇷', risk: 'clear', region: 'Central America', pop: '5M', gdp: '$69B', leader: 'Rodrigo Chaves', title: 'Stable Democracy' },
+  'Botswana': { lat: -22.33, lng: 24.68, flag: '🇧🇼', risk: 'clear', region: 'Africa', pop: '2.6M', gdp: '$19B', leader: 'Duma Boko', title: 'Stable Democracy' },
+  'Namibia': { lat: -22.96, lng: 18.49, flag: '🇳🇦', risk: 'clear', region: 'Africa', pop: '2.6M', gdp: '$13B', leader: 'Nandi-Ndaitwah', title: 'Stable' },
+  'Mauritius': { lat: -20.35, lng: 57.55, flag: '🇲🇺', risk: 'clear', region: 'Africa', pop: '1.3M', gdp: '$12B', leader: 'Ramgoolam', title: 'Stable Democracy' }
+};
+
+// ELECTIONS DATA
+const ELECTIONS = [
+  { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. Key test for current administration policies.' },
+  { flag: '🇧🇷', country: 'Brazil', date: 'Oct 2026', type: 'General Elections', stakes: 'Lula faces re-election challenge. Amazon policy central issue.' },
+  { flag: '🇫🇷', country: 'France', date: 'Apr 2027', type: 'Presidential Election', stakes: 'Macron term-limited. Political fragmentation continues.' },
+  { flag: '🇰🇷', country: 'South Korea', date: 'Mar 2027', type: 'Presidential Election', stakes: 'Political crisis aftermath. Conservative vs progressive battle.' },
+  { flag: '🇩🇪', country: 'Germany', date: 'Sep 2029', type: 'Federal Elections', stakes: 'Coalition government under pressure. AfD remains strong opposition.' },
+  { flag: '🇬🇧', country: 'United Kingdom', date: 'Jan 2029', type: 'General Elections', stakes: 'Labour government faces economic challenges. Brexit aftereffects.' },
+  { flag: '🇮🇳', country: 'India', date: 'Apr 2029', type: 'General Elections', stakes: 'Modi legacy election. Hindu nationalism vs opposition coalition.' },
+  { flag: '🇯🇵', country: 'Japan', date: 'Jul 2028', type: 'House of Councillors', stakes: 'Test for government. Defense policy and China relations key.' },
+  { flag: '🇲🇽', country: 'Mexico', date: 'Jun 2030', type: 'Presidential Election', stakes: 'MORENA seeks to extend dominance. Security and economy key issues.' },
+  { flag: '🇮🇩', country: 'Indonesia', date: 'Feb 2029', type: 'Presidential Election', stakes: 'Post-Prabowo era begins. Democracy and development focus.' }
+];
+
+// FORECASTS DATA
+const FORECASTS = [
+  { icon: '🌪️', region: 'Eastern Europe', risk: 'catastrophic', current: 'Active warfare continues in Ukraine with no ceasefire in sight. Western support remains crucial but faces domestic political challenges.', forecast: 'Expect continued attritional warfare through winter. Watch for potential diplomatic windows in Q2 2026 as ammunition constraints affect both sides.', indicators: [{ text: 'Conflict Intensity', dir: 'up' }, { text: 'Western Unity', dir: 'down' }, { text: 'Negotiations', dir: 'stable' }] },
+  { icon: '🔥', region: 'Middle East', risk: 'extreme', current: 'Multi-front regional tensions involving Israel, Iran, and proxy forces. Humanitarian crisis in Gaza continues.', forecast: 'High risk of wider escalation. Iran nuclear timeline accelerating. Watch for Hezbollah calculus and US election impact on policy.', indicators: [{ text: 'Escalation Risk', dir: 'up' }, { text: 'Diplomacy', dir: 'down' }, { text: 'Oil Prices', dir: 'up' }] },
+  { icon: '⚡', region: 'East Asia', risk: 'severe', current: 'Taiwan Strait tensions elevated. North Korea missile tests continue. US-China competition intensifying.', forecast: 'Near-term conflict unlikely but risks rising. Semiconductor decoupling accelerates. Watch for military incidents in South China Sea.', indicators: [{ text: 'Military Activity', dir: 'up' }, { text: 'Trade Ties', dir: 'down' }, { text: 'Tech War', dir: 'up' }] },
+  { icon: '🌩️', region: 'Sahel Africa', risk: 'extreme', current: 'Military coups across region. Wagner/Africa Corps presence expanding. Jihadi groups gaining ground.', forecast: 'Further destabilization likely. Western influence declining. Watch for spillover effects into coastal West Africa.', indicators: [{ text: 'Instability', dir: 'up' }, { text: 'Terrorism', dir: 'up' }, { text: 'Migration', dir: 'up' }] },
+  { icon: '📉', region: 'Global Economy', risk: 'stormy', current: 'Mixed signals with inflation cooling but debt concerns rising. China slowdown affects global growth.', forecast: 'Soft landing increasingly likely in US/EU. China structural challenges persist. Watch for emerging market debt crises.', indicators: [{ text: 'Inflation', dir: 'down' }, { text: 'Growth', dir: 'stable' }, { text: 'Debt Risk', dir: 'up' }] },
+  { icon: '🌡️', region: 'Climate Hotspots', risk: 'severe', current: 'Record temperatures, extreme weather events increasing. COP commitments falling short.', forecast: 'More frequent climate disasters expected. Watch for climate migration from vulnerable regions and food security impacts.', indicators: [{ text: 'Extreme Weather', dir: 'up' }, { text: 'Adaptation', dir: 'stable' }, { text: 'Emissions', dir: 'up' }] }
+];
+
+// DAILY BRIEFING
+const DAILY_BRIEFING = [
+  { time: '1h ago', category: 'CONFLICT', importance: 'high', headline: 'Heavy fighting reported in eastern Ukraine as winter operations intensify', source: 'Reuters', url: '#' },
+  { time: '2h ago', category: 'ECONOMY', importance: 'high', headline: 'China signals major stimulus package amid property sector concerns', source: 'Financial Times', url: '#' },
+  { time: '3h ago', category: 'SECURITY', importance: 'high', headline: 'North Korea conducts ballistic missile test over Sea of Japan', source: 'AP News', url: '#' },
+  { time: '4h ago', category: 'DIPLOMACY', importance: 'medium', headline: 'UN Security Council holds emergency session on Middle East crisis', source: 'Al Jazeera', url: '#' },
+  { time: '5h ago', category: 'POLITICS', importance: 'medium', headline: 'European leaders discuss expanded Ukraine military support', source: 'BBC', url: '#' },
+  { time: '6h ago', category: 'CRISIS', importance: 'high', headline: 'Humanitarian agencies warn of famine conditions in Sudan', source: 'UN News', url: '#' },
+  { time: '8h ago', category: 'ECONOMY', importance: 'medium', headline: 'Federal Reserve signals cautious approach to rate cuts in 2026', source: 'Bloomberg', url: '#' },
+  { time: '10h ago', category: 'SECURITY', importance: 'medium', headline: 'Taiwan reports increased Chinese military activity near strait', source: 'Nikkei Asia', url: '#' },
+  { time: '12h ago', category: 'POLITICS', importance: 'medium', headline: 'Venezuela opposition rejects latest government dialogue offer', source: 'Reuters', url: '#' },
+  { time: '14h ago', category: 'TECH', importance: 'medium', headline: 'US expands AI chip export restrictions to additional countries', source: 'WSJ', url: '#' }
+];
+
+// Set current date
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// Calculate stats
+let critical = 0, high = 0, stable = 0;
+Object.values(COUNTRIES).forEach(c => {
+  if (c.risk === 'catastrophic' || c.risk === 'extreme') critical++;
+  else if (c.risk === 'severe' || c.risk === 'stormy') high++;
+  else stable++;
+});
+document.getElementById('statCritical').textContent = critical;
+document.getElementById('statHigh').textContent = high;
+document.getElementById('statStable').textContent = stable;
+document.getElementById('statTotal').textContent = Object.keys(COUNTRIES).length;
+
+// Render watchlist
+const watchlistEl = document.getElementById('watchlist');
+const watchlistCountries = Object.entries(COUNTRIES)
+  .filter(([_, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
+  .sort((a, b) => ({ catastrophic: 0, extreme: 1 }[a[1].risk] - { catastrophic: 0, extreme: 1 }[b[1].risk]));
+watchlistEl.innerHTML = `<div class="watchlist-title">CRITICAL WATCHLIST</div>` +
+  watchlistCountries.map(([name, c]) => `<div class="watchlist-item" onclick="openModal('${name}')"><span class="wl-country">${c.flag} ${name}</span><span class="wl-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>`).join('');
+
+// THREE.JS GLOBE WITH TEXTURE
+let scene, camera, renderer, globe, countryMeshes = [], raycaster, mouse;
+const tooltip = document.getElementById('tooltip');
+
+function initGlobe() {
+  const container = document.getElementById('globe');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+  camera.position.z = 2.8;
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambient);
+  const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+  directional.position.set(5, 3, 5);
+  scene.add(directional);
+
+  // Earth sphere with texture
+  const earthGeom = new THREE.SphereGeometry(1, 64, 64);
+
+  // Load Earth texture
+  const textureLoader = new THREE.TextureLoader();
+  const earthTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+  const earthBump = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-topology.png');
+
+  const earthMat = new THREE.MeshPhongMaterial({
+    map: earthTexture,
+    bumpMap: earthBump,
+    bumpScale: 0.03,
+    specular: new THREE.Color(0x333333),
+    shininess: 5
+  });
+
+  globe = new THREE.Mesh(earthGeom, earthMat);
+  scene.add(globe);
+
+  // Atmosphere glow
+  const glowGeom = new THREE.SphereGeometry(1.02, 64, 64);
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.08, side: THREE.BackSide });
+  scene.add(new THREE.Mesh(glowGeom, glowMat));
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Draw country borders
+  drawBorders();
+
+  // Add country markers
+  addCountryMarkers();
+
+  container.addEventListener('mousemove', onMouseMove);
+  container.addEventListener('click', onClick);
+  window.addEventListener('resize', onResize);
+
+  animate();
+}
+
+function drawBorders() {
+  // Simplified border coordinates for major countries (lat/lng outline points)
+  const borderData = {
+    // Adding comprehensive border outlines
+    'USA': [[49,-125],[49,-67],[25,-80],[25,-97],[32,-117],[49,-125]],
+    'Canada': [[49,-125],[49,-55],[60,-55],[70,-90],[60,-140],[49,-125]],
+    'Mexico': [[32,-117],[32,-86],[15,-87],[15,-105],[32,-117]],
+    'Brazil': [[-5,-74],[-5,-35],[-33,-53],[-33,-58],[-15,-74],[-5,-74]],
+    'Argentina': [[-22,-66],[-22,-58],[-55,-68],[-55,-72],[-22,-66]],
+    'Russia': [[70,30],[70,180],[45,135],[45,30],[70,30]],
+    'China': [[53,73],[53,135],[18,110],[22,100],[35,73],[53,73]],
+    'India': [[35,68],[35,97],[8,77],[8,68],[35,68]],
+    'Australia': [[-10,113],[-10,154],[-44,147],[-35,115],[-10,113]],
+    'EU': [[70,-10],[70,40],[35,40],[35,-10],[70,-10]],
+    'Africa': [[37,-17],[37,51],[-35,20],[-35,-17],[37,-17]],
+    'MiddleEast': [[42,25],[42,63],[12,43],[12,25],[42,25]]
+  };
+
+  // Draw regional borders as thicker cyan lines
+  Object.entries(borderData).forEach(([region, coords]) => {
+    const points = coords.map(([lat, lng]) => latLngToVector3(lat, lng, 1.002));
+    points.push(points[0]); // Close the loop
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.4,
+      linewidth: 2
+    });
+    const line = new THREE.Line(geometry, material);
+    globe.add(line);
+  });
+
+  // Draw latitude/longitude grid
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const points = [];
+    for (let lng = -180; lng <= 180; lng += 5) {
+      points.push(latLngToVector3(lat, lng, 1.001));
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0x1f2937, transparent: true, opacity: 0.3 });
+    globe.add(new THREE.Line(geometry, material));
+  }
+
+  for (let lng = -180; lng < 180; lng += 30) {
+    const points = [];
+    for (let lat = -90; lat <= 90; lat += 5) {
+      points.push(latLngToVector3(lat, lng, 1.001));
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0x1f2937, transparent: true, opacity: 0.3 });
+    globe.add(new THREE.Line(geometry, material));
+  }
+}
+
+function addCountryMarkers() {
+  Object.entries(COUNTRIES).forEach(([name, data]) => {
+    // Create marker sphere - larger for visibility
+    const size = data.risk === 'catastrophic' ? 0.025 : data.risk === 'extreme' ? 0.02 : 0.015;
+    const markerGeom = new THREE.SphereGeometry(size, 16, 16);
+    const markerMat = new THREE.MeshBasicMaterial({
+      color: RISK_COLORS[data.risk]?.glow || 0x888888,
+      transparent: true,
+      opacity: 0.95
+    });
+    const marker = new THREE.Mesh(markerGeom, markerMat);
+
+    const pos = latLngToVector3(data.lat, data.lng, 1.02);
+    marker.position.copy(pos);
+    marker.userData = { name, data };
+
+    globe.add(marker);
+    countryMeshes.push(marker);
+
+    // Add pulsing ring for critical countries
+    if (data.risk === 'catastrophic' || data.risk === 'extreme') {
+      const ringGeom = new THREE.RingGeometry(size + 0.01, size + 0.025, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: RISK_COLORS[data.risk].glow,
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.DoubleSide
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.position.copy(pos);
+      ring.lookAt(new THREE.Vector3(0, 0, 0));
+      globe.add(ring);
+    }
+  });
+}
+
+function latLngToVector3(lat, lng, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lng + 180) * (Math.PI / 180);
+  return new THREE.Vector3(
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+function onMouseMove(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(countryMeshes);
+
+  if (intersects.length > 0) {
+    const { name, data } = intersects[0].object.userData;
+    tooltip.style.display = 'block';
+    tooltip.style.left = event.clientX + 15 + 'px';
+    tooltip.style.top = event.clientY + 15 + 'px';
+    tooltip.innerHTML = `
+      <div class="tooltip-name">${data.flag} ${name} <span class="tooltip-risk risk-${data.risk}">${data.risk.toUpperCase()}</span></div>
+      <div class="tooltip-region">${data.region} • ${data.title || ''}</div>
+      <div class="tooltip-hint">Click for details</div>
+    `;
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    tooltip.style.display = 'none';
+    renderer.domElement.style.cursor = 'grab';
+  }
+}
+
+function onClick(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(countryMeshes);
+
+  if (intersects.length > 0) {
+    openModal(intersects[0].object.userData.name);
+  }
+}
+
+function onResize() {
+  const container = document.getElementById('globe');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+// Drag rotation
+let isDragging = false, prevMouse = { x: 0, y: 0 };
+document.getElementById('globe').addEventListener('mousedown', (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; });
+document.addEventListener('mouseup', () => { isDragging = false; });
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging || !globe) return;
+  globe.rotation.y += (e.clientX - prevMouse.x) * 0.005;
+  globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + (e.clientY - prevMouse.y) * 0.005));
+  prevMouse = { x: e.clientX, y: e.clientY };
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!isDragging && globe) globe.rotation.y += 0.0008;
+  renderer.render(scene, camera);
+}
+
+// Sidebar tabs
+let currentTab = 'daily';
+function renderSidebar() {
+  const content = document.getElementById('sidebarContent');
+
+  if (currentTab === 'daily') {
+    content.innerHTML = DAILY_BRIEFING.map(item => `
+      <div class="card">
+        <div class="card-header"><span class="card-cat ${item.importance}">${item.category}</span><span class="card-time">${item.time}</span></div>
+        <div class="card-headline">${item.headline}</div>
+        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+      </div>
+    `).join('');
+  } else if (currentTab === 'forecast') {
+    content.innerHTML = FORECASTS.map(f => `
+      <div class="forecast-card">
+        <div class="forecast-header"><span class="forecast-icon">${f.icon}</span><span class="forecast-region">${f.region}</span><span class="forecast-risk risk-${f.risk}">${f.risk.toUpperCase()}</span></div>
+        <div class="forecast-current">${f.current}</div>
+        <div class="forecast-prediction"><div class="forecast-prediction-title">🔮 FORECAST</div><div class="forecast-prediction-text">${f.forecast}</div></div>
+        <div class="forecast-indicators">${f.indicators.map(i => `<span class="forecast-indicator ${i.dir}">${i.dir === 'up' ? '↑' : i.dir === 'down' ? '↓' : '→'} ${i.text}</span>`).join('')}</div>
+      </div>
+    `).join('');
+  } else if (currentTab === 'events') {
+    const sorted = Object.entries(COUNTRIES).sort((a, b) => ({ catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[a[1].risk] - { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[b[1].risk]));
+    content.innerHTML = sorted.map(([name, c]) => `
+      <div class="card" onclick="openModal('${name}')">
+        <div class="event-header"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country">${c.flag} ${name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>
+        <div class="event-title">${c.title || c.region}</div>
+      </div>
+    `).join('');
+  } else if (currentTab === 'elections') {
+    content.innerHTML = `<div style="font-size:9px;color:#f97316;font-weight:600;letter-spacing:1px;margin-bottom:12px">UPCOMING ELECTIONS</div>` +
+      ELECTIONS.map(e => `
+        <div class="election-card" onclick="openModal('${e.country}')">
+          <div class="election-header"><span class="election-flag">${e.flag}</span><span class="election-country">${e.country}</span><span class="election-date">${e.date}</span></div>
+          <div class="election-type">${e.type}</div>
+          <div class="election-stakes">${e.stakes}</div>
+        </div>
+      `).join('');
+  } else if (currentTab === 'regions') {
+    const regions = {};
+    Object.entries(COUNTRIES).forEach(([name, c]) => { if (!regions[c.region]) regions[c.region] = []; regions[c.region].push({ name, ...c }); });
+    content.innerHTML = Object.entries(regions).sort().map(([region, countries]) => `
+      <div style="margin-bottom:14px">
+        <div style="font-size:9px;color:#9ca3af;font-weight:600;letter-spacing:1px;margin-bottom:8px">${region.toUpperCase()} (${countries.length})</div>
+        ${countries.sort((a, b) => ({ catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[a.risk] - { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[b.risk])).map(c => `
+          <div class="card" onclick="openModal('${c.name}')" style="margin-bottom:4px;padding:8px">
+            <div class="event-header" style="margin:0"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country" style="font-size:10px">${c.flag} ${c.name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  } else if (currentTab === 'search') {
+    content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
+  }
+}
+
+function searchCountries(query) {
+  const results = document.getElementById('searchResults');
+  if (!query) { results.innerHTML = '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search...</div>'; return; }
+  const matches = Object.entries(COUNTRIES).filter(([name, c]) => name.toLowerCase().includes(query.toLowerCase()) || c.region.toLowerCase().includes(query.toLowerCase()) || (c.title && c.title.toLowerCase().includes(query.toLowerCase())));
+  results.innerHTML = matches.length ? matches.map(([name, c]) => `<div class="card" onclick="openModal('${name}')" style="margin-bottom:4px"><div class="event-header" style="margin:0"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country">${c.flag} ${name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div></div>`).join('') : '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">No countries found</div>';
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentTab = tab.dataset.tab;
+    renderSidebar();
+  });
+});
+
+function openModal(name) {
+  const c = COUNTRIES[name];
+  if (!c) return;
+  document.getElementById('modalFlag').textContent = c.flag;
+  document.getElementById('modalTitle').textContent = name;
+  const riskEl = document.getElementById('modalRisk');
+  riskEl.textContent = c.risk.toUpperCase();
+  riskEl.className = `modal-risk risk-${c.risk}`;
+  document.getElementById('modalSubtitle').textContent = c.title || c.region;
+
+  let html = `<div class="facts-grid"><div class="fact"><div class="fact-label">Region</div><div class="fact-value">${c.region}</div></div><div class="fact"><div class="fact-label">Population</div><div class="fact-value">${c.pop}</div></div><div class="fact"><div class="fact-label">GDP</div><div class="fact-value">${c.gdp}</div></div><div class="fact"><div class="fact-label">Leader</div><div class="fact-value">${c.leader}</div></div></div>`;
+
+  if (c.analysis) {
+    html += `<div class="section-title">Situation Analysis</div>
+      <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n1">1</div><div class="analysis-title">What Happened</div></div><p class="analysis-text">${c.analysis.what}</p></div>
+      <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n2">2</div><div class="analysis-title">Why It Matters</div></div><p class="analysis-text">${c.analysis.why}</p></div>
+      <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n3">3</div><div class="analysis-title">What Might Happen</div></div><p class="analysis-text">${c.analysis.next}</p></div>`;
+  }
+
+  if (c.news && c.news.length) {
+    html += `<div class="section-title">Recent Coverage</div>`;
+    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-bias" style="background:${BIAS_COLORS[n.bias]}"></span><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div><div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeStatPopup(); } });
+
+// Stat popup functions
+function showStatPopup(category) {
+  const popup = document.getElementById('statPopup');
+  const title = document.getElementById('statPopupTitle');
+  const content = document.getElementById('statPopupContent');
+
+  let countries = [];
+  let titleText = '';
+  let titleColor = '#06b6d4';
+
+  if (category === 'critical') {
+    countries = Object.entries(COUNTRIES).filter(([_, c]) => c.risk === 'catastrophic' || c.risk === 'extreme');
+    titleText = 'CRITICAL COUNTRIES';
+    titleColor = '#ef4444';
+  } else if (category === 'high') {
+    countries = Object.entries(COUNTRIES).filter(([_, c]) => c.risk === 'severe' || c.risk === 'stormy');
+    titleText = 'HIGH RISK COUNTRIES';
+    titleColor = '#f97316';
+  } else if (category === 'stable') {
+    countries = Object.entries(COUNTRIES).filter(([_, c]) => c.risk === 'cloudy' || c.risk === 'clear');
+    titleText = 'STABLE COUNTRIES';
+    titleColor = '#22c55e';
+  } else {
+    countries = Object.entries(COUNTRIES);
+    titleText = 'ALL COUNTRIES';
+    titleColor = '#06b6d4';
+  }
+
+  // Sort by risk level
+  countries.sort((a, b) => {
+    const order = { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 };
+    return order[a[1].risk] - order[b[1].risk];
+  });
+
+  title.textContent = titleText + ' (' + countries.length + ')';
+  title.style.color = titleColor;
+
+  content.innerHTML = countries.map(([name, c]) => `
+    <div class="stat-popup-item" onclick="openModal('${name}'); closeStatPopup();">
+      <span>${c.flag} ${name}</span>
+      <span class="wl-risk risk-${c.risk}">${c.risk.toUpperCase()}</span>
+    </div>
+  `).join('');
+
+  popup.classList.add('active');
+}
+
+function closeStatPopup() {
+  document.getElementById('statPopup').classList.remove('active');
+}
+
+initGlobe();
+renderSidebar();
+</script>
+</body>
+</html>
