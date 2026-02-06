@@ -582,7 +582,7 @@ const COUNTRIES = {
       { source: 'Yonhap', bias: 'center', time: '4h ago', headline: 'Constitutional court weighs martial law legality', url: '#' },
       { source: 'AP', bias: 'center', time: '7h ago', headline: 'Mass demonstrations continue nationwide', url: '#' }
     ]
-  }
+  },
 
   // More STORMY countries
   'Saudi Arabia': { lat: 23.89, lng: 45.08, flag: '🇸🇦', risk: 'stormy', region: 'Middle East', pop: '36M', gdp: '$1.1T', leader: 'MBS', title: 'Vision 2030',
@@ -908,7 +908,7 @@ const COUNTRIES = {
       { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Sovereign wealth fund reaches new record high', url: '#' },
       { source: 'FT', bias: 'center', time: '5h ago', headline: 'Norway gas exports stabilize European energy markets', url: '#' }
     ]
-  }
+  },
 
   // More CLOUDY countries
   'Malaysia': { lat: 4.21, lng: 101.98, flag: '🇲🇾', risk: 'cloudy', region: 'Southeast Asia', pop: '34M', gdp: '$407B', leader: 'Anwar Ibrahim', title: 'Coalition Politics',

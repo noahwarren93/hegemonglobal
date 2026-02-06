@@ -234,9 +234,6 @@
   </div>
 </div>
 
-<!-- Load comprehensive country data from external file -->
-<script src="countries-data.js"></script>
-
 <script>
 // Risk colors
 const RISK_COLORS = {
@@ -250,175 +247,1269 @@ const RISK_COLORS = {
 
 const BIAS_COLORS = { 'left': '#3b82f6', 'center-left': '#60a5fa', 'center': '#a3a3a3', 'center-right': '#f97316', 'right': '#ef4444' };
 
-// COUNTRIES loaded from countries-data.js - keeping inline as backup
-const COUNTRIES_INLINE = {
-  // CATASTROPHIC
-  'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', region: 'Eastern Europe', pop: '37M', gdp: '$160B', leader: 'Volodymyr Zelenskyy', title: 'Active War Zone', analysis: { what: 'Russia launched a full-scale invasion in February 2022, marking the largest military conflict in Europe since World War II. The war has evolved into a grinding war of attrition, with both sides suffering hundreds of thousands of casualties. Ukraine has lost approximately 20% of its territory, including Crimea (annexed in 2014) and portions of the Donbas region. Western nations have provided over $200 billion in military and economic aid, including advanced weapons systems like HIMARS, Patriot missiles, and F-16 fighter jets. Critical infrastructure has been systematically targeted, causing widespread power outages and civilian displacement, with millions of Ukrainians becoming refugees across Europe.', why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO, prompting Finland and Sweden to join the alliance. Global energy markets were thrown into chaos as Europe scrambled to reduce dependence on Russian gas, accelerating the green energy transition. Food security became a global concern as Ukraine—one of the world\\'s largest grain exporters—saw its agricultural output disrupted, affecting food prices in Africa and the Middle East. The war has also exposed the limits of economic sanctions as a deterrent and raised serious questions about nuclear escalation risks. The outcome will define the international order for decades: whether territorial conquest through military force remains viable in the 21st century.', next: 'Multiple scenarios remain possible: a frozen conflict similar to Korea, with a ceasefire but no peace treaty; a negotiated settlement involving territorial compromises; continued attritional warfare lasting years; or potential escalation involving NATO directly. Key factors to watch include: Western political will (especially after US elections), ammunition production capacity on both sides, Ukrainian mobilization challenges, Russian economic resilience, and any shifts in Chinese support for Russia. Spring and summer offensives will be critical. Diplomatic initiatives may emerge as both sides face exhaustion, but significant territorial concessions remain politically toxic for both Kyiv and Moscow.' }, news: [{ source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Fighting intensifies in eastern regions', url: '#' }, { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Winter energy crisis tests Ukrainian resilience', url: '#' }, { source: 'WSJ', bias: 'center-right', time: '8h ago', headline: 'Pentagon announces new aid package', url: '#' }] },
-  'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', region: 'Eastern Europe', pop: '144M', gdp: '$1.78T', leader: 'Vladimir Putin', title: 'Active Aggressor', analysis: { what: 'Russia is conducting the largest military operation since World War II, deploying hundreds of thousands of troops in Ukraine. The country faces unprecedented Western sanctions—over 16,000 individual measures—targeting its financial system, energy exports, technology imports, and oligarch assets. Despite predictions of economic collapse, Russia has adapted through shadow fleet oil sales, trade rerouting via China and India, and massive military-industrial mobilization. Domestically, Putin has consolidated authoritarian control, crushing opposition (Navalny died in prison), suppressing independent media, and criminalizing anti-war speech. Wagner Group mutiny in 2023 briefly challenged Putin\\'s authority but was resolved. Military casualties are estimated at 300,000+ killed and wounded.', why: 'Russia possesses the world\\'s largest nuclear arsenal and a permanent UN Security Council seat, making it a critical player in global security. The invasion has shattered the post-Cold War European security order and demonstrated that major powers can still wage wars of territorial conquest. Russia\\'s energy leverage over Europe (now diminished) reshaped global energy markets. The conflict has pushed Russia into deeper partnership with China, Iran, and North Korea, potentially forming a new axis challenging Western hegemony. Russian disinformation and election interference continue to destabilize democracies worldwide. How the war ends will determine whether authoritarian aggression is rewarded or deterred.', next: 'Russia appears committed to a long war, having shifted to a war economy with 40% of the budget dedicated to defense. Putin likely calculates that Western resolve will fade, particularly if political changes occur in the US or Europe. Potential scenarios include: continued slow territorial gains through attrition; a negotiated settlement that legitimizes some conquests; domestic instability if casualties become unsustainable; or dangerous escalation including tactical nuclear threats. Watch for: economic strain indicators, elite defections, military morale, and any signs of succession planning. Relations with China will be crucial—Beijing\\'s support is essential but comes with strings attached.' }, news: [{ source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Russian economy shows resilience despite sanctions', url: '#' }, { source: 'FT', bias: 'center', time: '6h ago', headline: 'Moscow increases military production targets', url: '#' }] },
-  'Gaza': { lat: 31.35, lng: 34.31, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '2.1M', gdp: '$1.7B', leader: 'Hamas', title: 'Humanitarian Crisis', analysis: { what: 'Following Hamas\\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza. The operation has resulted in catastrophic destruction, with over 30,000 Palestinians killed according to Gaza health authorities, and vast swathes of the territory reduced to rubble. Nearly 2 million people have been displaced, with most of Gaza\\'s population facing severe food insecurity. The UN has warned of imminent famine conditions. Critical infrastructure including hospitals, schools, and water systems has been devastated. International humanitarian access remains severely restricted. Hostage negotiations have produced limited exchanges but most captives remain in Gaza.', why: 'This conflict has the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting global trade routes. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. The conflict tests American diplomatic influence and its ability to balance support for Israel with humanitarian concerns. It has also exposed deep divisions within Western societies and universities. The long-term governance of Gaza—and the broader Israeli-Palestinian conflict—remains unresolved.', next: 'Multiple trajectories are possible: expanded regional war if Israel strikes Iran or Hezbollah launches major attacks; a fragile ceasefire that leaves Hamas weakened but not eliminated; prolonged low-intensity conflict; or international intervention for post-war governance. Key variables include: hostage negotiations, Hezbollah\\'s calculations, Iranian decision-making, US election dynamics, Israeli domestic politics, and humanitarian conditions. Watch for: escalation triggers, ceasefire negotiations, and any shifts in US policy. Post-conflict Gaza governance is a critical unresolved question—neither Israel, Hamas, nor the Palestinian Authority has a viable plan.' }, news: [{ source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns of famine conditions spreading', url: '#' }, { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'Ceasefire talks resume in Cairo', url: '#' }] },
-  'Sudan': { lat: 12.86, lng: 30.22, flag: '🇸🇩', risk: 'catastrophic', region: 'Africa', pop: '46M', gdp: '$34B', leader: 'Disputed', title: 'Civil War', analysis: { what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General Abdel Fattah al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Mohamed Hamdan Dagalo (Hemedti). Fighting has devastated the capital Khartoum and spread across the country, particularly in Darfur where ethnic violence has resurged. Over 12,000 people have been killed and 10+ million displaced—the world\\'s largest displacement crisis. Atrocities including mass killings, sexual violence, and ethnic cleansing have been documented. Critical infrastructure is destroyed, hospitals are non-functional, and famine conditions are spreading. International mediation efforts have repeatedly failed as both sides pursue military victory.', why: 'Sudan\\'s collapse threatens to destabilize the entire Horn of Africa and Sahel region. Neighboring countries face massive refugee flows. The RSF has links to Wagner Group/Russia and receives support from UAE, while SAF has Egyptian and Iranian backing—making this a proxy battlefield. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The humanitarian catastrophe rivals Yemen and Gaza in severity but receives far less international attention. Weapons flowing into Sudan risk spreading across Africa\\'s conflict zones.', next: 'Neither side appears capable of decisive military victory, suggesting prolonged conflict. The country may fragment into competing zones of control. Watch for: famine declarations, regional spillover, international intervention proposals, and any negotiation breakthroughs. The rainy season affects military operations. Without sustained international pressure and humanitarian access, mass starvation is likely. Long-term scenarios include partition, failed state status, or exhaustion-driven negotiations—but peace remains distant.' }, news: [{ source: 'UN News', bias: 'center', time: '3h ago', headline: 'Famine warning issued for Darfur', url: '#' }] },
-  'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil Resistance War' },
-  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Ongoing Civil War' },
-  'Haiti': { lat: 18.97, lng: -72.29, flag: '🇭🇹', risk: 'catastrophic', region: 'Caribbean', pop: '11.6M', gdp: '$20B', leader: 'Transitional', title: 'Gang Violence Crisis' },
-  'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'catastrophic', region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Taliban', title: 'Humanitarian Crisis' },
-  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'catastrophic', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict' },
-  'Somalia': { lat: 5.15, lng: 46.20, flag: '🇸🇴', risk: 'catastrophic', region: 'Africa', pop: '18M', gdp: '$8B', leader: 'Hassan Sheikh', title: 'Al-Shabaab Threat' },
+// COMPREHENSIVE COUNTRY DATABASE WITH FULL ANALYSIS AND NEWS
+const COUNTRIES = {
+  // ==================== CATASTROPHIC ====================
+  'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', region: 'Eastern Europe', pop: '37M', gdp: '$160B', leader: 'Volodymyr Zelenskyy', title: 'Active War Zone',
+    analysis: {
+      what: 'Russia launched a full-scale invasion in February 2022, marking the largest military conflict in Europe since World War II. The war has evolved into a grinding war of attrition, with both sides suffering hundreds of thousands of casualties. Ukraine has lost approximately 20% of its territory, including Crimea (annexed in 2014) and portions of the Donbas region. Western nations have provided over $200 billion in military and economic aid, including advanced weapons systems like HIMARS, Patriot missiles, and F-16 fighter jets. Critical infrastructure has been systematically targeted, causing widespread power outages and civilian displacement, with millions of Ukrainians becoming refugees across Europe.',
+      why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO, prompting Finland and Sweden to join the alliance. Global energy markets were thrown into chaos as Europe scrambled to reduce dependence on Russian gas, accelerating the green energy transition. Food security became a global concern as Ukraine—one of the world\'s largest grain exporters—saw its agricultural output disrupted, affecting food prices in Africa and the Middle East. The outcome will define the international order for decades: whether territorial conquest through military force remains viable in the 21st century.',
+      next: 'Multiple scenarios remain possible: a frozen conflict similar to Korea, with a ceasefire but no peace treaty; a negotiated settlement involving territorial compromises; continued attritional warfare lasting years; or potential escalation involving NATO directly. Key factors to watch include: Western political will, ammunition production capacity on both sides, Ukrainian mobilization challenges, and Russian economic resilience.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Heavy fighting reported along eastern front lines', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '3h ago', headline: 'Winter energy crisis tests Ukrainian resilience', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '6h ago', headline: 'Pentagon announces new $800M aid package', url: '#' },
+      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Zelenskyy addresses European Parliament', url: '#' }
+    ]
+  },
 
-  // EXTREME
-  'Israel': { lat: 31.05, lng: 34.85, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict' },
-  'Taiwan': { lat: 23.70, lng: 120.96, flag: '🇹🇼', risk: 'extreme', region: 'East Asia', pop: '24M', gdp: '$790B', leader: 'Lai Ching-te', title: 'Cross-Strait Tensions', analysis: { what: 'Cross-strait tensions have reached their highest level in decades. China has dramatically increased military activity around Taiwan, with near-daily incursions into Taiwan\\'s air defense identification zone and regular naval exercises simulating blockade scenarios. President Lai Ching-te of the Democratic Progressive Party (DPP) took office in 2024, continuing the pro-sovereignty stance Beijing considers provocative. Taiwan has accelerated defense spending and military reforms, extending conscription and acquiring advanced weapons from the US including F-16s and Harpoon missiles. TSMC, headquartered in Taiwan, manufactures over 90% of the world\\'s most advanced semiconductors, making the island critical to global technology supply chains.', why: 'Taiwan represents the most dangerous potential flashpoint for great-power conflict in the world. A Chinese invasion or blockade would likely trigger US military intervention, risking war between nuclear powers. The global economy would face catastrophic disruption—semiconductor shortages would halt production of everything from smartphones to automobiles to weapons systems. Japan, South Korea, and the Philippines would be directly affected. The outcome would determine whether the US-led order in Asia survives or China achieves regional hegemony. Taiwan also represents an ideological contest: a prosperous Chinese democracy versus the CCP\\'s authoritarian model.', next: 'Most analysts believe a full-scale invasion is unlikely before 2027 at earliest, as China builds military capability for such an operation. However, "gray zone" coercion—blockades, cyber attacks, economic pressure—could occur sooner. Key indicators: Chinese military exercises and rhetoric, US arms sales and diplomatic signals, Taiwanese defense preparations, and any changes in Japan\\'s posture. The 2027-2030 window is considered particularly dangerous as Xi Jinping may feel pressure to achieve "reunification" as a legacy. Economic decoupling and semiconductor supply chain diversification efforts (CHIPS Act, new fabs in US/Japan) aim to reduce leverage but will take years.' }, news: [{ source: 'Nikkei', bias: 'center', time: '2h ago', headline: 'Chinese military exercises near Taiwan intensify', url: '#' }] },
-  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Regional Proxy Conflicts', analysis: { what: 'Iran stands at the center of Middle Eastern tensions, orchestrating a network of proxy forces including Hezbollah in Lebanon, Hamas and Palestinian Islamic Jihad in Gaza, the Houthis in Yemen, and various militias in Iraq and Syria. The nuclear program has advanced significantly—Iran now enriches uranium to 60% purity, just below weapons-grade, with enough material for multiple bombs if further enriched. International negotiations (JCPOA) collapsed after US withdrawal in 2018, and diplomatic efforts have stalled. Domestically, the regime brutally suppressed the "Woman, Life, Freedom" protests in 2022-2023, killing hundreds and arresting thousands. Supreme Leader Khamenei (85 years old) faces succession questions. The economy struggles under sanctions despite oil sales to China.', why: 'Iran\\'s nuclear threshold status poses an existential concern for Israel and Gulf states, and could trigger regional nuclear proliferation (Saudi Arabia, Turkey, Egypt). Iranian proxies can strike Israel, disrupt Gulf oil shipping, and destabilize Arab governments. Houthi attacks on Red Sea shipping have disrupted 12% of global trade. Iran\\'s alliance with Russia (providing drones for Ukraine) and China challenges Western interests. Any direct Israel-Iran conflict could draw in the US and trigger oil price spikes that shock the global economy. Iran is the linchpin of the "Axis of Resistance" opposing US/Israeli regional influence.', next: 'The regime faces a difficult succession as Khamenei ages, with hardliners likely to maintain control. Nuclear "breakout" remains possible if Iran decides the strategic benefits outweigh costs—particularly if it feels an Israeli strike is imminent. Watch for: IAEA reports on enrichment levels, proxy escalation in Lebanon/Iraq, oil smuggling enforcement, and succession maneuvering. Israel has conducted covert sabotage operations and may strike nuclear facilities if diplomacy fails. The risk of direct Iran-Israel war has never been higher. Regional dynamics depend heavily on whether Gaza conflict expands or contains.' }, news: [{ source: 'Reuters', bias: 'center', time: '4h ago', headline: 'IAEA reports further uranium enrichment progress', url: '#' }] },
-  'North Korea': { lat: 40.34, lng: 127.51, flag: '🇰🇵', risk: 'extreme', region: 'East Asia', pop: '26M', gdp: '$18B', leader: 'Kim Jong Un', title: 'Nuclear Threats' },
-  'Syria': { lat: 34.80, lng: 38.99, flag: '🇸🇾', risk: 'extreme', region: 'Middle East', pop: '22M', gdp: '$9B', leader: 'Bashar al-Assad', title: 'Fragmented State' },
-  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'State Collapse' },
-  'Mali': { lat: 17.57, lng: -4.00, flag: '🇲🇱', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Military Junta', title: 'Wagner/Jihadi Conflict' },
-  'Burkina Faso': { lat: 12.24, lng: -1.56, flag: '🇧🇫', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Ibrahim Traoré', title: 'Jihadi Violence' },
-  'Niger': { lat: 17.61, lng: 8.08, flag: '🇳🇪', risk: 'extreme', region: 'Africa', pop: '26M', gdp: '$15B', leader: 'Military Junta', title: 'Coup Government' },
+  'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', region: 'Eastern Europe', pop: '144M', gdp: '$1.78T', leader: 'Vladimir Putin', title: 'Active Aggressor',
+    analysis: {
+      what: 'Russia is conducting the largest military operation since World War II, deploying hundreds of thousands of troops in Ukraine. The country faces unprecedented Western sanctions—over 16,000 individual measures—targeting its financial system, energy exports, technology imports, and oligarch assets. Despite predictions of economic collapse, Russia has adapted through shadow fleet oil sales, trade rerouting via China and India, and massive military-industrial mobilization. Domestically, Putin has consolidated authoritarian control, crushing opposition (Navalny died in prison), suppressing independent media, and criminalizing anti-war speech. Military casualties are estimated at 300,000+ killed and wounded.',
+      why: 'Russia possesses the world\'s largest nuclear arsenal and a permanent UN Security Council seat. The invasion has shattered the post-Cold War European security order. Russia\'s energy leverage over Europe reshaped global energy markets. The conflict has pushed Russia into deeper partnership with China, Iran, and North Korea, potentially forming a new axis challenging Western hegemony. Russian disinformation and election interference continue to destabilize democracies worldwide.',
+      next: 'Russia appears committed to a long war, having shifted to a war economy with 40% of the budget dedicated to defense. Putin likely calculates that Western resolve will fade. Potential scenarios include: continued slow territorial gains; a negotiated settlement; domestic instability if casualties become unsustainable; or dangerous escalation including tactical nuclear threats.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Russian economy shows resilience despite sanctions', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Moscow increases military production targets for 2026', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '7h ago', headline: 'Ruble stabilizes as oil revenues recover', url: '#' }
+    ]
+  },
 
-  // SEVERE
-  'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'severe', region: 'East Asia', pop: '1.4B', gdp: '$17.7T', leader: 'Xi Jinping', title: 'Economic Slowdown', analysis: { what: 'China faces its most serious economic challenges in decades. The property sector—which accounts for roughly 30% of GDP—is in crisis, with major developers like Evergrande and Country Garden defaulting on hundreds of billions in debt. Youth unemployment reached record highs above 20% before authorities stopped publishing the data. Consumer confidence has collapsed, with households hoarding savings rather than spending. Deflation concerns have emerged as prices fall. Local government debt has ballooned to dangerous levels after years of infrastructure spending. Xi Jinping has consolidated power to an unprecedented degree, removing term limits and purging rivals, while cracking down on tech giants, private education, and civil society. US-China tensions have intensified with sweeping semiconductor export controls and growing military competition in the South China Sea and Taiwan Strait.', why: 'As the world\\'s second-largest economy and largest trading nation, China\\'s slowdown ripples across global markets. Commodity exporters from Australia to Brazil depend on Chinese demand. Supply chains for everything from iPhones to solar panels run through China. A hard landing could trigger global recession. Geopolitically, China\\'s ambitions to dominate advanced technologies (AI, semiconductors, quantum computing) and its military modernization pose the primary strategic challenge to US hegemony. Taiwan—which produces 90% of advanced chips—remains the most dangerous flashpoint. China\\'s support for Russia, ties to Iran, and growing influence in the Global South are reshaping the international order toward multipolarity.', next: 'Beijing faces difficult choices: aggressive stimulus risks inflating debt bubbles further, while allowing deflation could trigger social unrest. Expect continued gradual stimulus measures rather than a "bazooka" response. The property sector will remain a drag for years as excess inventory is absorbed. Watch for: social stability indicators, policy shifts toward consumption, technology self-sufficiency progress, and Taiwan Strait military activity. US-China relations will likely remain contentious regardless of election outcomes. The risk of accidental military escalation in the South China Sea or Taiwan Strait remains elevated. Demographic decline (shrinking workforce, aging population) poses long-term structural challenges.' }, news: [{ source: 'FT', bias: 'center', time: '2h ago', headline: 'Beijing announces new stimulus measures', url: '#' }, { source: 'Bloomberg', bias: 'center-right', time: '5h ago', headline: 'Property sector woes deepen despite support', url: '#' }, { source: 'Reuters', bias: 'center', time: '8h ago', headline: 'US expands chip export restrictions', url: '#' }] },
-  'Venezuela': { lat: 6.42, lng: -66.59, flag: '🇻🇪', risk: 'severe', region: 'South America', pop: '28M', gdp: '$92B', leader: 'Nicolás Maduro', title: 'Political Crisis' },
-  'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'severe', region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Economic & Political Crisis' },
-  'Bangladesh': { lat: 23.68, lng: 90.36, flag: '🇧🇩', risk: 'severe', region: 'South Asia', pop: '170M', gdp: '$460B', leader: 'Muhammad Yunus', title: 'Post-Revolution' },
-  'Turkey': { lat: 38.96, lng: 35.24, flag: '🇹🇷', risk: 'severe', region: 'Middle East', pop: '85M', gdp: '$906B', leader: 'Recep Erdoğan', title: 'Economic Crisis' },
-  'Egypt': { lat: 26.82, lng: 30.80, flag: '🇪🇬', risk: 'severe', region: 'North Africa', pop: '105M', gdp: '$387B', leader: 'Abdel Fattah el-Sisi', title: 'Economic Crisis' },
-  'Argentina': { lat: -38.42, lng: -63.62, flag: '🇦🇷', risk: 'severe', region: 'South America', pop: '46M', gdp: '$641B', leader: 'Javier Milei', title: 'Economic Crisis' },
-  'Nigeria': { lat: 9.08, lng: 8.68, flag: '🇳🇬', risk: 'severe', region: 'Africa', pop: '223M', gdp: '$477B', leader: 'Bola Tinubu', title: 'Security Crisis' },
-  'Ethiopia': { lat: 9.15, lng: 40.49, flag: '🇪🇹', risk: 'severe', region: 'Africa', pop: '126M', gdp: '$126B', leader: 'Abiy Ahmed', title: 'Post-War Tensions' },
-  'Iraq': { lat: 33.22, lng: 43.68, flag: '🇮🇶', risk: 'severe', region: 'Middle East', pop: '44M', gdp: '$270B', leader: 'Mohammed al-Sudani', title: 'Fragile Stability' },
-  'Libya': { lat: 26.34, lng: 17.23, flag: '🇱🇾', risk: 'severe', region: 'North Africa', pop: '7M', gdp: '$41B', leader: 'Divided', title: 'Civil Conflict' },
-  'Tunisia': { lat: 33.89, lng: 9.54, flag: '🇹🇳', risk: 'severe', region: 'North Africa', pop: '12M', gdp: '$47B', leader: 'Kais Saied', title: 'Democratic Backsliding' },
-  'Ecuador': { lat: -1.83, lng: -78.18, flag: '🇪🇨', risk: 'severe', region: 'South America', pop: '18M', gdp: '$107B', leader: 'Daniel Noboa', title: 'Gang Violence Surge' },
-  'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'severe', region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Salome Zourabichvili', title: 'Pro-Russia Turn' },
-  'Armenia': { lat: 40.07, lng: 45.04, flag: '🇦🇲', risk: 'severe', region: 'Caucasus', pop: '2.8M', gdp: '$20B', leader: 'Nikol Pashinyan', title: 'Post-Karabakh Crisis' },
-  'Belarus': { lat: 53.71, lng: 27.95, flag: '🇧🇾', risk: 'severe', region: 'Eastern Europe', pop: '9M', gdp: '$73B', leader: 'Lukashenko', title: 'Russian Ally' },
-  'Moldova': { lat: 47.41, lng: 28.37, flag: '🇲🇩', risk: 'severe', region: 'Eastern Europe', pop: '2.6M', gdp: '$15B', leader: 'Maia Sandu', title: 'Russia Pressure' },
-  'Cuba': { lat: 21.52, lng: -77.78, flag: '🇨🇺', risk: 'severe', region: 'Caribbean', pop: '11M', gdp: '$107B', leader: 'Díaz-Canel', title: 'Economic Crisis' },
-  'Nicaragua': { lat: 12.87, lng: -85.21, flag: '🇳🇮', risk: 'severe', region: 'Central America', pop: '7M', gdp: '$15B', leader: 'Daniel Ortega', title: 'Authoritarian Rule' },
-  'Cameroon': { lat: 7.37, lng: 12.35, flag: '🇨🇲', risk: 'severe', region: 'Africa', pop: '28M', gdp: '$45B', leader: 'Paul Biya', title: 'Anglophone Crisis' },
-  'Chad': { lat: 15.45, lng: 18.73, flag: '🇹🇩', risk: 'severe', region: 'Africa', pop: '18M', gdp: '$12B', leader: 'Mahamat Déby', title: 'Regional Instability' },
-  'Eritrea': { lat: 15.18, lng: 39.78, flag: '🇪🇷', risk: 'severe', region: 'Africa', pop: '3.6M', gdp: '$2B', leader: 'Isaias Afwerki', title: 'Isolated Dictatorship' },
-  'Mozambique': { lat: -18.67, lng: 35.53, flag: '🇲🇿', risk: 'severe', region: 'Africa', pop: '33M', gdp: '$18B', leader: 'Disputed', title: 'Election Crisis' },
-  'Zimbabwe': { lat: -19.02, lng: 29.15, flag: '🇿🇼', risk: 'severe', region: 'Africa', pop: '16M', gdp: '$28B', leader: 'Mnangagwa', title: 'Economic Collapse' },
+  'Gaza': { lat: 31.35, lng: 34.31, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '2.1M', gdp: '$1.7B', leader: 'Hamas', title: 'Humanitarian Crisis',
+    analysis: {
+      what: 'Following Hamas\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza. The operation has resulted in catastrophic destruction, with over 35,000 Palestinians killed according to Gaza health authorities. Nearly 2 million people have been displaced, with most facing severe food insecurity. The UN has warned of famine conditions. Critical infrastructure including hospitals, schools, and water systems has been devastated. Hostage negotiations have produced limited exchanges but many captives remain in Gaza.',
+      why: 'This conflict has the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting 12% of global trade. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. The long-term governance of Gaza remains unresolved.',
+      next: 'Multiple trajectories are possible: expanded regional war if Israel strikes Iran or Hezbollah launches major attacks; a fragile ceasefire; prolonged low-intensity conflict; or international intervention for post-war governance. Key variables include hostage negotiations, Hezbollah\'s calculations, Iranian decision-making, and US policy.'
+    },
+    news: [
+      { source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns famine conditions spreading in northern Gaza', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Ceasefire talks resume in Cairo with US mediation', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Humanitarian aid deliveries remain severely restricted', url: '#' }
+    ]
+  },
 
-  // STORMY
-  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$25.5T', leader: 'Current Admin', title: 'Political Polarization', analysis: { what: 'America remains deeply polarized, with partisan divisions affecting nearly every aspect of governance and society. The economy has shown remarkable resilience—avoiding predicted recession, with low unemployment and cooling inflation—but high interest rates and housing costs strain middle-class households. Immigration has surged at the southern border, becoming a central political flashpoint. Foreign policy is stretched across multiple crises: supporting Ukraine while managing escalation risks, navigating Middle East turmoil, competing with China, and maintaining alliance commitments. Congress remains gridlocked on major legislation, with narrow margins and partisan warfare blocking immigration reform, budget deals, and foreign aid packages. Trust in institutions continues to erode across the political spectrum.', why: 'As the world\\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance system, American decisions reverberate globally. US commitment to Ukraine is essential for European security. The US-China relationship will shape the 21st-century order. Dollar hegemony underpins the global financial system. American technology companies dominate AI development. Domestic political instability directly impacts allies who depend on US security guarantees and adversaries who probe for weakness. Immigration policy affects Latin America; energy policy affects climate outcomes; trade policy affects global supply chains.', next: 'The 2026 midterm elections will determine control of Congress and set the trajectory for 2028 presidential politics. Key issues include: economy/inflation, immigration, abortion rights, and foreign policy. Watch for: changes in Ukraine aid commitment, China policy escalation, potential government shutdowns, and Supreme Court decisions. Allies are hedging against potential policy reversals. Adversaries may test American resolve during political transitions. The fundamental question is whether US democracy can overcome polarization to address long-term challenges like debt, infrastructure, and great-power competition—or whether gridlock and division will accelerate relative decline.' }, news: [{ source: 'AP', bias: 'center', time: '1h ago', headline: 'Congress debates foreign aid package', url: '#' }, { source: 'NYT', bias: 'center-left', time: '4h ago', headline: 'Border encounters reach new highs', url: '#' }, { source: 'WSJ', bias: 'center-right', time: '7h ago', headline: 'Fed signals cautious rate path ahead', url: '#' }] },
-  'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'stormy', region: 'Western Europe', pop: '68M', gdp: '$2.8T', leader: 'Emmanuel Macron', title: 'Political Fragmentation' },
-  'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'stormy', region: 'Western Europe', pop: '84M', gdp: '$4.2T', leader: 'Olaf Scholz', title: 'Economic Transition' },
-  'Brazil': { lat: -14.24, lng: -51.93, flag: '🇧🇷', risk: 'stormy', region: 'South America', pop: '215M', gdp: '$1.9T', leader: 'Lula da Silva', title: 'Amazon & Politics' },
-  'Mexico': { lat: 23.63, lng: -102.55, flag: '🇲🇽', risk: 'stormy', region: 'North America', pop: '130M', gdp: '$1.3T', leader: 'Claudia Sheinbaum', title: 'Cartel Violence' },
-  'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'stormy', region: 'South Asia', pop: '1.4B', gdp: '$3.4T', leader: 'Narendra Modi', title: 'Rising Power' },
-  'South Korea': { lat: 35.91, lng: 127.77, flag: '🇰🇷', risk: 'stormy', region: 'East Asia', pop: '52M', gdp: '$1.7T', leader: 'Yoon Suk Yeol', title: 'Political Crisis' },
-  'Saudi Arabia': { lat: 23.89, lng: 45.08, flag: '🇸🇦', risk: 'stormy', region: 'Middle East', pop: '36M', gdp: '$1.1T', leader: 'MBS', title: 'Vision 2030' },
-  'South Africa': { lat: -30.56, lng: 22.94, flag: '🇿🇦', risk: 'stormy', region: 'Africa', pop: '60M', gdp: '$399B', leader: 'Ramaphosa', title: 'Coalition Government' },
-  'Kenya': { lat: -0.02, lng: 37.91, flag: '🇰🇪', risk: 'stormy', region: 'Africa', pop: '54M', gdp: '$113B', leader: 'William Ruto', title: 'Protests & Debt' },
-  'Colombia': { lat: 4.57, lng: -74.30, flag: '🇨🇴', risk: 'stormy', region: 'South America', pop: '52M', gdp: '$314B', leader: 'Gustavo Petro', title: 'Peace Process' },
-  'Peru': { lat: -9.19, lng: -75.02, flag: '🇵🇪', risk: 'stormy', region: 'South America', pop: '34M', gdp: '$242B', leader: 'Dina Boluarte', title: 'Political Instability' },
-  'Thailand': { lat: 15.87, lng: 100.99, flag: '🇹🇭', risk: 'stormy', region: 'Southeast Asia', pop: '70M', gdp: '$495B', leader: 'Paetongtarn', title: 'Political Uncertainty' },
-  'Philippines': { lat: 12.88, lng: 121.77, flag: '🇵🇭', risk: 'stormy', region: 'Southeast Asia', pop: '115M', gdp: '$404B', leader: 'Marcos Jr', title: 'China Tensions' },
-  'Hungary': { lat: 47.16, lng: 19.50, flag: '🇭🇺', risk: 'stormy', region: 'Eastern Europe', pop: '10M', gdp: '$188B', leader: 'Viktor Orbán', title: 'Democratic Backsliding' },
-  'Serbia': { lat: 44.02, lng: 21.01, flag: '🇷🇸', risk: 'stormy', region: 'Balkans', pop: '7M', gdp: '$63B', leader: 'Aleksandar Vučić', title: 'Kosovo Tensions' },
-  'Kosovo': { lat: 42.60, lng: 20.90, flag: '🇽🇰', risk: 'stormy', region: 'Balkans', pop: '1.8M', gdp: '$9B', leader: 'Albin Kurti', title: 'Serbia Tensions' },
-  'Bosnia': { lat: 43.92, lng: 17.68, flag: '🇧🇦', risk: 'stormy', region: 'Balkans', pop: '3.2M', gdp: '$24B', leader: 'Rotating', title: 'Ethnic Divisions' },
-  'Jordan': { lat: 30.59, lng: 36.24, flag: '🇯🇴', risk: 'stormy', region: 'Middle East', pop: '11M', gdp: '$47B', leader: 'King Abdullah II', title: 'Regional Pressure' },
-  'Algeria': { lat: 28.03, lng: 1.66, flag: '🇩🇿', risk: 'stormy', region: 'North Africa', pop: '45M', gdp: '$187B', leader: 'Tebboune', title: 'Morocco Rivalry' },
-  'Azerbaijan': { lat: 40.14, lng: 47.58, flag: '🇦🇿', risk: 'stormy', region: 'Caucasus', pop: '10M', gdp: '$79B', leader: 'Ilham Aliyev', title: 'Karabakh Victory' },
-  'Kazakhstan': { lat: 48.02, lng: 66.92, flag: '🇰🇿', risk: 'stormy', region: 'Central Asia', pop: '20M', gdp: '$220B', leader: 'Tokayev', title: 'Russia Balancing' },
-  'Turkmenistan': { lat: 38.97, lng: 59.56, flag: '🇹🇲', risk: 'stormy', region: 'Central Asia', pop: '6M', gdp: '$45B', leader: 'Berdimuhamedow', title: 'Isolated Autocracy' },
-  'Tajikistan': { lat: 38.86, lng: 71.28, flag: '🇹🇯', risk: 'stormy', region: 'Central Asia', pop: '10M', gdp: '$11B', leader: 'Rahmon', title: 'Afghanistan Border' },
-  'Sri Lanka': { lat: 7.87, lng: 80.77, flag: '🇱🇰', risk: 'stormy', region: 'South Asia', pop: '22M', gdp: '$75B', leader: 'Anura Kumara', title: 'Economic Recovery' },
-  'Cambodia': { lat: 12.57, lng: 104.99, flag: '🇰🇭', risk: 'stormy', region: 'Southeast Asia', pop: '17M', gdp: '$30B', leader: 'Hun Manet', title: 'Authoritarian Succession' },
-  'Laos': { lat: 19.86, lng: 102.50, flag: '🇱🇦', risk: 'stormy', region: 'Southeast Asia', pop: '7M', gdp: '$19B', leader: 'Thongloun', title: 'Debt Crisis' },
-  'Uganda': { lat: 1.37, lng: 32.29, flag: '🇺🇬', risk: 'stormy', region: 'Africa', pop: '48M', gdp: '$46B', leader: 'Museveni', title: 'Long-term Rule' },
-  'Angola': { lat: -11.20, lng: 17.87, flag: '🇦🇴', risk: 'stormy', region: 'Africa', pop: '36M', gdp: '$117B', leader: 'João Lourenço', title: 'Oil Dependency' },
-  'Ghana': { lat: 7.95, lng: -1.02, flag: '🇬🇭', risk: 'stormy', region: 'Africa', pop: '33M', gdp: '$77B', leader: 'John Mahama', title: 'Economic Recovery' },
-  'Slovakia': { lat: 48.67, lng: 19.70, flag: '🇸🇰', risk: 'stormy', region: 'Eastern Europe', pop: '5M', gdp: '$115B', leader: 'Robert Fico', title: 'Pro-Russia Shift' },
-  'Guatemala': { lat: 15.78, lng: -90.23, flag: '🇬🇹', risk: 'stormy', region: 'Central America', pop: '17M', gdp: '$95B', leader: 'Bernardo Arévalo', title: 'Democratic Transition' },
-  'Honduras': { lat: 15.20, lng: -86.24, flag: '🇭🇳', risk: 'stormy', region: 'Central America', pop: '10M', gdp: '$31B', leader: 'Xiomara Castro', title: 'Gang Violence' },
-  'El Salvador': { lat: 13.79, lng: -88.90, flag: '🇸🇻', risk: 'stormy', region: 'Central America', pop: '6.5M', gdp: '$33B', leader: 'Nayib Bukele', title: 'Gang Crackdown' },
-  'Bolivia': { lat: -16.29, lng: -63.59, flag: '🇧🇴', risk: 'stormy', region: 'South America', pop: '12M', gdp: '$44B', leader: 'Luis Arce', title: 'Political Divisions' },
-  'Guyana': { lat: 4.86, lng: -58.93, flag: '🇬🇾', risk: 'stormy', region: 'South America', pop: '0.8M', gdp: '$15B', leader: 'Irfaan Ali', title: 'Oil Boom' },
-  'Papua New Guinea': { lat: -6.31, lng: 143.96, flag: '🇵🇬', risk: 'stormy', region: 'Oceania', pop: '10M', gdp: '$31B', leader: 'James Marape', title: 'Tribal Violence' },
-  'Solomon Islands': { lat: -9.43, lng: 160.02, flag: '🇸🇧', risk: 'stormy', region: 'Oceania', pop: '0.7M', gdp: '$1.6B', leader: 'Jeremiah Manele', title: 'China Pivot' },
-  'Madagascar': { lat: -18.77, lng: 46.87, flag: '🇲🇬', risk: 'stormy', region: 'Africa', pop: '29M', gdp: '$15B', leader: 'Rajoelina', title: 'Political Tensions' },
+  'Sudan': { lat: 12.86, lng: 30.22, flag: '🇸🇩', risk: 'catastrophic', region: 'Africa', pop: '46M', gdp: '$34B', leader: 'Disputed', title: 'Civil War',
+    analysis: {
+      what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Hemedti. Fighting has devastated Khartoum and spread across the country, particularly in Darfur where ethnic violence has resurged. Over 15,000 people have been killed and 10+ million displaced—the world\'s largest displacement crisis. Mass killings, sexual violence, and ethnic cleansing have been documented. Famine conditions are spreading with hospitals non-functional.',
+      why: 'Sudan\'s collapse threatens to destabilize the entire Horn of Africa and Sahel region. The RSF has links to Wagner Group/Russia and receives UAE support, while SAF has Egyptian and Iranian backing—making this a proxy battlefield. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The humanitarian catastrophe rivals Yemen and Gaza in severity but receives far less attention.',
+      next: 'Neither side appears capable of decisive military victory, suggesting prolonged conflict. The country may fragment into competing zones of control. Without sustained international pressure and humanitarian access, mass starvation is likely. Long-term scenarios include partition, failed state status, or exhaustion-driven negotiations.'
+    },
+    news: [
+      { source: 'UN News', bias: 'center', time: '2h ago', headline: 'Famine officially declared in Darfur camps', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'RSF advances on key eastern city', url: '#' },
+      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Millions face starvation as aid blocked', url: '#' }
+    ]
+  },
 
-  // CLOUDY
-  'United Kingdom': { lat: 55.38, lng: -3.44, flag: '🇬🇧', risk: 'cloudy', region: 'Western Europe', pop: '67M', gdp: '$3.1T', leader: 'Keir Starmer', title: 'Post-Brexit Adjustment' },
-  'Italy': { lat: 41.87, lng: 12.57, flag: '🇮🇹', risk: 'cloudy', region: 'Western Europe', pop: '59M', gdp: '$2.1T', leader: 'Giorgia Meloni', title: 'Right-Wing Government' },
-  'Spain': { lat: 40.46, lng: -3.75, flag: '🇪🇸', risk: 'cloudy', region: 'Western Europe', pop: '48M', gdp: '$1.4T', leader: 'Pedro Sánchez', title: 'Coalition Politics' },
-  'Netherlands': { lat: 52.13, lng: 5.29, flag: '🇳🇱', risk: 'cloudy', region: 'Western Europe', pop: '18M', gdp: '$991B', leader: 'Dick Schoof', title: 'Right-Wing Shift' },
-  'Poland': { lat: 51.92, lng: 19.15, flag: '🇵🇱', risk: 'cloudy', region: 'Eastern Europe', pop: '38M', gdp: '$688B', leader: 'Donald Tusk', title: 'Democratic Recovery' },
-  'Romania': { lat: 45.94, lng: 24.97, flag: '🇷🇴', risk: 'cloudy', region: 'Eastern Europe', pop: '19M', gdp: '$301B', leader: 'Klaus Iohannis', title: 'NATO Frontline' },
-  'Greece': { lat: 39.07, lng: 21.82, flag: '🇬🇷', risk: 'cloudy', region: 'Southern Europe', pop: '10M', gdp: '$219B', leader: 'Mitsotakis', title: 'Economic Recovery' },
-  'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Karl Nehammer', title: 'Far-Right Gains' },
-  'Sweden': { lat: 60.13, lng: 18.64, flag: '🇸🇪', risk: 'cloudy', region: 'Northern Europe', pop: '10M', gdp: '$585B', leader: 'Ulf Kristersson', title: 'NATO Member' },
-  'Finland': { lat: 61.92, lng: 25.75, flag: '🇫🇮', risk: 'cloudy', region: 'Northern Europe', pop: '6M', gdp: '$281B', leader: 'Petteri Orpo', title: 'New NATO Member' },
-  'Bulgaria': { lat: 42.73, lng: 25.49, flag: '🇧🇬', risk: 'cloudy', region: 'Eastern Europe', pop: '7M', gdp: '$89B', leader: 'Rumen Radev', title: 'Political Deadlock' },
-  'Estonia': { lat: 58.60, lng: 25.01, flag: '🇪🇪', risk: 'cloudy', region: 'Baltic', pop: '1.4M', gdp: '$38B', leader: 'Kaja Kallas', title: 'Russia Border' },
-  'Latvia': { lat: 56.88, lng: 24.60, flag: '🇱🇻', risk: 'cloudy', region: 'Baltic', pop: '1.9M', gdp: '$41B', leader: 'Evika Siliņa', title: 'NATO Frontline' },
-  'Lithuania': { lat: 55.17, lng: 23.88, flag: '🇱🇹', risk: 'cloudy', region: 'Baltic', pop: '2.8M', gdp: '$70B', leader: 'Ingrida Šimonytė', title: 'Belarus Border' },
-  'Cyprus': { lat: 35.13, lng: 33.43, flag: '🇨🇾', risk: 'cloudy', region: 'Mediterranean', pop: '1.2M', gdp: '$28B', leader: 'Christodoulides', title: 'Division Continues' },
-  'Indonesia': { lat: -0.79, lng: 113.92, flag: '🇮🇩', risk: 'cloudy', region: 'Southeast Asia', pop: '277M', gdp: '$1.3T', leader: 'Prabowo', title: 'New Leadership' },
-  'Malaysia': { lat: 4.21, lng: 101.98, flag: '🇲🇾', risk: 'cloudy', region: 'Southeast Asia', pop: '34M', gdp: '$407B', leader: 'Anwar Ibrahim', title: 'Coalition Politics' },
-  'Vietnam': { lat: 14.06, lng: 108.28, flag: '🇻🇳', risk: 'cloudy', region: 'Southeast Asia', pop: '100M', gdp: '$409B', leader: 'Tô Lâm', title: 'Manufacturing Hub' },
-  'Morocco': { lat: 31.79, lng: -7.09, flag: '🇲🇦', risk: 'cloudy', region: 'North Africa', pop: '37M', gdp: '$132B', leader: 'King Mohammed VI', title: 'Western Sahara' },
-  'Chile': { lat: -35.68, lng: -71.54, flag: '🇨🇱', risk: 'cloudy', region: 'South America', pop: '19M', gdp: '$301B', leader: 'Gabriel Boric', title: 'Constitutional Reform' },
-  'Dominican Republic': { lat: 18.74, lng: -70.16, flag: '🇩🇴', risk: 'cloudy', region: 'Caribbean', pop: '11M', gdp: '$114B', leader: 'Luis Abinader', title: 'Growing Economy' },
-  'Jamaica': { lat: 18.11, lng: -77.30, flag: '🇯🇲', risk: 'cloudy', region: 'Caribbean', pop: '3M', gdp: '$17B', leader: 'Andrew Holness', title: 'Crime Concerns' },
-  'Panama': { lat: 8.54, lng: -80.78, flag: '🇵🇦', risk: 'cloudy', region: 'Central America', pop: '4.4M', gdp: '$77B', leader: 'José Mulino', title: 'Canal Tensions' },
-  'Nepal': { lat: 28.39, lng: 84.12, flag: '🇳🇵', risk: 'cloudy', region: 'South Asia', pop: '30M', gdp: '$40B', leader: 'KP Sharma Oli', title: 'Political Instability' },
-  'Maldives': { lat: 3.20, lng: 73.22, flag: '🇲🇻', risk: 'cloudy', region: 'South Asia', pop: '0.5M', gdp: '$6B', leader: 'Mohamed Muizzu', title: 'India-China Rivalry' },
-  'Kyrgyzstan': { lat: 41.20, lng: 74.77, flag: '🇰🇬', risk: 'cloudy', region: 'Central Asia', pop: '7M', gdp: '$10B', leader: 'Sadyr Japarov', title: 'Democracy Struggles' },
-  'Uzbekistan': { lat: 41.38, lng: 64.59, flag: '🇺🇿', risk: 'cloudy', region: 'Central Asia', pop: '35M', gdp: '$80B', leader: 'Mirziyoyev', title: 'Opening Up' },
-  'Senegal': { lat: 14.50, lng: -14.45, flag: '🇸🇳', risk: 'cloudy', region: 'Africa', pop: '18M', gdp: '$28B', leader: 'Bassirou Faye', title: 'Democratic Transition' },
-  'Côte d\'Ivoire': { lat: 7.54, lng: -5.55, flag: '🇨🇮', risk: 'cloudy', region: 'Africa', pop: '28M', gdp: '$70B', leader: 'Ouattara', title: 'Economic Hub' },
-  'Tanzania': { lat: -6.37, lng: 34.89, flag: '🇹🇿', risk: 'cloudy', region: 'Africa', pop: '65M', gdp: '$76B', leader: 'Samia Hassan', title: 'Stable Growth' },
-  'Rwanda': { lat: -1.94, lng: 29.87, flag: '🇷🇼', risk: 'cloudy', region: 'Africa', pop: '14M', gdp: '$14B', leader: 'Paul Kagame', title: 'DRC Involvement' },
-  'Zambia': { lat: -13.13, lng: 27.85, flag: '🇿🇲', risk: 'cloudy', region: 'Africa', pop: '20M', gdp: '$29B', leader: 'Hichilema', title: 'Debt Recovery' },
-  'Montenegro': { lat: 42.71, lng: 19.37, flag: '🇲🇪', risk: 'cloudy', region: 'Balkans', pop: '0.6M', gdp: '$6B', leader: 'Jakov Milatović', title: 'EU Path' },
-  'North Macedonia': { lat: 41.51, lng: 21.75, flag: '🇲🇰', risk: 'cloudy', region: 'Balkans', pop: '2M', gdp: '$14B', leader: 'Mickoski', title: 'EU Candidate' },
-  'Albania': { lat: 41.15, lng: 20.17, flag: '🇦🇱', risk: 'cloudy', region: 'Balkans', pop: '2.8M', gdp: '$19B', leader: 'Edi Rama', title: 'EU Candidate' },
-  'Fiji': { lat: -17.71, lng: 178.07, flag: '🇫🇯', risk: 'cloudy', region: 'Oceania', pop: '0.9M', gdp: '$5B', leader: 'Sitiveni Rabuka', title: 'Democratic Recovery' },
-  'Timor-Leste': { lat: -8.87, lng: 125.73, flag: '🇹🇱', risk: 'cloudy', region: 'Southeast Asia', pop: '1.3M', gdp: '$2B', leader: 'Xanana Gusmão', title: 'Young Democracy' },
-  'Paraguay': { lat: -23.44, lng: -58.44, flag: '🇵🇾', risk: 'cloudy', region: 'South America', pop: '7M', gdp: '$42B', leader: 'Santiago Peña', title: 'Stable' },
-  'Kuwait': { lat: 29.31, lng: 47.48, flag: '🇰🇼', risk: 'cloudy', region: 'Middle East', pop: '4M', gdp: '$184B', leader: 'Sheikh Meshal', title: 'Political Deadlock' },
-  'Bahrain': { lat: 26.07, lng: 50.56, flag: '🇧🇭', risk: 'cloudy', region: 'Middle East', pop: '1.5M', gdp: '$44B', leader: 'King Hamad', title: 'US Naval Base' },
-  'Puerto Rico': { lat: 18.22, lng: -66.59, flag: '🇵🇷', risk: 'cloudy', region: 'Caribbean', pop: '3.2M', gdp: '$117B', leader: 'US Territory', title: 'Economic Recovery' },
+  'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil Resistance War',
+    analysis: {
+      what: 'Since the February 2021 military coup that overthrew the elected government of Aung San Suu Kyi, Myanmar has descended into civil war. Armed resistance groups—including ethnic armies and newly formed People\'s Defense Forces—have gained significant territory against the junta. The military has lost control of large swathes of border regions. Over 2 million people are internally displaced. The junta has responded with airstrikes on civilians, village burnings, and mass executions. The economy has collapsed with widespread poverty.',
+      why: 'Myanmar\'s instability creates refugee flows into Thailand, Bangladesh, and India. The country is a major corridor for drug trafficking (methamphetamine, heroin). China has significant economic interests and influence over ethnic armies. The conflict tests ASEAN\'s non-interference principle and regional stability. A junta collapse could create power vacuums exploited by various armed groups.',
+      next: 'The junta is losing ground but unlikely to collapse quickly given Chinese support. Resistance forces are gaining but lack coordination for final victory. Watch for: territorial shifts, military defections, Chinese mediation attempts, and humanitarian access. A federal democratic transition remains the opposition\'s goal but faces enormous obstacles.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Resistance forces capture key border town', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Military airstrikes kill dozens in Sagaing', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '9h ago', headline: 'Junta struggles to maintain territorial control', url: '#' }
+    ]
+  },
 
-  // CLEAR
-  'Canada': { lat: 56.13, lng: -106.35, flag: '🇨🇦', risk: 'clear', region: 'North America', pop: '40M', gdp: '$2.1T', leader: 'Justin Trudeau', title: 'Stable Democracy' },
-  'Japan': { lat: 36.20, lng: 138.25, flag: '🇯🇵', risk: 'clear', region: 'East Asia', pop: '125M', gdp: '$4.2T', leader: 'Shigeru Ishiba', title: 'Defense Buildup' },
-  'Australia': { lat: -25.27, lng: 133.78, flag: '🇦🇺', risk: 'clear', region: 'Oceania', pop: '26M', gdp: '$1.7T', leader: 'Anthony Albanese', title: 'AUKUS Partner' },
-  'New Zealand': { lat: -40.90, lng: 174.89, flag: '🇳🇿', risk: 'clear', region: 'Oceania', pop: '5M', gdp: '$247B', leader: 'Christopher Luxon', title: 'Stable' },
-  'Singapore': { lat: 1.35, lng: 103.82, flag: '🇸🇬', risk: 'clear', region: 'Southeast Asia', pop: '6M', gdp: '$424B', leader: 'Lawrence Wong', title: 'Leadership Transition' },
-  'Switzerland': { lat: 46.82, lng: 8.23, flag: '🇨🇭', risk: 'clear', region: 'Western Europe', pop: '9M', gdp: '$808B', leader: 'Federal Council', title: 'Neutral & Stable' },
-  'Norway': { lat: 60.47, lng: 8.47, flag: '🇳🇴', risk: 'clear', region: 'Northern Europe', pop: '5M', gdp: '$579B', leader: 'Jonas Støre', title: 'Energy Superpower' },
-  'Denmark': { lat: 56.26, lng: 9.50, flag: '🇩🇰', risk: 'clear', region: 'Northern Europe', pop: '6M', gdp: '$395B', leader: 'Mette Frederiksen', title: 'Greenland Focus' },
-  'Iceland': { lat: 64.96, lng: -19.02, flag: '🇮🇸', risk: 'clear', region: 'Northern Europe', pop: '0.4M', gdp: '$27B', leader: 'Bjarni Benediktsson', title: 'Volcanic Activity' },
-  'Ireland': { lat: 53.14, lng: -7.69, flag: '🇮🇪', risk: 'clear', region: 'Western Europe', pop: '5M', gdp: '$533B', leader: 'Simon Harris', title: 'Tech Hub' },
-  'Belgium': { lat: 50.50, lng: 4.47, flag: '🇧🇪', risk: 'clear', region: 'Western Europe', pop: '12M', gdp: '$582B', leader: 'Alexander De Croo', title: 'EU Capital' },
-  'Portugal': { lat: 39.40, lng: -8.22, flag: '🇵🇹', risk: 'clear', region: 'Western Europe', pop: '10M', gdp: '$252B', leader: 'Luís Montenegro', title: 'Stable' },
-  'Czech Republic': { lat: 49.82, lng: 15.47, flag: '🇨🇿', risk: 'clear', region: 'Eastern Europe', pop: '10M', gdp: '$290B', leader: 'Petr Fiala', title: 'Stable' },
-  'Slovenia': { lat: 46.15, lng: 14.99, flag: '🇸🇮', risk: 'clear', region: 'Southern Europe', pop: '2M', gdp: '$62B', leader: 'Robert Golob', title: 'Stable' },
-  'Croatia': { lat: 45.10, lng: 15.20, flag: '🇭🇷', risk: 'clear', region: 'Southern Europe', pop: '4M', gdp: '$71B', leader: 'Andrej Plenković', title: 'Eurozone Member' },
-  'Luxembourg': { lat: 49.82, lng: 6.13, flag: '🇱🇺', risk: 'clear', region: 'Western Europe', pop: '0.7M', gdp: '$87B', leader: 'Luc Frieden', title: 'Financial Hub' },
-  'Malta': { lat: 35.94, lng: 14.38, flag: '🇲🇹', risk: 'clear', region: 'Mediterranean', pop: '0.5M', gdp: '$18B', leader: 'Robert Abela', title: 'Stable' },
-  'Mongolia': { lat: 46.86, lng: 103.85, flag: '🇲🇳', risk: 'clear', region: 'East Asia', pop: '3.4M', gdp: '$17B', leader: 'Khürelsükh', title: 'Stable Democracy' },
-  'Bhutan': { lat: 27.51, lng: 90.43, flag: '🇧🇹', risk: 'clear', region: 'South Asia', pop: '0.8M', gdp: '$3B', leader: 'Tshering Tobgay', title: 'Stable Kingdom' },
-  'Brunei': { lat: 4.54, lng: 114.73, flag: '🇧🇳', risk: 'clear', region: 'Southeast Asia', pop: '0.4M', gdp: '$14B', leader: 'Sultan Bolkiah', title: 'Oil Wealth' },
-  'UAE': { lat: 23.42, lng: 53.85, flag: '🇦🇪', risk: 'clear', region: 'Middle East', pop: '10M', gdp: '$509B', leader: 'Mohamed bin Zayed', title: 'Regional Hub' },
-  'Qatar': { lat: 25.35, lng: 51.18, flag: '🇶🇦', risk: 'clear', region: 'Middle East', pop: '3M', gdp: '$221B', leader: 'Sheikh Tamim', title: 'Diplomatic Hub' },
-  'Oman': { lat: 21.47, lng: 55.98, flag: '🇴🇲', risk: 'clear', region: 'Middle East', pop: '5M', gdp: '$104B', leader: 'Sultan Haitham', title: 'Neutral Mediator' },
-  'Uruguay': { lat: -32.52, lng: -55.77, flag: '🇺🇾', risk: 'clear', region: 'South America', pop: '3.5M', gdp: '$71B', leader: 'Lacalle Pou', title: 'Stable Democracy' },
-  'Costa Rica': { lat: 9.75, lng: -83.75, flag: '🇨🇷', risk: 'clear', region: 'Central America', pop: '5M', gdp: '$69B', leader: 'Rodrigo Chaves', title: 'Stable Democracy' },
-  'Botswana': { lat: -22.33, lng: 24.68, flag: '🇧🇼', risk: 'clear', region: 'Africa', pop: '2.6M', gdp: '$19B', leader: 'Duma Boko', title: 'Stable Democracy' },
-  'Namibia': { lat: -22.96, lng: 18.49, flag: '🇳🇦', risk: 'clear', region: 'Africa', pop: '2.6M', gdp: '$13B', leader: 'Nandi-Ndaitwah', title: 'Stable' },
-  'Mauritius': { lat: -20.35, lng: 57.55, flag: '🇲🇺', risk: 'clear', region: 'Africa', pop: '1.3M', gdp: '$12B', leader: 'Ramgoolam', title: 'Stable Democracy' }
+  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Ongoing Civil War',
+    analysis: {
+      what: 'Yemen\'s civil war began in 2014 when Houthi rebels seized the capital Sanaa. A Saudi-led coalition intervened in 2015 but failed to defeat the Houthis. The war has killed over 150,000 people and created the world\'s worst humanitarian crisis, with 21 million needing aid. Since October 2023, Houthis have attacked Red Sea shipping in solidarity with Gaza, using drones and missiles to strike commercial vessels. US and UK have conducted airstrikes on Houthi positions in response.',
+      why: 'Houthi attacks have disrupted 12% of global trade passing through the Red Sea, forcing ships to reroute around Africa. This increases shipping costs and delivery times worldwide. Yemen is a proxy battleground between Iran (backing Houthis) and Saudi Arabia. The conflict destabilizes the Arabian Peninsula and threatens global energy infrastructure. Failure to resolve it perpetuates humanitarian suffering.',
+      next: 'Saudi Arabia has sought de-escalation and China brokered Saudi-Iran talks, but Houthi attacks complicate peace efforts. Watch for: Red Sea shipping disruptions, US military responses, Saudi-Houthi negotiations, and humanitarian conditions. A comprehensive peace deal remains elusive as Houthis have strengthened their position.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Houthis claim missile strike on cargo ship in Red Sea', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'US conducts new airstrikes on Houthi positions', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '7h ago', headline: 'UN warns of worsening famine conditions', url: '#' }
+    ]
+  },
+
+  'Haiti': { lat: 18.97, lng: -72.29, flag: '🇭🇹', risk: 'catastrophic', region: 'Caribbean', pop: '11.6M', gdp: '$20B', leader: 'Transitional Council', title: 'Gang Violence Crisis',
+    analysis: {
+      what: 'Haiti has collapsed into gang rule following the 2021 assassination of President Moïse. Armed gangs now control 80% of Port-au-Prince, the capital. Gang violence has killed thousands and displaced over 700,000 people. The state has effectively ceased to function—hospitals are closed, schools shuttered, and police overwhelmed. A Kenya-led multinational security mission began deploying in 2024 but faces enormous challenges. A transitional council governs with little actual power.',
+      why: 'Haiti\'s collapse creates migration pressure toward the US, Dominican Republic, and Caribbean nations. It demonstrates how quickly state failure can occur. The country is a transit point for drug trafficking. International intervention efforts have repeatedly failed, raising questions about effective responses to fragile states. Regional stability in the Caribbean is affected.',
+      next: 'The Kenyan-led mission is under-resourced and faces well-armed gangs. Without dramatic intervention, gang consolidation will continue. Watch for: security mission effectiveness, gang coordination, migration flows, and humanitarian access. Long-term recovery requires dismantling gang networks and rebuilding institutions from scratch—a generational project.'
+    },
+    news: [
+      { source: 'AP', bias: 'center', time: '2h ago', headline: 'Gang violence surges despite international mission', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '5h ago', headline: 'Thousands flee Port-au-Prince as fighting intensifies', url: '#' },
+      { source: 'Miami Herald', bias: 'center', time: '8h ago', headline: 'Kenya deploys additional troops to Haiti', url: '#' }
+    ]
+  },
+
+  'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'catastrophic', region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Taliban', title: 'Humanitarian Crisis',
+    analysis: {
+      what: 'The Taliban seized power in August 2021 as US forces withdrew after 20 years of war. The regime has imposed strict Islamic law, banning girls from secondary education and women from most employment. The economy has collapsed with international sanctions and frozen assets. Over 23 million people face acute hunger. ISIS-K conducts attacks against the Taliban and minorities. Resistance movements exist but pose no serious threat to Taliban control.',
+      why: 'Afghanistan remains a potential terrorist safe haven—Al-Qaeda leader Zawahiri was killed there in 2022. The humanitarian crisis creates refugee pressure on Pakistan and Iran. Women\'s rights rollback is the most severe in the world. Drug production (opium, methamphetamine) fuels regional trafficking. Neighboring countries face spillover instability.',
+      next: 'Taliban rule appears consolidated despite international isolation. No recognition from major powers is likely given women\'s rights abuses. Watch for: humanitarian conditions, terrorist activity, refugee flows, and any internal Taliban splits. The population faces grinding poverty with no improvement in sight.'
+    },
+    news: [
+      { source: 'UN News', bias: 'center', time: '3h ago', headline: 'Millions face starvation as winter approaches', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Taliban expands restrictions on women', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '10h ago', headline: 'ISIS-K claims attack in Kabul province', url: '#' }
+    ]
+  },
+
+  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'catastrophic', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict',
+    analysis: {
+      what: 'The eastern Democratic Republic of Congo has been engulfed in conflict for decades, but violence has escalated dramatically since 2022. The M23 rebel group, backed by Rwanda, has seized significant territory near Goma. Over 100 armed groups operate in the region. Nearly 7 million people are internally displaced—more than any other country. Massacres, sexual violence, and child soldier recruitment are widespread. The Congolese army is ineffective despite UN peacekeeping presence.',
+      why: 'DRC holds vast mineral wealth critical to global technology—cobalt for batteries, coltan for electronics, gold, and diamonds. Armed groups control many mining operations, fueling conflict. Rwanda\'s involvement creates regional tensions. The humanitarian crisis is among the world\'s worst but receives little attention. Instability affects all neighboring countries.',
+      next: 'Regional diplomatic efforts have failed to stop fighting. Rwanda denies supporting M23 despite overwhelming evidence. Watch for: M23 advances, regional mediation attempts, UN mission changes, and humanitarian access. Without addressing Rwanda\'s role and governance failures, conflict will continue indefinitely.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'M23 rebels advance toward strategic city', url: '#' },
+      { source: 'UN News', bias: 'center', time: '5h ago', headline: 'Displacement reaches record 7 million', url: '#' },
+      { source: 'AP', bias: 'center', time: '9h ago', headline: 'UN peacekeepers ordered to withdraw', url: '#' }
+    ]
+  },
+
+  'Somalia': { lat: 5.15, lng: 46.20, flag: '🇸🇴', risk: 'catastrophic', region: 'Africa', pop: '18M', gdp: '$8B', leader: 'Hassan Sheikh Mohamud', title: 'Al-Shabaab Threat',
+    analysis: {
+      what: 'Somalia has lacked effective central government since 1991. Al-Shabaab, an Al-Qaeda affiliate, controls large rural areas and conducts devastating attacks including car bombings in Mogadishu. President Hassan Sheikh Mohamud launched a major offensive against the group in 2022 with initial success, but Al-Shabaab has regrouped. Drought and famine have killed thousands. Clan politics complicate governance. The African Union mission is drawing down.',
+      why: 'Al-Shabaab threatens regional stability, conducting attacks in Kenya and elsewhere. Somalia\'s coast is strategic for global shipping (Gulf of Aden). Failed state status makes it a potential terrorist haven. Climate change-induced drought creates humanitarian emergencies. Piracy, though reduced, can resurge.',
+      next: 'The government offensive has stalled and Al-Shabaab remains potent. Watch for: AU troop withdrawal impacts, Al-Shabaab attacks, drought conditions, and clan reconciliation efforts. Building effective state institutions remains the fundamental challenge.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Al-Shabaab car bomb kills dozens in Mogadishu', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Drought displaces thousands more families', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '10h ago', headline: 'Government forces clash with militants in south', url: '#' }
+    ]
+  },
+
+  // ==================== EXTREME ====================
+  'Israel': { lat: 31.05, lng: 34.85, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict',
+    analysis: {
+      what: 'Israel is conducting its largest military operation since 1973 following Hamas\'s October 7, 2023 attack. Ground operations in Gaza have been extensive but costly. Hezbollah engages in daily cross-border fire in the north, displacing 80,000 Israelis. Netanyahu\'s coalition includes far-right ministers pushing controversial policies. Domestic protests over judicial reform paused during war but tensions remain. The economy has been strained by mobilizing 300,000 reservists.',
+      why: 'Israel is the US\'s closest Middle East ally, receiving $3.8 billion annually in military aid. The conflict tests US diplomatic influence and its ability to balance Israeli security with humanitarian concerns. Regional escalation could draw in Iran and trigger oil price spikes. Israeli technology is globally integrated. The Palestinian question shapes Muslim world politics.',
+      next: 'Post-war Gaza governance remains unresolved. Watch for: Hezbollah escalation, Iran confrontation, hostage negotiations, Netanyahu coalition stability, and US policy shifts. Long-term scenarios range from expanded regional war to an imposed peace framework.'
+    },
+    news: [
+      { source: 'Times of Israel', bias: 'center-right', time: '1h ago', headline: 'IDF expands operations in central Gaza', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Hezbollah exchanges fire intensify on northern border', url: '#' },
+      { source: 'Haaretz', bias: 'center-left', time: '6h ago', headline: 'Protests resume over hostage deal delays', url: '#' }
+    ]
+  },
+
+  'Taiwan': { lat: 23.70, lng: 120.96, flag: '🇹🇼', risk: 'extreme', region: 'East Asia', pop: '24M', gdp: '$790B', leader: 'Lai Ching-te', title: 'Cross-Strait Tensions',
+    analysis: {
+      what: 'Cross-strait tensions have reached their highest level in decades. China has dramatically increased military activity around Taiwan with near-daily air defense zone incursions and naval exercises simulating blockade scenarios. President Lai Ching-te continues the DPP\'s pro-sovereignty stance. Taiwan has accelerated defense spending, extended conscription, and acquired advanced US weapons including F-16s and Harpoon missiles. TSMC manufactures over 90% of the world\'s most advanced semiconductors.',
+      why: 'Taiwan represents the most dangerous potential flashpoint for great-power conflict. A Chinese invasion would likely trigger US intervention, risking war between nuclear powers. The global economy would face catastrophic disruption—semiconductor shortages would halt production of everything from smartphones to weapons. Japan, South Korea, and the Philippines would be directly affected. Taiwan represents an ideological contest: prosperous democracy versus CCP authoritarianism.',
+      next: 'Full-scale invasion unlikely before 2027 as China builds capability. However, "gray zone" coercion—blockades, cyber attacks—could occur sooner. Watch for: Chinese military exercises, US arms sales, Japanese posture changes. The 2027-2030 window is considered particularly dangerous.'
+    },
+    news: [
+      { source: 'Nikkei', bias: 'center', time: '2h ago', headline: 'China conducts largest Taiwan Strait exercises this year', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'Taiwan scrambles jets as PLA aircraft approach', url: '#' },
+      { source: 'SCMP', bias: 'center-right', time: '8h ago', headline: 'Beijing warns against "Taiwan independence" moves', url: '#' }
+    ]
+  },
+
+  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Regional Proxy Conflicts',
+    analysis: {
+      what: 'Iran orchestrates a network of proxy forces: Hezbollah in Lebanon, Hamas in Gaza, Houthis in Yemen, and militias in Iraq and Syria. The nuclear program has advanced significantly—Iran enriches uranium to 60% purity with enough material for multiple bombs if further enriched. The JCPOA collapsed after US withdrawal in 2018. The regime brutally suppressed the "Woman, Life, Freedom" protests, killing hundreds. Supreme Leader Khamenei (85) faces succession questions.',
+      why: 'Iran\'s nuclear threshold status could trigger regional proliferation (Saudi Arabia, Turkey, Egypt). Iranian proxies can strike Israel, disrupt Gulf shipping, and destabilize Arab governments. Houthi attacks have disrupted 12% of global trade. Iran\'s alliance with Russia (providing drones for Ukraine) and China challenges Western interests. The risk of direct Israel-Iran war has never been higher.',
+      next: 'Nuclear breakout remains possible if Iran decides benefits outweigh costs. Watch for: IAEA reports, proxy escalation, oil smuggling enforcement, and succession maneuvering. Israel has conducted covert sabotage and may strike nuclear facilities if diplomacy fails.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'IAEA reports further uranium enrichment progress', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Iran-backed militias strike US base in Iraq', url: '#' },
+      { source: 'FT', bias: 'center', time: '8h ago', headline: 'Tehran signals openness to nuclear talks', url: '#' }
+    ]
+  },
+
+  'North Korea': { lat: 40.34, lng: 127.51, flag: '🇰🇵', risk: 'extreme', region: 'East Asia', pop: '26M', gdp: '$18B', leader: 'Kim Jong Un', title: 'Nuclear Threats',
+    analysis: {
+      what: 'North Korea has conducted record numbers of missile tests, including ICBMs theoretically capable of reaching the US mainland. The nuclear arsenal is estimated at 50+ warheads and growing. Kim Jong Un has declared South Korea a "hostile state" and abandoned reunification as a goal. Military cooperation with Russia has deepened, with North Korea providing ammunition for the Ukraine war in exchange for technology. The population faces chronic food insecurity under strict totalitarian control.',
+      why: 'North Korea\'s nuclear weapons threaten South Korea, Japan, and potentially the US. Proliferation risk is high—Pyongyang has sold missile technology to Iran and others. Military miscalculation could trigger catastrophic war on the Korean Peninsula. The regime\'s brutality makes it among the world\'s worst human rights situations. US troops and alliance commitments in the region are directly affected.',
+      next: 'Denuclearization appears impossible given Kim\'s survival calculus. Watch for: weapons tests (especially nuclear), US-ROK exercises, Russia military cooperation, and any provocations. Crisis management rather than resolution is the realistic focus.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'North Korea fires ballistic missile toward Sea of Japan', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Kim Jong Un inspects new missile submarine', url: '#' },
+      { source: 'Yonhap', bias: 'center', time: '9h ago', headline: 'Seoul condemns latest DPRK weapons test', url: '#' }
+    ]
+  },
+
+  'Syria': { lat: 34.80, lng: 38.99, flag: '🇸🇾', risk: 'extreme', region: 'Middle East', pop: '22M', gdp: '$9B', leader: 'Bashar al-Assad', title: 'Fragmented State',
+    analysis: {
+      what: 'Syria\'s civil war, which began in 2011, has largely frozen with Assad controlling about 70% of territory backed by Russia and Iran. The northeast remains under Kurdish-led SDF control with US military presence. Idlib province is held by rebel groups. The economy has collapsed under sanctions and war damage. Over half the pre-war population has been displaced. Israel regularly strikes Iranian targets in Syria. The country produces most of the world\'s captagon (amphetamines).',
+      why: 'Syria hosts Russian and Iranian military bases, projecting their power into the Mediterranean and toward Israel. The refugee crisis reshaped European politics. Assad\'s survival demonstrates how authoritarian regimes can outlast international pressure. Drug trafficking destabilizes neighbors. Reconstruction would require massive investment no one will provide while Assad remains.',
+      next: 'Frozen conflict is the likely indefinite state. Watch for: Israeli strikes on Iranian assets, US troop presence debates, Kurdish autonomy negotiations, and normalization efforts by Arab states. Meaningful reconstruction or refugee return appears impossible.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Israeli airstrikes target Iranian positions near Damascus', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'UN warns of worsening humanitarian conditions', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '9h ago', headline: 'Earthquake recovery stalls amid sanctions', url: '#' }
+    ]
+  },
+
+  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'State Collapse',
+    analysis: {
+      what: 'Lebanon has experienced economic collapse since 2019—the currency lost 98% of its value, banks froze deposits, and the middle class was wiped out. The Beirut port explosion in 2020 killed 200+ and destroyed large areas. Political paralysis left the country without a president for two years. Hezbollah, more powerful than the state, has engaged in cross-border fighting with Israel since October 2023, risking full-scale war. Essential services barely function.',
+      why: 'Lebanon sits on the Israel-Hezbollah fault line—full war would be devastating for the region. Hezbollah possesses 150,000+ rockets that can hit any Israeli city. Lebanon\'s collapse creates refugee outflows and regional instability. It demonstrates the consequences of sectarian governance and corruption. The banking crisis has implications for regional finance.',
+      next: 'Full Israel-Hezbollah war remains a serious risk depending on Gaza developments. Watch for: escalation triggers, ceasefire negotiations, economic deterioration, and political reform efforts. Recovery requires reforms that entrenched elites resist.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Hezbollah and Israel exchange heavy fire on border', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'New president faces daunting economic challenges', url: '#' },
+      { source: 'FT', bias: 'center', time: '7h ago', headline: 'IMF deal stalls amid political deadlock', url: '#' }
+    ]
+  },
+
+  'Mali': { lat: 17.57, lng: -4.00, flag: '🇲🇱', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Military Junta', title: 'Wagner/Jihadi Conflict',
+    analysis: {
+      what: 'Mali has been ruled by a military junta since 2020/2021 coups. French forces withdrew after a decade fighting jihadists, replaced by Russian Wagner Group mercenaries. Jihadi groups (linked to Al-Qaeda and ISIS) control vast northern territories. Wagner forces have been implicated in massacres of civilians. The junta has allied with Russia, expelled Western diplomats, and postponed elections indefinitely. Conflict has displaced millions.',
+      why: 'Mali is the epicenter of Sahel instability spreading across West Africa. Wagner presence expands Russian influence in Africa. Jihadi expansion threatens coastal West African states. Migration flows toward Europe originate here. Gold mining finances armed groups. The French withdrawal marks a strategic shift in Africa.',
+      next: 'The junta appears stable but faces jihadi resurgence. Watch for: territorial control changes, Wagner activities, refugee flows, and relations with neighbors. Without addressing governance and development, conflict will persist.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Jihadi attack kills dozens in central Mali', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'UN mission completes withdrawal from country', url: '#' },
+      { source: 'France24', bias: 'center-left', time: '10h ago', headline: 'Wagner forces accused of civilian massacres', url: '#' }
+    ]
+  },
+
+  'Burkina Faso': { lat: 12.24, lng: -1.56, flag: '🇧🇫', risk: 'extreme', region: 'Africa', pop: '22M', gdp: '$19B', leader: 'Ibrahim Traoré', title: 'Jihadi Violence',
+    analysis: {
+      what: 'Burkina Faso has suffered two coups since 2022 as the military seized power amid security failures. Captain Ibrahim Traoré, the world\'s youngest head of state at 35, expelled French forces and turned to Russia. Jihadi groups now control roughly 40% of the territory. Over 2 million people are displaced. Massacres occur regularly in rural areas. The junta has conscripted volunteers for self-defense.',
+      why: 'Burkina Faso\'s collapse accelerates the spread of Sahel instability toward coastal states like Ghana and Côte d\'Ivoire. It demonstrates the limits of military responses to jihadi insurgency. Russian influence expands at French expense. Humanitarian crisis creates migration pressure. Gold mining areas are contested.',
+      next: 'The junta faces a worsening security situation despite Russian support. Watch for: territorial losses to jihadists, humanitarian conditions, coup risk, and regional spillover. State collapse is a real possibility.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Jihadi fighters seize town in northern region', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Displacement crisis worsens amid fighting', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '9h ago', headline: 'Military government extends emergency rule', url: '#' }
+    ]
+  },
+
+  'Niger': { lat: 17.61, lng: 8.08, flag: '🇳🇪', risk: 'extreme', region: 'Africa', pop: '26M', gdp: '$15B', leader: 'Military Junta', title: 'Coup Government',
+    analysis: {
+      what: 'A military coup in July 2023 overthrew Niger\'s elected president, ending the last democracy in the Sahel. The junta expelled French and US forces, aligned with Mali and Burkina Faso, and turned toward Russia. ECOWAS threatened intervention but backed down. Jihadi groups are expanding in the southeast. The population is among the world\'s poorest with severe food insecurity.',
+      why: 'Niger was a key Western partner for counterterrorism in the Sahel—its loss is a major strategic setback. US drone base and French forces repositioned. Russian influence expands in a uranium-rich country. The coup demonstrates fragility of democracy in the region. Regional instability affects migration routes to Europe.',
+      next: 'The junta appears consolidated with regional support. Watch for: jihadi expansion, Russian military presence, humanitarian conditions, and ECOWAS relations. Return to civilian rule appears unlikely near-term.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Junta deepens ties with Russia and Iran', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'US completes military withdrawal', url: '#' },
+      { source: 'France24', bias: 'center-left', time: '10h ago', headline: 'Jihadi attacks increase in southeast', url: '#' }
+    ]
+  },
+
+  // ==================== SEVERE ====================
+  'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'severe', region: 'East Asia', pop: '1.4B', gdp: '$17.7T', leader: 'Xi Jinping', title: 'Economic Slowdown',
+    analysis: {
+      what: 'China faces its most serious economic challenges in decades. The property sector—30% of GDP—is in crisis with major developers defaulting. Youth unemployment exceeded 20% before data publication stopped. Consumer confidence has collapsed. Deflation concerns have emerged. Local government debt is dangerous. Xi Jinping has consolidated unprecedented power while cracking down on tech giants and civil society. US-China tensions have intensified with semiconductor export controls.',
+      why: 'As the world\'s second-largest economy and largest trading nation, China\'s slowdown ripples globally. A hard landing could trigger global recession. Geopolitically, China\'s tech ambitions and military modernization pose the primary strategic challenge to US hegemony. Taiwan remains the most dangerous flashpoint. China\'s support for Russia and growing influence in the Global South reshape the international order.',
+      next: 'Expect gradual stimulus rather than a "bazooka" response. Property will drag for years. Watch for: social stability, consumption shifts, tech self-sufficiency, and Taiwan Strait activity. US-China tensions will remain contentious. Demographic decline poses long-term challenges.'
+    },
+    news: [
+      { source: 'FT', bias: 'center', time: '1h ago', headline: 'Beijing announces largest stimulus package since 2008', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '3h ago', headline: 'Property sector woes deepen despite government support', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '6h ago', headline: 'US expands chip export restrictions to more Chinese firms', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '9h ago', headline: 'Consumer spending remains weak ahead of Lunar New Year', url: '#' }
+    ]
+  },
+
+  'Venezuela': { lat: 6.42, lng: -66.59, flag: '🇻🇪', risk: 'severe', region: 'South America', pop: '28M', gdp: '$92B', leader: 'Nicolás Maduro', title: 'Political Crisis',
+    analysis: {
+      what: 'The July 2024 presidential election was widely seen as stolen by Maduro despite opposition candidate González\'s apparent victory. Protests were violently suppressed with thousands arrested. González fled to Spain. The opposition holds evidence of fraud but international pressure has failed. Over 7 million Venezuelans have fled the country—the largest displacement in Western Hemisphere history. The economy has shrunk 75% since 2013.',
+      why: 'Venezuela has the world\'s largest proven oil reserves but produces a fraction of potential output. The migration crisis strains neighboring countries, especially Colombia. It\'s a test case for whether authoritarian consolidation can be reversed. Russian and Chinese support props up the regime. Regional democracy norms are weakened.',
+      next: 'Maduro appears secure despite illegitimacy. Watch for: sanctions pressure, opposition strategy, oil production changes, and migration flows. Without elite defection or external intervention, the regime will persist.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Opposition leader calls for renewed protests', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Thousands more flee to Colombia amid crackdown', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '8h ago', headline: 'Oil production edges up despite sanctions', url: '#' }
+    ]
+  },
+
+  'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'severe', region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Economic & Political Crisis',
+    analysis: {
+      what: 'Pakistan faces severe economic crisis with inflation above 30%, IMF bailouts, and depleted foreign reserves. Former PM Imran Khan was jailed on multiple charges his supporters call politically motivated. The military remains the ultimate power broker, engineering Khan\'s removal and subsequent elections. Terrorism has resurged with TTP attacks from Afghanistan. Climate disasters (2022 floods killed 1,700) add to challenges.',
+      why: 'Pakistan is a nuclear-armed state of 230 million—instability has global implications. Taliban-controlled Afghanistan enables cross-border terrorism. Pakistan\'s relations with India remain tense. Its economic crisis affects regional trade. The military\'s political role undermines democratic consolidation.',
+      next: 'IMF conditionality will impose painful reforms. Watch for: economic indicators, Khan\'s legal battles, military-civilian relations, and terrorism. Structural reform is needed but politically difficult.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'IMF approves next loan tranche after reforms', url: '#' },
+      { source: 'Dawn', bias: 'center', time: '5h ago', headline: 'Imran Khan faces new charges in prison', url: '#' },
+      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Terrorist attack kills soldiers near Afghan border', url: '#' }
+    ]
+  },
+
+  'Bangladesh': { lat: 23.68, lng: 90.36, flag: '🇧🇩', risk: 'severe', region: 'South Asia', pop: '170M', gdp: '$460B', leader: 'Muhammad Yunus', title: 'Post-Revolution',
+    analysis: {
+      what: 'Mass student protests in 2024 toppled long-ruling PM Sheikh Hasina, who fled to India. Nobel laureate Muhammad Yunus leads an interim government tasked with reforms and new elections. The transition is fragile with political tensions high. The garment industry (80% of exports) faces pressure. Rohingya refugee camps host 1 million people. Relations with India are complicated.',
+      why: 'Bangladesh is a garment manufacturing powerhouse supplying global brands—instability disrupts supply chains. It hosts the largest refugee camp in the world. Climate change threatens this low-lying nation of 170 million. Democratic transition success or failure will influence regional politics.',
+      next: 'The interim government must navigate between political factions while reforming institutions. Watch for: election timeline, Hasina\'s influence from exile, economic stability, and India relations. Successful transition is uncertain.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Interim government announces reform roadmap', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Garment workers protest over wages', url: '#' },
+      { source: 'AP', bias: 'center', time: '9h ago', headline: 'Yunus meets international donors for support', url: '#' }
+    ]
+  },
+
+  'Turkey': { lat: 38.96, lng: 35.24, flag: '🇹🇷', risk: 'severe', region: 'Middle East', pop: '85M', gdp: '$906B', leader: 'Recep Erdoğan', title: 'Economic Crisis',
+    analysis: {
+      what: 'Turkey faces severe economic crisis with inflation exceeding 60%, currency collapse, and unorthodox monetary policy that deterred investment. Erdoğan won 2023 elections despite the economy, consolidating power further. Relations with the West are strained over S-400 missiles, Syria policy, and NATO enlargement. Devastating earthquakes in 2023 killed 50,000+. Kurdish conflict continues.',
+      why: 'Turkey controls the Bosphorus straits critical to Black Sea shipping. It\'s a NATO ally but often at odds with Western interests. Turkey hosts 4 million Syrian refugees affecting European migration. Its drone technology is globally significant. Erdoğan\'s balancing between Russia and the West creates uncertainty.',
+      next: 'Orthodox economic policy has begun with rate hikes but pain will continue. Watch for: inflation trajectory, Erdoğan\'s health/succession, NATO relations, and Kurdish peace prospects. Structural reform is needed but Erdoğan resists liberalization.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Central bank raises rates to combat inflation', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Lira stabilizes after policy shift', url: '#' },
+      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Erdoğan meets Putin for talks on Ukraine grain deal', url: '#' }
+    ]
+  },
+
+  'Egypt': { lat: 26.82, lng: 30.80, flag: '🇪🇬', risk: 'severe', region: 'North Africa', pop: '105M', gdp: '$387B', leader: 'Abdel Fattah el-Sisi', title: 'Economic Crisis',
+    analysis: {
+      what: 'Egypt faces severe foreign currency shortage, forcing multiple devaluations and IMF intervention. Inflation has hit 35%+. Sisi has built megaprojects (new capital city) while debt ballooned. The military controls much of the economy. Repression of dissent is severe with tens of thousands of political prisoners. Gaza conflict has strained relations with Israel while Egypt controls the Rafah crossing.',
+      why: 'Egypt controls the Suez Canal—12% of global trade. Its 105 million people make it the Arab world\'s most populous country. It\'s a key US ally receiving $1.3 billion in annual military aid. Stability matters for Libya, Sudan, and Gaza. Water disputes with Ethiopia over the Nile dam are serious.',
+      next: 'UAE investment has provided relief but structural problems remain. Watch for: currency stability, IMF conditions, Gaza spillover, and Nile negotiations. Economic discontent poses medium-term risk to regime stability.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Egypt secures new IMF agreement amid crisis', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Suez Canal revenues drop due to Houthi attacks', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '8h ago', headline: 'UAE investment helps stabilize pound', url: '#' }
+    ]
+  },
+
+  'Argentina': { lat: -38.42, lng: -63.62, flag: '🇦🇷', risk: 'severe', region: 'South America', pop: '46M', gdp: '$641B', leader: 'Javier Milei', title: 'Economic Crisis',
+    analysis: {
+      what: 'Argentina has suffered chronic economic crisis with inflation exceeding 200%—the world\'s highest. Libertarian President Javier Milei, elected in 2023, is implementing radical austerity: massive spending cuts, devaluation, and deregulation. Poverty has spiked to 50%+. Protests are frequent but Milei retains support among those desperate for change. IMF debt is being restructured.',
+      why: 'Argentina is South America\'s second-largest economy with major agricultural exports. Milei\'s experiment tests whether shock therapy can break chronic inflation. His alignment with the US and Israel marks a regional shift. Lithium reserves make Argentina important for battery supply chains.',
+      next: 'Milei faces the challenge of maintaining support through painful adjustment. Watch for: inflation trends, social unrest, congressional support, and investment flows. Success would validate radical reform; failure could bring backlash.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Milei announces new round of spending cuts', url: '#' },
+      { source: 'FT', bias: 'center', time: '4h ago', headline: 'Inflation shows first signs of slowing', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Thousands protest austerity measures in Buenos Aires', url: '#' }
+    ]
+  },
+
+  'Nigeria': { lat: 9.08, lng: 8.68, flag: '🇳🇬', risk: 'severe', region: 'Africa', pop: '223M', gdp: '$477B', leader: 'Bola Tinubu', title: 'Security Crisis',
+    analysis: {
+      what: 'Nigeria faces multiple security crises: Boko Haram insurgency in the northeast, banditry in the northwest, separatist agitation in the southeast, and farmer-herder conflicts across the middle belt. President Tinubu removed fuel subsidies causing prices to triple, sparking hardship. The economy struggles with oil theft reducing production, high inflation, and unemployment. Kidnapping for ransom is endemic.',
+      why: 'Nigeria is Africa\'s most populous country (223 million) and largest economy. It\'s a major oil producer though output has declined. Instability affects the entire West African region. The country is critical for regional peacekeeping. Diaspora remittances are globally significant.',
+      next: 'Tinubu faces immense challenges with few resources. Watch for: security situation in each region, economic reforms, oil production recovery, and 2027 election positioning. Structural decline continues without major reforms.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Bandit attack kills dozens in northwest state', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Protests over rising fuel costs spread', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '8h ago', headline: 'Central bank raises rates to fight inflation', url: '#' }
+    ]
+  },
+
+  'Ethiopia': { lat: 9.15, lng: 40.49, flag: '🇪🇹', risk: 'severe', region: 'Africa', pop: '126M', gdp: '$126B', leader: 'Abiy Ahmed', title: 'Post-War Tensions',
+    analysis: {
+      what: 'The 2020-2022 Tigray war killed an estimated 600,000 people—one of the deadliest conflicts this century. A ceasefire holds but tensions remain with Eritrean troops still present. Ethnic conflicts continue in Amhara and Oromia regions. PM Abiy Ahmed, once a Nobel Peace laureate, is now accused of authoritarianism. The economy struggles with debt and inflation. A new Red Sea access deal with Somaliland has angered Somalia.',
+      why: 'Ethiopia is Africa\'s second most populous country and a regional power. The Grand Ethiopian Renaissance Dam affects Egypt\'s water supply. Instability affects the entire Horn of Africa. It was a key US partner on counterterrorism. The country\'s trajectory matters for 126 million people.',
+      next: 'Post-war reconciliation is incomplete and ethnic tensions persist. Watch for: Tigray integration, regional conflicts, dam negotiations, and economic reforms. Abiy faces the challenge of holding together a fractious federation.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Fighting continues in Amhara region', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Somalia protests Ethiopia port deal', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '9h ago', headline: 'Tigray reconstruction faces funding shortfall', url: '#' }
+    ]
+  },
+
+  'Iraq': { lat: 33.22, lng: 43.68, flag: '🇮🇶', risk: 'severe', region: 'Middle East', pop: '44M', gdp: '$270B', leader: 'Mohammed al-Sudani', title: 'Fragile Stability',
+    analysis: {
+      what: 'Iraq has achieved relative stability after years of war against ISIS. But Iran-backed militias hold significant power, sometimes attacking US forces. PM al-Sudani governs through a coalition including these militias. Oil revenues provide budget but corruption is endemic. Kurdistan region tensions persist. Basic services remain inadequate. Political dysfunction continues with parliament often paralyzed.',
+      why: 'Iraq is OPEC\'s second-largest producer and vital to global energy supply. It\'s a key arena for US-Iran competition. Stability affects Syria, Jordan, and the Gulf. ISIS could resurge if governance fails. Iranian influence challenges US interests.',
+      next: 'The current stability is fragile and dependent on oil prices. Watch for: US-militia tensions, Kurdistan disputes, service delivery, and ISIS remnants. Without addressing corruption and governance, Iraq cannot achieve its potential.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Iran-backed militia attacks US base', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Oil revenues boost budget amid price rise', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '8h ago', headline: 'Protests demand better services in Basra', url: '#' }
+    ]
+  },
+
+  // Continue with more countries...
+  'Libya': { lat: 26.34, lng: 17.23, flag: '🇱🇾', risk: 'severe', region: 'North Africa', pop: '7M', gdp: '$41B', leader: 'Divided', title: 'Civil Conflict',
+    analysis: {
+      what: 'Libya remains divided between rival governments in Tripoli (west) and Benghazi (east) since the 2011 overthrow of Gaddafi. Armed militias control territory across the country. Oil production fluctuates based on conflict. Turkey backs the western government while Russia, Egypt, and UAE support the east. Migration from sub-Saharan Africa flows through Libya toward Europe. Elections remain blocked.',
+      why: 'Libya has Africa\'s largest proven oil reserves. It\'s the main departure point for Mediterranean migration to Europe. Russian Wagner forces operate in the east, expanding Moscow\'s African presence. Instability affects neighbors Tunisia, Egypt, and Niger.',
+      next: 'Unification efforts have repeatedly failed. Watch for: oil production disruptions, election attempts, foreign interference, and migration flows. Partition is increasingly the de facto reality.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Oil production halted amid militia clashes', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'UN envoy pushes for delayed elections', url: '#' }
+    ]
+  },
+
+  'Tunisia': { lat: 33.89, lng: 9.54, flag: '🇹🇳', risk: 'severe', region: 'North Africa', pop: '12M', gdp: '$47B', leader: 'Kais Saied', title: 'Democratic Backsliding',
+    analysis: {
+      what: 'President Kais Saied has dismantled Tunisia\'s democracy—the only success of the Arab Spring—by suspending parliament, rewriting the constitution, and jailing opponents. The economy is in crisis requiring IMF intervention. Migration to Europe has surged. Critics and journalists face prosecution. The opposition is fragmented and suppressed.',
+      why: 'Tunisia\'s democratic collapse is a cautionary tale for the region. Migration pressure affects Europe. Economic failure creates instability near Libya. The country was seen as proof that Arab democracy was possible.',
+      next: 'Saied appears secure despite economic failure. Watch for: IMF negotiations, repression levels, migration flows, and any protest emergence. Democratic reversal appears unlikely near-term.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'IMF talks stall over subsidy reforms', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Opposition figures arrested in crackdown', url: '#' }
+    ]
+  },
+
+  'Ecuador': { lat: -1.83, lng: -78.18, flag: '🇪🇨', risk: 'severe', region: 'South America', pop: '18M', gdp: '$107B', leader: 'Daniel Noboa', title: 'Gang Violence Surge',
+    analysis: {
+      what: 'Ecuador has experienced explosive gang violence, transforming from one of Latin America\'s safest countries to among its most dangerous. Drug trafficking organizations have taken over prisons and cities. The murder rate has quadrupled since 2018. Young President Daniel Noboa declared a state of emergency and deployed the military. A TV station was stormed live on air by gunmen.',
+      why: 'Ecuador\'s collapse shows how quickly drug trafficking can destabilize a country. It\'s now a major cocaine transit point between Colombia and the US/Europe. Regional crime networks are interconnected. Tourism has collapsed.',
+      next: 'Noboa faces gangs that may be more powerful than the state. Watch for: violence levels, military effectiveness, prison control, and whether cartels can be pushed back. The country\'s future hangs in the balance.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Gang attacks continue despite military deployment', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Noboa extends state of emergency', url: '#' }
+    ]
+  },
+
+  'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'severe', region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Salome Zourabichvili', title: 'Pro-Russia Turn',
+    analysis: {
+      what: 'Georgia\'s ruling Georgian Dream party has shifted toward Russia, passing a "foreign agents" law modeled on Russian legislation and cracking down on protests. The EU froze Georgia\'s membership candidacy. Mass protests erupted but were suppressed. President Zourabichvili opposes the government but has limited power. The 2024 elections were disputed.',
+      why: 'Georgia was a pro-Western success story in the post-Soviet space—its reversal is significant. It borders Russia, which occupies 20% of its territory. The shift affects the South Caucasus corridor between Europe and Asia.',
+      next: 'The government appears committed to its pro-Russia turn despite public opposition. Watch for: protest dynamics, EU relations, Russian influence, and any political change. Democratic backsliding continues.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'EU freezes Georgia membership talks', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Opposition protests continue in Tbilisi', url: '#' }
+    ]
+  },
+
+  'Armenia': { lat: 40.07, lng: 45.04, flag: '🇦🇲', risk: 'severe', region: 'Caucasus', pop: '2.8M', gdp: '$20B', leader: 'Nikol Pashinyan', title: 'Post-Karabakh Crisis',
+    analysis: {
+      what: 'Armenia suffered a devastating defeat in the 2020 Nagorno-Karabakh war and lost the territory entirely in 2023 when Azerbaijan seized it, forcing 100,000 Armenians to flee. PM Pashinyan faces anger over the losses. Relations with Russia have soured as Moscow failed to protect Armenia. The country is pivoting toward the West. Azerbaijan may push for further concessions.',
+      why: 'The Karabakh outcome shows the limits of Russian security guarantees—significant for other post-Soviet states. Armenia\'s Western pivot could reshape South Caucasus geopolitics. The humanitarian crisis of displaced Karabakh Armenians is ongoing.',
+      next: 'Armenia faces an emboldened Azerbaijan and uncertain Russian support. Watch for: border negotiations, peace treaty prospects, domestic politics, and Western integration. The country is in strategic transition.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Armenia-Azerbaijan peace talks resume', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Karabakh refugees struggle to rebuild', url: '#' }
+    ]
+  },
+
+  'Belarus': { lat: 53.71, lng: 27.95, flag: '🇧🇾', risk: 'severe', region: 'Eastern Europe', pop: '9M', gdp: '$73B', leader: 'Lukashenko', title: 'Russian Ally',
+    analysis: {
+      what: 'Alexander Lukashenko brutally suppressed 2020 protests against his disputed election, remaining in power with Russian support. Belarus has become a Russian military platform, hosting troops and allowing invasion of Ukraine from its territory. Western sanctions are severe. Opposition leaders are jailed or exiled. The economy is propped up by Russian subsidies.',
+      why: 'Belarus is effectively a Russian satellite state on NATO\'s border. It hosts Russian nuclear weapons. The country\'s airspace and territory are used against Ukraine. Opposition to Lukashenko represents potential future instability.',
+      next: 'Lukashenko appears secure as long as Russia supports him. Watch for: his health (age 70), succession planning, Russian demands, and émigré opposition activities. True independence seems impossible while Russia is strong.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Belarus extends military cooperation with Russia', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Opposition leader sentenced to 18 years', url: '#' }
+    ]
+  },
+
+  'Moldova': { lat: 47.41, lng: 28.37, flag: '🇲🇩', risk: 'severe', region: 'Eastern Europe', pop: '2.6M', gdp: '$15B', leader: 'Maia Sandu', title: 'Russia Pressure',
+    analysis: {
+      what: 'Pro-European President Maia Sandu faces Russian destabilization efforts including: support for separatist Transnistria, energy blackmail, disinformation campaigns, and alleged coup plots. Moldova gained EU candidate status but faces challenges implementing reforms. The Transnistria region hosts Russian troops. Economic dependence on remittances makes the country vulnerable.',
+      why: 'Moldova is a frontline state in the Russia-West confrontation, sandwiched between Ukraine and NATO member Romania. Its EU integration would be a strategic defeat for Moscow. Russian troops in Transnistria are 50km from Odesa.',
+      next: 'Sandu won reelection despite Russian interference but faces continued pressure. Watch for: EU integration progress, Transnistria negotiations, Russian hybrid attacks, and energy security. The country\'s Western path is contested.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Moldova accuses Russia of election interference', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'EU approves next step in membership talks', url: '#' }
+    ]
+  },
+
+  'Cuba': { lat: 21.52, lng: -77.78, flag: '🇨🇺', risk: 'severe', region: 'Caribbean', pop: '11M', gdp: '$107B', leader: 'Díaz-Canel', title: 'Economic Crisis',
+    analysis: {
+      what: 'Cuba faces its worst economic crisis since the 1990s "Special Period." Food and medicine shortages are severe. Power blackouts are frequent. Inflation has surged. Mass protests in 2021 were suppressed with hundreds jailed. Migration to the US has surged to record levels. The government blames US sanctions while critics cite mismanagement.',
+      why: 'Cuba\'s crisis drives record migration to the US, a major political issue. The country\'s trajectory affects Latin American left politics. US-Cuba relations remain frozen. The island\'s location gives it strategic significance.',
+      next: 'The regime appears stable despite the crisis, but emigration provides a safety valve. Watch for: economic conditions, migration flows, any political opening, and US policy changes. Significant reform seems unlikely under current leadership.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Power grid collapses again leaving millions without electricity', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Record number of Cubans reach US border', url: '#' }
+    ]
+  },
+
+  'Nicaragua': { lat: 12.87, lng: -85.21, flag: '🇳🇮', risk: 'severe', region: 'Central America', pop: '7M', gdp: '$15B', leader: 'Daniel Ortega', title: 'Authoritarian Rule',
+    analysis: {
+      what: 'Daniel Ortega has transformed Nicaragua into a family dictatorship. Opposition leaders have been jailed or exiled. NGOs and media have been shut down. The Catholic Church is persecuted with bishops imprisoned. Elections are shams. The country has aligned with Russia, China, and Iran. Thousands have fled.',
+      why: 'Nicaragua\'s authoritarian consolidation is complete, joining Cuba and Venezuela as regional dictatorships. Its alignment with US adversaries is concerning. Migration affects Central American stability. Democratic norms in the region are weakened.',
+      next: 'Ortega faces no serious internal challenge. Watch for: succession planning (his wife is VP), relations with adversaries, migration trends, and regional responses. The dictatorship appears durable.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Ortega expels more NGOs from country', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Catholic bishop sentenced to 26 years', url: '#' }
+    ]
+  },
+
+  // STORMY COUNTRIES
+  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$25.5T', leader: 'Current Admin', title: 'Political Polarization',
+    analysis: {
+      what: 'America remains deeply polarized, with partisan divisions affecting nearly every aspect of governance. The economy has shown resilience—avoiding recession, with low unemployment and cooling inflation—but high interest rates and housing costs strain households. Immigration has surged at the southern border. Foreign policy is stretched across multiple crises: supporting Ukraine, navigating Middle East turmoil, competing with China. Congress remains gridlocked with narrow margins.',
+      why: 'As the world\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance, American decisions reverberate globally. US commitment to Ukraine is essential for European security. The US-China relationship will shape the 21st-century order. Dollar hegemony underpins the global financial system.',
+      next: 'The 2026 midterm elections will determine Congressional control and set the trajectory for 2028. Key issues include economy, immigration, and foreign policy. Watch for: Ukraine aid commitment, China policy, government shutdowns, and Supreme Court decisions.'
+    },
+    news: [
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Congress debates border security package', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Fed signals steady rates through spring', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '5h ago', headline: 'Economy adds 200,000 jobs in latest report', url: '#' },
+      { source: 'NYT', bias: 'center-left', time: '7h ago', headline: 'Immigration debate dominates Capitol Hill', url: '#' }
+    ]
+  },
+
+  'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'stormy', region: 'Western Europe', pop: '68M', gdp: '$2.8T', leader: 'Emmanuel Macron', title: 'Political Fragmentation',
+    analysis: {
+      what: 'France faces political fragmentation with Macron\'s centrist coalition weakened and both the far-right (Le Pen) and far-left (Mélenchon) gaining ground. Snap elections in 2024 produced a hung parliament. Pension reform protests showed deep social discontent. The economy struggles with high debt and sluggish growth. Immigration and security remain divisive issues.',
+      why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. French politics shape EU direction. Macron has pushed European strategic autonomy. Far-right gains would significantly impact EU and NATO.',
+      next: 'Macron is a lame duck until 2027 elections. Watch for: coalition stability, Le Pen\'s positioning, economic reforms, and EU leadership role. Political uncertainty will persist.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Government survives no-confidence vote', url: '#' },
+      { source: 'Le Monde', bias: 'center-left', time: '5h ago', headline: 'Budget negotiations stall in parliament', url: '#' },
+      { source: 'FT', bias: 'center', time: '8h ago', headline: 'France faces EU pressure over deficit', url: '#' }
+    ]
+  },
+
+  'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'stormy', region: 'Western Europe', pop: '84M', gdp: '$4.2T', leader: 'Olaf Scholz', title: 'Economic Transition',
+    analysis: {
+      what: 'Germany faces structural economic challenges as its industrial model—based on cheap Russian energy and exports to China—unravels. The economy has stagnated. Energy transition costs are high. The coalition government is fractious. The far-right AfD has surged to second place in polls. Immigration remains divisive.',
+      why: 'Germany is Europe\'s largest economy and the EU\'s de facto leader. German industry is central to European supply chains. Its energy transition affects climate goals. Political shifts here reshape the entire EU.',
+      next: 'Elections in 2025 will likely bring political change. Watch for: economic indicators, AfD\'s trajectory, coalition dynamics, and EU positioning. Germany is at an inflection point.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Industrial output falls for third straight month', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Coalition tensions rise over budget', url: '#' },
+      { source: 'DW', bias: 'center', time: '8h ago', headline: 'AfD leads polls in eastern states', url: '#' }
+    ]
+  },
+
+  'Brazil': { lat: -14.24, lng: -51.93, flag: '🇧🇷', risk: 'stormy', region: 'South America', pop: '215M', gdp: '$1.9T', leader: 'Lula da Silva', title: 'Amazon & Politics',
+    analysis: {
+      what: 'President Lula returned to power in 2023 after defeating Bolsonaro, whose supporters stormed government buildings. Amazon deforestation has declined under Lula\'s policies. The economy is growing moderately with inflation controlled. But political polarization remains intense and Bolsonaro retains significant support despite legal troubles.',
+      why: 'Brazil is the world\'s largest rainforest nation—its Amazon policies affect global climate. It\'s Latin America\'s largest economy. Lula has sought to rebuild Brazil\'s global diplomatic role. Political stability here affects the entire region.',
+      next: 'Lula faces challenges balancing environmental goals with development. Watch for: Amazon policy, economic performance, Bolsonaro\'s legal fate, and 2026 election positioning. Polarization will persist.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Amazon deforestation hits five-year low', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Bolsonaro charged in coup investigation', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '8h ago', headline: 'Central bank signals rate cuts ahead', url: '#' }
+    ]
+  },
+
+  'Mexico': { lat: 23.63, lng: -102.55, flag: '🇲🇽', risk: 'stormy', region: 'North America', pop: '130M', gdp: '$1.3T', leader: 'Claudia Sheinbaum', title: 'Cartel Violence',
+    analysis: {
+      what: 'Mexico faces entrenched cartel violence with over 30,000 homicides annually. President Sheinbaum, the first female president, continues her predecessor\'s "hugs not bullets" approach despite criticism. Fentanyl trafficking to the US dominates bilateral relations. Nearshoring is boosting manufacturing as companies leave China. Democratic institutions face pressure.',
+      why: 'Mexico is the US\'s largest trading partner and shares a 2,000-mile border. Migration and drug trafficking are central to US politics. Nearshoring makes Mexico increasingly important to supply chains. Instability would directly affect the US.',
+      next: 'Sheinbaum must address security while maintaining economic growth. Watch for: cartel violence, US relations, nearshoring investment, and judicial reforms. The relationship with the US will remain complex.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Cartel violence surges in Sinaloa state', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'US presses Mexico on fentanyl trafficking', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '8h ago', headline: 'Manufacturers flock to Mexico amid nearshoring boom', url: '#' }
+    ]
+  },
+
+  'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'stormy', region: 'South Asia', pop: '1.4B', gdp: '$3.4T', leader: 'Narendra Modi', title: 'Rising Power',
+    analysis: {
+      what: 'India is the world\'s fastest-growing major economy and most populous country. PM Modi won a third term but with reduced majority, requiring coalition partners. Hindu nationalism has risen, with concerns about Muslim minority treatment. Relations with China remain tense after border clashes. India is courted by both the US and Russia.',
+      why: 'India is a crucial swing state in great power competition—both the US and China seek its partnership. Its massive market and young population offer economic potential. It\'s a nuclear power and major military force. Indian diaspora is globally influential.',
+      next: 'Modi must balance growth with inclusion while navigating between great powers. Watch for: economic reforms, religious tensions, China border, and strategic alignments. India\'s trajectory will shape this century.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'India GDP growth exceeds expectations', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'Modi meets with US officials on defense ties', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '7h ago', headline: 'Religious tensions flare in multiple states', url: '#' }
+    ]
+  },
+
+  'South Korea': { lat: 35.91, lng: 127.77, flag: '🇰🇷', risk: 'stormy', region: 'East Asia', pop: '52M', gdp: '$1.7T', leader: 'Yoon Suk Yeol', title: 'Political Crisis',
+    analysis: {
+      what: 'President Yoon Suk Yeol shocked the nation by declaring martial law in December 2024, quickly reversed after parliamentary opposition. He faces impeachment proceedings. Political polarization is intense. Relations with Japan have improved but North Korean threats persist. The economy faces headwinds from China slowdown affecting exports.',
+      why: 'South Korea is a major economy, technological powerhouse (Samsung, semiconductors), and crucial US ally. It hosts 28,000 US troops facing North Korea. Political instability affects regional security. Korean pop culture has global reach.',
+      next: 'Yoon\'s political survival is uncertain. Watch for: impeachment proceedings, early elections, North Korea policy, and US alliance management. A political transition may occur.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Impeachment vote scheduled amid protests', url: '#' },
+      { source: 'Yonhap', bias: 'center', time: '4h ago', headline: 'Constitutional court weighs martial law legality', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Mass demonstrations continue nationwide', url: '#' }
+    ]
+  },
+
+  // More STORMY countries
+  'Saudi Arabia': { lat: 23.89, lng: 45.08, flag: '🇸🇦', risk: 'stormy', region: 'Middle East', pop: '36M', gdp: '$1.1T', leader: 'MBS', title: 'Vision 2030',
+    analysis: {
+      what: 'Crown Prince Mohammed bin Salman (MBS) is rapidly transforming Saudi Arabia through Vision 2030—diversifying away from oil dependence. Megaprojects like NEOM ($500B futuristic city), sports investments (LIV Golf, Newcastle FC), and entertainment liberalization mark dramatic changes. But the murder of journalist Khashoggi, Yemen war involvement, and suppression of dissent continue. Oil production decisions heavily influence global energy markets.',
+      why: 'Saudi Arabia is the world\'s swing oil producer, able to influence global prices. It controls Islam\'s holiest sites. MBS\'s regional policies—Yemen war, Qatar blockade (now ended), Abraham Accords negotiations—reshape the Middle East. The kingdom\'s sovereign wealth fund is one of the world\'s largest, acquiring global assets.',
+      next: 'Vision 2030\'s success is uncertain given oil price volatility and ambitious spending. Watch for: oil production decisions, normalization with Israel (paused after Gaza), succession dynamics, and social reform pace. The transformation is real but faces significant headwinds.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'OPEC+ maintains production cuts amid demand concerns', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'NEOM faces delays and cost overruns', url: '#' }
+    ]
+  },
+
+  'South Africa': { lat: -30.56, lng: 22.94, flag: '🇿🇦', risk: 'stormy', region: 'Africa', pop: '60M', gdp: '$399B', leader: 'Ramaphosa', title: 'Coalition Government',
+    analysis: {
+      what: 'The ANC lost its majority for the first time since 1994, forced into coalition with the DA and others. President Ramaphosa continues but with weakened mandate. The economy struggles with load shedding (power cuts), high unemployment (32%), and infrastructure decay. Crime is severe. Corruption scandals have eroded trust.',
+      why: 'South Africa is Africa\'s most industrialized economy and a regional anchor. Its trajectory affects the entire southern African region. The country\'s stance on Russia and Palestine puts it at odds with Western allies. Its financial markets are Africa\'s most developed.',
+      next: 'The coalition government faces the challenge of reform while maintaining stability. Watch for: power crisis resolution, economic reforms, corruption prosecutions, and coalition dynamics. The country is at an inflection point.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Load shedding eases as new power plants come online', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Coalition tensions flare over cabinet posts', url: '#' }
+    ]
+  },
+
+  'Kenya': { lat: -0.02, lng: 37.91, flag: '🇰🇪', risk: 'stormy', region: 'Africa', pop: '54M', gdp: '$113B', leader: 'William Ruto', title: 'Protests & Debt',
+    analysis: {
+      what: 'Mass youth-led protests in 2024 forced President Ruto to withdraw a controversial tax bill and reshuffle his cabinet. The economy is strained by high debt servicing costs—nearly half of revenue goes to debt payments. Kenya leads the Haiti security mission despite domestic challenges. Tech sector ("Silicon Savannah") remains a bright spot.',
+      why: 'Kenya is East Africa\'s largest economy and a key US security partner in the region. It\'s a hub for regional business and technology. The youth protest movement could inspire similar actions across Africa. Kenya\'s debt distress mirrors broader emerging market challenges.',
+      next: 'Ruto faces the difficult balance of fiscal reform versus public anger. Watch for: debt restructuring, protest dynamics, Haiti mission progress, and 2027 election positioning. The government\'s reform agenda faces significant headwinds.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Kenya secures debt relief from creditors', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Youth activists maintain pressure on government', url: '#' }
+    ]
+  },
+
+  'Colombia': { lat: 4.57, lng: -74.30, flag: '🇨🇴', risk: 'stormy', region: 'South America', pop: '52M', gdp: '$314B', leader: 'Gustavo Petro', title: 'Peace Process',
+    analysis: {
+      what: 'President Petro, Colombia\'s first leftist leader, has pursued "total peace"—negotiations with multiple armed groups. Results are mixed: talks with ELN guerrillas have stalled, while some groups have demobilized. Coca production remains at record levels. Relations with the US are strained. Economic reforms have been controversial.',
+      why: 'Colombia is the world\'s largest cocaine producer. Its stability affects the entire region. The country hosts 2+ million Venezuelan refugees. US-Colombia relations are historically close but now tested. The peace process outcome will determine security for decades.',
+      next: 'Petro\'s ambitious agenda faces congressional opposition and armed group intransigence. Watch for: peace negotiations, coca policy, economic reforms, and 2026 elections. The country\'s direction depends on peace process success.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'ELN peace talks resume after breakdown', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Coca production hits new record despite eradication efforts', url: '#' }
+    ]
+  },
+
+  'Peru': { lat: -9.19, lng: -75.02, flag: '🇵🇪', risk: 'stormy', region: 'South America', pop: '34M', gdp: '$242B', leader: 'Dina Boluarte', title: 'Political Instability',
+    analysis: {
+      what: 'Peru has cycled through multiple presidents in recent years amid political chaos. President Boluarte faces very low approval after taking power when Castillo was impeached and arrested for attempting a self-coup. Protests killed dozens. Mining remains the economic backbone but faces social opposition. Corruption scandals have touched virtually every political figure.',
+      why: 'Peru is the world\'s second-largest copper producer, critical for the energy transition. Political instability deters investment in a resource-rich country. Regional drug trafficking flows through Peru. The pattern of presidential dysfunction weakens democratic institutions.',
+      next: 'Boluarte will likely serve until 2026 elections but with minimal legitimacy. Watch for: mining investment, social conflicts, corruption prosecutions, and electoral dynamics. Structural political reform seems unlikely.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Mining protests block major copper operations', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Boluarte approval ratings hit new low', url: '#' }
+    ]
+  },
+
+  'Thailand': { lat: 15.87, lng: 100.99, flag: '🇹🇭', risk: 'stormy', region: 'Southeast Asia', pop: '70M', gdp: '$495B', leader: 'Paetongtarn', title: 'Political Uncertainty',
+    analysis: {
+      what: 'Thailand\'s politics remain turbulent despite a new government led by Paetongtarn Shinawatra, daughter of exiled former PM Thaksin. The progressive Move Forward party was dissolved by constitutional court despite winning the most seats. The military and monarchy retain enormous influence. Economic growth has lagged regional peers. Tourism has recovered post-COVID.',
+      why: 'Thailand is Southeast Asia\'s second-largest economy and a major tourist destination. The monarchy is deeply revered but succession creates uncertainty. The country\'s position between US and China shapes regional dynamics. Its political instability (19 coups since 1932) affects investment.',
+      next: 'The Shinawatra-linked government faces military and conservative establishment skepticism. Watch for: coalition stability, economic reforms, lèse-majesté prosecutions, and relations with progressive opposition. Another political disruption cannot be ruled out.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'New government faces constitutional court challenges', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '5h ago', headline: 'Tourism revenues approach pre-COVID levels', url: '#' }
+    ]
+  },
+
+  'Philippines': { lat: 12.88, lng: 121.77, flag: '🇵🇭', risk: 'stormy', region: 'Southeast Asia', pop: '115M', gdp: '$404B', leader: 'Marcos Jr', title: 'China Tensions',
+    analysis: {
+      what: 'President Marcos Jr has shifted from his predecessor Duterte\'s China-friendly stance, strengthening US alliance ties amid South China Sea tensions. Chinese vessels regularly confront Philippine boats at disputed reefs. The Visiting Forces Agreement with the US was renewed, and new base access granted. A rift has developed between Marcos and VP Sara Duterte (daughter of the former president).',
+      why: 'The Philippines sits on critical South China Sea shipping lanes where $3 trillion in trade passes annually. It\'s a key US ally hosting military facilities. The confrontational dynamics with China could escalate to armed conflict. The large overseas Filipino worker population sends significant remittances.',
+      next: 'Tensions with China will likely persist and potentially escalate. Watch for: South China Sea incidents, US military cooperation, Marcos-Duterte political split, and economic development. The country is increasingly on the frontline of US-China competition.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Chinese vessels block Philippine boats at disputed reef', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'US announces new military cooperation package', url: '#' }
+    ]
+  },
+
+  'Hungary': { lat: 47.16, lng: 19.50, flag: '🇭🇺', risk: 'stormy', region: 'Eastern Europe', pop: '10M', gdp: '$188B', leader: 'Viktor Orbán', title: 'Democratic Backsliding',
+    analysis: {
+      what: 'PM Viktor Orbán has built what he calls "illiberal democracy"—concentrating power, capturing media, and undermining judicial independence. Hungary regularly clashes with the EU over rule of law, blocking Ukraine aid and migration policies. Orbán maintains close ties with Putin and has visited Moscow. The economy struggles with high inflation and EU funding freezes.',
+      why: 'Hungary demonstrates democratic backsliding within the EU, challenging the bloc\'s values. Its veto power blocks EU decisions on Ukraine and other issues. Orbán is a model for right-wing populists globally. Hungary\'s position complicates NATO unity.',
+      next: 'Orbán appears secure domestically but faces increasing EU isolation. Watch for: EU funding negotiations, Ukraine policy, and any opposition consolidation. Hungary will continue to be the EU\'s most difficult member.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'EU freezes more funds over rule of law concerns', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Orbán blocks joint EU statement on Ukraine', url: '#' }
+    ]
+  },
+
+  'Serbia': { lat: 44.02, lng: 21.01, flag: '🇷🇸', risk: 'stormy', region: 'Balkans', pop: '7M', gdp: '$63B', leader: 'Aleksandar Vučić', title: 'Kosovo Tensions',
+    analysis: {
+      what: 'President Vučić maintains strong grip on power with control over media and institutions. Serbia refuses to recognize Kosovo\'s independence and tensions remain high, including recent violent incidents. The country seeks EU membership but won\'t align with sanctions on Russia. It has close ties with both Russia and China while negotiating with the West.',
+      why: 'Serbia\'s relations with Kosovo are a potential flashpoint in Europe. Its balancing act between East and West complicates regional integration. Weapons flowing from Serbia have appeared in various conflicts. The country is key to Balkan stability.',
+      next: 'The Kosovo issue appears intractable without significant compromise. Watch for: Kosovo-Serbia negotiations, EU accession progress, and Russian influence. Vučić will try to maintain his balancing act indefinitely.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'EU-mediated talks with Kosovo make limited progress', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Serbia maintains neutrality on Russia sanctions', url: '#' }
+    ]
+  },
+
+  'El Salvador': { lat: 13.79, lng: -88.90, flag: '🇸🇻', risk: 'stormy', region: 'Central America', pop: '6.5M', gdp: '$33B', leader: 'Nayib Bukele', title: 'Gang Crackdown',
+    analysis: {
+      what: 'President Bukele has achieved dramatic reduction in gang violence through a state of emergency, mass arrests (80,000+), and harsh conditions that have drawn human rights criticism. Homicides dropped from world\'s highest to among lowest in the Americas. He won reelection overwhelmingly despite constitutional concerns. Bitcoin adoption as legal tender has been rocky.',
+      why: 'Bukele\'s gang suppression model is being watched by other violence-plagued countries. His popularity despite authoritarian methods challenges democratic norms. The Bitcoin experiment tests cryptocurrency\'s viability as national currency. Migration from El Salvador significantly affects the US.',
+      next: 'Bukele faces the challenge of sustaining security gains and economic development. Watch for: human rights concerns, economic indicators, Bitcoin project, and whether the security model is replicable. His approach is a test case for the region.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Homicide rate remains at historic low', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Human rights groups condemn prison conditions', url: '#' }
+    ]
+  },
+
+  'Sri Lanka': { lat: 7.87, lng: 80.77, flag: '🇱🇰', risk: 'stormy', region: 'South Asia', pop: '22M', gdp: '$75B', leader: 'Anura Kumara', title: 'Economic Recovery',
+    analysis: {
+      what: 'Sri Lanka experienced complete economic collapse in 2022—defaulting on debt, running out of fuel and medicine, and seeing the president flee the country amid mass protests. A new leftist president won elections promising reform. IMF bailout conditions are being implemented with painful austerity. Tourism is recovering slowly.',
+      why: 'Sri Lanka\'s collapse was a warning about debt distress in developing countries. Its strategic location in the Indian Ocean makes it important to India and China (which built the controversial Hambantota port). The recovery\'s success will influence how other struggling nations are treated.',
+      next: 'The new government must balance IMF conditions with public patience. Watch for: economic indicators, tourism recovery, debt restructuring, and India-China competition. Recovery will be long and painful but appears on track.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'IMF approves next bailout tranche', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Tourism arrivals show steady recovery', url: '#' }
+    ]
+  },
+
+  'Bolivia': { lat: -16.29, lng: -63.59, flag: '🇧🇴', risk: 'stormy', region: 'South America', pop: '12M', gdp: '$44B', leader: 'Luis Arce', title: 'Political Divisions',
+    analysis: {
+      what: 'Bolivia faces political division between President Arce and his former mentor Evo Morales, splitting the ruling MAS party. A failed coup attempt in 2024 (or what critics called a staged event) added confusion. Economic challenges mount as natural gas revenues decline. Indigenous politics remain central. Lithium reserves offer potential.',
+      why: 'Bolivia has among the world\'s largest lithium reserves, crucial for battery production. The MAS movement\'s internal conflict affects regional left politics. The country demonstrates tensions between democratic norms and populist movements.',
+      next: 'The Arce-Morales split will dominate politics heading toward 2025 elections. Watch for: economic conditions, lithium development, and political violence risk. The outcome will shape Bolivia\'s direction for years.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Morales announces presidential bid despite controversy', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Natural gas exports continue decline', url: '#' }
+    ]
+  },
+
+  'Guyana': { lat: 4.86, lng: -58.93, flag: '🇬🇾', risk: 'stormy', region: 'South America', pop: '0.8M', gdp: '$15B', leader: 'Irfaan Ali', title: 'Oil Boom',
+    analysis: {
+      what: 'Guyana has experienced the world\'s fastest economic growth due to massive offshore oil discoveries—expected to produce over 1 million barrels per day by 2027. This tiny country of 800,000 people faces the challenge of managing sudden wealth. Venezuela claims two-thirds of Guyana\'s territory (Essequibo) and has made threatening moves.',
+      why: 'Guyana\'s oil boom is one of the most dramatic economic transformations in history. The Venezuela territorial dispute could escalate to conflict. How Guyana manages its windfall will be studied as a development case. Caribbean stability is affected.',
+      next: 'The key challenge is using oil wealth wisely to avoid the "resource curse." Watch for: Venezuela tensions, governance quality, infrastructure development, and wealth distribution. The country\'s transformation is just beginning.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Oil production exceeds projections', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Venezuela continues military posturing on border', url: '#' }
+    ]
+  },
+
+  // ==================== CLOUDY COUNTRIES ====================
+  'United Kingdom': { lat: 55.38, lng: -3.44, flag: '🇬🇧', risk: 'cloudy', region: 'Western Europe', pop: '67M', gdp: '$3.1T', leader: 'Keir Starmer', title: 'Post-Brexit Adjustment',
+    analysis: {
+      what: 'Labour\'s Keir Starmer won a landslide election in 2024, ending 14 years of Conservative rule. He inherits an economy still adjusting to Brexit with sluggish growth, strained public services, and high debt. Relations with Europe are being reset, though not rejoining the EU. Immigration policy and small boat crossings remain contentious.',
+      why: 'The UK is Europe\'s second-largest economy and a permanent UN Security Council member. Its global financial center status continues despite Brexit. The "special relationship" with the US remains important. The UK is a key NATO contributor.',
+      next: 'Starmer faces the challenge of delivering change with limited fiscal room. Watch for: economic growth, EU relationship, immigration policy, and public service reform. The honeymoon period will be tested quickly.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Starmer announces EU cooperation initiatives', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'NHS waiting lists remain at record levels', url: '#' }
+    ]
+  },
+
+  'Italy': { lat: 41.87, lng: 12.57, flag: '🇮🇹', risk: 'cloudy', region: 'Western Europe', pop: '59M', gdp: '$2.1T', leader: 'Giorgia Meloni', title: 'Right-Wing Government',
+    analysis: {
+      what: 'PM Giorgia Meloni leads the most right-wing government since WWII, but has proven more pragmatic than feared—maintaining EU relations and supporting Ukraine. Economic growth is modest. Debt remains very high at 140% of GDP. Migration from Africa is a central issue. Her Brothers of Italy party has post-fascist roots.',
+      why: 'Italy is the eurozone\'s third-largest economy—its debt levels affect European financial stability. Meloni\'s pragmatism has surprised observers and influences how other right-wing leaders govern. Italian migration policy affects EU-wide approaches. Italy is a key NATO member.',
+      next: 'Meloni\'s popularity has held but economic challenges persist. Watch for: debt dynamics, migration deals, EU relations, and coalition stability. Italy demonstrates right-wing governance within EU constraints.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Meloni meets EU leaders on migration deal', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Italian bonds stable despite high debt', url: '#' }
+    ]
+  },
+
+  'Poland': { lat: 51.92, lng: 19.15, flag: '🇵🇱', risk: 'cloudy', region: 'Eastern Europe', pop: '38M', gdp: '$688B', leader: 'Donald Tusk', title: 'Democratic Recovery',
+    analysis: {
+      what: 'PM Donald Tusk returned to power in 2023, ending 8 years of PiS rule that had eroded judicial independence and clashed with the EU. The new government is working to restore rule of law and unlock frozen EU funds. Poland hosts millions of Ukrainian refugees and is a major defense spender. Relations with the EU are normalizing.',
+      why: 'Poland is the largest Central European economy and NATO\'s eastern anchor. It borders Ukraine and Russia\'s Kaliningrad exclave. Its democratic recovery is significant for EU cohesion. Poland has become a major military power with 4% of GDP defense spending.',
+      next: 'Tusk faces the challenge of reforming captured institutions while maintaining stability. Watch for: judicial reforms, EU funding, Ukraine support, and relations with President Duda. Democratic restoration is a long process.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'EU releases frozen funds after reform progress', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Poland hosts major NATO exercises near Belarus border', url: '#' }
+    ]
+  },
+
+  'Spain': { lat: 40.46, lng: -3.75, flag: '🇪🇸', risk: 'cloudy', region: 'Western Europe', pop: '48M', gdp: '$1.4T', leader: 'Pedro Sánchez', title: 'Coalition Politics',
+    analysis: {
+      what: 'PM Sánchez leads a fragile minority government dependent on regional parties including Catalan separatists. An amnesty for Catalan independence leaders was passed amid controversy. The economy has performed better than eurozone peers. Housing affordability is a growing issue. Devastating floods in Valencia highlighted climate vulnerabilities.',
+      why: 'Spain is the eurozone\'s fourth-largest economy. The Catalan independence issue creates precedent for separatist movements elsewhere. Spanish is spoken by 500+ million people globally. Tourism makes Spain a major European destination.',
+      next: 'Sánchez\'s coalition is unstable and could collapse. Watch for: Catalan negotiations, economic performance, housing protests, and snap election risk. The government\'s survival is not assured.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Catalan amnesty law faces constitutional challenge', url: '#' },
+      { source: 'El País', bias: 'center-left', time: '5h ago', headline: 'Housing protests spread to major cities', url: '#' }
+    ]
+  },
+
+  'Netherlands': { lat: 52.13, lng: 5.29, flag: '🇳🇱', risk: 'cloudy', region: 'Western Europe', pop: '18M', gdp: '$991B', leader: 'Dick Schoof', title: 'Right-Wing Shift',
+    analysis: {
+      what: 'Geert Wilders\' far-right PVV won elections but couldn\'t form government directly—a coalition with moderate parties installed technocrat PM Schoof. The government has adopted the toughest asylum policy in Dutch history. Economic concerns include housing shortage and agricultural transition. The Netherlands remains Europe\'s largest port.',
+      why: 'The Netherlands is a major EU economy and home to Rotterdam, Europe\'s largest port. Its political shift rightward reflects broader European trends. Dutch agriculture and tech sectors are globally significant. Shell and other major multinationals are headquartered there.',
+      next: 'The coalition\'s stability will be tested by Wilders\' ambitions and policy compromises. Watch for: asylum policy implementation, EU relations, and farmer protests. The rightward shift may continue.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Government announces strictest asylum rules in history', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Dutch ports see record trade volumes', url: '#' }
+    ]
+  },
+
+  'Indonesia': { lat: -0.79, lng: 113.92, flag: '🇮🇩', risk: 'cloudy', region: 'Southeast Asia', pop: '277M', gdp: '$1.3T', leader: 'Prabowo', title: 'New Leadership',
+    analysis: {
+      what: 'New President Prabowo Subianto, a former general once accused of human rights abuses, won elections with Jokowi\'s backing. He has announced ambitious programs including free school meals. Indonesia is building a new capital (Nusantara) in Borneo. The economy grows steadily with nickel processing driving investment. Democratic backsliding concerns exist.',
+      why: 'Indonesia is the world\'s fourth most populous country and ASEAN\'s largest economy. It has vast mineral resources crucial for batteries (nickel, cobalt). The country\'s stability affects Southeast Asian regional dynamics. Its moderate Islam influences global Muslim communities.',
+      next: 'Prabowo\'s leadership style and policies are still being defined. Watch for: democratic institutions, economic policy, environmental concerns (deforestation), and foreign policy direction. The transition marks a significant shift.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Prabowo announces major infrastructure investments', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '5h ago', headline: 'Nickel processing attracts Chinese investment', url: '#' }
+    ]
+  },
+
+  'Vietnam': { lat: 14.06, lng: 108.28, flag: '🇻🇳', risk: 'cloudy', region: 'Southeast Asia', pop: '100M', gdp: '$409B', leader: 'Tô Lâm', title: 'Manufacturing Hub',
+    analysis: {
+      what: 'Vietnam has emerged as a major manufacturing hub, benefiting from supply chain diversification away from China. GDP growth exceeds 6% annually. A sweeping anti-corruption campaign has reshuffled leadership including the president. The one-party communist state maintains stability while gradually opening the economy.',
+      why: 'Vietnam is one of the fastest-growing economies and a key beneficiary of "China+1" supply chain strategies. Major tech companies (Samsung, Apple suppliers) have significant operations there. The country balances relations with the US and China despite historical conflicts with both.',
+      next: 'Manufacturing growth should continue as companies diversify from China. Watch for: US-Vietnam relations, anti-corruption campaign impacts, and infrastructure development. Vietnam\'s rise as a manufacturing power will accelerate.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Manufacturing exports hit new record', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '5h ago', headline: 'Apple expands supplier operations in Vietnam', url: '#' }
+    ]
+  },
+
+  'Japan': { lat: 36.20, lng: 138.25, flag: '🇯🇵', risk: 'clear', region: 'East Asia', pop: '125M', gdp: '$4.2T', leader: 'Shigeru Ishiba', title: 'Defense Buildup',
+    analysis: {
+      what: 'Japan has undertaken its most significant defense transformation since WWII, doubling military spending and acquiring counterstrike capabilities in response to China and North Korea. New PM Ishiba has pushed for even more, including a potential Asian NATO. The economy has finally exited decades of deflation with wages rising. Demographic decline (population shrinking by 500,000/year) poses long-term challenges.',
+      why: 'Japan is the world\'s third-largest economy and crucial US ally. Its defense buildup reshapes Asian security dynamics. Japanese technology and manufacturing remain globally important. Yen weakness has affected global currency markets.',
+      next: 'The defense transformation will continue as regional tensions persist. Watch for: China relations, US alliance management, economic normalization, and demographic policies. Japan is becoming a more "normal" military power.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Defense budget reaches record levels', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '4h ago', headline: 'Wages show sustained growth for first time in decades', url: '#' }
+    ]
+  },
+
+  'Canada': { lat: 56.13, lng: -106.35, flag: '🇨🇦', risk: 'clear', region: 'North America', pop: '40M', gdp: '$2.1T', leader: 'Mark Carney', title: 'Stable Democracy',
+    analysis: {
+      what: 'Canada has experienced political transition with new Liberal leadership. Relations with the US have been tested by trade tensions and border security debates. Housing affordability remains a major domestic issue with prices among the world\'s highest. Immigration levels are high but face public skepticism. The country is a major energy producer.',
+      why: 'Canada is America\'s largest trading partner and close ally. Its energy resources (oil sands, hydropower) are globally significant. Canadian stability contrasts with US polarization. Arctic sovereignty is increasingly important as ice melts.',
+      next: 'Trade relations with the US will be the dominant concern. Watch for: US tariff threats, housing policy, immigration levels, and energy sector development. Canadian-US relations face unusual uncertainty.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'New government faces US trade pressure', url: '#' },
+      { source: 'Globe and Mail', bias: 'center', time: '5h ago', headline: 'Housing starts increase as prices moderate', url: '#' }
+    ]
+  },
+
+  'Australia': { lat: -25.27, lng: 133.78, flag: '🇦🇺', risk: 'clear', region: 'Oceania', pop: '26M', gdp: '$1.7T', leader: 'Anthony Albanese', title: 'AUKUS Partner',
+    analysis: {
+      what: 'Australia is implementing the AUKUS agreement to acquire nuclear-powered submarines, the largest defense investment in its history. Relations with China have thawed after years of tension, though strategic competition continues. The economy benefits from mining exports but faces housing affordability challenges. Labor government balances alliance commitments with regional engagement.',
+      why: 'Australia is a key US ally in the Indo-Pacific, hosting military facilities and participating in the Quad. Its mineral exports (iron ore, lithium, coal) are globally crucial, especially for China. The AUKUS submarines represent a major shift in regional military balance.',
+      next: 'The AUKUS implementation faces technical and political challenges. Watch for: China relations, submarine program progress, Pacific Island engagement, and domestic politics. Australia\'s strategic importance will grow.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'AUKUS submarine construction begins', url: '#' },
+      { source: 'ABC', bias: 'center-left', time: '5h ago', headline: 'Trade with China reaches new highs', url: '#' }
+    ]
+  },
+
+  'Singapore': { lat: 1.35, lng: 103.82, flag: '🇸🇬', risk: 'clear', region: 'Southeast Asia', pop: '6M', gdp: '$424B', leader: 'Lawrence Wong', title: 'Leadership Transition',
+    analysis: {
+      what: 'Singapore has completed its leadership transition from Lee Hsien Loong to Lawrence Wong, only the fourth prime minister since independence. The city-state remains Southeast Asia\'s financial hub with one of the world\'s highest GDPs per capita. It balances relations with the US and China while maintaining authoritarian political control. Housing costs and inequality are domestic concerns.',
+      why: 'Singapore is a global financial center and trading hub. Its political stability model influences regional governance. The country\'s port is among the world\'s busiest. Singapore\'s policies on technology and finance set regional standards.',
+      next: 'Wong must maintain Singapore\'s success while addressing inequality and political expectations. Watch for: US-China positioning, financial sector developments, and any political liberalization. The city-state\'s model will be tested.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Singapore GDP growth exceeds forecasts', url: '#' },
+      { source: 'Straits Times', bias: 'center-right', time: '5h ago', headline: 'PM Wong outlines new housing initiatives', url: '#' }
+    ]
+  },
+
+  'UAE': { lat: 23.42, lng: 53.85, flag: '🇦🇪', risk: 'clear', region: 'Middle East', pop: '10M', gdp: '$509B', leader: 'Mohamed bin Zayed', title: 'Regional Hub',
+    analysis: {
+      what: 'The UAE has emerged as the Middle East\'s business and logistics hub, with Dubai hosting global events and Abu Dhabi investing massively through sovereign wealth funds. It signed the Abraham Accords normalizing relations with Israel. Energy transition investments are significant. The country maintains influence through strategic investments and regional diplomacy.',
+      why: 'The UAE is a major global investor through funds like ADIA and Mubadala. Dubai is a global aviation and tourism hub. The country bridges East and West commercially. Its regional influence extends through investments, media, and military interventions.',
+      next: 'Economic diversification will continue as oil importance declines. Watch for: regional diplomatic role, investment patterns, and post-MBZ succession planning. The UAE model of authoritarian modernization will be tested.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'UAE sovereign fund announces major tech investments', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '5h ago', headline: 'Dubai real estate prices continue rising', url: '#' }
+    ]
+  },
+
+  'Switzerland': { lat: 46.82, lng: 8.23, flag: '🇨🇭', risk: 'clear', region: 'Western Europe', pop: '9M', gdp: '$808B', leader: 'Federal Council', title: 'Neutral & Stable',
+    analysis: {
+      what: 'Switzerland has navigated the Ukraine war while maintaining modified neutrality—adopting EU sanctions despite its neutral status. The banking sector faced upheaval with Credit Suisse\'s collapse and forced merger with UBS. Relations with the EU remain complex with no framework agreement. The direct democracy system continues to function well.',
+      why: 'Switzerland is a global financial center and headquarters for many international organizations. Its neutrality has been a cornerstone of European diplomacy. Swiss technology and pharmaceutical sectors are globally significant. The country\'s stability attracts wealth from worldwide.',
+      next: 'EU relations and neutrality policy will continue to evolve post-Ukraine. Watch for: banking sector stability, EU framework negotiations, and any neutrality debates. Switzerland\'s model faces 21st-century pressures.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Swiss banks report strong profits after consolidation', url: '#' },
+      { source: 'SWI', bias: 'center', time: '5h ago', headline: 'EU talks resume on bilateral framework', url: '#' }
+    ]
+  },
+
+  'Norway': { lat: 60.47, lng: 8.47, flag: '🇳🇴', risk: 'clear', region: 'Northern Europe', pop: '5M', gdp: '$579B', leader: 'Jonas Støre', title: 'Energy Superpower',
+    analysis: {
+      what: 'Norway has benefited enormously from high energy prices following Russia\'s invasion of Ukraine, with gas exports to Europe surging. The sovereign wealth fund (world\'s largest at $1.6 trillion) continues to grow. NATO\'s northern flank has increased importance. Arctic sovereignty is a growing focus. The country debates its role as a fossil fuel exporter amid climate concerns.',
+      why: 'Norway is Europe\'s largest gas supplier since Russia\'s decline. Its sovereign wealth fund\'s investments affect global markets. The country\'s Arctic expertise is increasingly valuable. Norway\'s NATO role has gained importance.',
+      next: 'The tension between fossil fuel wealth and climate goals will intensify. Watch for: energy policy, Arctic developments, NATO contributions, and sovereign fund decisions. Norway\'s choices have outsized global impact.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Sovereign wealth fund reaches new record high', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Norway gas exports stabilize European energy markets', url: '#' }
+    ]
+  },
+
+  // More CLOUDY countries
+  'Malaysia': { lat: 4.21, lng: 101.98, flag: '🇲🇾', risk: 'cloudy', region: 'Southeast Asia', pop: '34M', gdp: '$407B', leader: 'Anwar Ibrahim', title: 'Coalition Politics',
+    analysis: {
+      what: 'PM Anwar Ibrahim leads a unity government after decades of waiting for power. The economy is stable with electronics and palm oil exports. Political coalitions remain fragile with ethnic and religious tensions. The 1MDB corruption scandal continues to echo. Malaysia balances relations with China and Western powers.',
+      why: 'Malaysia controls the Strait of Malacca, one of the world\'s busiest shipping lanes. It\'s a major electronics manufacturing hub. The country\'s multiethnic balance influences regional politics. Palm oil exports affect global food and fuel markets.',
+      next: 'Anwar must maintain coalition unity while addressing economic inequality. Watch for: coalition stability, ethnic relations, and China engagement. Malaysia\'s political direction remains uncertain.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Electronics exports drive economic growth', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '5h ago', headline: 'Coalition partners debate economic policy', url: '#' }
+    ]
+  },
+
+  'Romania': { lat: 45.94, lng: 24.97, flag: '🇷🇴', risk: 'cloudy', region: 'Eastern Europe', pop: '19M', gdp: '$301B', leader: 'Disputed', title: 'NATO Frontline',
+    analysis: {
+      what: 'Romania faces political uncertainty after a far-right candidate won the first round of presidential elections before it was annulled over alleged Russian interference. The country is a key NATO member bordering Ukraine, hosting US troops and missile defense. Economic growth has been strong but faces fiscal challenges.',
+      why: 'Romania is on NATO\'s eastern flank, directly bordering Ukraine and Moldova. It hosts major US military facilities. The Black Sea coast is strategically important. Romanian politics serve as a bellwether for Russian influence operations in the EU.',
+      next: 'The political crisis will take time to resolve with new elections. Watch for: Russian interference, NATO posture, and EU relations. Romania\'s stability matters for regional security.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Constitutional court schedules new elections', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'NATO reinforces Black Sea presence', url: '#' }
+    ]
+  },
+
+  'Greece': { lat: 39.07, lng: 21.82, flag: '🇬🇷', risk: 'cloudy', region: 'Southern Europe', pop: '10M', gdp: '$219B', leader: 'Mitsotakis', title: 'Economic Recovery',
+    analysis: {
+      what: 'Greece has achieved remarkable recovery after its debt crisis, with investment-grade credit restored and tourism booming. PM Mitsotakis won a strong mandate for continued reforms. Relations with Turkey remain tense over maritime boundaries and Cyprus. Wildfires have become more devastating with climate change.',
+      why: 'Greece\'s recovery from near-default is a success story for eurozone crisis management. The country occupies strategic position at Europe\'s southeastern corner. Greek-Turkish tensions affect NATO cohesion. Tourism is vital to the Mediterranean economy.',
+      next: 'Economic momentum should continue but structural challenges remain. Watch for: Turkey relations, migration pressures, and climate impacts. Greece has turned a corner but faces ongoing challenges.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Tourism revenues exceed pre-pandemic levels', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Greece repays more crisis-era debt early', url: '#' }
+    ]
+  },
+
+  'Sweden': { lat: 60.13, lng: 18.64, flag: '🇸🇪', risk: 'cloudy', region: 'Northern Europe', pop: '10M', gdp: '$585B', leader: 'Ulf Kristersson', title: 'NATO Member',
+    analysis: {
+      what: 'Sweden ended over 200 years of neutrality by joining NATO in 2024, a historic shift prompted by Russia\'s invasion of Ukraine. The right-wing government relies on far-right support while maintaining centrist policies. Gang violence has become a major concern with shootings and bombings. The economy is stable with strong tech sector.',
+      why: 'Sweden\'s NATO membership fundamentally changes Baltic Sea security dynamics. The country\'s defense industry (Saab) is globally significant. Sweden\'s experience with gang violence offers lessons for other countries. Nordic cooperation is strengthening.',
+      next: 'NATO integration will deepen while addressing domestic security. Watch for: military investments, gang violence response, and Russia relations. Sweden\'s security posture has been transformed.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Sweden hosts first NATO exercises since joining', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Gang violence crackdown shows mixed results', url: '#' }
+    ]
+  },
+
+  'Finland': { lat: 61.92, lng: 25.75, flag: '🇫🇮', risk: 'cloudy', region: 'Northern Europe', pop: '6M', gdp: '$281B', leader: 'Petteri Orpo', title: 'New NATO Member',
+    analysis: {
+      what: 'Finland joined NATO in 2023, ending decades of "Finlandization" following Russia\'s invasion of Ukraine. This doubled NATO\'s border with Russia. The economy faces challenges with Nokia\'s decline and low growth. The right-wing coalition government has implemented budget cuts. Border security with Russia has required enhanced measures.',
+      why: 'Finland\'s 1,340km border with Russia is NATO\'s longest. Finnish military capabilities and Arctic expertise are significant NATO additions. The country\'s transformation shows how Russia\'s aggression has backfired. Nordic defense cooperation has intensified.',
+      next: 'NATO integration and border security will remain priorities. Watch for: Russia relations, Arctic developments, and economic reforms. Finland\'s strategic position has gained new importance.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Finland reinforces eastern border defenses', url: '#' },
+      { source: 'YLE', bias: 'center', time: '5h ago', headline: 'Government announces new defense investments', url: '#' }
+    ]
+  },
+
+  'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Karl Nehammer', title: 'Far-Right Gains',
+    analysis: {
+      what: 'The far-right FPÖ won elections in 2024 but has struggled to form a government due to other parties refusing to coalition. Austria maintains neutrality while being surrounded by NATO members. The economy depends heavily on trade with Germany. Immigration and Russia relations are divisive issues.',
+      why: 'Austria\'s political shifts reflect broader European far-right trends. The country\'s neutrality creates complications for European defense. Austrian banking has historical ties to Eastern Europe. The country is a transit point for migration.',
+      next: 'Government formation remains challenging. Watch for: coalition negotiations, Russia policy, and migration debates. Austria\'s political direction is uncertain.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Coalition talks continue amid deadlock', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Far-right gains reshape political landscape', url: '#' }
+    ]
+  },
+
+  'Chile': { lat: -35.68, lng: -71.54, flag: '🇨🇱', risk: 'cloudy', region: 'South America', pop: '19M', gdp: '$301B', leader: 'Gabriel Boric', title: 'Constitutional Reform',
+    analysis: {
+      what: 'President Boric leads a left-wing government that has struggled to deliver promised reforms after two constitutional referendums failed. The economy is stable but growth is weak. Migration from Venezuela and Haiti has strained services. Chile remains the world\'s largest copper producer with lithium reserves gaining importance.',
+      why: 'Chile is critical to the global copper supply, essential for electrification and green energy. Its lithium reserves are among the world\'s largest. The country has been Latin America\'s most stable economy. Chilean political shifts influence regional trends.',
+      next: 'Boric faces challenging path to 2025 midterms. Watch for: mining policy, constitutional debates, and economic performance. Chile\'s reform agenda has stalled but stability continues.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Copper prices boost fiscal revenues', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Lithium nationalization debate continues', url: '#' }
+    ]
+  },
+
+  'Morocco': { lat: 31.79, lng: -7.09, flag: '🇲🇦', risk: 'cloudy', region: 'North Africa', pop: '37M', gdp: '$132B', leader: 'King Mohammed VI', title: 'Western Sahara',
+    analysis: {
+      what: 'Morocco has gained international recognition for its sovereignty over Western Sahara, including from the US and increasingly from European states. The economy is diversifying into automotive and aerospace manufacturing. The 2023 earthquake killed nearly 3,000 and recovery continues. Relations with Algeria remain frozen.',
+      why: 'Morocco controls key Atlantic shipping lanes and is Africa\'s gateway to Europe. Its Western Sahara claim affects regional dynamics. The country is a major agricultural exporter to Europe. Morocco\'s stability contrasts with regional turmoil.',
+      next: 'Western Sahara recognition momentum may continue. Watch for: EU relations, economic development, and Algeria tensions. Morocco is consolidating its regional position.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'France recognizes Morocco Western Sahara sovereignty', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Earthquake reconstruction proceeds', url: '#' }
+    ]
+  },
+
+  'Senegal': { lat: 14.50, lng: -14.45, flag: '🇸🇳', risk: 'cloudy', region: 'Africa', pop: '18M', gdp: '$28B', leader: 'Bassirou Faye', title: 'Democratic Transition',
+    analysis: {
+      what: 'Senegal achieved a remarkable democratic transition when opposition candidate Bassirou Faye won the presidency after his predecessor\'s attempt to delay elections failed. The new government promises anti-corruption reforms. Oil and gas production is beginning. The country remains West Africa\'s most stable democracy.',
+      why: 'Senegal\'s democratic transition is a positive example for Africa amid coups elsewhere. New oil/gas revenues could transform the economy. The country is a key regional partner for the West. Senegal hosts significant foreign investment.',
+      next: 'The new government must deliver on reform promises while managing oil wealth. Watch for: governance reforms, oil production ramp-up, and regional influence. Senegal\'s success matters for African democracy.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'New government launches anti-corruption probe', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'First oil exports begin from offshore fields', url: '#' }
+    ]
+  },
+
+  'Tanzania': { lat: -6.37, lng: 34.89, flag: '🇹🇿', risk: 'cloudy', region: 'Africa', pop: '65M', gdp: '$76B', leader: 'Samia Hassan', title: 'Stable Growth',
+    analysis: {
+      what: 'President Samia Hassan, Africa\'s only female head of state, has reversed her predecessor\'s controversial policies including COVID denialism. The economy grows steadily with tourism and mining driving development. Democratic space remains constrained but has improved. Tanzania mediates regional conflicts.',
+      why: 'Tanzania is one of Africa\'s largest and most stable countries. It hosts refugees from multiple neighboring conflicts. The country\'s tourism (Serengeti, Zanzibar) is globally significant. Tanzania mediates in DRC and other regional disputes.',
+      next: 'Gradual reform and economic growth should continue. Watch for: 2025 elections, mining development, and regional diplomatic role. Tanzania is quietly becoming more influential.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Tourism revenues reach new record', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Tanzania hosts regional peace talks', url: '#' }
+    ]
+  },
+
+  // More CLEAR countries
+  'New Zealand': { lat: -40.90, lng: 174.89, flag: '🇳🇿', risk: 'clear', region: 'Oceania', pop: '5M', gdp: '$247B', leader: 'Christopher Luxon', title: 'Stable',
+    analysis: {
+      what: 'The center-right government elected in 2023 has reversed some previous progressive policies while maintaining overall stability. The economy faces challenges from high interest rates and housing costs. New Zealand maintains close ties with Australia through AUKUS adjacent arrangements. Pacific Islands engagement remains important.',
+      why: 'New Zealand punches above its weight diplomatically, particularly in Pacific Islands affairs. Its agricultural exports are globally significant. The country is part of Five Eyes intelligence sharing. New Zealand\'s clean image supports tourism and exports.',
+      next: 'Economic challenges will dominate domestic politics. Watch for: housing policy, Pacific engagement, and China relations. New Zealand remains stable and well-governed.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Interest rates begin to ease as inflation falls', url: '#' },
+      { source: 'RNZ', bias: 'center', time: '6h ago', headline: 'Pacific partnerships strengthened', url: '#' }
+    ]
+  },
+
+  'Denmark': { lat: 56.26, lng: 9.50, flag: '🇩🇰', risk: 'clear', region: 'Northern Europe', pop: '6M', gdp: '$395B', leader: 'Mette Frederiksen', title: 'Greenland Focus',
+    analysis: {
+      what: 'Denmark has faced increased attention due to US interest in Greenland, which it governs. PM Frederiksen has firmly rejected any sale while increasing defense spending for Greenland. The economy is strong with major pharmaceutical and shipping industries. Denmark leads in wind energy and green transition.',
+      why: 'Greenland\'s strategic location and resources (rare earths, oil) have gained geopolitical importance. Denmark controls key Arctic approaches. Danish shipping giant Maersk is globally significant. The country\'s renewable energy expertise is exported worldwide.',
+      next: 'Greenland\'s status will remain in focus given Arctic competition. Watch for: US relations, Arctic defense investments, and Greenland autonomy debates. Denmark\'s small size belies its strategic importance.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Denmark increases Greenland defense spending', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Pharmaceutical exports drive trade surplus', url: '#' }
+    ]
+  },
+
+  'Ireland': { lat: 53.14, lng: -7.69, flag: '🇮🇪', risk: 'clear', region: 'Western Europe', pop: '5M', gdp: '$533B', leader: 'Simon Harris', title: 'Tech Hub',
+    analysis: {
+      what: 'Ireland is a major European tech hub, hosting headquarters for Apple, Google, Microsoft, and others drawn by low corporate taxes. GDP figures are distorted by multinational accounting but genuine prosperity is high. Housing and healthcare face serious challenges. Relations with Britain have stabilized post-Brexit.',
+      why: 'Ireland\'s tax policies have made it crucial to global tech and pharmaceutical supply chains. The border with Northern Ireland affects UK-EU relations. Irish-American ties influence US politics. Dublin has emerged as a post-Brexit financial center alternative.',
+      next: 'Pressure on corporate tax arrangements will continue. Watch for: housing crisis, corporate tax changes, and EU relations. Ireland\'s economic model faces challenges but remains robust.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Apple announces expanded Irish operations', url: '#' },
+      { source: 'Irish Times', bias: 'center', time: '5h ago', headline: 'Housing crisis dominates political agenda', url: '#' }
+    ]
+  },
+
+  'Portugal': { lat: 39.40, lng: -8.22, flag: '🇵🇹', risk: 'clear', region: 'Western Europe', pop: '10M', gdp: '$252B', leader: 'Luís Montenegro', title: 'Stable',
+    analysis: {
+      what: 'Portugal has achieved strong economic recovery, attracting digital nomads and investment. Tourism is booming, sometimes to excess. The center-right government faces challenges from housing costs and public services. Relations with former colonies in Africa remain important. Renewable energy progress is significant.',
+      why: 'Portugal has become a model for economic recovery and tech-friendly policies. The country is strategically located for Atlantic shipping. Portuguese language connects 260 million speakers globally. Tourism and real estate have transformed the economy.',
+      next: 'Balancing growth with livability is the key challenge. Watch for: housing policy, public service reform, and tourism management. Portugal\'s success story faces sustainability questions.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Tourism arrivals set new record', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Housing affordability measures debated', url: '#' }
+    ]
+  },
+
+  'Qatar': { lat: 25.35, lng: 51.18, flag: '🇶🇦', risk: 'clear', region: 'Middle East', pop: '3M', gdp: '$221B', leader: 'Sheikh Tamim', title: 'Diplomatic Hub',
+    analysis: {
+      what: 'Qatar has emerged as a crucial diplomatic mediator, hosting Hamas political office and facilitating Gaza negotiations. The country is the world\'s largest LNG exporter, benefiting from energy crisis. Post-World Cup infrastructure remains. Relations with neighbors have normalized after the 2017 blockade.',
+      why: 'Qatar is the world\'s largest LNG exporter, crucial to European and Asian energy security. Its diplomatic role in conflicts from Gaza to Afghanistan is significant. Al Jazeera provides influential media reach. The sovereign wealth fund is a major global investor.',
+      next: 'Diplomatic and energy roles will continue expanding. Watch for: Gaza mediation, LNG contracts, and regional positioning. Qatar\'s small size and enormous influence create unique dynamics.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Qatar mediates new phase of Gaza talks', url: '#' },
+      { source: 'FT', bias: 'center', time: '4h ago', headline: 'LNG exports reach record levels', url: '#' }
+    ]
+  },
+
+  'Costa Rica': { lat: 9.75, lng: -83.75, flag: '🇨🇷', risk: 'clear', region: 'Central America', pop: '5M', gdp: '$69B', leader: 'Rodrigo Chaves', title: 'Stable Democracy',
+    analysis: {
+      what: 'Costa Rica remains Central America\'s most stable democracy with no military since 1948. The economy is diverse with tech, medical devices, and tourism. Environmental leadership continues with 99% renewable electricity. Relations with Nicaragua are strained. Social services face funding pressures.',
+      why: 'Costa Rica is a model of stability and environmental leadership in a troubled region. It hosts significant international institutions. Ecotourism leadership offers lessons for conservation. The country\'s development model contrasts with neighbors.',
+      next: 'Maintaining the Costa Rican model faces fiscal challenges. Watch for: environmental policy, regional migration, and economic diversification. Costa Rica\'s exceptionalism faces tests.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Tech exports drive economic growth', url: '#' },
+      { source: 'Tico Times', bias: 'center', time: '6h ago', headline: 'Renewable energy investments continue', url: '#' }
+    ]
+  },
+
+  'Uruguay': { lat: -32.52, lng: -55.77, flag: '🇺🇾', risk: 'clear', region: 'South America', pop: '3.5M', gdp: '$71B', leader: 'Lacalle Pou', title: 'Stable Democracy',
+    analysis: {
+      what: 'Uruguay remains South America\'s most stable and democratic country with strong institutions and low corruption. The economy depends on agriculture and services. Progressive social policies (marijuana legalization, abortion rights) continue. The small population limits influence but enables nimble governance.',
+      why: 'Uruguay is a model of stability and good governance for Latin America. Its banking system attracts regional deposits. Progressive policies influence debates elsewhere. The country maintains good relations across the political spectrum.',
+      next: 'Presidential elections in 2024 resulted in change. Watch for: economic policy, regional relations, and social policies. Uruguay\'s stability should continue regardless of who governs.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'New government maintains fiscal discipline', url: '#' },
+      { source: 'El Observador', bias: 'center', time: '6h ago', headline: 'Agricultural exports strong despite drought', url: '#' }
+    ]
+  },
+
+  'Botswana': { lat: -22.33, lng: 24.68, flag: '🇧🇼', risk: 'clear', region: 'Africa', pop: '2.6M', gdp: '$19B', leader: 'Duma Boko', title: 'Stable Democracy',
+    analysis: {
+      what: 'Botswana achieved a peaceful transfer of power in 2024 elections—rare in African history. The economy depends on diamond mining with De Beers partnership. Governance is among Africa\'s best with low corruption. Wildlife conservation is a major focus. Diversification away from diamonds remains a challenge.',
+      why: 'Botswana is Africa\'s longest continuous democracy and governance model. Diamond revenues have funded development. The country\'s wildlife tourism is globally significant. Botswana shows that resource wealth can support good governance.',
+      next: 'The new government must diversify the economy as diamond demand evolves. Watch for: economic reforms, conservation policy, and democratic consolidation. Botswana\'s success story should continue.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'New government outlines diversification plans', url: '#' },
+      { source: 'AP', bias: 'center', time: '6h ago', headline: 'Diamond sector faces global demand changes', url: '#' }
+    ]
+  },
+
+  // Remaining countries with brief analysis
+  'Estonia': { lat: 58.60, lng: 25.01, flag: '🇪🇪', risk: 'cloudy', region: 'Baltic', pop: '1.4M', gdp: '$38B', leader: 'Kristen Michal', title: 'Digital Pioneer',
+    analysis: {
+      what: 'Estonia is a digital governance pioneer with e-residency programs and online voting. As a NATO frontline state bordering Russia, defense is paramount. The economy is tech-focused with high digital adoption. Russian minority relations require careful management.',
+      why: 'Estonia demonstrates how small states can leverage technology. Its border with Russia makes it NATO\'s northeastern anchor. Cybersecurity expertise is globally recognized. The country hosts NATO cyber defense center.',
+      next: 'Digital leadership and security focus will continue. Watch for: Russia relations, tech sector growth, and NATO posture.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Estonia increases defense spending to 3.5% of GDP', url: '#' }
+    ]
+  },
+
+  'Latvia': { lat: 56.88, lng: 24.60, flag: '🇱🇻', risk: 'cloudy', region: 'Baltic', pop: '1.9M', gdp: '$41B', leader: 'Evika Siliņa', title: 'NATO Frontline',
+    analysis: {
+      what: 'Latvia is a NATO frontline state with significant Russian-speaking minority. Defense spending has increased dramatically. The economy is recovering from energy price shocks. Democratic institutions are solid. The country hosts NATO battlegroup.',
+      why: 'Latvia\'s strategic position between Russia and NATO makes it crucial to alliance defense. Managing ethnic Russian population while countering Russian influence is challenging. Baltic cooperation is strengthening.',
+      next: 'Security will remain the dominant concern. Watch for: defense investments, integration policies, and NATO presence.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'NATO reinforces Baltic air patrols', url: '#' }
+    ]
+  },
+
+  'Lithuania': { lat: 55.17, lng: 23.88, flag: '🇱🇹', risk: 'cloudy', region: 'Baltic', pop: '2.8M', gdp: '$70B', leader: 'Ingrida Šimonytė', title: 'Belarus Border',
+    analysis: {
+      what: 'Lithuania has taken a strong stance against Belarus and Russia, hosting opposition figures and breaking with China over Taiwan. The economy is growing despite regional tensions. The Suwalki Gap (land connection to NATO) is a strategic vulnerability.',
+      why: 'Lithuania\'s position adjacent to Russian exclave Kaliningrad and Belarus makes it NATO\'s most exposed member. Its principled foreign policy has made it a target for authoritarian pressure. The country is vocal on human rights.',
+      next: 'Strategic exposure will continue requiring allied attention. Watch for: Belarus border situation, China relations, and defense buildup.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'US troops reinforce Suwalki corridor', url: '#' }
+    ]
+  },
+
+  'Czech Republic': { lat: 49.82, lng: 15.47, flag: '🇨🇿', risk: 'clear', region: 'Eastern Europe', pop: '10M', gdp: '$290B', leader: 'Petr Fiala', title: 'Stable',
+    analysis: {
+      what: 'The Czech Republic is among Central Europe\'s most stable democracies with strong institutions. The economy is manufacturing-heavy, integrated with German supply chains. Support for Ukraine has been strong. Housing costs are a domestic concern.',
+      why: 'The Czech economy is closely tied to German industry, especially automotive. Prague is a major tourism and business center. The country\'s pro-Western stance is firm. Arms supplies to Ukraine have been significant.',
+      next: 'Stability and EU integration will continue. Watch for: economic performance, elections, and continued Ukraine support.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Czech ammunition initiative for Ukraine expands', url: '#' }
+    ]
+  },
+
+  'Belgium': { lat: 50.50, lng: 4.47, flag: '🇧🇪', risk: 'clear', region: 'Western Europe', pop: '12M', gdp: '$582B', leader: 'Alexander De Croo', title: 'EU Capital',
+    analysis: {
+      what: 'Belgium hosts EU and NATO headquarters, giving it outsized international importance. Complex federal structure divides Dutch and French-speaking regions. The economy is diverse with pharmaceuticals and chemicals prominent. Governance is often complicated by linguistic politics.',
+      why: 'Brussels is effectively the capital of Europe, hosting major institutions. Belgium\'s port of Antwerp is among Europe\'s largest. The country\'s internal divisions mirror broader European tensions. Intelligence services track terrorist threats.',
+      next: 'Belgium\'s role as institutional host will continue. Watch for: federal politics, economic performance, and EU developments.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'EU summit addresses Ukraine support', url: '#' }
+    ]
+  },
+
+  'Croatia': { lat: 45.10, lng: 15.20, flag: '🇭🇷', risk: 'clear', region: 'Southern Europe', pop: '4M', gdp: '$71B', leader: 'Andrej Plenković', title: 'Eurozone Member',
+    analysis: {
+      what: 'Croatia joined the eurozone and Schengen in 2023, completing EU integration. Tourism drives the economy, particularly along the Adriatic coast. Relations with Serbia and Bosnia require management. Emigration to Western Europe is a demographic challenge.',
+      why: 'Croatia\'s EU integration path is complete, making it a model for Western Balkan aspirants. Its Adriatic coast is strategically and economically important. The country bridges Central Europe and the Balkans.',
+      next: 'Building on EU integration will be the focus. Watch for: tourism, demographics, and regional relations.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Eurozone membership boosts tourism investment', url: '#' }
+    ]
+  },
+
+  'Slovenia': { lat: 46.15, lng: 14.99, flag: '🇸🇮', risk: 'clear', region: 'Southern Europe', pop: '2M', gdp: '$62B', leader: 'Robert Golob', title: 'Stable',
+    analysis: {
+      what: 'Slovenia is among Europe\'s most developed post-communist states. The economy is export-oriented with pharmaceuticals and automotive. Progressive social policies include same-sex marriage. Brief populist interlude under Janša has ended.',
+      why: 'Slovenia shows successful EU integration path. The country bridges Germanic and Slavic Europe. Its stability contrasts with Balkan neighbors. The port of Koper serves landlocked Central Europe.',
+      next: 'Continued stability and development. Watch for: economic performance and EU engagement.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Slovenia leads EU renewable energy growth', url: '#' }
+    ]
+  },
+
+  'Luxembourg': { lat: 49.82, lng: 6.13, flag: '🇱🇺', risk: 'clear', region: 'Western Europe', pop: '0.7M', gdp: '$87B', leader: 'Luc Frieden', title: 'Financial Hub',
+    analysis: {
+      what: 'Luxembourg has the world\'s highest GDP per capita, driven by financial services. It hosts major EU institutions including the European Court of Justice. Tax policies have faced criticism but remain attractive. The tiny country punches above its weight.',
+      why: 'Luxembourg is a major financial center with trillions in managed assets. Its EU institutional role gives influence. The country demonstrates how small states can thrive. Space industry ambitions are growing.',
+      next: 'Financial services dominance will continue despite pressure. Watch for: tax policy changes and EU relations.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Luxembourg fund industry reaches new highs', url: '#' }
+    ]
+  },
+
+  'Oman': { lat: 21.47, lng: 55.98, flag: '🇴🇲', risk: 'clear', region: 'Middle East', pop: '5M', gdp: '$104B', leader: 'Sultan Haitham', title: 'Neutral Mediator',
+    analysis: {
+      what: 'Oman maintains neutrality in regional conflicts, often serving as a diplomatic back channel. Sultan Haitham continues modernization while preserving stability. The economy is diversifying from oil through tourism and logistics. Relations with all regional powers are maintained.',
+      why: 'Oman\'s neutrality makes it invaluable for diplomacy—US-Iran talks often use Omani channels. The Strait of Hormuz gives strategic importance. The country balances Saudi, Iranian, and Western relationships uniquely.',
+      next: 'Mediating role will continue to be valuable. Watch for: economic diversification, succession stability, and diplomatic initiatives.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Oman facilitates regional dialogue', url: '#' }
+    ]
+  },
+
+  'Iceland': { lat: 64.96, lng: -19.02, flag: '🇮🇸', risk: 'clear', region: 'Northern Europe', pop: '0.4M', gdp: '$27B', leader: 'Bjarni Benediktsson', title: 'Volcanic Activity',
+    analysis: {
+      what: 'Iceland has experienced significant volcanic activity with eruptions near Grindavík. The economy is driven by tourism, fishing, and geothermal energy. NATO member hosting US facilities. Financial recovery from 2008 crisis is complete.',
+      why: 'Iceland controls strategic North Atlantic approaches. Its renewable energy model is globally studied. Fishing rights remain important. Volcanic activity affects global aviation.',
+      next: 'Managing volcanic risks while maintaining tourism growth. Watch for: geological activity and Arctic positioning.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Volcanic activity continues near Grindavík', url: '#' }
+    ]
+  },
+
+  'Malta': { lat: 35.94, lng: 14.38, flag: '🇲🇹', risk: 'clear', region: 'Mediterranean', pop: '0.5M', gdp: '$18B', leader: 'Robert Abela', title: 'Stable',
+    analysis: {
+      what: 'Malta is a prosperous island nation with gaming, financial services, and tourism. EU membership has brought growth. Governance concerns exist around citizenship sales and journalist murder investigation. Mediterranean migration routes affect the island.',
+      why: 'Malta\'s strategic Mediterranean position has historical and current importance. Its gaming and fintech sectors are significant. The country hosts NATO naval facilities.',
+      next: 'Continued prosperity with governance questions. Watch for: migration pressures and rule of law concerns.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Malta gaming sector continues growth', url: '#' }
+    ]
+  },
+
+  'Mongolia': { lat: 46.86, lng: 103.85, flag: '🇲🇳', risk: 'clear', region: 'East Asia', pop: '3.4M', gdp: '$17B', leader: 'Khürelsükh', title: 'Stable Democracy',
+    analysis: {
+      what: 'Mongolia is a rare democracy sandwiched between Russia and China. Mining (copper, coal) drives the economy but creates environmental concerns. "Third neighbor" policy seeks ties with US, Japan, South Korea. Traditional nomadic culture persists alongside modernization.',
+      why: 'Mongolia\'s democracy in a challenging neighborhood is remarkable. Its mineral resources are vast. The country provides a buffer between great powers. Traditional practices offer cultural heritage.',
+      next: 'Balancing great power relations while developing resources. Watch for: mining development, democratic resilience, and neighbor relations.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Mining exports drive economic growth', url: '#' }
+    ]
+  }
 };
-
-// Use external COUNTRIES if loaded, otherwise fallback to inline
-// (COUNTRIES is loaded from countries-data.js)
-
 // ELECTIONS DATA
 const ELECTIONS = [
   { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. Key test for current administration policies.' },
