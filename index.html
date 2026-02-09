@@ -2900,11 +2900,9 @@ function drawBorders() {
 }
 
 function addCountryMarkers() {
-  const isMobile = window.innerWidth <= 768;
   Object.entries(COUNTRIES).forEach(([name, data]) => {
-    // Create marker sphere - larger for visibility, extra large on mobile for easier tapping
-    const baseSize = data.risk === 'catastrophic' ? 0.025 : data.risk === 'extreme' ? 0.02 : 0.015;
-    const size = isMobile ? baseSize * 1.8 : baseSize;
+    // Create marker sphere
+    const size = data.risk === 'catastrophic' ? 0.025 : data.risk === 'extreme' ? 0.02 : 0.015;
     const markerGeom = new THREE.SphereGeometry(size, 16, 16);
     const markerMat = new THREE.MeshBasicMaterial({
       color: RISK_COLORS[data.risk]?.glow || 0x888888,
@@ -2922,9 +2920,7 @@ function addCountryMarkers() {
 
     // Add pulsing ring for critical countries
     if (data.risk === 'catastrophic' || data.risk === 'extreme') {
-      const ringInner = isMobile ? size + 0.015 : size + 0.01;
-      const ringOuter = isMobile ? size + 0.04 : size + 0.025;
-      const ringGeom = new THREE.RingGeometry(ringInner, ringOuter, 32);
+      const ringGeom = new THREE.RingGeometry(size + 0.01, size + 0.025, 32);
       const ringMat = new THREE.MeshBasicMaterial({
         color: RISK_COLORS[data.risk].glow,
         transparent: true,
