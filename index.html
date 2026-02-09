@@ -2471,8 +2471,13 @@ function animateConflictZones() {
   });
 }
 
-// Set current date
-document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+// Set current date (updates automatically at midnight)
+function updateDate() {
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+updateDate();
+// Check every minute and update if date changed
+setInterval(updateDate, 60000);
 
 // Calculate stats
 let critical = 0, high = 0, stable = 0;
