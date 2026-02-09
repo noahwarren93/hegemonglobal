@@ -240,6 +240,7 @@
       .stat-card { padding: 8px 10px; }
       .stat-value { font-size: 16px; }
       .stat-label { font-size: 6px; }
+      .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .tabs { flex-wrap: nowrap; overflow-x: auto; }
       .tab { min-width: auto; padding: 8px 10px; font-size: 7px; white-space: nowrap; }
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
@@ -2819,6 +2820,11 @@ function initGlobe() {
   scene.add(new THREE.Mesh(glowGeom, glowMat));
 
   raycaster = new THREE.Raycaster();
+  // Increase touch detection area on mobile for easier tapping
+  if (window.innerWidth <= 768) {
+    raycaster.params.Line = { threshold: 0.1 };
+    raycaster.params.Points = { threshold: 0.1 };
+  }
   mouse = new THREE.Vector2();
 
   // Draw country borders
@@ -2894,9 +2900,11 @@ function drawBorders() {
 }
 
 function addCountryMarkers() {
+  const isMobile = window.innerWidth <= 768;
   Object.entries(COUNTRIES).forEach(([name, data]) => {
-    // Create marker sphere - larger for visibility
-    const size = data.risk === 'catastrophic' ? 0.025 : data.risk === 'extreme' ? 0.02 : 0.015;
+    // Create marker sphere - larger for visibility, extra large on mobile for easier tapping
+    const baseSize = data.risk === 'catastrophic' ? 0.025 : data.risk === 'extreme' ? 0.02 : 0.015;
+    const size = isMobile ? baseSize * 1.8 : baseSize;
     const markerGeom = new THREE.SphereGeometry(size, 16, 16);
     const markerMat = new THREE.MeshBasicMaterial({
       color: RISK_COLORS[data.risk]?.glow || 0x888888,
@@ -2914,7 +2922,9 @@ function addCountryMarkers() {
 
     // Add pulsing ring for critical countries
     if (data.risk === 'catastrophic' || data.risk === 'extreme') {
-      const ringGeom = new THREE.RingGeometry(size + 0.01, size + 0.025, 32);
+      const ringInner = isMobile ? size + 0.015 : size + 0.01;
+      const ringOuter = isMobile ? size + 0.04 : size + 0.025;
+      const ringGeom = new THREE.RingGeometry(ringInner, ringOuter, 32);
       const ringMat = new THREE.MeshBasicMaterial({
         color: RISK_COLORS[data.risk].glow,
         transparent: true,
