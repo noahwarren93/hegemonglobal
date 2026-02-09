@@ -1990,6 +1990,7 @@ const IRRELEVANT_KEYWORDS = [
 function isRelevantToCountry(title, description, countryName) {
   const text = ((title || '') + ' ' + (description || '')).toLowerCase();
   const titleLower = (title || '').toLowerCase();
+  const descLower = (description || '').toLowerCase();
   const countryLower = countryName.toLowerCase();
 
   // Check for irrelevant keywords - reject these
@@ -1997,30 +1998,109 @@ function isRelevantToCountry(title, description, countryName) {
     if (text.includes(kw)) return false;
   }
 
-  // Must have country name in title to be relevant
-  if (!titleLower.includes(countryLower)) {
-    // Check for demonyms
-    const demonyms = {
-      'Honduras': ['honduran', 'honduras'], 'Mexico': ['mexican', 'mexico'], 'Brazil': ['brazilian', 'brazil'],
-      'China': ['chinese', 'china', 'beijing'], 'Russia': ['russian', 'russia', 'moscow', 'kremlin'],
-      'Japan': ['japanese', 'japan', 'tokyo'], 'Germany': ['german', 'germany', 'berlin'],
-      'France': ['french', 'france', 'paris', 'macron'], 'India': ['indian', 'india', 'delhi', 'modi'],
-      'Pakistan': ['pakistani', 'pakistan', 'islamabad'], 'Iran': ['iranian', 'iran', 'tehran'],
-      'Iraq': ['iraqi', 'iraq', 'baghdad'], 'Israel': ['israeli', 'israel', 'netanyahu', 'gaza'],
-      'Ukraine': ['ukrainian', 'ukraine', 'kyiv', 'zelensky'], 'Turkey': ['turkish', 'turkey', 'ankara', 'erdogan'],
-      'Egypt': ['egyptian', 'egypt', 'cairo'], 'Nigeria': ['nigerian', 'nigeria', 'lagos'],
-      'South Africa': ['south african', 'south africa', 'johannesburg', 'pretoria'],
-      'Taiwan': ['taiwanese', 'taiwan', 'taipei'], 'North Korea': ['north korean', 'pyongyang', 'kim jong'],
-      'South Korea': ['south korean', 'seoul'], 'Saudi Arabia': ['saudi', 'riyadh'],
-      'United States': ['u.s.', 'us ', 'american', 'washington', 'biden', 'congress', 'white house'],
-      'United Kingdom': ['british', 'uk ', 'britain', 'london', 'parliament']
-    };
-    const countryTerms = demonyms[countryName] || [countryLower];
-    const hasCountryTerm = countryTerms.some(term => titleLower.includes(term));
-    if (!hasCountryTerm) return false;
-  }
+  // Comprehensive demonyms for all major countries
+  const demonyms = {
+    'Afghanistan': ['afghan', 'kabul', 'taliban'],
+    'Albania': ['albanian', 'tirana'],
+    'Algeria': ['algerian', 'algiers'],
+    'Argentina': ['argentine', 'argentinian', 'buenos aires'],
+    'Armenia': ['armenian', 'yerevan'],
+    'Australia': ['australian', 'canberra', 'sydney', 'melbourne'],
+    'Austria': ['austrian', 'vienna'],
+    'Azerbaijan': ['azerbaijani', 'baku'],
+    'Bangladesh': ['bangladeshi', 'dhaka'],
+    'Belarus': ['belarusian', 'minsk', 'lukashenko'],
+    'Belgium': ['belgian', 'brussels'],
+    'Bolivia': ['bolivian', 'la paz'],
+    'Brazil': ['brazilian', 'brasilia', 'rio', 'sao paulo', 'lula'],
+    'Bulgaria': ['bulgarian', 'sofia'],
+    'Cambodia': ['cambodian', 'phnom penh'],
+    'Canada': ['canadian', 'ottawa', 'toronto', 'trudeau'],
+    'Chile': ['chilean', 'santiago'],
+    'China': ['chinese', 'beijing', 'xi jinping', 'ccp', 'prc'],
+    'Colombia': ['colombian', 'bogota'],
+    'Croatia': ['croatian', 'zagreb'],
+    'Cuba': ['cuban', 'havana'],
+    'Czech Republic': ['czech', 'prague'],
+    'Denmark': ['danish', 'copenhagen'],
+    'Ecuador': ['ecuadorian', 'quito'],
+    'Egypt': ['egyptian', 'cairo', 'sisi'],
+    'Ethiopia': ['ethiopian', 'addis ababa'],
+    'Finland': ['finnish', 'helsinki'],
+    'France': ['french', 'paris', 'macron', 'élysée'],
+    'Georgia': ['georgian', 'tbilisi'],
+    'Germany': ['german', 'berlin', 'scholz', 'bundestag'],
+    'Greece': ['greek', 'athens'],
+    'Guatemala': ['guatemalan'],
+    'Honduras': ['honduran', 'tegucigalpa'],
+    'Hungary': ['hungarian', 'budapest', 'orban'],
+    'India': ['indian', 'delhi', 'mumbai', 'modi', 'bjp'],
+    'Indonesia': ['indonesian', 'jakarta', 'jokowi'],
+    'Iran': ['iranian', 'tehran', 'ayatollah', 'khamenei'],
+    'Iraq': ['iraqi', 'baghdad', 'kurdish'],
+    'Ireland': ['irish', 'dublin'],
+    'Israel': ['israeli', 'tel aviv', 'jerusalem', 'netanyahu', 'gaza', 'idf'],
+    'Italy': ['italian', 'rome', 'meloni'],
+    'Japan': ['japanese', 'tokyo', 'kishida'],
+    'Jordan': ['jordanian', 'amman'],
+    'Kazakhstan': ['kazakh', 'astana', 'almaty'],
+    'Kenya': ['kenyan', 'nairobi'],
+    'Kuwait': ['kuwaiti'],
+    'Lebanon': ['lebanese', 'beirut', 'hezbollah'],
+    'Libya': ['libyan', 'tripoli'],
+    'Malaysia': ['malaysian', 'kuala lumpur'],
+    'Mexico': ['mexican', 'mexico city'],
+    'Morocco': ['moroccan', 'rabat'],
+    'Myanmar': ['burmese', 'myanmar', 'yangon', 'junta'],
+    'Netherlands': ['dutch', 'amsterdam', 'the hague'],
+    'New Zealand': ['new zealand', 'kiwi', 'wellington'],
+    'Nigeria': ['nigerian', 'lagos', 'abuja'],
+    'North Korea': ['north korean', 'pyongyang', 'kim jong', 'dprk'],
+    'Norway': ['norwegian', 'oslo'],
+    'Pakistan': ['pakistani', 'islamabad', 'karachi'],
+    'Palestine': ['palestinian', 'hamas', 'west bank', 'ramallah'],
+    'Peru': ['peruvian', 'lima'],
+    'Philippines': ['filipino', 'philippine', 'manila', 'marcos'],
+    'Poland': ['polish', 'warsaw'],
+    'Portugal': ['portuguese', 'lisbon'],
+    'Qatar': ['qatari', 'doha'],
+    'Romania': ['romanian', 'bucharest'],
+    'Russia': ['russian', 'moscow', 'kremlin', 'putin'],
+    'Saudi Arabia': ['saudi', 'riyadh', 'mbs'],
+    'Serbia': ['serbian', 'belgrade'],
+    'Singapore': ['singaporean'],
+    'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town'],
+    'South Korea': ['south korean', 'seoul', 'korean'],
+    'Spain': ['spanish', 'madrid', 'barcelona'],
+    'Sri Lanka': ['sri lankan', 'colombo'],
+    'Sudan': ['sudanese', 'khartoum'],
+    'Sweden': ['swedish', 'stockholm'],
+    'Switzerland': ['swiss', 'bern', 'zurich', 'geneva'],
+    'Syria': ['syrian', 'damascus', 'assad'],
+    'Taiwan': ['taiwanese', 'taipei'],
+    'Thailand': ['thai', 'bangkok'],
+    'Tunisia': ['tunisian', 'tunis'],
+    'Turkey': ['turkish', 'ankara', 'istanbul', 'erdogan'],
+    'Ukraine': ['ukrainian', 'kyiv', 'zelensky'],
+    'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi'],
+    'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster'],
+    'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
+    'Venezuela': ['venezuelan', 'caracas', 'maduro'],
+    'Vietnam': ['vietnamese', 'hanoi', 'ho chi minh'],
+    'Yemen': ['yemeni', 'sanaa', 'houthi']
+  };
 
-  return true;
+  // Check if country name or demonym appears in title OR description
+  const countryTerms = demonyms[countryName] || [countryLower];
+  const allTerms = [countryLower, ...countryTerms];
+
+  // Check title first (strongest signal)
+  const inTitle = allTerms.some(term => titleLower.includes(term));
+  if (inTitle) return true;
+
+  // Also check description (weaker but still valid)
+  const inDesc = allTerms.some(term => descLower.includes(term));
+  return inDesc;
 }
 
 // Fetch country-specific news with relevance filtering
@@ -2030,14 +2110,18 @@ async function fetchCountryNews(countryName) {
     const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&q=${encodeURIComponent(countryName)}&size=30`);
     const data = await response.json();
 
+    console.log('News API response for', countryName, ':', data.status, data.results?.length || 0, 'results');
+
     if (data.status === 'success' && data.results && data.results.length > 0) {
       // Filter for relevant articles about this country
       const relevantArticles = data.results.filter(article =>
         isRelevantToCountry(article.title, article.description, countryName)
       );
 
-      // Use filtered results, or fall back to top unfiltered if filter is too aggressive
-      const articlesToUse = relevantArticles.length >= 5 ? relevantArticles : data.results;
+      console.log('Relevant articles:', relevantArticles.length, 'of', data.results.length);
+
+      // Use filtered results if we have any, otherwise fall back to all results
+      const articlesToUse = relevantArticles.length > 0 ? relevantArticles : data.results;
 
       return articlesToUse.slice(0, 15).map(article => ({
         headline: article.title,
@@ -2047,6 +2131,12 @@ async function fetchCountryNews(countryName) {
         category: detectCategory(article.title, article.description)
       }));
     }
+
+    // Log API errors
+    if (data.status === 'error') {
+      console.error('NewsData API error:', data.results?.message || 'Unknown error');
+    }
+
     return null;
   } catch (error) {
     console.error('Failed to fetch country news:', error);
