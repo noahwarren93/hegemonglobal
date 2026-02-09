@@ -2065,13 +2065,22 @@ fetchLiveNews();
 setInterval(fetchLiveNews, NEWS_REFRESH_INTERVAL);
 
 // Breaking news detection keywords
-const BREAKING_KEYWORDS = ['breaking', 'just in', 'urgent', 'developing', 'explosion', 'attack', 'earthquake', 'tsunami', 'coup', 'assassination', 'war declared', 'nuclear'];
+const BREAKING_KEYWORDS = ['breaking', 'just in', 'urgent', 'developing', 'explosion', 'earthquake', 'tsunami', 'coup', 'assassination', 'war declared', 'nuclear'];
 
-// Check for breaking news
+// Check for breaking news - only shows for recent articles (within last 6 hours)
 function checkBreakingNews(articles) {
+  // Hide any existing banner first
+  closeBanner();
+
   for (const article of articles) {
     const text = (article.headline || article.title || '').toLowerCase();
-    if (BREAKING_KEYWORDS.some(kw => text.includes(kw))) {
+    const timeText = (article.time || '').toLowerCase();
+
+    // Only trigger for recent news (contains "m ago" for minutes, or "h ago" with small number)
+    const isRecent = timeText.includes('m ago') ||
+                     (timeText.includes('h ago') && parseInt(timeText) <= 6);
+
+    if (isRecent && BREAKING_KEYWORDS.some(kw => text.includes(kw))) {
       showBreakingBanner(article.headline || article.title);
       return;
     }
