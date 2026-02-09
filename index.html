@@ -170,6 +170,9 @@
     /* Breaking News Banner */
     .breaking-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%); padding: 8px 20px; display: none; animation: bannerPulse 2s infinite; }
     .breaking-banner.active { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    body.banner-active .app { padding-top: 36px; }
+    body.banner-active .header { top: 36px; }
+    body.banner-active .watchlist { top: 116px; }
     .breaking-label { background: #fff; color: #7f1d1d; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 3px; letter-spacing: 1px; }
     .breaking-text { font-size: 12px; font-weight: 600; color: #fff; }
     .breaking-close { background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 18px; margin-left: auto; }
@@ -2048,13 +2051,17 @@ function showBreakingBanner(text) {
   if (banner && textEl) {
     textEl.textContent = text;
     banner.classList.add('active');
+    document.body.classList.add('banner-active');
   }
 }
 
 // Close breaking news banner
 function closeBanner() {
   const banner = document.getElementById('breakingBanner');
-  if (banner) banner.classList.remove('active');
+  if (banner) {
+    banner.classList.remove('active');
+    document.body.classList.remove('banner-active');
+  }
 }
 
 // Words that indicate an article is NOT about geopolitics
