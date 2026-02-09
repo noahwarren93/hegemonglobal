@@ -1718,9 +1718,29 @@ const DAILY_BRIEFING_FALLBACK = [
 let DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
 let lastNewsUpdate = null;
 
-// NewsData.io API configuration
-const NEWS_API_KEY = 'pub_7c217680d0cb4730af5530a2e86e2474';
+// News API configuration - multiple sources for reliability
+const NEWS_APIS = {
+  newsdata: {
+    key: 'pub_7c217680d0cb4730af5530a2e86e2474',
+    baseUrl: 'https://newsdata.io/api/1/news',
+    buildUrl: (key, query) => `https://newsdata.io/api/1/news?apikey=${key}&language=en&q=${encodeURIComponent(query)}&size=30`,
+    parseResults: (data) => data.status === 'success' ? data.results : null
+  },
+  gnews: {
+    key: 'c6d7e44af8d09d59ac7e4cab6abc9bca', // Free tier key
+    baseUrl: 'https://gnews.io/api/v4/search',
+    buildUrl: (key, query) => `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=30&apikey=${key}`,
+    parseResults: (data) => data.articles ? data.articles.map(a => ({
+      title: a.title,
+      description: a.description,
+      link: a.url,
+      source_id: a.source?.name || 'Unknown',
+      pubDate: a.publishedAt
+    })) : null
+  }
+};
 const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
+let currentNewsApi = 'newsdata'; // Track which API is working
 
 // Category detection based on keywords
 function detectCategory(title, description) {
@@ -1862,71 +1882,103 @@ function timeAgo(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Fetch live news from NewsData.io
+// Fetch live news from multiple API sources
 async function fetchLiveNews() {
-  try {
-    console.log('Fetching live news...');
+  console.log('Fetching live news...');
 
-    // Update UI to show loading
-    const timestampEl = document.getElementById('newsTimestamp');
+  // Update UI to show loading
+  const timestampEl = document.getElementById('newsTimestamp');
+  if (timestampEl) {
+    timestampEl.innerHTML = `<span style="color:#eab308;">●</span> Fetching latest news...`;
+  }
+
+  // Try NewsData.io first, then GNews as fallback
+  const apis = [
+    {
+      name: 'newsdata',
+      url: `https://newsdata.io/api/1/news?apikey=${NEWS_APIS.newsdata.key}&language=en&category=world,politics,business,technology&size=50`,
+      parse: (data) => data.status === 'success' ? data.results : null
+    },
+    {
+      name: 'gnews',
+      url: `https://gnews.io/api/v4/top-headlines?category=world&lang=en&max=50&apikey=${NEWS_APIS.gnews.key}`,
+      parse: (data) => data.articles ? data.articles.map(a => ({
+        title: a.title,
+        description: a.description,
+        link: a.url,
+        source_id: a.source?.name || 'Unknown',
+        pubDate: a.publishedAt
+      })) : null
+    }
+  ];
+
+  for (const api of apis) {
+    try {
+      console.log(`Trying ${api.name} for daily news...`);
+      const response = await fetch(api.url);
+
+      if (!response.ok) {
+        console.warn(`${api.name} returned ${response.status}, trying next...`);
+        continue;
+      }
+
+      const data = await response.json();
+      const results = api.parse(data);
+
+      if (results && results.length > 0) {
+        console.log(`${api.name} returned ${results.length} articles`);
+
+        // Filter out irrelevant articles (sports, entertainment, local crime, etc.)
+        const relevantArticles = results.filter(article => {
+          const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+          return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+        });
+
+        DAILY_BRIEFING = relevantArticles.map(article => {
+          const category = detectCategory(article.title, article.description);
+          const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
+          const sourceName = formatSourceName(article.source_id);
+
+          return {
+            time: timeAgo(article.pubDate),
+            category: category,
+            importance: importance,
+            headline: article.title,
+            source: sourceName,
+            url: article.link || '#'
+          };
+        });
+
+        lastNewsUpdate = new Date();
+        console.log('Live news updated:', DAILY_BRIEFING.length, 'articles');
+
+        // Update the display if on daily tab
+        if (currentTab === 'daily') {
+          renderSidebar();
+        }
+
+        // Update the last updated indicator
+        updateNewsTimestamp();
+
+        // Check for breaking news
+        checkBreakingNews(DAILY_BRIEFING);
+        return; // Success! Exit the loop
+      }
+    } catch (error) {
+      console.warn(`${api.name} error:`, error.message);
+      continue;
+    }
+  }
+
+  // All APIs failed
+  console.error('All news APIs failed');
+  if (!lastNewsUpdate) {
+    lastNewsUpdate = new Date();
     if (timestampEl) {
-      timestampEl.innerHTML = `<span style="color:#eab308;">●</span> Fetching latest news...`;
+      timestampEl.innerHTML = `<span style="color:#f97316;">●</span> News services unavailable · <span style="color:#6b7280;">Using cached data</span>`;
     }
-
-    // Single API call to avoid rate limits
-    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&category=world,politics,business,technology&size=50`);
-    const data = await response.json();
-
-    console.log('API Response:', data.status, data.results ? data.results.length : 0, 'articles');
-
-    if (data.status === 'success' && data.results && data.results.length > 0) {
-      // Filter out irrelevant articles (sports, entertainment, local crime, etc.)
-      const relevantArticles = data.results.filter(article => {
-        const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-        return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
-      });
-
-      DAILY_BRIEFING = relevantArticles.map(article => {
-        const category = detectCategory(article.title, article.description);
-        const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
-        const sourceName = formatSourceName(article.source_id);
-
-        return {
-          time: timeAgo(article.pubDate),
-          category: category,
-          importance: importance,
-          headline: article.title,
-          source: sourceName,
-          url: article.link || '#'
-        };
-      });
-
-      lastNewsUpdate = new Date();
-      console.log('Live news updated:', DAILY_BRIEFING.length, 'articles');
-
-      // Update the display if on daily tab
-      if (currentTab === 'daily') {
-        renderSidebar();
-      }
-
-      // Update the last updated indicator
-      updateNewsTimestamp();
-
-      // Check for breaking news
-      checkBreakingNews(DAILY_BRIEFING);
-    }
-  } catch (error) {
-    console.error('Failed to fetch live news:', error);
-    // Use fallback news and still update display
-    if (!lastNewsUpdate) {
-      lastNewsUpdate = new Date();
-      const timestampEl = document.getElementById('newsTimestamp');
-      if (timestampEl) {
-        timestampEl.innerHTML = `<span style="color:#f97316;">●</span> Offline · Using cached news · <span style="color:#6b7280;">${DAILY_BRIEFING.length} articles</span>`;
-      }
-      if (currentTab === 'daily') {
-        renderSidebar();
-      }
+    if (currentTab === 'daily') {
+      renderSidebar();
     }
   }
 }
@@ -2103,45 +2155,58 @@ function isRelevantToCountry(title, description, countryName) {
   return inDesc;
 }
 
-// Fetch country-specific news with relevance filtering
+// Fetch country-specific news with relevance filtering - tries multiple APIs
 async function fetchCountryNews(countryName) {
-  try {
-    // Fetch more results so we have enough after filtering
-    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&q=${encodeURIComponent(countryName)}&size=30`);
-    const data = await response.json();
+  const apiOrder = currentNewsApi === 'gnews' ? ['gnews', 'newsdata'] : ['newsdata', 'gnews'];
 
-    console.log('News API response for', countryName, ':', data.status, data.results?.length || 0, 'results');
+  for (const apiName of apiOrder) {
+    const api = NEWS_APIS[apiName];
+    if (!api || !api.key) continue;
 
-    if (data.status === 'success' && data.results && data.results.length > 0) {
-      // Filter for relevant articles about this country
-      const relevantArticles = data.results.filter(article =>
-        isRelevantToCountry(article.title, article.description, countryName)
-      );
+    try {
+      const url = api.buildUrl(api.key, countryName);
+      console.log(`Trying ${apiName} API for ${countryName}...`);
 
-      console.log('Relevant articles:', relevantArticles.length, 'of', data.results.length);
+      const response = await fetch(url);
 
-      // Use filtered results if we have any, otherwise fall back to all results
-      const articlesToUse = relevantArticles.length > 0 ? relevantArticles : data.results;
+      // Check for rate limiting or errors
+      if (!response.ok) {
+        console.warn(`${apiName} API returned ${response.status}, trying next...`);
+        continue;
+      }
 
-      return articlesToUse.slice(0, 15).map(article => ({
-        headline: article.title,
-        source: formatSourceName(article.source_id),
-        time: timeAgo(article.pubDate),
-        url: article.link || '#',
-        category: detectCategory(article.title, article.description)
-      }));
+      const data = await response.json();
+      const results = api.parseResults(data);
+
+      if (results && results.length > 0) {
+        console.log(`${apiName} returned ${results.length} results for ${countryName}`);
+        currentNewsApi = apiName; // Remember which API worked
+
+        // Filter for relevant articles about this country
+        const relevantArticles = results.filter(article =>
+          isRelevantToCountry(article.title, article.description, countryName)
+        );
+
+        // Use filtered results if we have any, otherwise fall back to all results
+        const articlesToUse = relevantArticles.length > 0 ? relevantArticles : results;
+
+        return articlesToUse.slice(0, 15).map(article => ({
+          headline: article.title,
+          source: formatSourceName(article.source_id),
+          time: timeAgo(article.pubDate),
+          url: article.link || '#',
+          category: detectCategory(article.title, article.description)
+        }));
+      }
+    } catch (error) {
+      console.warn(`${apiName} API error:`, error.message);
+      continue;
     }
-
-    // Log API errors
-    if (data.status === 'error') {
-      console.error('NewsData API error:', data.results?.message || 'Unknown error');
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Failed to fetch country news:', error);
-    return null;
   }
+
+  // All APIs failed
+  console.error('All news APIs failed for', countryName);
+  return { error: 'News services temporarily unavailable. Please try again later.' };
 }
 
 // Generate risk trend data (simulated historical data)
@@ -2684,11 +2749,14 @@ function openModal(name) {
   document.getElementById('modalOverlay').classList.add('active');
 
   // Fetch live country-specific news
-  fetchCountryNews(name).then(news => {
+  fetchCountryNews(name).then(result => {
     const newsContainer = document.getElementById('countryNewsContent');
     if (newsContainer) {
-      if (news && news.length > 0) {
-        newsContainer.innerHTML = news.map(n => `
+      // Check if it's an error object
+      if (result && result.error) {
+        newsContainer.innerHTML = `<div style="color:#f59e0b;font-size:11px;">${result.error}</div>`;
+      } else if (result && Array.isArray(result) && result.length > 0) {
+        newsContainer.innerHTML = result.map(n => `
           <div class="news-item">
             <div class="news-meta">
               <span class="card-cat ${n.category}" style="font-size:7px;padding:1px 4px;">${n.category}</span>
