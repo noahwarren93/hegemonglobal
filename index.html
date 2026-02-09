@@ -1880,7 +1880,13 @@ async function fetchLiveNews() {
     console.log('API Response:', data.status, data.results ? data.results.length : 0, 'articles');
 
     if (data.status === 'success' && data.results && data.results.length > 0) {
-      DAILY_BRIEFING = data.results.map(article => {
+      // Filter out irrelevant articles (sports, entertainment, local crime, etc.)
+      const relevantArticles = data.results.filter(article => {
+        const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+        return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+      });
+
+      DAILY_BRIEFING = relevantArticles.map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
         const sourceName = formatSourceName(article.source_id);
@@ -1967,16 +1973,75 @@ function closeBanner() {
   if (banner) banner.classList.remove('active');
 }
 
-// Fetch country-specific news
+// Words that indicate an article is NOT about geopolitics
+const IRRELEVANT_KEYWORDS = [
+  'sports', 'football', 'soccer', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'nfl', 'nba', 'mlb',
+  'celebrity', 'entertainment', 'movie', 'film', 'music', 'concert', 'album', 'netflix', 'streaming',
+  'recipe', 'cooking', 'fashion', 'beauty', 'lifestyle', 'horoscope', 'zodiac',
+  'dating', 'relationship', 'wedding', 'divorce', 'kardashian', 'influencer',
+  'weight loss', 'diet', 'fitness', 'workout', 'yoga',
+  'lottery', 'powerball', 'mega millions', 'jackpot',
+  'figure skating', 'ice skating', 'world cup goal', 'super bowl',
+  'tv show', 'reality tv', 'american idol', 'bachelor', 'bachelorette',
+  'stock picks', 'buy now', 'shares up', 'otcmkts', 'penny stock'
+];
+
+// Check if article is relevant to the country and geopolitics
+function isRelevantToCountry(title, description, countryName) {
+  const text = ((title || '') + ' ' + (description || '')).toLowerCase();
+  const titleLower = (title || '').toLowerCase();
+  const countryLower = countryName.toLowerCase();
+
+  // Check for irrelevant keywords - reject these
+  for (const kw of IRRELEVANT_KEYWORDS) {
+    if (text.includes(kw)) return false;
+  }
+
+  // Must have country name in title to be relevant
+  if (!titleLower.includes(countryLower)) {
+    // Check for demonyms
+    const demonyms = {
+      'Honduras': ['honduran', 'honduras'], 'Mexico': ['mexican', 'mexico'], 'Brazil': ['brazilian', 'brazil'],
+      'China': ['chinese', 'china', 'beijing'], 'Russia': ['russian', 'russia', 'moscow', 'kremlin'],
+      'Japan': ['japanese', 'japan', 'tokyo'], 'Germany': ['german', 'germany', 'berlin'],
+      'France': ['french', 'france', 'paris', 'macron'], 'India': ['indian', 'india', 'delhi', 'modi'],
+      'Pakistan': ['pakistani', 'pakistan', 'islamabad'], 'Iran': ['iranian', 'iran', 'tehran'],
+      'Iraq': ['iraqi', 'iraq', 'baghdad'], 'Israel': ['israeli', 'israel', 'netanyahu', 'gaza'],
+      'Ukraine': ['ukrainian', 'ukraine', 'kyiv', 'zelensky'], 'Turkey': ['turkish', 'turkey', 'ankara', 'erdogan'],
+      'Egypt': ['egyptian', 'egypt', 'cairo'], 'Nigeria': ['nigerian', 'nigeria', 'lagos'],
+      'South Africa': ['south african', 'south africa', 'johannesburg', 'pretoria'],
+      'Taiwan': ['taiwanese', 'taiwan', 'taipei'], 'North Korea': ['north korean', 'pyongyang', 'kim jong'],
+      'South Korea': ['south korean', 'seoul'], 'Saudi Arabia': ['saudi', 'riyadh'],
+      'United States': ['u.s.', 'us ', 'american', 'washington', 'biden', 'congress', 'white house'],
+      'United Kingdom': ['british', 'uk ', 'britain', 'london', 'parliament']
+    };
+    const countryTerms = demonyms[countryName] || [countryLower];
+    const hasCountryTerm = countryTerms.some(term => titleLower.includes(term));
+    if (!hasCountryTerm) return false;
+  }
+
+  return true;
+}
+
+// Fetch country-specific news with relevance filtering
 async function fetchCountryNews(countryName) {
   try {
-    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&q=${encodeURIComponent(countryName)}&size=5`);
+    // Fetch more results so we have enough after filtering
+    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&q=${encodeURIComponent(countryName)}&size=30`);
     const data = await response.json();
 
     if (data.status === 'success' && data.results && data.results.length > 0) {
-      return data.results.map(article => ({
+      // Filter for relevant articles about this country
+      const relevantArticles = data.results.filter(article =>
+        isRelevantToCountry(article.title, article.description, countryName)
+      );
+
+      // Use filtered results, or fall back to top unfiltered if filter is too aggressive
+      const articlesToUse = relevantArticles.length >= 5 ? relevantArticles : data.results;
+
+      return articlesToUse.slice(0, 15).map(article => ({
         headline: article.title,
-        source: article.source_id || 'News',
+        source: formatSourceName(article.source_id),
         time: timeAgo(article.pubDate),
         url: article.link || '#',
         category: detectCategory(article.title, article.description)
