@@ -48,7 +48,7 @@
     .stat-popup::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
     .stat-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1f2937; }
     .stat-popup-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    .stat-popup-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 18px; }
+    .stat-popup-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 24px; padding: 8px; min-width: 44px; min-height: 44px; }
     .stat-popup-close:hover { color: #fff; }
     .stat-popup-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f293755; cursor: pointer; font-size: 10px; transition: all 0.15s; }
     .stat-popup-item:hover { padding-left: 6px; background: #1f293733; }
@@ -137,7 +137,7 @@
     .modal-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
     .modal-risk { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
     .modal-subtitle { font-size: 12px; color: #9ca3af; margin-top: 4px; }
-    .modal-close { background: none; border: none; color: #6b7280; font-size: 24px; cursor: pointer; padding: 8px; }
+    .modal-close { background: none; border: none; color: #6b7280; font-size: 28px; cursor: pointer; padding: 12px; min-width: 44px; min-height: 44px; }
     .modal-close:hover { color: #fff; }
     .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
     .modal-body::-webkit-scrollbar { width: 5px; }
@@ -2320,7 +2320,7 @@ function onResize() {
   renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
-// Drag rotation
+// Drag rotation - Mouse events
 let isDragging = false, prevMouse = { x: 0, y: 0 };
 document.getElementById('globe').addEventListener('mousedown', (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; });
 document.addEventListener('mouseup', () => { isDragging = false; });
@@ -2330,6 +2330,49 @@ document.addEventListener('mousemove', (e) => {
   globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + (e.clientY - prevMouse.y) * 0.005));
   prevMouse = { x: e.clientX, y: e.clientY };
 });
+
+// Touch events for mobile globe rotation
+let touchStart = { x: 0, y: 0 };
+document.getElementById('globe').addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => { isDragging = false; });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isDragging || !globe || e.touches.length !== 1) return;
+  const touch = e.touches[0];
+  globe.rotation.y += (touch.clientX - prevMouse.x) * 0.005;
+  globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + (touch.clientY - prevMouse.y) * 0.005));
+  prevMouse = { x: touch.clientX, y: touch.clientY };
+}, { passive: true });
+
+// Touch tap on markers for mobile
+document.getElementById('globe').addEventListener('touchend', (e) => {
+  // Only handle single tap (not after drag)
+  if (e.changedTouches.length === 1) {
+    const touch = e.changedTouches[0];
+    const dx = Math.abs(touch.clientX - touchStart.x);
+    const dy = Math.abs(touch.clientY - touchStart.y);
+    // If minimal movement, treat as tap/click
+    if (dx < 10 && dy < 10) {
+      const container = document.getElementById('globe');
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(countryMeshes);
+      if (intersects.length > 0) {
+        const { name } = intersects[0].object.userData;
+        openModal(name);
+      }
+    }
+  }
+}, { passive: true });
 
 function animate() {
   requestAnimationFrame(animate);
@@ -2562,6 +2605,26 @@ function showStatPopup(category) {
 function closeStatPopup() {
   document.getElementById('statPopup').classList.remove('active');
 }
+
+// Close stat popup when clicking/tapping outside
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('statPopup');
+  const isStatBox = e.target.closest('.stat-box');
+  const isPopup = e.target.closest('.stat-popup');
+  if (popup.classList.contains('active') && !isStatBox && !isPopup) {
+    closeStatPopup();
+  }
+});
+
+// Also handle touch for mobile
+document.addEventListener('touchend', (e) => {
+  const popup = document.getElementById('statPopup');
+  const isStatBox = e.target.closest('.stat-box');
+  const isPopup = e.target.closest('.stat-popup');
+  if (popup.classList.contains('active') && !isStatBox && !isPopup) {
+    closeStatPopup();
+  }
+});
 
 initGlobe();
 renderSidebar();
