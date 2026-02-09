@@ -1718,80 +1718,35 @@ const DAILY_BRIEFING_FALLBACK = [
 let DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
 let lastNewsUpdate = null;
 
-// News API configuration - multiple sources for maximum reliability
-// Total: ~1000+ requests/day across all APIs
+// RSS Feed sources - FREE and UNLIMITED!
+const RSS_FEEDS = {
+  // Major world news RSS feeds
+  daily: [
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
+    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' }
+  ],
+  // Country-specific search will use Google News RSS
+  search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
+};
+
+// RSS to JSON proxy (free tier: 10,000 req/day)
+const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+// Backup News APIs (if RSS fails)
 const NEWS_APIS = {
-  // NewsData.io - 200 requests/day free
   newsdata: {
     key: 'pub_7c217680d0cb4730af5530a2e86e2474',
-    daily: 200,
     buildUrl: (key, query) => `https://newsdata.io/api/1/news?apikey=${key}&language=en&q=${encodeURIComponent(query)}&size=30`,
     buildDailyUrl: (key) => `https://newsdata.io/api/1/news?apikey=${key}&language=en&category=world,politics,business,technology&size=50`,
     parseResults: (data) => data.status === 'success' ? data.results : null
-  },
-  // GNews.io - 100 requests/day free
-  gnews: {
-    key: 'c6d7e44af8d09d59ac7e4cab6abc9bca',
-    daily: 100,
-    buildUrl: (key, query) => `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=30&apikey=${key}`,
-    buildDailyUrl: (key) => `https://gnews.io/api/v4/top-headlines?category=world&lang=en&max=50&apikey=${key}`,
-    parseResults: (data) => data.articles ? data.articles.map(a => ({
-      title: a.title,
-      description: a.description,
-      link: a.url,
-      source_id: a.source?.name || 'Unknown',
-      pubDate: a.publishedAt
-    })) : null
-  },
-  // Currents API - 600 requests/day free (most generous!)
-  currents: {
-    key: 'fYqoSEjvZ_5WIH7UYrLz8VwB6Qx9hmTsNdGc3O0PLanFeJpE',
-    daily: 600,
-    buildUrl: (key, query) => `https://api.currentsapi.services/v1/search?apiKey=${key}&keywords=${encodeURIComponent(query)}&language=en`,
-    buildDailyUrl: (key) => `https://api.currentsapi.services/v1/latest-news?apiKey=${key}&language=en`,
-    parseResults: (data) => data.status === 'ok' ? data.news?.map(a => ({
-      title: a.title,
-      description: a.description,
-      link: a.url,
-      source_id: a.author || 'Unknown',
-      pubDate: a.published
-    })) : null
-  },
-  // TheNewsAPI - 100 requests/day free
-  thenewsapi: {
-    key: 'HpGTqCo9JLZbHqIFlFE1oRH5IaKLFnPyjeVqeqza',
-    daily: 100,
-    buildUrl: (key, query) => `https://api.thenewsapi.com/v1/news/all?api_token=${key}&search=${encodeURIComponent(query)}&language=en&limit=30`,
-    buildDailyUrl: (key) => `https://api.thenewsapi.com/v1/news/top?api_token=${key}&language=en&limit=50`,
-    parseResults: (data) => data.data ? data.data.map(a => ({
-      title: a.title,
-      description: a.description || a.snippet,
-      link: a.url,
-      source_id: a.source || 'Unknown',
-      pubDate: a.published_at
-    })) : null
-  },
-  // MediaStack - 100 requests/month free (use sparingly as backup)
-  mediastack: {
-    key: '8d0f0c8f8a5f0d6e7b9c1a2d3e4f5a6b',
-    daily: 3,
-    buildUrl: (key, query) => `http://api.mediastack.com/v1/news?access_key=${key}&keywords=${encodeURIComponent(query)}&languages=en&limit=30`,
-    buildDailyUrl: (key) => `http://api.mediastack.com/v1/news?access_key=${key}&languages=en&limit=50`,
-    parseResults: (data) => data.data ? data.data.map(a => ({
-      title: a.title,
-      description: a.description,
-      link: a.url,
-      source_id: a.source || 'Unknown',
-      pubDate: a.published_at
-    })) : null
   }
 };
 
-// API priority order (most reliable/generous first)
-const API_PRIORITY = ['currents', 'newsdata', 'gnews', 'thenewsapi', 'mediastack'];
 const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
-let currentNewsApi = 'currents'; // Track which API is working
-let apiFailures = {}; // Track recent failures to avoid hammering broken APIs
+let apiFailures = {}; // Track recent failures
 
 // Category detection based on keywords
 function detectCategory(title, description) {
@@ -1933,9 +1888,32 @@ function timeAgo(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Fetch live news from multiple API sources - tries ALL APIs in priority order
+// Fetch RSS feed and convert to JSON
+async function fetchRSS(feedUrl, sourceName) {
+  try {
+    const proxyUrl = RSS2JSON_API + encodeURIComponent(feedUrl);
+    const response = await fetch(proxyUrl);
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    if (data.status !== 'ok' || !data.items) return [];
+
+    return data.items.map(item => ({
+      title: item.title,
+      description: item.description || item.content || '',
+      link: item.link,
+      source_id: sourceName || data.feed?.title || 'News',
+      pubDate: item.pubDate
+    }));
+  } catch (error) {
+    console.warn(`RSS fetch failed for ${sourceName}:`, error.message);
+    return [];
+  }
+}
+
+// Fetch live news from RSS feeds (FREE and UNLIMITED!)
 async function fetchLiveNews() {
-  console.log('Fetching live news...');
+  console.log('Fetching live news from RSS feeds...');
 
   // Update UI to show loading
   const timestampEl = document.getElementById('newsTimestamp');
@@ -1943,91 +1921,97 @@ async function fetchLiveNews() {
     timestampEl.innerHTML = `<span style="color:#eab308;">●</span> Fetching latest news...`;
   }
 
-  // Try all APIs in priority order, starting with the one that worked last
-  const apiOrder = [currentNewsApi, ...API_PRIORITY.filter(a => a !== currentNewsApi)];
+  try {
+    // Fetch from multiple RSS feeds in parallel
+    const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
+    const feedResults = await Promise.all(feedPromises);
 
-  for (const apiName of apiOrder) {
-    const api = NEWS_APIS[apiName];
-    if (!api || !api.key || !api.buildDailyUrl) continue;
+    // Combine all results
+    let allArticles = feedResults.flat();
+    console.log(`RSS feeds returned ${allArticles.length} total articles`);
 
-    // Skip APIs that failed recently (within last 5 minutes)
-    if (apiFailures[apiName] && Date.now() - apiFailures[apiName] < 300000) {
-      console.log(`Skipping ${apiName} for daily news (recently failed)`);
-      continue;
-    }
+    if (allArticles.length > 0) {
+      // Sort by date (newest first)
+      allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-    try {
-      const url = api.buildDailyUrl(api.key);
-      console.log(`Trying ${apiName} for daily news...`);
+      // Filter out irrelevant articles
+      const relevantArticles = allArticles.filter(article => {
+        const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+        return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+      });
 
-      const response = await fetch(url);
+      // Remove duplicates by title similarity
+      const seen = new Set();
+      const uniqueArticles = relevantArticles.filter(article => {
+        const key = article.title.toLowerCase().slice(0, 50);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
-      if (!response.ok) {
-        console.warn(`${apiName} returned ${response.status}, trying next...`);
-        apiFailures[apiName] = Date.now();
-        continue;
+      DAILY_BRIEFING = uniqueArticles.slice(0, 50).map(article => {
+        const category = detectCategory(article.title, article.description);
+        const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
+        const sourceName = formatSourceName(article.source_id);
+
+        return {
+          time: timeAgo(article.pubDate),
+          category: category,
+          importance: importance,
+          headline: article.title,
+          source: sourceName,
+          url: article.link || '#'
+        };
+      });
+
+      lastNewsUpdate = new Date();
+      console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
+
+      if (currentTab === 'daily') {
+        renderSidebar();
       }
-
-      const data = await response.json();
-      const results = api.parseResults(data);
-
-      if (results && results.length > 0) {
-        console.log(`${apiName} returned ${results.length} articles`);
-        currentNewsApi = apiName;
-        delete apiFailures[apiName];
-
-        // Filter out irrelevant articles (sports, entertainment, local crime, etc.)
-        const relevantArticles = results.filter(article => {
-          const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-          return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
-        });
-
-        DAILY_BRIEFING = relevantArticles.map(article => {
-          const category = detectCategory(article.title, article.description);
-          const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
-          const sourceName = formatSourceName(article.source_id);
-
-          return {
-            time: timeAgo(article.pubDate),
-            category: category,
-            importance: importance,
-            headline: article.title,
-            source: sourceName,
-            url: article.link || '#'
-          };
-        });
-
-        lastNewsUpdate = new Date();
-        console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from', apiName);
-
-        // Update the display if on daily tab
-        if (currentTab === 'daily') {
-          renderSidebar();
-        }
-
-        // Update the last updated indicator
-        updateNewsTimestamp();
-
-        // Check for breaking news
-        checkBreakingNews(DAILY_BRIEFING);
-        return; // Success! Exit the loop
-      }
-    } catch (error) {
-      console.warn(`${api.name} error:`, error.message);
-      continue;
+      updateNewsTimestamp();
+      checkBreakingNews(DAILY_BRIEFING);
+      return;
     }
+  } catch (error) {
+    console.warn('RSS feeds failed:', error.message);
   }
 
-  // All APIs failed
-  console.error('All news APIs failed');
-  if (!lastNewsUpdate) {
-    lastNewsUpdate = new Date();
-    if (timestampEl) {
-      timestampEl.innerHTML = `<span style="color:#f97316;">●</span> News services unavailable · <span style="color:#6b7280;">Using cached data</span>`;
+  // Fallback to NewsData API if RSS fails
+  try {
+    const api = NEWS_APIS.newsdata;
+    const response = await fetch(api.buildDailyUrl(api.key));
+    if (response.ok) {
+      const data = await response.json();
+      const results = api.parseResults(data);
+      if (results && results.length > 0) {
+        console.log('Fallback to NewsData API:', results.length, 'articles');
+        DAILY_BRIEFING = results.filter(article => {
+          const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+          return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+        }).map(article => ({
+          time: timeAgo(article.pubDate),
+          category: detectCategory(article.title, article.description),
+          importance: 'medium',
+          headline: article.title,
+          source: formatSourceName(article.source_id),
+          url: article.link || '#'
+        }));
+        lastNewsUpdate = new Date();
+        if (currentTab === 'daily') renderSidebar();
+        updateNewsTimestamp();
+        return;
+      }
     }
-    if (currentTab === 'daily') {
-      renderSidebar();
-    }
+  } catch (e) {
+    console.warn('NewsData fallback failed:', e.message);
+  }
+
+  // All sources failed
+  console.error('All news sources failed');
+  if (timestampEl) {
+    timestampEl.innerHTML = `<span style="color:#f97316;">●</span> News temporarily unavailable`;
   }
 }
 
@@ -2203,68 +2187,75 @@ function isRelevantToCountry(title, description, countryName) {
   return inDesc;
 }
 
-// Fetch country-specific news with relevance filtering - tries ALL APIs in priority order
+// Fetch country-specific news using Google News RSS (FREE!)
 async function fetchCountryNews(countryName) {
-  // Reorder to try the currently working API first
-  const apiOrder = [currentNewsApi, ...API_PRIORITY.filter(a => a !== currentNewsApi)];
+  console.log(`Fetching news for ${countryName}...`);
 
-  for (const apiName of apiOrder) {
-    const api = NEWS_APIS[apiName];
-    if (!api || !api.key || !api.buildUrl) continue;
+  // Try Google News RSS first (free, unlimited)
+  try {
+    const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
+    const articles = await fetchRSS(googleNewsUrl, 'Google News');
 
-    // Skip APIs that failed recently (within last 5 minutes)
-    if (apiFailures[apiName] && Date.now() - apiFailures[apiName] < 300000) {
-      console.log(`Skipping ${apiName} (recently failed)`);
-      continue;
+    if (articles && articles.length > 0) {
+      console.log(`Google News RSS returned ${articles.length} results for ${countryName}`);
+
+      // Filter for relevant articles about this country
+      const relevantArticles = articles.filter(article =>
+        isRelevantToCountry(article.title, article.description, countryName)
+      );
+
+      // Use filtered results if we have any, otherwise fall back to all results
+      const articlesToUse = relevantArticles.length > 0 ? relevantArticles : articles;
+
+      return articlesToUse.slice(0, 15).map(article => ({
+        headline: article.title,
+        source: formatSourceName(article.source_id),
+        time: timeAgo(article.pubDate),
+        url: article.link || '#',
+        category: detectCategory(article.title, article.description)
+      }));
     }
-
-    try {
-      const url = api.buildUrl(api.key, countryName);
-      console.log(`Trying ${apiName} API for ${countryName}...`);
-
-      const response = await fetch(url);
-
-      // Check for rate limiting or errors
-      if (!response.ok) {
-        console.warn(`${apiName} API returned ${response.status}, trying next...`);
-        apiFailures[apiName] = Date.now();
-        continue;
-      }
-
-      const data = await response.json();
-      const results = api.parseResults(data);
-
-      if (results && results.length > 0) {
-        console.log(`${apiName} returned ${results.length} results for ${countryName}`);
-        currentNewsApi = apiName; // Remember which API worked
-        delete apiFailures[apiName]; // Clear failure record
-
-        // Filter for relevant articles about this country
-        const relevantArticles = results.filter(article =>
-          isRelevantToCountry(article.title, article.description, countryName)
-        );
-
-        // Use filtered results if we have any, otherwise fall back to all results
-        const articlesToUse = relevantArticles.length > 0 ? relevantArticles : results;
-
-        return articlesToUse.slice(0, 15).map(article => ({
-          headline: article.title,
-          source: formatSourceName(article.source_id),
-          time: timeAgo(article.pubDate),
-          url: article.link || '#',
-          category: detectCategory(article.title, article.description)
-        }));
-      }
-    } catch (error) {
-      console.warn(`${apiName} API error:`, error.message);
-      apiFailures[apiName] = Date.now();
-      continue;
-    }
+  } catch (error) {
+    console.warn('Google News RSS failed:', error.message);
   }
 
-  // All APIs failed
-  console.error('All news APIs failed for', countryName);
-  return { error: 'News services temporarily unavailable. Please try again later.' };
+  // Fallback to NewsData API
+  try {
+    const api = NEWS_APIS.newsdata;
+    if (api && api.key) {
+      const url = api.buildUrl(api.key, countryName);
+      const response = await fetch(url);
+
+      if (response.ok) {
+        const data = await response.json();
+        const results = api.parseResults(data);
+
+        if (results && results.length > 0) {
+          console.log(`NewsData returned ${results.length} results for ${countryName}`);
+
+          const relevantArticles = results.filter(article =>
+            isRelevantToCountry(article.title, article.description, countryName)
+          );
+
+          const articlesToUse = relevantArticles.length > 0 ? relevantArticles : results;
+
+          return articlesToUse.slice(0, 15).map(article => ({
+            headline: article.title,
+            source: formatSourceName(article.source_id),
+            time: timeAgo(article.pubDate),
+            url: article.link || '#',
+            category: detectCategory(article.title, article.description)
+          }));
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('NewsData API failed:', error.message);
+  }
+
+  // All sources failed
+  console.error('All news sources failed for', countryName);
+  return { error: 'Unable to fetch news. Please try again.' };
 }
 
 // Generate risk trend data (simulated historical data)
