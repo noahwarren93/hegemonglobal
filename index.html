@@ -210,9 +210,10 @@
       .legend { bottom: auto; top: 70px; left: 10px; padding: 8px; }
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
-      .globe-controls { right: 10px; bottom: auto; top: 70px; }
-      .globe-toggle { padding: 6px 10px; font-size: 8px; }
-      .toggle-icon { width: 12px; height: 12px; }
+      .globe-controls { right: auto; left: 10px; bottom: 70px; top: auto; }
+      .globe-toggle { padding: 5px 8px; font-size: 7px; }
+      .toggle-icon { width: 10px; height: 10px; }
+      .toggle-text { display: none; }
       .stats { bottom: 10px; left: 10px; right: 10px; gap: 6px; }
       .stat-card { padding: 8px 10px; }
       .stat-value { font-size: 16px; }
@@ -232,7 +233,9 @@
       .live { font-size: 9px; }
       .date { font-size: 10px; }
       .legend { display: none; }
-      .globe-controls { top: 55px; }
+      .globe-controls { left: 10px; bottom: 65px; }
+      .globe-toggle { padding: 4px 6px; }
+      .toggle-icon { width: 12px; height: 12px; }
       .globe-container { height: 45vh; }
       .sidebar { height: 55vh; }
     }
@@ -281,7 +284,7 @@
         <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/>
         </svg>
-        AUTO-ROTATE
+        <span class="toggle-text">AUTO-ROTATE</span>
       </button>
     </div>
 
