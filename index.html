@@ -38,6 +38,12 @@
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #d1d5db; text-transform: uppercase; font-weight: 500; }
     .legend-icon { width: 10px; height: 10px; border-radius: 50%; }
 
+    .globe-controls { position: absolute; bottom: 16px; right: 340px; z-index: 10; display: flex; gap: 8px; }
+    .globe-toggle { background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 8px 12px; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; }
+    .globe-toggle:hover { border-color: #374151; color: #e5e7eb; }
+    .globe-toggle.active { border-color: #06b6d4; color: #06b6d4; }
+    .toggle-icon { width: 14px; height: 14px; }
+
     .stats { position: absolute; bottom: 16px; left: 230px; z-index: 10; display: flex; gap: 8px; }
     .stat-card { background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 10px 14px; border-radius: 10px; border: 1px solid #1f2937; text-align: center; min-width: 70px; cursor: pointer; transition: all 0.2s; }
     .stat-card:hover { border-color: #374151; transform: translateY(-2px); }
@@ -204,6 +210,9 @@
       .legend { bottom: auto; top: 70px; left: 10px; padding: 8px; }
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
+      .globe-controls { right: 10px; bottom: auto; top: 70px; }
+      .globe-toggle { padding: 6px 10px; font-size: 8px; }
+      .toggle-icon { width: 12px; height: 12px; }
       .stats { bottom: 10px; left: 10px; right: 10px; gap: 6px; }
       .stat-card { padding: 8px 10px; }
       .stat-value { font-size: 16px; }
@@ -223,6 +232,7 @@
       .live { font-size: 9px; }
       .date { font-size: 10px; }
       .legend { display: none; }
+      .globe-controls { top: 55px; }
       .globe-container { height: 45vh; }
       .sidebar { height: 55vh; }
     }
@@ -264,6 +274,15 @@
         <div class="legend-item"><div class="legend-icon" style="background:#3b82f6"></div>Cloudy</div>
         <div class="legend-item"><div class="legend-icon" style="background:#22c55e"></div>Clear</div>
       </div>
+    </div>
+
+    <div class="globe-controls">
+      <button class="globe-toggle active" id="rotateToggle" onclick="toggleRotation()">
+        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/>
+        </svg>
+        AUTO-ROTATE
+      </button>
     </div>
 
     <div class="stats">
@@ -2404,6 +2423,7 @@ function initGlobe() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   camera.position.z = 2.8;
+  camera.position.x = -0.15; // Shift globe slightly left to center it
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
@@ -2607,8 +2627,17 @@ function onResize() {
   renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
-// Drag rotation - Mouse events
+// Globe controls
 let isDragging = false, prevMouse = { x: 0, y: 0 };
+let autoRotate = true;
+
+function toggleRotation() {
+  autoRotate = !autoRotate;
+  const btn = document.getElementById('rotateToggle');
+  if (btn) btn.classList.toggle('active', autoRotate);
+}
+
+// Drag rotation - Mouse events
 document.getElementById('globe').addEventListener('mousedown', (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; });
 document.addEventListener('mouseup', () => { isDragging = false; });
 document.addEventListener('mousemove', (e) => {
@@ -2663,7 +2692,7 @@ document.getElementById('globe').addEventListener('touchend', (e) => {
 
 function animate() {
   requestAnimationFrame(animate);
-  if (!isDragging && globe) globe.rotation.y += 0.0008;
+  if (!isDragging && autoRotate && globe) globe.rotation.y += 0.0008;
   animateConflictZones(); // Pulse conflict zones
   renderer.render(scene, camera);
 }
