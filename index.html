@@ -16,11 +16,11 @@
     .header-content { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 26px; font-weight: 800; color: #06b6d4; letter-spacing: 2px; }
     .logo-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; letter-spacing: 3px; font-weight: 600; }
-    .header-right { display: flex; align-items: center; gap: 16px; }
-    .live { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #22c55e; font-weight: 600; }
-    .live-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #22c55e; }
+    .header-right { position: absolute; top: 16px; right: 340px; display: flex; align-items: center; gap: 16px; z-index: 15; }
+    .live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #22c55e; font-weight: 700; }
+    .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #22c55e; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-    .date { font-size: 11px; color: #6b7280; }
+    .date { font-size: 12px; color: #f3f4f6; font-weight: 600; }
 
     .watchlist { position: absolute; top: 80px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 14px; border-radius: 10px; border: 1px solid #1f2937; width: 200px; max-height: 320px; overflow-y: auto; }
     .watchlist::-webkit-scrollbar { width: 4px; }
@@ -197,6 +197,7 @@
       .globe-container { height: 50vh; }
       .sidebar { width: 100%; height: 50vh; border-left: none; border-top: 1px solid #1f2937; }
       .header { right: 0; padding: 10px 12px; }
+      .header-right { right: 12px; top: 12px; }
       .logo { font-size: 20px; }
       .logo-sub { font-size: 9px; }
       .watchlist { display: none; }
@@ -218,7 +219,9 @@
     }
 
     @media (max-width: 480px) {
-      .header-right { display: none; }
+      .header-right { right: 10px; top: 10px; gap: 10px; }
+      .live { font-size: 9px; }
+      .date { font-size: 10px; }
       .legend { display: none; }
       .globe-container { height: 45vh; }
       .sidebar { height: 55vh; }
@@ -242,11 +245,11 @@
           <div class="logo">HEGEMON</div>
           <div class="logo-sub">GLOBAL INTELLIGENCE NETWORK</div>
         </div>
-        <div class="header-right">
-          <div class="live"><div class="live-dot"></div>LIVE</div>
-          <div class="date" id="currentDate"></div>
-        </div>
       </div>
+    </div>
+    <div class="header-right">
+      <div class="live"><div class="live-dot"></div>LIVE</div>
+      <div class="date" id="currentDate"></div>
     </div>
 
     <div class="watchlist" id="watchlist"></div>
