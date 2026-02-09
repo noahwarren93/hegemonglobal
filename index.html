@@ -2220,7 +2220,7 @@ function renderSidebar() {
 
     // Top Stories section
     if (topStories.length > 0) {
-      html += `<div class="section-header" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(90deg,rgba(239,68,68,0.15) 0%,transparent 100%);border-left:3px solid #ef4444;margin-bottom:10px;"><span style="font-size:11px;font-weight:700;color:#ef4444;letter-spacing:1px;">🔥 TOP STORIES</span></div>`;
+      html += `<div class="section-header" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(90deg,rgba(239,68,68,0.15) 0%,transparent 100%);border-left:3px solid #ef4444;margin-bottom:10px;"><span style="font-size:11px;font-weight:700;color:#ef4444;letter-spacing:1px;">TOP STORIES</span></div>`;
       html += topStories.map(item => `
         <div class="card" style="border-left:2px solid ${item.category === 'CONFLICT' ? '#ef4444' : item.category === 'CRISIS' ? '#f97316' : '#eab308'};">
           <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
@@ -2231,7 +2231,7 @@ function renderSidebar() {
     }
 
     // All News section
-    html += `<div class="section-header" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;margin:14px 0 10px 0;"><span style="font-size:11px;font-weight:700;color:#3b82f6;letter-spacing:1px;">📰 LATEST UPDATES</span><span style="font-size:9px;color:#6b7280;">(${DAILY_BRIEFING.length} articles)</span></div>`;
+    html += `<div class="section-header" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;margin:14px 0 10px 0;"><span style="font-size:11px;font-weight:700;color:#3b82f6;letter-spacing:1px;">LATEST UPDATES</span><span style="font-size:9px;color:#6b7280;">(${DAILY_BRIEFING.length} articles)</span></div>`;
     html += allNews.map(item => `
       <div class="card">
         <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
@@ -2242,7 +2242,7 @@ function renderSidebar() {
 
     // Load More button
     if (newsDisplayCount < DAILY_BRIEFING.length) {
-      html += `<button onclick="loadMoreNews()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#1f2937 0%,#111827 100%);border:1px solid #374151;border-radius:8px;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;">📥 LOAD MORE (${DAILY_BRIEFING.length - newsDisplayCount} remaining)</button>`;
+      html += `<button onclick="loadMoreNews()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#1f2937 0%,#111827 100%);border:1px solid #374151;border-radius:8px;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;">LOAD MORE (${DAILY_BRIEFING.length - newsDisplayCount} remaining)</button>`;
     }
 
     content.innerHTML = html;
@@ -2251,7 +2251,7 @@ function renderSidebar() {
       <div class="forecast-card">
         <div class="forecast-header"><span class="forecast-icon">${f.icon}</span><span class="forecast-region">${f.region}</span><span class="forecast-risk risk-${f.risk}">${f.risk.toUpperCase()}</span></div>
         <div class="forecast-current">${f.current}</div>
-        <div class="forecast-prediction"><div class="forecast-prediction-title">🔮 FORECAST</div><div class="forecast-prediction-text">${f.forecast}</div></div>
+        <div class="forecast-prediction"><div class="forecast-prediction-title">FORECAST</div><div class="forecast-prediction-text">${f.forecast}</div></div>
         <div class="forecast-indicators">${f.indicators.map(i => `<span class="forecast-indicator ${i.dir}">${i.dir === 'up' ? '↑' : i.dir === 'down' ? '↓' : '→'} ${i.text}</span>`).join('')}</div>
       </div>
     `).join('');
@@ -2345,7 +2345,7 @@ function openModal(name) {
   }
 
   // Add placeholder for live country news
-  html += `<div class="country-news-section"><div class="country-news-title">📡 LIVE NEWS FOR ${name.toUpperCase()}</div><div id="countryNewsContent" class="country-news-loading">Loading latest news...</div></div>`;
+  html += `<div class="country-news-section"><div class="country-news-title">LIVE NEWS FOR ${name.toUpperCase()}</div><div id="countryNewsContent" class="country-news-loading">Loading latest news...</div></div>`;
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('active');
