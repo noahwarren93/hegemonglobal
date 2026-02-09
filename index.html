@@ -1757,22 +1757,36 @@ function formatSourceName(sourceId) {
     'bloomberg': 'Bloomberg', 'ft': 'Financial Times', 'economist': 'The Economist',
     'cnbc': 'CNBC', 'marketwatch': 'MarketWatch', 'forbes': 'Forbes', 'fortune': 'Fortune',
     'businessinsider': 'Business Insider', 'insider': 'Insider', 'barrons': 'Barrons',
+    'benzinga': 'Benzinga', 'investorplace': 'InvestorPlace', 'seekingalpha': 'Seeking Alpha',
+    'thestreet': 'TheStreet', 'investopedia': 'Investopedia', 'kiplinger': 'Kiplinger',
+    'biztoc': 'BizToc', 'bizjournals': 'Biz Journals', 'ibtimes': 'IB Times',
     // UK News
     'sky': 'Sky News', 'telegraph': 'The Telegraph', 'independent': 'The Independent',
     'mirror': 'The Mirror', 'express': 'Daily Express', 'metro': 'Metro UK', 'thesun': 'The Sun',
     'dailymail': 'Daily Mail', 'dailymailuk': 'Daily Mail UK', 'eveningstandard': 'Evening Standard',
+    'londonlovesbusiness': 'London Loves Business', 'cityam': 'City A.M.',
     // Middle East
     'dailysabah': 'Daily Sabah', 'jpost': 'Jerusalem Post', 'timesofisrael': 'Times of Israel',
     'haaretz': 'Haaretz', 'middleeastmonitor': 'Middle East Monitor', 'middleeasteye': 'Middle East Eye',
     'arabnews': 'Arab News', 'gulfnews': 'Gulf News', 'zawya': 'Zawya', 'alarabiya': 'Al Arabiya',
     'trtworld': 'TRT World', 'aa': 'Anadolu Agency', 'tehrantimes': 'Tehran Times',
-    // Asia
+    'menafn': 'MENAFN', 'albawaba': 'Al Bawaba', 'middleeaststar': 'Middle East Star',
+    // Asia - Pakistan
+    'tribune_pk': 'Express Tribune', 'expresstribune': 'Express Tribune', 'dawn': 'Dawn',
+    'geo': 'Geo News', 'arynews': 'ARY News', 'thenews': 'The News', 'pakistantoday': 'Pakistan Today',
+    // Asia - India
     'thehindu': 'The Hindu', 'hindustantimes': 'Hindustan Times', 'ndtv': 'NDTV',
     'indiatoday': 'India Today', 'mathrubhumi': 'Mathrubhumi', 'timesofindia': 'Times of India',
+    'toi': 'Times of India', 'indianexpress': 'Indian Express', 'deccanherald': 'Deccan Herald',
+    'theprint': 'The Print', 'thewire': 'The Wire', 'scroll': 'Scroll', 'firstpost': 'Firstpost',
+    'livemint': 'Live Mint', 'moneycontrol': 'Money Control', 'economictimes': 'Economic Times',
+    // Asia - Others
     'scmp': 'South China Morning Post', 'straitstimes': 'Straits Times', 'channelnewsasia': 'CNA',
     'nikkei': 'Nikkei Asia', 'japantimes': 'Japan Times', 'koreaherald': 'Korea Herald',
     'koreatimes': 'Korea Times', 'asahi': 'Asahi Shimbun', 'bangkokpost': 'Bangkok Post',
     'xinhua': 'Xinhua', 'globaltimes': 'Global Times', 'chinadaily': 'China Daily',
+    'philstar': 'PhilStar', 'inquirer': 'Inquirer', 'manilatimes': 'Manila Times',
+    'thestar': 'The Star Malaysia', 'bernama': 'Bernama', 'vnexpress': 'VnExpress',
     // Russia/Eastern Europe
     'rt': 'RT', 'tass': 'TASS', 'ria': 'RIA Novosti', 'pravda': 'Pravda',
     'kyivindependent': 'Kyiv Independent', 'kyivpost': 'Kyiv Post', 'unian': 'UNIAN',
@@ -1780,6 +1794,7 @@ function formatSourceName(sourceId) {
     'efe': 'EFE', 'ansa': 'ANSA', 'dpa': 'DPA', 'lemonde': 'Le Monde', 'spiegel': 'Der Spiegel',
     'elpais': 'El País', 'rte': 'RTÉ', 'irishtimes': 'Irish Times', 'dutchnews': 'Dutch News',
     'thelocal': 'The Local', 'euronews': 'Euronews', 'politicoeu': 'Politico EU',
+    'rmoutlook': 'RM Outlook', 'rmf24': 'RMF24', 'onet': 'Onet',
     // Africa
     'legit': 'Legit News', 'punch': 'Punch Nigeria', 'vanguard': 'Vanguard Nigeria',
     'dailynigerian': 'Daily Nigerian', 'premiumtimes': 'Premium Times', 'nation': 'The Nation',
@@ -1790,10 +1805,22 @@ function formatSourceName(sourceId) {
     'eluniversal': 'El Universal', 'milenio': 'Milenio', 'reforma': 'Reforma',
     // Australia/Oceania
     'abc_au': 'ABC Australia', 'smh': 'Sydney Morning Herald', 'theaustralian': 'The Australian',
-    'nzherald': 'NZ Herald', 'stuff': 'Stuff NZ', 'rnz': 'RNZ',
+    'nzherald': 'NZ Herald', 'stuff': 'Stuff NZ', 'rnz': 'RNZ', '9news': 'Nine News',
+    // Tech News
+    'techcrunch': 'TechCrunch', 'theverge': 'The Verge', 'wired': 'Wired', 'arstechnica': 'Ars Technica',
+    'engadget': 'Engadget', 'cnet': 'CNET', 'zdnet': 'ZDNet', 'tomshardware': 'Toms Hardware',
+    'gizmodo': 'Gizmodo', 'mashable': 'Mashable', 'venturebeat': 'VentureBeat',
     // Wire Services & Others
     'upi': 'UPI', 'pti': 'PTI', 'ani': 'ANI', 'ians': 'IANS',
-    'report_az': 'Report Azerbaijan', 'spsrasd_info': 'Sahara Press', 'wionews': 'WION'
+    'report_az': 'Report Azerbaijan', 'spsrasd_info': 'Sahara Press', 'wionews': 'WION',
+    // Aggregators & Others
+    'newsweek': 'Newsweek', 'time': 'TIME', 'theatlantic': 'The Atlantic', 'newyorker': 'The New Yorker',
+    'foreignpolicy': 'Foreign Policy', 'foreignaffairs': 'Foreign Affairs', 'theconversation': 'The Conversation',
+    'defenseone': 'Defense One', 'defensenews': 'Defense News', 'breakingdefense': 'Breaking Defense',
+    'oilprice': 'OilPrice', 'hellenicshippingnews': 'Hellenic Shipping', 'lloydslist': 'Lloyds List',
+    'semafor': 'Semafor', 'puck': 'Puck', 'theintercept': 'The Intercept', 'motherjones': 'Mother Jones',
+    'nationalreview': 'National Review', 'dailywire': 'Daily Wire', 'breitbart': 'Breitbart',
+    'rawstory': 'Raw Story', 'mediaite': 'Mediaite', 'thedailybeast': 'Daily Beast'
   };
 
   if (sourceMap[id]) return sourceMap[id];
