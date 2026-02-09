@@ -197,6 +197,28 @@
     .country-news-title { font-size: 10px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; margin-bottom: 10px; }
     .country-news-loading { font-size: 11px; color: #6b7280; text-align: center; padding: 20px; }
 
+    /* Newsletter Styles */
+    .newsletter-header { background: linear-gradient(135deg, #0d1117 0%, #1a1a2e 100%); border: 1px solid #1f2937; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .newsletter-title { font-size: 13px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; margin-bottom: 4px; }
+    .newsletter-meta { font-size: 9px; color: #6b7280; display: flex; align-items: center; gap: 12px; }
+    .newsletter-status { display: flex; align-items: center; gap: 4px; }
+    .newsletter-status.live { color: #22c55e; }
+    .newsletter-status.pending { color: #f59e0b; }
+    .newsletter-region { background: #0d0d14; border: 1px solid #1f293777; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .newsletter-region-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #1f293755; }
+    .newsletter-region-name { font-size: 11px; font-weight: 700; color: #e5e7eb; letter-spacing: 0.5px; }
+    .newsletter-region-count { font-size: 9px; color: #6b7280; margin-left: auto; }
+    .newsletter-summary { font-size: 10px; color: #9ca3af; line-height: 1.6; margin-bottom: 10px; }
+    .newsletter-stories { display: flex; flex-direction: column; gap: 6px; }
+    .newsletter-story { background: #0a0a0f; border-radius: 6px; padding: 8px 10px; border-left: 2px solid #374151; }
+    .newsletter-story.high { border-left-color: #ef4444; }
+    .newsletter-story.medium { border-left-color: #f97316; }
+    .newsletter-story-headline { font-size: 10px; color: #d1d5db; line-height: 1.4; }
+    .newsletter-story-meta { font-size: 8px; color: #6b7280; margin-top: 4px; display: flex; gap: 8px; }
+    .newsletter-countdown { text-align: center; padding: 30px 20px; color: #6b7280; }
+    .newsletter-countdown-time { font-size: 24px; font-weight: 700; color: #f59e0b; margin: 10px 0; font-family: monospace; }
+    .newsletter-countdown-label { font-size: 10px; color: #9ca3af; }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .app { flex-direction: column; }
@@ -307,6 +329,7 @@
   <div class="sidebar">
     <div class="tabs">
       <button class="tab active" data-tab="daily">Daily</button>
+      <button class="tab" data-tab="newsletter">Newsletter</button>
       <button class="tab" data-tab="forecast">Forecast</button>
       <button class="tab" data-tab="events">Events</button>
       <button class="tab" data-tab="elections">Elections</button>
@@ -1733,6 +1756,217 @@ const FORECASTS = [
   { region: 'Climate Hotspots', risk: 'severe', current: 'Record temperatures, extreme weather events increasing. COP commitments falling short.', forecast: 'More frequent climate disasters expected. Watch for climate migration from vulnerable regions and food security impacts.', indicators: [{ text: 'Extreme Weather', dir: 'up' }, { text: 'Adaptation', dir: 'stable' }, { text: 'Emissions', dir: 'up' }] }
 ];
 
+// NEWSLETTER SYSTEM
+// Region mapping for news categorization
+const NEWSLETTER_REGIONS = {
+  'Eastern Europe': ['Ukraine', 'Russia', 'Belarus', 'Moldova', 'Poland', 'Romania', 'Hungary', 'Balkans'],
+  'Middle East': ['Israel', 'Gaza', 'Palestine', 'Iran', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'UAE', 'Qatar', 'Jordan', 'Egypt'],
+  'East Asia': ['China', 'Taiwan', 'Japan', 'Korea', 'North Korea', 'South Korea', 'Hong Kong'],
+  'Southeast Asia': ['Myanmar', 'Thailand', 'Vietnam', 'Philippines', 'Indonesia', 'Malaysia', 'Singapore', 'Cambodia', 'Laos'],
+  'South Asia': ['India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Afghanistan'],
+  'Africa': ['Sudan', 'Somalia', 'Ethiopia', 'DRC', 'Congo', 'Nigeria', 'Kenya', 'South Africa', 'Mali', 'Niger', 'Burkina', 'Sahel', 'Libya', 'Algeria'],
+  'Americas': ['United States', 'US', 'Brazil', 'Mexico', 'Venezuela', 'Colombia', 'Argentina', 'Haiti', 'Cuba', 'Canada'],
+  'Europe': ['UK', 'Britain', 'France', 'Germany', 'Italy', 'Spain', 'NATO', 'EU', 'European']
+};
+
+// Store last newsletter data
+let lastNewsletterData = null;
+let lastNewsletterTime = null;
+
+// Check if it's past 5pm EST (22:00 UTC in winter, 21:00 UTC in summer)
+function isNewsletterTime() {
+  const now = new Date();
+  // Convert to EST (UTC-5)
+  const estHour = (now.getUTCHours() - 5 + 24) % 24;
+  return estHour >= 17; // 5pm EST or later
+}
+
+// Get the newsletter release time for today
+function getNewsletterReleaseTime() {
+  const now = new Date();
+  // Create today at 5pm EST (22:00 UTC)
+  const release = new Date(now);
+  release.setUTCHours(22, 0, 0, 0);
+
+  // If we're past that time, show it
+  if (now >= release) {
+    return release;
+  }
+  return null;
+}
+
+// Get time until next newsletter
+function getTimeUntilNewsletter() {
+  const now = new Date();
+  const estHour = (now.getUTCHours() - 5 + 24) % 24;
+  const estMinute = now.getUTCMinutes();
+
+  if (estHour >= 17) {
+    return null; // Already released
+  }
+
+  const hoursLeft = 16 - estHour;
+  const minsLeft = 60 - estMinute;
+
+  return { hours: hoursLeft, minutes: minsLeft };
+}
+
+// Categorize news by region
+function categorizeNewsByRegion(articles) {
+  const regionNews = {};
+
+  // Initialize all regions
+  Object.keys(NEWSLETTER_REGIONS).forEach(region => {
+    regionNews[region] = [];
+  });
+  regionNews['Global'] = []; // For uncategorized news
+
+  articles.forEach(article => {
+    const text = (article.headline || article.title || '').toLowerCase();
+    let matched = false;
+
+    for (const [region, keywords] of Object.entries(NEWSLETTER_REGIONS)) {
+      if (keywords.some(kw => text.includes(kw.toLowerCase()))) {
+        regionNews[region].push(article);
+        matched = true;
+        break; // Only assign to first matching region
+      }
+    }
+
+    if (!matched) {
+      regionNews['Global'].push(article);
+    }
+  });
+
+  return regionNews;
+}
+
+// Generate region summary based on articles
+function generateRegionSummary(region, articles) {
+  if (articles.length === 0) return 'No significant developments reported in the past 24 hours.';
+
+  const categories = {};
+  articles.forEach(a => {
+    const cat = a.category || 'WORLD';
+    categories[cat] = (categories[cat] || 0) + 1;
+  });
+
+  const topCategory = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
+  const highPriority = articles.filter(a => a.importance === 'high').length;
+
+  let summary = '';
+
+  if (highPriority > 0) {
+    summary += `${highPriority} high-priority development${highPriority > 1 ? 's' : ''} reported. `;
+  }
+
+  if (topCategory) {
+    const catName = topCategory[0].charAt(0) + topCategory[0].slice(1).toLowerCase();
+    summary += `Primary focus: ${catName} (${topCategory[1]} ${topCategory[1] > 1 ? 'stories' : 'story'}). `;
+  }
+
+  summary += `${articles.length} total update${articles.length > 1 ? 's' : ''} in the past 24 hours.`;
+
+  return summary;
+}
+
+// Render the newsletter
+function renderNewsletter() {
+  const now = new Date();
+  const timeUntil = getTimeUntilNewsletter();
+
+  // If before 5pm EST, show countdown
+  if (timeUntil) {
+    return `
+      <div class="newsletter-header">
+        <div class="newsletter-title">DAILY INTELLIGENCE BRIEFING</div>
+        <div class="newsletter-meta">
+          <span class="newsletter-status pending"><span style="display:inline-block;width:6px;height:6px;background:#f59e0b;border-radius:50%;margin-right:4px;"></span>PENDING</span>
+          <span>Released daily at 5:00 PM EST</span>
+        </div>
+      </div>
+      <div class="newsletter-countdown">
+        <div style="font-size:10px;color:#9ca3af;margin-bottom:8px;">NEXT BRIEFING IN</div>
+        <div class="newsletter-countdown-time">${String(timeUntil.hours).padStart(2, '0')}:${String(timeUntil.minutes).padStart(2, '0')}</div>
+        <div class="newsletter-countdown-label">hours : minutes</div>
+        <div style="margin-top:20px;font-size:10px;color:#6b7280;line-height:1.6;">
+          The daily newsletter compiles and summarizes the past 24 hours of global events by region. Check back after 5:00 PM EST for today's briefing.
+        </div>
+      </div>
+    `;
+  }
+
+  // After 5pm EST - show the newsletter
+  const regionNews = categorizeNewsByRegion(DAILY_BRIEFING);
+
+  // Get today's date formatted
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  let html = `
+    <div class="newsletter-header">
+      <div class="newsletter-title">DAILY INTELLIGENCE BRIEFING</div>
+      <div class="newsletter-meta">
+        <span class="newsletter-status live"><span style="display:inline-block;width:6px;height:6px;background:#22c55e;border-radius:50%;margin-right:4px;animation:pulse 1.5s infinite;"></span>LIVE</span>
+        <span>${dateStr}</span>
+      </div>
+    </div>
+  `;
+
+  // Sort regions by article count (most active first)
+  const sortedRegions = Object.entries(regionNews)
+    .filter(([_, articles]) => articles.length > 0)
+    .sort((a, b) => {
+      // Prioritize high-importance regions
+      const aHigh = a[1].filter(x => x.importance === 'high').length;
+      const bHigh = b[1].filter(x => x.importance === 'high').length;
+      if (aHigh !== bHigh) return bHigh - aHigh;
+      return b[1].length - a[1].length;
+    });
+
+  if (sortedRegions.length === 0) {
+    html += `<div style="text-align:center;padding:30px;color:#6b7280;font-size:11px;">No news available for today's briefing. Check back later.</div>`;
+    return html;
+  }
+
+  sortedRegions.forEach(([region, articles]) => {
+    const highPriority = articles.filter(a => a.importance === 'high');
+    const topStories = [...highPriority, ...articles.filter(a => a.importance !== 'high')].slice(0, 3);
+
+    html += `
+      <div class="newsletter-region">
+        <div class="newsletter-region-header">
+          <span class="newsletter-region-name">${region.toUpperCase()}</span>
+          ${highPriority.length > 0 ? `<span style="font-size:8px;background:#7f1d1d;color:#fca5a5;padding:2px 6px;border-radius:3px;">${highPriority.length} CRITICAL</span>` : ''}
+          <span class="newsletter-region-count">${articles.length} update${articles.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="newsletter-summary">${generateRegionSummary(region, articles)}</div>
+        <div class="newsletter-stories">
+          ${topStories.map(story => `
+            <div class="newsletter-story ${story.importance || 'medium'}">
+              <div class="newsletter-story-headline">${story.headline}</div>
+              <div class="newsletter-story-meta">
+                <span class="card-cat ${story.category}" style="font-size:7px;padding:1px 4px;">${story.category}</span>
+                <span>${story.source}</span>
+                <span>${story.time}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // Add footer
+  html += `
+    <div style="text-align:center;padding:16px;margin-top:10px;border-top:1px solid #1f2937;">
+      <div style="font-size:9px;color:#6b7280;">Compiled from ${DAILY_BRIEFING.length} sources</div>
+      <div style="font-size:8px;color:#4b5563;margin-top:4px;">Next briefing: Tomorrow at 5:00 PM EST</div>
+    </div>
+  `;
+
+  return html;
+}
+
 // DAILY BRIEFING
 // Fallback static news (used if API fails)
 const DAILY_BRIEFING_FALLBACK = [
@@ -2899,6 +3133,8 @@ function renderSidebar() {
     `).join('');
   } else if (currentTab === 'search') {
     content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
+  } else if (currentTab === 'newsletter') {
+    content.innerHTML = renderNewsletter();
   }
 }
 
