@@ -2674,21 +2674,32 @@ function closeStatPopup() {
 // Close stat popup when clicking/tapping outside
 document.addEventListener('click', (e) => {
   const popup = document.getElementById('statPopup');
-  const isStatBox = e.target.closest('.stat-box');
+  const isStatCard = e.target.closest('.stat-card');
   const isPopup = e.target.closest('.stat-popup');
-  if (popup.classList.contains('active') && !isStatBox && !isPopup) {
+  if (popup.classList.contains('active') && !isStatCard && !isPopup) {
     closeStatPopup();
   }
 });
 
-// Also handle touch for mobile
-document.addEventListener('touchend', (e) => {
+// Also handle touch for mobile - close popup when tapping outside
+document.addEventListener('touchstart', (e) => {
   const popup = document.getElementById('statPopup');
-  const isStatBox = e.target.closest('.stat-box');
+  const isStatCard = e.target.closest('.stat-card');
   const isPopup = e.target.closest('.stat-popup');
-  if (popup.classList.contains('active') && !isStatBox && !isPopup) {
+  if (popup.classList.contains('active') && !isStatCard && !isPopup) {
     closeStatPopup();
   }
+}, { passive: true });
+
+// Make stat cards work with touch on mobile
+document.querySelectorAll('.stat-card').forEach(card => {
+  card.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const onclick = card.getAttribute('onclick');
+    if (onclick) {
+      eval(onclick);
+    }
+  });
 });
 
 initGlobe();
