@@ -73,9 +73,19 @@
     .card { background: #0d0d12; border: 1px solid #1f293755; border-radius: 8px; padding: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; }
     .card:hover { border-color: #374151; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .card-cat { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 500; text-transform: uppercase; }
+    .card-cat { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
     .card-cat.high { background: #7f1d1d; color: #fca5a5; }
     .card-cat.medium { background: #374151; color: #9ca3af; }
+    /* Category color coding */
+    .card-cat.CONFLICT { background: #7f1d1d; color: #fca5a5; }
+    .card-cat.CRISIS { background: #9a3412; color: #fdba74; }
+    .card-cat.SECURITY { background: #7c2d12; color: #fed7aa; }
+    .card-cat.ECONOMY { background: #166534; color: #86efac; }
+    .card-cat.POLITICS { background: #1e40af; color: #93c5fd; }
+    .card-cat.DIPLOMACY { background: #5b21b6; color: #c4b5fd; }
+    .card-cat.TECH { background: #0e7490; color: #67e8f9; }
+    .card-cat.CLIMATE { background: #065f46; color: #6ee7b7; }
+    .card-cat.WORLD { background: #374151; color: #d1d5db; }
     .card-time { font-size: 8px; color: #6b7280; }
     .card-headline { font-size: 10px; color: #e5e7eb; line-height: 1.4; }
     .card-source { font-size: 8px; color: #6b7280; margin-top: 4px; }
@@ -1590,7 +1600,7 @@ function timeAgo(dateString) {
 async function fetchLiveNews() {
   try {
     console.log('Fetching live news...');
-    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&category=world,politics&size=10`);
+    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&category=world,politics,business,technology&size=50`);
     const data = await response.json();
 
     if (data.status === 'success' && data.results && data.results.length > 0) {
@@ -1897,7 +1907,7 @@ function renderSidebar() {
   if (currentTab === 'daily') {
     content.innerHTML = DAILY_BRIEFING.map(item => `
       <div class="card">
-        <div class="card-header"><span class="card-cat ${item.importance}">${item.category}</span><span class="card-time">${item.time}</span></div>
+        <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
         <div class="card-headline">${item.headline}</div>
         <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
       </div>
