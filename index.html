@@ -1666,18 +1666,26 @@ const COUNTRIES = {
   'Nauru': { lat: -0.52, lng: 166.93, flag: '🇳🇷', risk: 'cloudy', region: 'Oceania', pop: '11K', gdp: '$150M', leader: 'Adeang', title: 'Smallest Republic', analysis: { what: 'Nauru depleted its phosphate resources and now hosts Australian migrant detention center.', why: 'Cautionary tale of resource depletion. Australian detention arrangement is controversial.', next: 'Finding sustainable economic path.' }, news: [{ source: 'Pacific Islands Report', bias: 'center', time: '6h ago', headline: 'Economic diversification efforts continue', url: '#' }] },
   'Tuvalu': { lat: -7.48, lng: 179.20, flag: '🇹🇻', risk: 'severe', region: 'Oceania', pop: '11K', gdp: '$60M', leader: 'Teo', title: 'Disappearing Nation', analysis: { what: 'Tuvalu will likely be submerged by rising seas this century. Australia offered residency rights.', why: 'Most vulnerable nation to climate change. Digital revenue from .tv domain is creative solution.', next: 'Preserving nationhood amid disappearance.' }, news: [{ source: 'Pacific Islands Report', bias: 'center', time: '5h ago', headline: 'Australia migration agreement implemented', url: '#' }] }
 };
-// ELECTIONS DATA
+// RECENT ELECTION RESULTS
+const RECENT_ELECTIONS = [
+  { flag: '🇯🇵', country: 'Japan', date: 'Feb 2026', type: 'Snap Election', winner: 'Sanae Takaichi (LDP)', result: 'LDP wins majority', summary: 'First female PM. Nationalist conservative takes power after snap election landslide.' },
+  { flag: '🇵🇹', country: 'Portugal', date: 'Jan 2026', type: 'Presidential Election', winner: 'Ana Gomes (Left)', result: 'Leftist victory', summary: 'Defeated far-right surge. Chega party gains but falls short.' },
+  { flag: '🇹🇭', country: 'Thailand', date: 'Jan 2026', type: 'Senate Elections', winner: 'Move Forward aligned', result: 'Progressive gains', summary: 'Reformist senators elected. Military influence declining.' },
+  { flag: '🇩🇪', country: 'Germany', date: 'Feb 2025', type: 'Federal Elections', winner: 'Friedrich Merz (CDU)', result: 'Center-right coalition', summary: 'CDU returns to power. Scholz government ousted after coalition collapse.' },
+  { flag: '🇧🇾', country: 'Belarus', date: 'Jan 2025', type: 'Presidential Election', winner: 'Alexander Lukashenko', result: 'Authoritarian hold', summary: 'Widely disputed results. Opposition in exile denounces sham election.' },
+  { flag: '🇮🇩', country: 'Indonesia', date: 'Feb 2024', type: 'Presidential Election', winner: 'Prabowo Subianto', result: 'Defense minister wins', summary: 'Former general takes presidency. Jokowi dynasty concerns raised.' }
+];
+
+// UPCOMING ELECTIONS DATA
 const ELECTIONS = [
   { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. Key test for current administration policies.' },
   { flag: '🇧🇷', country: 'Brazil', date: 'Oct 2026', type: 'General Elections', stakes: 'Lula faces re-election challenge. Amazon policy central issue.' },
+  { flag: '🇦🇺', country: 'Australia', date: 'May 2026', type: 'Federal Election', stakes: 'Labor seeks second term. Cost of living and housing key issues.' },
   { flag: '🇫🇷', country: 'France', date: 'Apr 2027', type: 'Presidential Election', stakes: 'Macron term-limited. Political fragmentation continues.' },
   { flag: '🇰🇷', country: 'South Korea', date: 'Mar 2027', type: 'Presidential Election', stakes: 'Political crisis aftermath. Conservative vs progressive battle.' },
-  { flag: '🇩🇪', country: 'Germany', date: 'Sep 2029', type: 'Federal Elections', stakes: 'Coalition government under pressure. AfD remains strong opposition.' },
   { flag: '🇬🇧', country: 'United Kingdom', date: 'Jan 2029', type: 'General Elections', stakes: 'Labour government faces economic challenges. Brexit aftereffects.' },
   { flag: '🇮🇳', country: 'India', date: 'Apr 2029', type: 'General Elections', stakes: 'Modi legacy election. Hindu nationalism vs opposition coalition.' },
-  { flag: '🇯🇵', country: 'Japan', date: 'Jul 2028', type: 'House of Councillors', stakes: 'Test for government. Defense policy and China relations key.' },
-  { flag: '🇲🇽', country: 'Mexico', date: 'Jun 2030', type: 'Presidential Election', stakes: 'MORENA seeks to extend dominance. Security and economy key issues.' },
-  { flag: '🇮🇩', country: 'Indonesia', date: 'Feb 2029', type: 'Presidential Election', stakes: 'Post-Prabowo era begins. Democracy and development focus.' }
+  { flag: '🇲🇽', country: 'Mexico', date: 'Jun 2030', type: 'Presidential Election', stakes: 'MORENA seeks to extend dominance. Security and economy key issues.' }
 ];
 
 // FORECASTS DATA
@@ -2721,9 +2729,18 @@ function renderSidebar() {
       </div>
     `).join('');
   } else if (currentTab === 'elections') {
-    content.innerHTML = `<div style="font-size:9px;color:#f97316;font-weight:600;letter-spacing:1px;margin-bottom:12px">UPCOMING ELECTIONS</div>` +
+    content.innerHTML = `<div style="font-size:9px;color:#22c55e;font-weight:600;letter-spacing:1px;margin-bottom:12px">RECENT RESULTS</div>` +
+      RECENT_ELECTIONS.map(e => `
+        <div class="election-card" onclick="openModal('${e.country}')" style="border-left:3px solid #22c55e">
+          <div class="election-header"><span class="election-flag">${e.flag}</span><span class="election-country">${e.country}</span><span class="election-date" style="color:#22c55e">${e.date}</span></div>
+          <div class="election-type">${e.type}</div>
+          <div style="font-size:10px;color:#22c55e;font-weight:600;margin:4px 0">${e.winner}</div>
+          <div class="election-stakes">${e.summary}</div>
+        </div>
+      `).join('') +
+      `<div style="font-size:9px;color:#f97316;font-weight:600;letter-spacing:1px;margin:20px 0 12px">UPCOMING ELECTIONS</div>` +
       ELECTIONS.map(e => `
-        <div class="election-card" onclick="openModal('${e.country}')">
+        <div class="election-card" onclick="openModal('${e.country}')" style="border-left:3px solid #f97316">
           <div class="election-header"><span class="election-flag">${e.flag}</span><span class="election-country">${e.country}</span><span class="election-date">${e.date}</span></div>
           <div class="election-type">${e.type}</div>
           <div class="election-stakes">${e.stakes}</div>
