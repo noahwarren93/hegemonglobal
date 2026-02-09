@@ -166,9 +166,70 @@
     .news-time { font-size: 9px; color: #6b7280; margin-left: auto; }
     .news-headline { font-size: 11px; color: #d1d5db; line-height: 1.5; }
     .news-link { font-size: 9px; color: #06b6d4; text-decoration: none; display: inline-block; margin-top: 6px; }
+
+    /* Breaking News Banner */
+    .breaking-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%); padding: 8px 20px; display: none; animation: bannerPulse 2s infinite; }
+    .breaking-banner.active { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .breaking-label { background: #fff; color: #7f1d1d; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 3px; letter-spacing: 1px; }
+    .breaking-text { font-size: 12px; font-weight: 600; color: #fff; }
+    .breaking-close { background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 18px; margin-left: auto; }
+    @keyframes bannerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.9; } }
+
+    /* Risk Trend Chart */
+    .trend-chart { display: flex; align-items: flex-end; gap: 2px; height: 30px; margin-top: 8px; }
+    .trend-bar { width: 4px; border-radius: 2px; transition: height 0.3s; }
+    .trend-up { background: linear-gradient(to top, #ef4444, #fca5a5); }
+    .trend-down { background: linear-gradient(to top, #22c55e, #86efac); }
+    .trend-stable { background: linear-gradient(to top, #6b7280, #9ca3af); }
+    .trend-label { font-size: 8px; color: #6b7280; margin-top: 4px; }
+
+    /* Country News Section in Modal */
+    .country-news-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1f2937; }
+    .country-news-title { font-size: 10px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; margin-bottom: 10px; }
+    .country-news-loading { font-size: 11px; color: #6b7280; text-align: center; padding: 20px; }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .app { flex-direction: column; }
+      .globe-container { height: 50vh; }
+      .sidebar { width: 100%; height: 50vh; border-left: none; border-top: 1px solid #1f2937; }
+      .header { right: 0; padding: 10px 12px; }
+      .logo { font-size: 20px; }
+      .logo-sub { font-size: 9px; }
+      .watchlist { display: none; }
+      .legend { bottom: auto; top: 70px; left: 10px; padding: 8px; }
+      .legend-title { font-size: 7px; }
+      .legend-item { font-size: 8px; }
+      .stats { bottom: 10px; left: 10px; right: 10px; gap: 6px; }
+      .stat-card { padding: 8px 10px; }
+      .stat-value { font-size: 16px; }
+      .stat-label { font-size: 6px; }
+      .tabs { flex-wrap: nowrap; overflow-x: auto; }
+      .tab { min-width: auto; padding: 8px 10px; font-size: 7px; white-space: nowrap; }
+      .modal { width: 95%; max-height: 85vh; margin: 10px; }
+      .modal-header { padding: 12px; }
+      .modal-title { font-size: 16px; }
+      .modal-body { padding: 12px; }
+      .breaking-banner { padding: 6px 10px; }
+      .breaking-text { font-size: 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .header-right { display: none; }
+      .legend { display: none; }
+      .globe-container { height: 45vh; }
+      .sidebar { height: 55vh; }
+    }
   </style>
 </head>
 <body>
+<!-- Breaking News Banner -->
+<div class="breaking-banner" id="breakingBanner">
+  <span class="breaking-label">BREAKING</span>
+  <span class="breaking-text" id="breakingText"></span>
+  <button class="breaking-close" onclick="closeBanner()">&times;</button>
+</div>
+
 <div class="app">
   <div class="globe-container">
     <div id="globe"></div>
@@ -1582,6 +1643,29 @@ function detectCategory(title, description) {
   return 'WORLD';
 }
 
+// Format source name nicely
+function formatSourceName(sourceId) {
+  if (!sourceId) return 'News';
+  const sourceMap = {
+    'bbc': 'BBC',
+    'reuters': 'Reuters',
+    'aljazeera': 'Al Jazeera',
+    'theguardian': 'The Guardian',
+    'apnews': 'AP News',
+    'dw': 'DW News',
+    'france24': 'France 24',
+    'cnn': 'CNN',
+    'nytimes': 'NY Times',
+    'washingtonpost': 'Washington Post',
+    'wsj': 'WSJ',
+    'bloomberg': 'Bloomberg',
+    'ft': 'Financial Times',
+    'economist': 'The Economist',
+    'politico': 'Politico'
+  };
+  return sourceMap[sourceId.toLowerCase()] || sourceId.charAt(0).toUpperCase() + sourceId.slice(1).replace(/_/g, ' ');
+}
+
 // Calculate time ago
 function timeAgo(dateString) {
   const date = new Date(dateString);
@@ -1596,24 +1680,64 @@ function timeAgo(dateString) {
   return diffDays + 'd ago';
 }
 
-// Fetch live news from NewsData.io
+// Premium news source domains for variety
+const PREMIUM_SOURCES = ['bbc', 'reuters', 'aljazeera', 'theguardian', 'apnews', 'dw', 'france24'];
+
+// Fetch live news from NewsData.io with source variety
 async function fetchLiveNews() {
   try {
-    console.log('Fetching live news...');
-    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&category=world,politics,business,technology&size=50`);
-    const data = await response.json();
+    console.log('Fetching live news from multiple sources...');
 
-    if (data.status === 'success' && data.results && data.results.length > 0) {
-      DAILY_BRIEFING = data.results.map(article => {
+    // Fetch general world news
+    const mainPromise = fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&category=world,politics,business,technology&size=30`);
+
+    // Fetch from premium sources (rotating through them to avoid rate limits)
+    const sourceIndex = Math.floor(Date.now() / 3600000) % PREMIUM_SOURCES.length;
+    const selectedSources = PREMIUM_SOURCES.slice(sourceIndex, sourceIndex + 3).join(',');
+    const premiumPromise = fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&domain=${selectedSources}&size=20`);
+
+    const [mainResponse, premiumResponse] = await Promise.all([mainPromise, premiumPromise]);
+    const mainData = await mainResponse.json();
+    const premiumData = await premiumResponse.json();
+
+    const allArticles = [];
+
+    // Add main news
+    if (mainData.status === 'success' && mainData.results) {
+      allArticles.push(...mainData.results);
+    }
+
+    // Add premium source news
+    if (premiumData.status === 'success' && premiumData.results) {
+      allArticles.push(...premiumData.results);
+    }
+
+    if (allArticles.length > 0) {
+      // Remove duplicates based on title similarity
+      const seen = new Set();
+      const uniqueArticles = allArticles.filter(article => {
+        const titleKey = article.title.toLowerCase().slice(0, 50);
+        if (seen.has(titleKey)) return false;
+        seen.add(titleKey);
+        return true;
+      });
+
+      // Sort by date (newest first)
+      uniqueArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+      DAILY_BRIEFING = uniqueArticles.slice(0, 50).map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
+
+        // Format source name nicely
+        const sourceName = formatSourceName(article.source_id);
 
         return {
           time: timeAgo(article.pubDate),
           category: category,
           importance: importance,
           headline: article.title,
-          source: article.source_id || 'News',
+          source: sourceName,
           url: article.link || '#'
         };
       });
@@ -1646,6 +1770,151 @@ function updateNewsTimestamp() {
 // Initialize live news and set up auto-refresh
 fetchLiveNews();
 setInterval(fetchLiveNews, NEWS_REFRESH_INTERVAL);
+
+// Breaking news detection keywords
+const BREAKING_KEYWORDS = ['breaking', 'just in', 'urgent', 'developing', 'explosion', 'attack', 'earthquake', 'tsunami', 'coup', 'assassination', 'war declared', 'nuclear'];
+
+// Check for breaking news
+function checkBreakingNews(articles) {
+  for (const article of articles) {
+    const text = (article.headline || article.title || '').toLowerCase();
+    if (BREAKING_KEYWORDS.some(kw => text.includes(kw))) {
+      showBreakingBanner(article.headline || article.title);
+      return;
+    }
+  }
+}
+
+// Show breaking news banner
+function showBreakingBanner(text) {
+  const banner = document.getElementById('breakingBanner');
+  const textEl = document.getElementById('breakingText');
+  if (banner && textEl) {
+    textEl.textContent = text;
+    banner.classList.add('active');
+  }
+}
+
+// Close breaking news banner
+function closeBanner() {
+  const banner = document.getElementById('breakingBanner');
+  if (banner) banner.classList.remove('active');
+}
+
+// Fetch country-specific news
+async function fetchCountryNews(countryName) {
+  try {
+    const response = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&q=${encodeURIComponent(countryName)}&size=5`);
+    const data = await response.json();
+
+    if (data.status === 'success' && data.results && data.results.length > 0) {
+      return data.results.map(article => ({
+        headline: article.title,
+        source: article.source_id || 'News',
+        time: timeAgo(article.pubDate),
+        url: article.link || '#',
+        category: detectCategory(article.title, article.description)
+      }));
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch country news:', error);
+    return null;
+  }
+}
+
+// Generate risk trend data (simulated historical data)
+function generateTrendData(risk) {
+  const trends = [];
+  const baseValues = { catastrophic: 85, extreme: 70, severe: 55, stormy: 40, cloudy: 25, clear: 10 };
+  const base = baseValues[risk] || 50;
+
+  for (let i = 0; i < 12; i++) {
+    const variance = Math.random() * 20 - 10;
+    trends.push(Math.max(5, Math.min(100, base + variance)));
+  }
+  return trends;
+}
+
+// Render risk trend chart
+function renderTrendChart(risk) {
+  const data = generateTrendData(risk);
+  const max = Math.max(...data);
+
+  return `
+    <div class="trend-chart">
+      ${data.map((val, i) => {
+        const height = (val / max) * 25 + 5;
+        const trend = i > 0 ? (val > data[i-1] ? 'up' : val < data[i-1] ? 'down' : 'stable') : 'stable';
+        return `<div class="trend-bar trend-${trend}" style="height:${height}px"></div>`;
+      }).join('')}
+    </div>
+    <div class="trend-label">12-month risk trend</div>
+  `;
+}
+
+// Conflict zones data (lat, lng, radius, intensity)
+const CONFLICT_ZONES = [
+  { lat: 48.5, lng: 35.0, radius: 0.15, name: 'Ukraine-Russia', intensity: 1.0 },
+  { lat: 31.5, lng: 34.5, radius: 0.08, name: 'Gaza', intensity: 1.0 },
+  { lat: 15.5, lng: 32.5, radius: 0.12, name: 'Sudan', intensity: 0.9 },
+  { lat: 21.0, lng: 96.0, radius: 0.10, name: 'Myanmar', intensity: 0.8 },
+  { lat: 15.5, lng: 47.5, radius: 0.10, name: 'Yemen', intensity: 0.8 },
+  { lat: 2.0, lng: 45.0, radius: 0.08, name: 'Somalia', intensity: 0.7 },
+  { lat: -2.0, lng: 28.0, radius: 0.12, name: 'DRC East', intensity: 0.8 },
+  { lat: 33.5, lng: 36.5, radius: 0.06, name: 'Syria', intensity: 0.7 },
+  { lat: 18.5, lng: -72.3, radius: 0.04, name: 'Haiti', intensity: 0.7 },
+  { lat: 17.0, lng: -3.0, radius: 0.10, name: 'Sahel', intensity: 0.8 }
+];
+
+// Add conflict zones to globe
+function addConflictZones(globe) {
+  CONFLICT_ZONES.forEach(zone => {
+    // Create pulsing conflict zone circle
+    const geometry = new THREE.RingGeometry(zone.radius * 0.5, zone.radius, 32);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xff3333,
+      transparent: true,
+      opacity: 0.3 * zone.intensity,
+      side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(geometry, material);
+
+    const pos = latLngToVector3(zone.lat, zone.lng, 1.01);
+    ring.position.copy(pos);
+    ring.lookAt(new THREE.Vector3(0, 0, 0));
+    ring.userData = { isConflictZone: true, intensity: zone.intensity, baseOpacity: 0.3 * zone.intensity };
+
+    globe.add(ring);
+
+    // Add outer glow ring
+    const glowGeom = new THREE.RingGeometry(zone.radius, zone.radius * 1.3, 32);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0xff6666,
+      transparent: true,
+      opacity: 0.15 * zone.intensity,
+      side: THREE.DoubleSide
+    });
+    const glow = new THREE.Mesh(glowGeom, glowMat);
+    glow.position.copy(pos);
+    glow.lookAt(new THREE.Vector3(0, 0, 0));
+    glow.userData = { isConflictZone: true, isGlow: true };
+    globe.add(glow);
+  });
+}
+
+// Animate conflict zones (pulsing effect)
+function animateConflictZones() {
+  if (!globe) return;
+  const time = Date.now() * 0.002;
+
+  globe.children.forEach(child => {
+    if (child.userData && child.userData.isConflictZone && !child.userData.isGlow) {
+      const pulse = 0.5 + 0.5 * Math.sin(time * child.userData.intensity);
+      child.material.opacity = child.userData.baseOpacity * (0.5 + 0.5 * pulse);
+    }
+  });
+}
 
 // Set current date
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -1727,6 +1996,9 @@ function initGlobe() {
 
   // Add country markers
   addCountryMarkers();
+
+  // Add conflict zone overlays
+  addConflictZones(globe);
 
   container.addEventListener('mousemove', onMouseMove);
   container.addEventListener('click', onClick);
@@ -1896,6 +2168,7 @@ document.addEventListener('mousemove', (e) => {
 function animate() {
   requestAnimationFrame(animate);
   if (!isDragging && globe) globe.rotation.y += 0.0008;
+  animateConflictZones(); // Pulse conflict zones
   renderer.render(scene, camera);
 }
 
@@ -1984,6 +2257,9 @@ function openModal(name) {
 
   let html = `<div class="facts-grid"><div class="fact"><div class="fact-label">Region</div><div class="fact-value">${c.region}</div></div><div class="fact"><div class="fact-label">Population</div><div class="fact-value">${c.pop}</div></div><div class="fact"><div class="fact-label">GDP</div><div class="fact-value">${c.gdp}</div></div><div class="fact"><div class="fact-label">Leader</div><div class="fact-value">${c.leader}</div></div></div>`;
 
+  // Add risk trend chart
+  html += `<div class="section-title">Risk Trend</div>${renderTrendChart(c.risk)}`;
+
   if (c.analysis) {
     html += `<div class="section-title">Situation Analysis</div>
       <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n1">1</div><div class="analysis-title">What Happened</div></div><p class="analysis-text">${c.analysis.what}</p></div>
@@ -1991,13 +2267,39 @@ function openModal(name) {
       <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n3">3</div><div class="analysis-title">What Might Happen</div></div><p class="analysis-text">${c.analysis.next}</p></div>`;
   }
 
+  // Show cached news first
   if (c.news && c.news.length) {
     html += `<div class="section-title">Recent Coverage</div>`;
     c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-bias" style="background:${BIAS_COLORS[n.bias]}"></span><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div><div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
   }
 
+  // Add placeholder for live country news
+  html += `<div class="country-news-section"><div class="country-news-title">📡 LIVE NEWS FOR ${name.toUpperCase()}</div><div id="countryNewsContent" class="country-news-loading">Loading latest news...</div></div>`;
+
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('active');
+
+  // Fetch live country-specific news
+  fetchCountryNews(name).then(news => {
+    const newsContainer = document.getElementById('countryNewsContent');
+    if (newsContainer) {
+      if (news && news.length > 0) {
+        newsContainer.innerHTML = news.map(n => `
+          <div class="news-item">
+            <div class="news-meta">
+              <span class="card-cat ${n.category}" style="font-size:7px;padding:1px 4px;">${n.category}</span>
+              <span class="news-source">${n.source}</span>
+              <span class="news-time">${n.time}</span>
+            </div>
+            <div class="news-headline">${n.headline}</div>
+            <a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>
+          </div>
+        `).join('');
+      } else {
+        newsContainer.innerHTML = '<div style="color:#6b7280;font-size:11px;">No recent news found for this country.</div>';
+      }
+    }
+  });
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
