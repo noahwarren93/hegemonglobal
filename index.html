@@ -1661,46 +1661,70 @@ function detectCategory(title, description) {
 // Format source name nicely
 function formatSourceName(sourceId) {
   if (!sourceId) return 'News';
+  const id = sourceId.toLowerCase();
+
+  // Comprehensive source mapping
   const sourceMap = {
-    'bbc': 'BBC',
-    'reuters': 'Reuters',
-    'aljazeera': 'Al Jazeera',
-    'theguardian': 'The Guardian',
-    'apnews': 'AP News',
-    'dw': 'DW News',
-    'france24': 'France 24',
-    'cnn': 'CNN',
-    'nytimes': 'NY Times',
-    'washingtonpost': 'Washington Post',
-    'wsj': 'WSJ',
-    'bloomberg': 'Bloomberg',
-    'ft': 'Financial Times',
-    'economist': 'The Economist',
-    'politico': 'Politico'
+    'bbc': 'BBC News', 'reuters': 'Reuters', 'aljazeera': 'Al Jazeera', 'theguardian': 'The Guardian',
+    'apnews': 'AP News', 'dw': 'Deutsche Welle', 'france24': 'France 24', 'cnn': 'CNN',
+    'nytimes': 'NY Times', 'washingtonpost': 'Washington Post', 'wsj': 'Wall Street Journal',
+    'bloomberg': 'Bloomberg', 'ft': 'Financial Times', 'economist': 'The Economist', 'politico': 'Politico',
+    'dailymail': 'Daily Mail', 'dailymailuk': 'Daily Mail UK', 'dailysabah': 'Daily Sabah',
+    'jpost': 'Jerusalem Post', 'timesofisrael': 'Times of Israel', 'haaretz': 'Haaretz',
+    'middleeastmonitor': 'Middle East Monitor', 'middleeasteye': 'Middle East Eye',
+    'arabnews': 'Arab News', 'gulfnews': 'Gulf News', 'zawya': 'Zawya Finance',
+    'thehindu': 'The Hindu', 'hindustantimes': 'Hindustan Times', 'ndtv': 'NDTV',
+    'indiatoday': 'India Today', 'mathrubhumi': 'Mathrubhumi',
+    'scmp': 'South China Morning Post', 'straitstimes': 'Straits Times', 'channelnewsasia': 'CNA',
+    'nikkei': 'Nikkei Asia', 'japantimes': 'Japan Times', 'koreaherald': 'Korea Herald',
+    'xinhua': 'Xinhua', 'globaltimes': 'Global Times', 'chinadaily': 'China Daily',
+    'rt': 'RT', 'tass': 'TASS', 'ria': 'RIA Novosti',
+    'abc': 'ABC News', 'nbc': 'NBC News', 'cbs': 'CBS News', 'fox': 'Fox News',
+    'npr': 'NPR', 'pbs': 'PBS', 'usatoday': 'USA Today', 'latimes': 'LA Times',
+    'sky': 'Sky News', 'telegraph': 'The Telegraph', 'independent': 'The Independent',
+    'mirror': 'The Mirror', 'express': 'Daily Express', 'metro': 'Metro UK',
+    'afp': 'AFP', 'efe': 'EFE', 'ansa': 'ANSA', 'dpa': 'DPA',
+    'legit': 'Legit News', 'punch': 'Punch NG', 'vanguard': 'Vanguard NG',
+    'report_az': 'Report Azerbaijan', 'spsrasd_info': 'Sahara Press'
   };
-  return sourceMap[sourceId.toLowerCase()] || sourceId.charAt(0).toUpperCase() + sourceId.slice(1).replace(/_/g, ' ');
+
+  if (sourceMap[id]) return sourceMap[id];
+
+  // Smart formatting for unknown sources
+  return sourceId
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .split(' ')
+    .map(word => {
+      if (word.length <= 3 && word === word.toUpperCase()) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ')
+    .trim();
 }
 
-// Calculate time ago
+// Calculate time ago with cleaner display
 function timeAgo(dateString) {
-  if (!dateString) return 'recently';
+  if (!dateString) return 'Today';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'recently';
+  if (isNaN(date.getTime())) return 'Today';
 
   const now = new Date();
   const diffMs = now - date;
 
   // Handle future dates or very recent
-  if (diffMs < 60000) return 'just now';
+  if (diffMs < 60000) return 'Just now';
 
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 60) return diffMins + 'm ago';
-  if (diffHours < 24) return diffHours + 'h ago';
-  if (diffDays === 1) return '1d ago';
-  return diffDays + 'd ago';
+  if (diffHours < 6) return diffHours + 'h ago';
+  if (diffHours < 24) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return diffDays + ' days ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // Fetch live news from NewsData.io
