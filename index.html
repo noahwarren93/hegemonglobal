@@ -285,7 +285,7 @@
       <button class="tab" data-tab="regions">Regions</button>
       <button class="tab" data-tab="search">Search</button>
     </div>
-    <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">⟳ Loading live news...</div>
+    <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">Loading live news...</div>
     <div class="sidebar-content" id="sidebarContent"></div>
   </div>
 </div>
@@ -1598,12 +1598,12 @@ const ELECTIONS = [
 
 // FORECASTS DATA
 const FORECASTS = [
-  { icon: '🌪️', region: 'Eastern Europe', risk: 'catastrophic', current: 'Active warfare continues in Ukraine with no ceasefire in sight. Western support remains crucial but faces domestic political challenges.', forecast: 'Expect continued attritional warfare through winter. Watch for potential diplomatic windows in Q2 2026 as ammunition constraints affect both sides.', indicators: [{ text: 'Conflict Intensity', dir: 'up' }, { text: 'Western Unity', dir: 'down' }, { text: 'Negotiations', dir: 'stable' }] },
-  { icon: '🔥', region: 'Middle East', risk: 'extreme', current: 'Multi-front regional tensions involving Israel, Iran, and proxy forces. Humanitarian crisis in Gaza continues.', forecast: 'High risk of wider escalation. Iran nuclear timeline accelerating. Watch for Hezbollah calculus and US election impact on policy.', indicators: [{ text: 'Escalation Risk', dir: 'up' }, { text: 'Diplomacy', dir: 'down' }, { text: 'Oil Prices', dir: 'up' }] },
-  { icon: '⚡', region: 'East Asia', risk: 'severe', current: 'Taiwan Strait tensions elevated. North Korea missile tests continue. US-China competition intensifying.', forecast: 'Near-term conflict unlikely but risks rising. Semiconductor decoupling accelerates. Watch for military incidents in South China Sea.', indicators: [{ text: 'Military Activity', dir: 'up' }, { text: 'Trade Ties', dir: 'down' }, { text: 'Tech War', dir: 'up' }] },
-  { icon: '🌩️', region: 'Sahel Africa', risk: 'extreme', current: 'Military coups across region. Wagner/Africa Corps presence expanding. Jihadi groups gaining ground.', forecast: 'Further destabilization likely. Western influence declining. Watch for spillover effects into coastal West Africa.', indicators: [{ text: 'Instability', dir: 'up' }, { text: 'Terrorism', dir: 'up' }, { text: 'Migration', dir: 'up' }] },
-  { icon: '📉', region: 'Global Economy', risk: 'stormy', current: 'Mixed signals with inflation cooling but debt concerns rising. China slowdown affects global growth.', forecast: 'Soft landing increasingly likely in US/EU. China structural challenges persist. Watch for emerging market debt crises.', indicators: [{ text: 'Inflation', dir: 'down' }, { text: 'Growth', dir: 'stable' }, { text: 'Debt Risk', dir: 'up' }] },
-  { icon: '🌡️', region: 'Climate Hotspots', risk: 'severe', current: 'Record temperatures, extreme weather events increasing. COP commitments falling short.', forecast: 'More frequent climate disasters expected. Watch for climate migration from vulnerable regions and food security impacts.', indicators: [{ text: 'Extreme Weather', dir: 'up' }, { text: 'Adaptation', dir: 'stable' }, { text: 'Emissions', dir: 'up' }] }
+  { region: 'Eastern Europe', risk: 'catastrophic', current: 'Active warfare continues in Ukraine with no ceasefire in sight. Western support remains crucial but faces domestic political challenges.', forecast: 'Expect continued attritional warfare through winter. Watch for potential diplomatic windows in Q2 2026 as ammunition constraints affect both sides.', indicators: [{ text: 'Conflict Intensity', dir: 'up' }, { text: 'Western Unity', dir: 'down' }, { text: 'Negotiations', dir: 'stable' }] },
+  { region: 'Middle East', risk: 'extreme', current: 'Multi-front regional tensions involving Israel, Iran, and proxy forces. Humanitarian crisis in Gaza continues.', forecast: 'High risk of wider escalation. Iran nuclear timeline accelerating. Watch for Hezbollah calculus and US election impact on policy.', indicators: [{ text: 'Escalation Risk', dir: 'up' }, { text: 'Diplomacy', dir: 'down' }, { text: 'Oil Prices', dir: 'up' }] },
+  { region: 'East Asia', risk: 'severe', current: 'Taiwan Strait tensions elevated. North Korea missile tests continue. US-China competition intensifying.', forecast: 'Near-term conflict unlikely but risks rising. Semiconductor decoupling accelerates. Watch for military incidents in South China Sea.', indicators: [{ text: 'Military Activity', dir: 'up' }, { text: 'Trade Ties', dir: 'down' }, { text: 'Tech War', dir: 'up' }] },
+  { region: 'Sahel Africa', risk: 'extreme', current: 'Military coups across region. Wagner/Africa Corps presence expanding. Jihadi groups gaining ground.', forecast: 'Further destabilization likely. Western influence declining. Watch for spillover effects into coastal West Africa.', indicators: [{ text: 'Instability', dir: 'up' }, { text: 'Terrorism', dir: 'up' }, { text: 'Migration', dir: 'up' }] },
+  { region: 'Global Economy', risk: 'stormy', current: 'Mixed signals with inflation cooling but debt concerns rising. China slowdown affects global growth.', forecast: 'Soft landing increasingly likely in US/EU. China structural challenges persist. Watch for emerging market debt crises.', indicators: [{ text: 'Inflation', dir: 'down' }, { text: 'Growth', dir: 'stable' }, { text: 'Debt Risk', dir: 'up' }] },
+  { region: 'Climate Hotspots', risk: 'severe', current: 'Record temperatures, extreme weather events increasing. COP commitments falling short.', forecast: 'More frequent climate disasters expected. Watch for climate migration from vulnerable regions and food security impacts.', indicators: [{ text: 'Extreme Weather', dir: 'up' }, { text: 'Adaptation', dir: 'stable' }, { text: 'Emissions', dir: 'up' }] }
 ];
 
 // DAILY BRIEFING
@@ -2249,7 +2249,7 @@ function renderSidebar() {
   } else if (currentTab === 'forecast') {
     content.innerHTML = FORECASTS.map(f => `
       <div class="forecast-card">
-        <div class="forecast-header"><span class="forecast-icon">${f.icon}</span><span class="forecast-region">${f.region}</span><span class="forecast-risk risk-${f.risk}">${f.risk.toUpperCase()}</span></div>
+        <div class="forecast-header"><span class="forecast-region">${f.region}</span><span class="forecast-risk risk-${f.risk}">${f.risk.toUpperCase()}</span></div>
         <div class="forecast-current">${f.current}</div>
         <div class="forecast-prediction"><div class="forecast-prediction-title">FORECAST</div><div class="forecast-prediction-text">${f.forecast}</div></div>
         <div class="forecast-indicators">${f.indicators.map(i => `<span class="forecast-indicator ${i.dir}">${i.dir === 'up' ? '↑' : i.dir === 'down' ? '↓' : '→'} ${i.text}</span>`).join('')}</div>
