@@ -2416,6 +2416,24 @@ function showRiskToast(message) {
 // Easy to update manually; designed for future API hookup (OFAC, EU, UN)
 
 const SANCTIONS_DATA = {
+  // === MAJOR WESTERN SANCTIONERS ===
+  'United States': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Ukraine invasion; energy sector; 400+ entities; shadow fleet', year: 2022 },
+      { target: 'Iran', reason: 'Maximum pressure; nuclear program; terrorism support', year: 1979 },
+      { target: 'North Korea', reason: 'WMD proliferation; cyber attacks; human rights', year: 2008 },
+      { target: 'Cuba', reason: 'Full economic embargo; Helms-Burton Act', year: 1962 },
+      { target: 'Venezuela', reason: 'Oil sector; Maduro regime; cartel FTO designations', year: 2015 },
+      { target: 'China', reason: 'Uyghur rights; tech/chip export controls; Entity List', year: 2019 },
+      { target: 'Syria', reason: 'Most lifted post-Assad fall; Caesar Act repealed Dec 2025', year: 2004 },
+      { target: 'Yemen (Houthis)', reason: 'Re-designated FTO Mar 2025; illicit oil networks', year: 2024 },
+      { target: 'Sudan', reason: 'Chemical weapons use; RSF/SAF conflict parties', year: 2023 },
+      { target: 'Myanmar', reason: 'Military coup; Rohingya genocide; cyber scam networks', year: 2021 }
+    ]
+  },
+  // === HEAVILY SANCTIONED ===
   'Russia': {
     severity: 'heavy',
     on: [
@@ -2423,7 +2441,7 @@ const SANCTIONS_DATA = {
       { by: 'EU', reason: '20 sanctions packages; full energy ban (LNG Apr 2026, pipeline gas Jun 2026); 640 shadow fleet vessels; crypto platforms restricted', year: 2022 },
       { by: 'UK', reason: 'Asset freezes, trade restrictions, oligarch sanctions; aligned with EU rounds', year: 2022 },
       { by: 'UN', reason: 'Limited measures; Russia vetoes broader Security Council action', year: 2014 },
-      { by: 'Canada', reason: 'Trade bans, asset freezes, sanctions on officials', year: 2022 },
+      { by: 'Canada', reason: 'Trade bans, asset freezes, secondary sanctions on shadow fleet', year: 2022 },
       { by: 'Japan', reason: 'Export controls on semiconductors and tech; asset freezes', year: 2022 },
       { by: 'Australia', reason: 'Financial sanctions, travel bans, trade restrictions', year: 2022 },
       { by: 'Switzerland', reason: 'Adopted EU sanctions packages; asset freezes', year: 2022 }
@@ -2445,7 +2463,8 @@ const SANCTIONS_DATA = {
     ],
     by: [
       { target: 'Israel', reason: 'Full trade and diplomatic embargo', year: 1979 },
-      { target: 'US-allied entities', reason: 'Restrictions on Western companies operating in Iran', year: 2012 }
+      { target: 'US officials', reason: 'Retaliatory sanctions on government and military officials', year: 2020 },
+      { target: 'UK officials', reason: 'Retaliatory sanctions on British officials', year: 2022 }
     ]
   },
   'North Korea': {
@@ -2538,39 +2557,6 @@ const SANCTIONS_DATA = {
     ],
     by: []
   },
-  'China': {
-    severity: 'moderate',
-    on: [
-      { by: 'US', reason: 'Uyghur human rights; tech/chip export controls; 125 Chinese entities added to Entity List for Russia support; sanctions expansion paused Oct 2025 after Trump-Xi meeting', year: 2019 },
-      { by: 'EU', reason: 'Xinjiang human rights abuses (targeted individuals)', year: 2021 },
-      { by: 'UK', reason: 'Xinjiang human rights; Hong Kong crackdown', year: 2021 },
-      { by: 'Canada', reason: 'Uyghur human rights abuses; targeted officials', year: 2021 }
-    ],
-    by: [
-      { target: 'US entities', reason: '28 US aerospace/defense entities added to export control list Jan 2025', year: 2020 },
-      { target: 'Global', reason: 'Strictest-ever rare earth and permanent magnet export controls effective Dec 2025; lithium battery controls', year: 2025 },
-      { target: 'EU officials', reason: 'Retaliatory sanctions on European Parliament members', year: 2021 }
-    ]
-  },
-  'Ukraine': {
-    severity: 'none',
-    on: [],
-    by: [
-      { target: 'Russia', reason: 'Trade restrictions and sanctions on Russian entities', year: 2022 }
-    ]
-  },
-  'Israel': {
-    severity: 'limited',
-    on: [
-      { by: 'Arab League (historic)', reason: 'Economic boycott (largely defunct; some members normalized)', year: 1948 },
-      { by: 'EU (partial)', reason: 'Settlement product labeling; some investment restrictions', year: 2015 },
-      { by: 'US (targeted)', reason: 'Sanctions on extremist settlers in West Bank', year: 2024 }
-    ],
-    by: [
-      { target: 'Gaza', reason: 'Blockade on goods and movement (with Egypt)', year: 2007 },
-      { target: 'Iran/Hezbollah', reason: 'Enforcement of international sanctions; trade restrictions', year: 2010 }
-    ]
-  },
   'Gaza': {
     severity: 'heavy',
     on: [
@@ -2589,13 +2575,20 @@ const SANCTIONS_DATA = {
     ],
     by: []
   },
-  'Iraq': {
-    severity: 'limited',
+  // === MODERATE ===
+  'China': {
+    severity: 'moderate',
     on: [
-      { by: 'US', reason: 'Targeted sanctions on Iran-aligned militias and corrupt officials', year: 2019 },
-      { by: 'UN', reason: 'Residual measures from Saddam era (mostly lifted)', year: 2003 }
+      { by: 'US', reason: 'Uyghur human rights; tech/chip export controls; 125 Chinese entities added to Entity List for Russia support; sanctions expansion paused Oct 2025 after Trump-Xi meeting', year: 2019 },
+      { by: 'EU', reason: 'Xinjiang human rights abuses (targeted individuals)', year: 2021 },
+      { by: 'UK', reason: 'Xinjiang human rights; Hong Kong crackdown', year: 2021 },
+      { by: 'Canada', reason: 'Uyghur human rights abuses; targeted officials', year: 2021 }
     ],
-    by: []
+    by: [
+      { target: 'US entities', reason: '28 US aerospace/defense entities added to export control list Jan 2025', year: 2020 },
+      { target: 'Global', reason: 'Strictest-ever rare earth and permanent magnet export controls effective Dec 2025; lithium battery controls', year: 2025 },
+      { target: 'EU officials', reason: 'Retaliatory sanctions on European Parliament members', year: 2021 }
+    ]
   },
   'Libya': {
     severity: 'moderate',
@@ -2632,74 +2625,6 @@ const SANCTIONS_DATA = {
     ],
     by: []
   },
-  'Pakistan': {
-    severity: 'limited',
-    on: [
-      { by: 'US', reason: 'Targeted: nuclear proliferation-related entities; terrorism financing concerns', year: 2004 }
-    ],
-    by: [
-      { target: 'India', reason: 'Trade suspension over Kashmir dispute', year: 2019 }
-    ]
-  },
-  'Nigeria': {
-    severity: 'limited',
-    on: [
-      { by: 'US', reason: 'Targeted: Boko Haram/ISWAP terrorism designations; visa restrictions', year: 2013 },
-      { by: 'UK', reason: 'Targeted sanctions on corruption-linked individuals', year: 2021 }
-    ],
-    by: []
-  },
-  'Turkey': {
-    severity: 'limited',
-    on: [
-      { by: 'US', reason: 'CAATSA sanctions over S-400 purchase; defense sector restrictions', year: 2020 },
-      { by: 'EU (partial)', reason: 'Arms export restrictions over Syria operations', year: 2019 }
-    ],
-    by: []
-  },
-  'Philippines': {
-    severity: 'none',
-    on: [],
-    by: []
-  },
-  'Mexico': {
-    severity: 'limited',
-    on: [
-      { by: 'US', reason: 'Kingpin Act designations on cartel leaders; OFAC fentanyl trafficking network sanctions expanded 2023-2025', year: 2000 }
-    ],
-    by: []
-  },
-  'India': {
-    severity: 'none',
-    on: [],
-    by: [
-      { target: 'Pakistan', reason: 'Trade restrictions; MFN status revoked post-Pulwama', year: 2019 },
-      { target: 'China', reason: 'Banned 200+ Chinese apps; restricted Chinese investment', year: 2020 }
-    ]
-  },
-  'South Korea': {
-    severity: 'none',
-    on: [],
-    by: [
-      { target: 'North Korea', reason: 'Full sanctions enforcement aligned with UN/US', year: 2010 }
-    ]
-  },
-  'Japan': {
-    severity: 'none',
-    on: [],
-    by: [
-      { target: 'Russia', reason: 'Asset freezes; export controls; energy restrictions', year: 2022 },
-      { target: 'North Korea', reason: 'Full trade embargo; ship entry bans', year: 2006 }
-    ]
-  },
-  'Saudi Arabia': {
-    severity: 'limited',
-    on: [
-      { by: 'US (targeted)', reason: 'Magnitsky sanctions on individuals re: Khashoggi murder', year: 2018 },
-      { by: 'Canada', reason: 'Arms export review after Khashoggi killing', year: 2018 }
-    ],
-    by: []
-  },
   'Ethiopia': {
     severity: 'moderate',
     on: [
@@ -2733,6 +2658,90 @@ const SANCTIONS_DATA = {
     ],
     by: []
   },
+  'Central African Republic': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; targeted sanctions on armed group leaders', year: 2013 },
+      { by: 'US', reason: 'Targeted: individuals undermining peace process', year: 2014 }
+    ],
+    by: []
+  },
+  'South Sudan': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; targeted sanctions on conflict parties', year: 2018 },
+      { by: 'US', reason: 'Civil war; obstruction of peace process', year: 2014 },
+      { by: 'EU', reason: 'Targeted sanctions on individuals undermining peace', year: 2014 }
+    ],
+    by: []
+  },
+  // === LIMITED ===
+  'Israel': {
+    severity: 'limited',
+    on: [
+      { by: 'Arab League (historic)', reason: 'Economic boycott (largely defunct; some members normalized)', year: 1948 },
+      { by: 'EU (partial)', reason: 'Settlement product labeling; some investment restrictions', year: 2015 },
+      { by: 'US (targeted)', reason: 'Sanctions on extremist settlers in West Bank', year: 2024 },
+      { by: 'Turkey', reason: 'Total export/import ban imposed 2024 over Gaza conflict', year: 2024 }
+    ],
+    by: [
+      { target: 'Gaza', reason: 'Blockade on goods and movement (with Egypt)', year: 2007 },
+      { target: 'Iran/Hezbollah', reason: 'Enforcement of international sanctions; trade restrictions', year: 2010 }
+    ]
+  },
+  'Turkey': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'CAATSA sanctions over S-400 purchase; defense sector restrictions', year: 2020 },
+      { by: 'EU (partial)', reason: 'Arms export restrictions over Syria operations', year: 2019 }
+    ],
+    by: [
+      { target: 'Israel', reason: 'Total export/import ban over Gaza conflict', year: 2024 },
+      { target: 'Syria (historic)', reason: 'Economic sanctions during civil war (now easing)', year: 2011 }
+    ]
+  },
+  'Iraq': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted sanctions on Iran-aligned militias and corrupt officials', year: 2019 },
+      { by: 'UN', reason: 'Residual measures from Saddam era (mostly lifted)', year: 2003 }
+    ],
+    by: []
+  },
+  'Pakistan': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted: nuclear proliferation-related entities; terrorism financing concerns', year: 2004 }
+    ],
+    by: [
+      { target: 'India', reason: 'Trade suspension over Kashmir dispute', year: 2019 }
+    ]
+  },
+  'Nigeria': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted: Boko Haram/ISWAP terrorism designations; visa restrictions', year: 2013 },
+      { by: 'UK', reason: 'Targeted sanctions on corruption-linked individuals', year: 2021 }
+    ],
+    by: []
+  },
+  'Mexico': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Kingpin Act designations on cartel leaders; OFAC fentanyl trafficking network sanctions expanded 2023-2025', year: 2000 }
+    ],
+    by: []
+  },
+  'Saudi Arabia': {
+    severity: 'limited',
+    on: [
+      { by: 'US (targeted)', reason: 'Magnitsky sanctions on individuals re: Khashoggi murder', year: 2018 },
+      { by: 'Canada', reason: 'Arms export review after Khashoggi killing', year: 2018 }
+    ],
+    by: [
+      { target: 'UN-mandated targets', reason: 'Enforces UN terrorism/proliferation sanctions through GCC', year: 2017 }
+    ]
+  },
   'Mali': {
     severity: 'limited',
     on: [
@@ -2762,21 +2771,40 @@ const SANCTIONS_DATA = {
     ],
     by: []
   },
-  'Central African Republic': {
-    severity: 'moderate',
-    on: [
-      { by: 'UN', reason: 'Arms embargo; targeted sanctions on armed group leaders', year: 2013 },
-      { by: 'US', reason: 'Targeted: individuals undermining peace process', year: 2014 }
-    ],
-    by: []
+  // === NONE (but impose sanctions on others) ===
+  'Ukraine': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Trade restrictions and sanctions on Russian entities', year: 2022 }
+    ]
   },
-  'South Sudan': {
-    severity: 'moderate',
-    on: [
-      { by: 'UN', reason: 'Arms embargo; targeted sanctions on conflict parties', year: 2018 },
-      { by: 'US', reason: 'Civil war; obstruction of peace process', year: 2014 },
-      { by: 'EU', reason: 'Targeted sanctions on individuals undermining peace', year: 2014 }
-    ],
+  'India': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Pakistan', reason: 'Trade restrictions; MFN status revoked post-Pulwama', year: 2019 },
+      { target: 'China', reason: 'Banned 200+ Chinese apps; restricted Chinese investment', year: 2020 }
+    ]
+  },
+  'South Korea': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'North Korea', reason: 'Full sanctions enforcement aligned with UN/US', year: 2010 }
+    ]
+  },
+  'Japan': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Asset freezes; export controls; energy restrictions', year: 2022 },
+      { target: 'North Korea', reason: 'Full trade embargo; ship entry bans', year: 2006 }
+    ]
+  },
+  'Philippines': {
+    severity: 'none',
+    on: [],
     by: []
   }
 };
