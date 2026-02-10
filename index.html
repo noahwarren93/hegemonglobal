@@ -361,7 +361,6 @@
       <button class="tab" data-tab="forecast">Forecast</button>
       <button class="tab" data-tab="events">Events</button>
       <button class="tab" data-tab="elections">Elections</button>
-      <button class="tab" data-tab="regions">Regions</button>
       <button class="tab" data-tab="search">Search</button>
     </div>
     <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">Loading live news...</div>
@@ -4862,19 +4861,6 @@ function renderSidebar() {
           <div class="election-stakes">${e.stakes}</div>
         </div>
       `).join('');
-  } else if (currentTab === 'regions') {
-    const regions = {};
-    Object.entries(COUNTRIES).forEach(([name, c]) => { if (!regions[c.region]) regions[c.region] = []; regions[c.region].push({ name, ...c }); });
-    content.innerHTML = Object.entries(regions).sort().map(([region, countries]) => `
-      <div style="margin-bottom:14px">
-        <div style="font-size:9px;color:#9ca3af;font-weight:600;letter-spacing:1px;margin-bottom:8px">${region.toUpperCase()} (${countries.length})</div>
-        ${countries.sort((a, b) => ({ catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[a.risk] - { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[b.risk])).map(c => `
-          <div class="card" onclick="openModal('${c.name}')" style="margin-bottom:4px;padding:8px">
-            <div class="event-header" style="margin:0"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country" style="font-size:10px">${c.flag} ${c.name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>
-          </div>
-        `).join('')}
-      </div>
-    `).join('');
   } else if (currentTab === 'search') {
     content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
   } else if (currentTab === 'newsletter') {
