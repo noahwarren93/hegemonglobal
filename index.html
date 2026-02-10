@@ -135,23 +135,8 @@
     .risk-clear { background: #14532d; color: #86efac; }
 
     /* Dynamic risk system styles */
-    .risk-override-controls { display: flex; gap: 6px; align-items: center; margin-top: 10px; padding: 8px 12px; background: #111827; border: 1px solid #1f2937; border-radius: 8px; }
-    .risk-override-controls span.override-label { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-    .override-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #374151; background: #1f2937; color: #e5e7eb; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .override-btn:hover { background: #374151; border-color: #4b5563; }
-    .override-btn.override-clear { width: auto; padding: 0 10px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .override-active-badge { font-size: 9px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px; }
-    .risk-change-log { max-height: 200px; overflow-y: auto; margin-top: 8px; }
-    .risk-change-entry { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1f293744; font-size: 10px; }
-    .risk-change-icon { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
-    .risk-change-icon.up { background: #7f1d1d; color: #fca5a5; }
-    .risk-change-icon.down { background: #14532d; color: #86efac; }
-    .risk-change-icon.manual { background: #78350f; color: #fcd34d; }
-    .risk-change-text { color: #d1d5db; line-height: 1.4; }
-    .risk-change-time { color: #6b7280; font-size: 9px; }
     .risk-toast { position: fixed; bottom: 20px; right: 20px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 12px 18px; z-index: 200; font-size: 11px; color: #e5e7eb; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; max-width: 320px; }
     .risk-toast.active { opacity: 1; transform: translateY(0); }
-    .risk-toast .toast-arrow { font-size: 13px; margin-right: 6px; }
 
     /* Sanctions section styles */
     .sanctions-section { margin-top: 16px; }
@@ -2422,74 +2407,6 @@ function showRiskToast(message) {
 }
 
 // ============================================================
-// DYNAMIC RISK SYSTEM - Manual Override
-// ============================================================
-
-function overrideRisk(countryName, direction) {
-  const state = COUNTRY_RISK_STATE[countryName];
-  if (!state) return;
-
-  const currentIdx = RISK_LEVELS_ORDERED.indexOf(COUNTRIES[countryName].risk);
-  const newIdx = Math.max(0, Math.min(5, currentIdx + direction));
-  if (newIdx === currentIdx) return;
-
-  const oldRisk = COUNTRIES[countryName].risk;
-  const newRisk = RISK_LEVELS_ORDERED[newIdx];
-
-  COUNTRIES[countryName].risk = newRisk;
-  state.currentRisk = newRisk;
-  state.riskValue = riskLevelToValue(newRisk);
-  state.overrideActive = true;
-  state.overrideReason = 'Manual analyst adjustment';
-  state.lastLevelChange = Date.now();
-
-  state.changeLog.push({
-    timestamp: Date.now(),
-    type: 'MANUAL_OVERRIDE',
-    from: oldRisk,
-    to: newRisk,
-    trigger: 'Manual adjustment'
-  });
-
-  // Refresh all UI
-  refreshRiskUI([{ name: countryName, from: oldRisk, to: newRisk }]);
-
-  // Refresh modal if it's open for this country
-  const modalTitle = document.getElementById('modalTitle');
-  if (modalTitle && modalTitle.textContent === countryName) {
-    openModal(countryName);
-  }
-}
-
-function clearRiskOverride(countryName) {
-  const state = COUNTRY_RISK_STATE[countryName];
-  if (!state) return;
-
-  state.overrideActive = false;
-  state.overrideReason = '';
-
-  // Recalculate from accumulated data
-  const newRisk = calculateDynamicRisk(countryName);
-  const oldRisk = COUNTRIES[countryName].risk;
-  COUNTRIES[countryName].risk = newRisk;
-
-  state.changeLog.push({
-    timestamp: Date.now(),
-    type: 'OVERRIDE_CLEARED',
-    from: oldRisk,
-    to: newRisk,
-    trigger: 'Override cleared, reverted to automatic'
-  });
-
-  refreshRiskUI([{ name: countryName, from: oldRisk, to: newRisk }]);
-
-  const modalTitle = document.getElementById('modalTitle');
-  if (modalTitle && modalTitle.textContent === countryName) {
-    openModal(countryName);
-  }
-}
-
-// ============================================================
 // SANCTIONS DATA & RENDERING
 // ============================================================
 // Structure: each country key maps to { severity, on: [...], by: [...] }
@@ -2937,76 +2854,6 @@ function toggleSanctions(sectionId) {
     body.classList.toggle('open');
     if (chevron) chevron.classList.toggle('open');
   }
-}
-
-// ============================================================
-// DYNAMIC RISK SYSTEM - Modal UI Components
-// ============================================================
-
-function buildRiskOverrideControls(countryName) {
-  const state = COUNTRY_RISK_STATE[countryName];
-  if (!state) return '';
-
-  const overrideStatus = state.overrideActive
-    ? `<span class="override-active-badge">Override Active</span><button class="override-btn override-clear" onclick="clearRiskOverride('${countryName}')">Reset</button>`
-    : `<span style="font-size:9px;color:#6b7280;">Automatic</span>`;
-
-  const score = state.accumulatedScore.toFixed(1);
-  const scoreColor = state.accumulatedScore > 2 ? '#fca5a5' : state.accumulatedScore < -2 ? '#86efac' : '#6b7280';
-
-  return `
-    <div class="risk-override-controls">
-      <span class="override-label">Risk Control</span>
-      <button class="override-btn" onclick="overrideRisk('${countryName}', -1)" title="Decrease risk">&#9660;</button>
-      ${overrideStatus}
-      <button class="override-btn" onclick="overrideRisk('${countryName}', 1)" title="Increase risk">&#9650;</button>
-      <span style="margin-left:auto;font-size:9px;color:${scoreColor};" title="Accumulated risk score">Score: ${score}</span>
-    </div>`;
-}
-
-function buildRiskChangeLog(countryName) {
-  const state = COUNTRY_RISK_STATE[countryName];
-  if (!state || state.changeLog.length === 0) return '';
-
-  const recent = state.changeLog.slice(-10).reverse();
-
-  let html = `<div class="section-title">Risk Change History</div><div class="risk-change-log">`;
-
-  for (const entry of recent) {
-    let icon = '', iconClass = '', label = '';
-
-    if (entry.type === 'LEVEL_CHANGE') {
-      const up = RISK_LEVELS_ORDERED.indexOf(entry.to) > RISK_LEVELS_ORDERED.indexOf(entry.from);
-      icon = up ? '&#9650;' : '&#9660;';
-      iconClass = up ? 'up' : 'down';
-      label = `${entry.from} &rarr; ${entry.to}`;
-      if (entry.trigger) label += `<br><span class="risk-change-time">${entry.trigger.slice(0, 80)}</span>`;
-    } else if (entry.type === 'MANUAL_OVERRIDE') {
-      icon = '&#9998;';
-      iconClass = 'manual';
-      label = `Manual: ${entry.from} &rarr; ${entry.to}`;
-    } else if (entry.type === 'OVERRIDE_CLEARED') {
-      icon = '&#8634;';
-      iconClass = 'down';
-      label = `Override cleared &rarr; ${entry.to}`;
-    }
-
-    const time = new Date(entry.timestamp).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-
-    html += `
-      <div class="risk-change-entry">
-        <div class="risk-change-icon ${iconClass}">${icon}</div>
-        <div>
-          <div class="risk-change-text">${label}</div>
-          <div class="risk-change-time">${time}</div>
-        </div>
-      </div>`;
-  }
-
-  html += `</div>`;
-  return html;
 }
 
 // Format source name nicely
@@ -4160,12 +4007,6 @@ function openModal(name) {
 
   // Add risk trend chart with indicators
   html += `<div class="section-title">Risk Trend & Indicators</div>${renderTrendChart(name, c.risk)}`;
-
-  // Dynamic risk: manual override controls
-  html += buildRiskOverrideControls(name);
-
-  // Dynamic risk: change log
-  html += buildRiskChangeLog(name);
 
   if (c.analysis) {
     html += `<div class="section-title">Situation Analysis</div>
