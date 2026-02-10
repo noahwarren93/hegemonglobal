@@ -2045,6 +2045,171 @@ const DAILY_BRIEFING_FALLBACK = [
 let DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
 let lastNewsUpdate = null;
 
+// ============================================================
+// BRIEFING HISTORY - Keep past 3 days of briefings
+// ============================================================
+const BRIEFING_HISTORY_KEY = 'hegemon_briefing_history';
+const BRIEFING_MAX_HISTORY = 3;
+
+function getBriefingDateKey() {
+  const now = new Date();
+  return now.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+function formatBriefingDate(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00');
+  const month = date.toLocaleString('en-US', { month: 'long' });
+  const day = date.getDate();
+  const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+  return `${month} ${day}${suffix}`;
+}
+
+function loadBriefingHistory() {
+  try {
+    const stored = localStorage.getItem(BRIEFING_HISTORY_KEY);
+    if (stored) {
+      const history = JSON.parse(stored);
+      // Clean out entries older than 4 days
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 4);
+      const cutoffStr = cutoff.toISOString().split('T')[0];
+      const cleaned = {};
+      Object.keys(history).filter(d => d >= cutoffStr).sort().reverse().slice(0, BRIEFING_MAX_HISTORY).forEach(d => {
+        cleaned[d] = history[d];
+      });
+      return cleaned;
+    }
+  } catch (e) {
+    console.warn('Failed to load briefing history:', e.message);
+  }
+  return {};
+}
+
+function saveBriefingSnapshot() {
+  if (!DAILY_BRIEFING || DAILY_BRIEFING.length === 0) return;
+  // Only save non-fallback data (check if we have real articles with real URLs)
+  const hasRealArticles = DAILY_BRIEFING.some(a => a.url && a.url !== '#');
+  if (!hasRealArticles) return;
+
+  const todayKey = getBriefingDateKey();
+  try {
+    const history = loadBriefingHistory();
+
+    // Save today's snapshot (overwrite if exists - keeps latest version)
+    history[todayKey] = {
+      date: todayKey,
+      articles: DAILY_BRIEFING.slice(0, 50).map(a => ({
+        time: a.time,
+        category: a.category,
+        importance: a.importance,
+        headline: a.headline,
+        source: a.source,
+        url: a.url
+      })),
+      savedAt: new Date().toISOString(),
+      articleCount: DAILY_BRIEFING.length
+    };
+
+    // Keep only the most recent entries (today + 3 past days)
+    const allDates = Object.keys(history).sort().reverse();
+    const trimmed = {};
+    allDates.slice(0, BRIEFING_MAX_HISTORY + 1).forEach(d => { trimmed[d] = history[d]; });
+
+    localStorage.setItem(BRIEFING_HISTORY_KEY, JSON.stringify(trimmed));
+    console.log(`Briefing snapshot saved for ${todayKey} (${DAILY_BRIEFING.length} articles)`);
+  } catch (e) {
+    console.warn('Failed to save briefing snapshot:', e.message);
+  }
+}
+
+function getPastBriefings() {
+  const todayKey = getBriefingDateKey();
+  const history = loadBriefingHistory();
+  // Return past briefings (exclude today), sorted newest first
+  return Object.keys(history)
+    .filter(d => d !== todayKey)
+    .sort()
+    .reverse()
+    .slice(0, BRIEFING_MAX_HISTORY)
+    .map(d => history[d]);
+}
+
+function togglePastBriefing(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  if (el) {
+    const isOpen = el.style.maxHeight && el.style.maxHeight !== '0px';
+    el.style.maxHeight = isOpen ? '0px' : el.scrollHeight + 'px';
+    el.style.opacity = isOpen ? '0' : '1';
+    if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+
+function renderPastBriefingsHTML() {
+  const pastBriefings = getPastBriefings();
+  if (pastBriefings.length === 0) return '';
+
+  let html = `<div style="margin-top:20px;border-top:1px solid #1f2937;padding-top:14px;">
+    <div style="font-size:9px;color:#6b7280;font-weight:600;letter-spacing:1px;margin-bottom:10px;padding:0 4px;">PREVIOUS BRIEFINGS</div>`;
+
+  pastBriefings.forEach((briefing, index) => {
+    const id = 'past-briefing-' + index;
+    const dateLabel = formatBriefingDate(briefing.date);
+    const articleCount = briefing.articles ? briefing.articles.length : 0;
+
+    html += `
+      <div style="margin-bottom:8px;border:1px solid #1f2937;border-radius:8px;overflow:hidden;background:#0d0d14;">
+        <div onclick="togglePastBriefing('${id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;transition:background 0.2s;background:#0d0d14;" onmouseover="this.style.background='#131320'" onmouseout="this.style.background='#0d0d14'">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:600;color:#9ca3af;">${dateLabel}'s Brief</span>
+            <span style="font-size:8px;color:#6b7280;background:#1f2937;padding:2px 6px;border-radius:4px;">${articleCount} articles</span>
+          </div>
+          <span id="${id}-arrow" style="color:#6b7280;font-size:10px;transition:transform 0.3s ease;">▼</span>
+        </div>
+        <div id="${id}" style="max-height:0px;opacity:0;overflow-y:auto;transition:max-height 0.4s ease, opacity 0.3s ease;max-height:0;">`;
+
+    if (briefing.articles && briefing.articles.length > 0) {
+      // Show top stories first
+      const topStories = briefing.articles.filter(a => a.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(a.category)).slice(0, 3);
+      const otherArticles = briefing.articles.filter(a => !topStories.includes(a)).slice(0, 12);
+
+      if (topStories.length > 0) {
+        html += `<div style="padding:4px 10px 2px;font-size:8px;color:#ef4444;font-weight:600;letter-spacing:0.5px;">TOP STORIES</div>`;
+        html += topStories.map(a => `
+          <div style="padding:6px 10px;border-bottom:1px solid #111827;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+              <span class="card-cat ${a.category}" style="font-size:6px;padding:1px 4px;">${a.category}</span>
+              <span style="font-size:8px;color:#6b7280;">${a.source}</span>
+            </div>
+            <div style="font-size:10px;color:#d1d5db;line-height:1.4;">${a.headline}</div>
+            ${a.url && a.url !== '#' ? `<a href="${a.url}" target="_blank" style="font-size:8px;color:#06b6d4;text-decoration:none;">Read more ↗</a>` : ''}
+          </div>
+        `).join('');
+      }
+
+      if (otherArticles.length > 0) {
+        html += `<div style="padding:6px 10px 2px;font-size:8px;color:#3b82f6;font-weight:600;letter-spacing:0.5px;">ALL UPDATES</div>`;
+        html += otherArticles.map(a => `
+          <div style="padding:5px 10px;border-bottom:1px solid #111827;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+              <span class="card-cat ${a.category}" style="font-size:6px;padding:1px 4px;">${a.category}</span>
+              <span style="font-size:8px;color:#6b7280;">${a.source}</span>
+            </div>
+            <div style="font-size:9px;color:#9ca3af;line-height:1.4;">${a.headline}</div>
+          </div>
+        `).join('');
+      }
+    } else {
+      html += `<div style="padding:12px;font-size:10px;color:#6b7280;text-align:center;">No articles available for this briefing.</div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
 // RSS Feed sources - FREE and UNLIMITED!
 const RSS_FEEDS = {
   // Major world news RSS feeds
@@ -3558,6 +3723,9 @@ async function fetchLiveNews() {
       lastNewsUpdate = new Date();
       console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
 
+      // Save briefing snapshot for history
+      saveBriefingSnapshot();
+
       if (currentTab === 'daily') {
         renderSidebar();
       }
@@ -3599,6 +3767,7 @@ async function fetchLiveNews() {
             url: article.link || '#'
           }));
           lastNewsUpdate = new Date();
+          saveBriefingSnapshot();
           if (currentTab === 'daily') renderSidebar();
           updateNewsTimestamp();
           if (typeof updateDynamicRisks === 'function') {
@@ -4583,6 +4752,9 @@ function renderSidebar() {
     if (newsDisplayCount < DAILY_BRIEFING.length) {
       html += `<button onclick="loadMoreNews()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#1f2937 0%,#111827 100%);border:1px solid #374151;border-radius:8px;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;">LOAD MORE (${DAILY_BRIEFING.length - newsDisplayCount} remaining)</button>`;
     }
+
+    // Past briefings (collapsible dropdowns)
+    html += renderPastBriefingsHTML();
 
     content.innerHTML = html;
   } else if (currentTab === 'forecast') {
