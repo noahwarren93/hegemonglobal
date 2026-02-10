@@ -134,6 +134,50 @@
     .risk-cloudy { background: #1e3a5f; color: #93c5fd; }
     .risk-clear { background: #14532d; color: #86efac; }
 
+    /* Dynamic risk system styles */
+    .risk-override-controls { display: flex; gap: 6px; align-items: center; margin-top: 10px; padding: 8px 12px; background: #111827; border: 1px solid #1f2937; border-radius: 8px; }
+    .risk-override-controls span.override-label { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .override-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #374151; background: #1f2937; color: #e5e7eb; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .override-btn:hover { background: #374151; border-color: #4b5563; }
+    .override-btn.override-clear { width: auto; padding: 0 10px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .override-active-badge { font-size: 9px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .risk-change-log { max-height: 200px; overflow-y: auto; margin-top: 8px; }
+    .risk-change-entry { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1f293744; font-size: 10px; }
+    .risk-change-icon { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+    .risk-change-icon.up { background: #7f1d1d; color: #fca5a5; }
+    .risk-change-icon.down { background: #14532d; color: #86efac; }
+    .risk-change-icon.manual { background: #78350f; color: #fcd34d; }
+    .risk-change-text { color: #d1d5db; line-height: 1.4; }
+    .risk-change-time { color: #6b7280; font-size: 9px; }
+    .risk-toast { position: fixed; bottom: 20px; right: 20px; background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 12px 18px; z-index: 200; font-size: 11px; color: #e5e7eb; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; max-width: 320px; }
+    .risk-toast.active { opacity: 1; transform: translateY(0); }
+    .risk-toast .toast-arrow { font-size: 13px; margin-right: 6px; }
+
+    /* Sanctions section styles */
+    .sanctions-section { margin-top: 16px; }
+    .sanctions-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 12px; background: #0d0d14; border: 1px solid #1f293755; border-radius: 8px; transition: background 0.15s; }
+    .sanctions-toggle:hover { background: #111827; }
+    .sanctions-toggle-left { display: flex; align-items: center; gap: 8px; }
+    .sanctions-toggle-title { font-size: 10px; color: #06b6d4; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .sanctions-severity { font-size: 8px; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sanctions-severity.heavy { background: #7f1d1d; color: #fca5a5; }
+    .sanctions-severity.moderate { background: #78350f; color: #fcd34d; }
+    .sanctions-severity.limited { background: #713f12; color: #fde047; }
+    .sanctions-severity.none { background: #14532d; color: #86efac; }
+    .sanctions-chevron { color: #6b7280; font-size: 12px; transition: transform 0.2s; }
+    .sanctions-chevron.open { transform: rotate(180deg); }
+    .sanctions-body { overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out; }
+    .sanctions-body.open { max-height: 2000px; transition: max-height 0.5s ease-in; }
+    .sanctions-inner { padding: 10px 0 0; }
+    .sanctions-group-title { font-size: 9px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 6px; padding-left: 2px; }
+    .sanctions-group-title:first-child { margin-top: 0; }
+    .sanction-item { background: #0d0d14; border: 1px solid #1f293755; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
+    .sanction-header { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .sanction-by { font-size: 10px; font-weight: 600; color: #e5e7eb; }
+    .sanction-year { font-size: 9px; color: #6b7280; margin-left: auto; }
+    .sanction-reason { font-size: 10px; color: #9ca3af; line-height: 1.4; }
+    .sanctions-none { font-size: 10px; color: #6b7280; font-style: italic; padding: 6px 0; }
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal { background: #0a0a0f; border: 1px solid #1f2937; border-radius: 16px; width: 90%; max-width: 600px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -2060,6 +2104,911 @@ function detectCategory(title, description) {
   return 'WORLD';
 }
 
+// ============================================================
+// DYNAMIC RISK SYSTEM - Article Impact Scoring
+// ============================================================
+
+const ESCALATION_KEYWORDS = {
+  'escalat': 1.5, 'deadly': 1.4, 'massacre': 1.5, 'catastroph': 1.5,
+  'kill': 1.3, 'destroy': 1.3, 'collapse': 1.3, 'crisis': 1.2,
+  'emergency': 1.2, 'threaten': 1.1, 'attack': 1.3, 'bomb': 1.4,
+  'war': 1.3, 'conflict': 1.2, 'nuclear': 1.5, 'weapon': 1.2,
+  'invasion': 1.4, 'siege': 1.3, 'famine': 1.3, 'genocide': 1.5,
+  'casualt': 1.3, 'death toll': 1.4, 'militant': 1.2, 'terror': 1.4,
+  'coup': 1.4, 'martial law': 1.4, 'crackdown': 1.2, 'shell': 1.3,
+  'airstrike': 1.4, 'drone strike': 1.3, 'offensive': 1.2, 'hostage': 1.3
+};
+
+const DEESCALATION_KEYWORDS = {
+  'ceasefire': -4, 'peace': -3, 'agreement': -2, 'deal': -2,
+  'resolution': -3, 'treaty': -4, 'accord': -3, 'settle': -2,
+  'release': -1.5, 'freed': -1.5, 'pardon': -1.5, 'amnesty': -2,
+  'relief': -1, 'aid deliver': -1, 'reconcil': -2.5, 'dialogue': -1.5,
+  'negotiat': -1.5, 'truce': -3.5, 'withdraw': -2, 'de-escalat': -3,
+  'deescalat': -3, 'stabiliz': -2, 'rebuild': -1.5, 'reconstruct': -1.5,
+  'democra': -1, 'election held': -1.5, 'peaceful protest': -1,
+  'humanitarian corridor': -2, 'prisoner exchange': -2, 'diplomatic': -1.5
+};
+
+const CATEGORY_WEIGHTS = {
+  'CONFLICT': 12, 'CRISIS': 10, 'SECURITY': 8,
+  'POLITICS': 3, 'ECONOMY': 2, 'CLIMATE': 2,
+  'DIPLOMACY': -3, 'TECH': 1, 'WORLD': 1
+};
+
+function scoreArticleImpact(article) {
+  const text = ((article.headline || article.title || '') + ' ' + (article.description || '')).toLowerCase();
+  const category = article.category || detectCategory(text, '');
+
+  let baseImpact = CATEGORY_WEIGHTS[category] || 1;
+
+  // Find highest severity multiplier from escalation keywords
+  let severityMultiplier = 1;
+  for (const kw in ESCALATION_KEYWORDS) {
+    if (text.includes(kw)) {
+      severityMultiplier = Math.max(severityMultiplier, ESCALATION_KEYWORDS[kw]);
+    }
+  }
+
+  // Sum de-escalation bonuses (can stack, but capped)
+  let deescalationBonus = 0;
+  for (const kw in DEESCALATION_KEYWORDS) {
+    if (text.includes(kw)) {
+      deescalationBonus += DEESCALATION_KEYWORDS[kw];
+    }
+  }
+  deescalationBonus = Math.max(-8, deescalationBonus); // Cap stacking
+
+  // If article is fundamentally positive (diplomacy + peace keywords), flip base impact
+  if (deescalationBonus < -3 && baseImpact > 0) {
+    baseImpact = -Math.abs(baseImpact) * 0.5;
+  }
+
+  const riskDelta = Math.max(-5, Math.min(15, (baseImpact * severityMultiplier) + deescalationBonus));
+
+  return {
+    riskDelta,
+    category,
+    isDeescalation: deescalationBonus < -1,
+    severity: severityMultiplier,
+    headline: article.headline || article.title || ''
+  };
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - State Management
+// ============================================================
+
+const COUNTRY_RISK_STATE = {};
+const RISK_LEVELS_ORDERED = ['clear', 'cloudy', 'stormy', 'severe', 'extreme', 'catastrophic'];
+
+function riskLevelToValue(level) {
+  const map = { 'catastrophic': 95, 'extreme': 78, 'severe': 62, 'stormy': 45, 'cloudy': 28, 'clear': 10 };
+  return map[level] || 45;
+}
+
+function valueToRiskLevel(value) {
+  if (value >= 88) return 'catastrophic';
+  if (value >= 70) return 'extreme';
+  if (value >= 54) return 'severe';
+  if (value >= 36) return 'stormy';
+  if (value >= 18) return 'cloudy';
+  return 'clear';
+}
+
+function initializeRiskState() {
+  for (const countryName in COUNTRIES) {
+    const c = COUNTRIES[countryName];
+    COUNTRY_RISK_STATE[countryName] = {
+      baseRisk: c.risk,
+      currentRisk: c.risk,
+      riskValue: riskLevelToValue(c.risk),
+      accumulatedScore: 0,
+      newsHistory: [],
+      changeLog: [],
+      lastLevelChange: 0,
+      overrideActive: false,
+      overrideReason: ''
+    };
+  }
+  console.log(`[RISK] Initialized dynamic risk state for ${Object.keys(COUNTRIES).length} countries`);
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - Accumulator & Transition Engine
+// ============================================================
+
+function updateCountryRiskAccumulator(countryName, articles) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state || state.overrideActive) return;
+
+  const now = Date.now();
+
+  // Prune history to 48h window
+  state.newsHistory = state.newsHistory.filter(item => now - item.timestamp < 48 * 3600 * 1000);
+
+  // Score each new article and add to history
+  for (const article of articles) {
+    const impact = scoreArticleImpact(article);
+    state.newsHistory.push({
+      timestamp: now,
+      impact: impact.riskDelta,
+      headline: impact.headline,
+      category: impact.category,
+      isDeescalation: impact.isDeescalation
+    });
+  }
+
+  // Calculate weighted average (exponential decay, 24h half-life)
+  let totalScore = 0;
+  let totalWeight = 0;
+  for (const item of state.newsHistory) {
+    const ageHours = (now - item.timestamp) / 3600000;
+    const weight = Math.exp(-ageHours / 24);
+    totalScore += item.impact * weight;
+    totalWeight += weight;
+  }
+  const avgImpact = totalWeight > 0 ? totalScore / totalWeight : 0;
+
+  // Update accumulator with momentum damping (85% decay per cycle)
+  state.accumulatedScore = state.accumulatedScore * 0.85 + avgImpact * 0.15;
+  state.accumulatedScore = Math.max(-50, Math.min(50, state.accumulatedScore));
+}
+
+function calculateDynamicRisk(countryName) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state || state.overrideActive) return COUNTRIES[countryName].risk;
+
+  const baseValue = riskLevelToValue(state.baseRisk);
+  const dynamicValue = Math.max(0, Math.min(100, baseValue + state.accumulatedScore));
+
+  // Enforce max 1 level jump per cycle
+  const currentLevel = state.currentRisk;
+  const proposedLevel = valueToRiskLevel(dynamicValue);
+  const currentIdx = RISK_LEVELS_ORDERED.indexOf(currentLevel);
+  const proposedIdx = RISK_LEVELS_ORDERED.indexOf(proposedLevel);
+  const stepDiff = proposedIdx - currentIdx;
+
+  let newLevel;
+  if (Math.abs(stepDiff) <= 1) {
+    newLevel = proposedLevel;
+  } else {
+    // Constrain to 1 step
+    newLevel = RISK_LEVELS_ORDERED[currentIdx + (stepDiff > 0 ? 1 : -1)];
+  }
+
+  // Enforce 6-hour cooldown between level changes
+  const now = Date.now();
+  const sixHours = 6 * 3600 * 1000;
+
+  if (newLevel !== state.currentRisk) {
+    if (state.lastLevelChange && (now - state.lastLevelChange) < sixHours) {
+      // Still in cooldown — don't change level
+      return state.currentRisk;
+    }
+
+    // Allow the change
+    const oldRisk = state.currentRisk;
+    state.currentRisk = newLevel;
+    state.lastLevelChange = now;
+    state.riskValue = riskLevelToValue(newLevel);
+
+    // Log the transition
+    const triggerArticle = state.newsHistory.length > 0
+      ? state.newsHistory[state.newsHistory.length - 1].headline
+      : 'Accumulated news impact';
+
+    state.changeLog.push({
+      timestamp: now,
+      type: 'LEVEL_CHANGE',
+      from: oldRisk,
+      to: newLevel,
+      trigger: triggerArticle,
+      score: state.accumulatedScore.toFixed(1)
+    });
+
+    // Keep log manageable
+    if (state.changeLog.length > 50) state.changeLog = state.changeLog.slice(-50);
+
+    console.log(`[RISK] ${countryName}: ${oldRisk} → ${newLevel} (score: ${state.accumulatedScore.toFixed(1)})`);
+  }
+
+  return state.currentRisk;
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - Master Update Function
+// ============================================================
+
+async function updateDynamicRisks(articles) {
+  if (!articles || articles.length === 0) return [];
+
+  // Group articles by country using existing relevance matching
+  const articlesByCountry = {};
+  for (const countryName in COUNTRIES) {
+    const relevant = articles.filter(article =>
+      isRelevantToCountry(article.headline || article.title || '', article.description || '', countryName)
+    );
+    if (relevant.length > 0) {
+      articlesByCountry[countryName] = relevant;
+    }
+  }
+
+  // Update each country's risk accumulator and calculate new level
+  const changedCountries = [];
+  for (const countryName in articlesByCountry) {
+    const oldRisk = COUNTRIES[countryName].risk;
+
+    updateCountryRiskAccumulator(countryName, articlesByCountry[countryName]);
+    const newRisk = calculateDynamicRisk(countryName);
+
+    // Apply the new risk to the COUNTRIES object
+    COUNTRIES[countryName].risk = newRisk;
+
+    if (oldRisk !== newRisk) {
+      changedCountries.push({ name: countryName, from: oldRisk, to: newRisk });
+    }
+  }
+
+  // Batch UI refresh
+  if (changedCountries.length > 0) {
+    refreshRiskUI(changedCountries);
+    console.log(`[RISK] ${changedCountries.length} countries changed risk level`);
+  }
+
+  const articleCount = Object.values(articlesByCountry).reduce((sum, arr) => sum + arr.length, 0);
+  console.log(`[RISK] Analyzed ${articleCount} articles across ${Object.keys(articlesByCountry).length} countries`);
+
+  return changedCountries;
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - UI Refresh
+// ============================================================
+
+function refreshRiskUI(changedCountries) {
+  // 1. Update stats
+  refreshStats();
+
+  // 2. Refresh sidebar (watchlist + current tab)
+  renderSidebar();
+
+  // 3. Show toast notification for changes
+  if (changedCountries.length > 0) {
+    const first = changedCountries[0];
+    const upCount = changedCountries.filter(c => RISK_LEVELS_ORDERED.indexOf(c.to) > RISK_LEVELS_ORDERED.indexOf(c.from)).length;
+    const downCount = changedCountries.length - upCount;
+    let msg = '';
+    if (changedCountries.length === 1) {
+      const dir = RISK_LEVELS_ORDERED.indexOf(first.to) > RISK_LEVELS_ORDERED.indexOf(first.from) ? '&#9650;' : '&#9660;';
+      msg = `${dir} ${first.name}: ${first.from} &rarr; ${first.to}`;
+    } else {
+      const parts = [];
+      if (upCount > 0) parts.push(`${upCount} escalated`);
+      if (downCount > 0) parts.push(`${downCount} de-escalated`);
+      msg = `${changedCountries.length} risk changes: ${parts.join(', ')}`;
+    }
+    showRiskToast(msg);
+  }
+}
+
+function refreshStats() {
+  let critical = 0, high = 0, stable = 0;
+  Object.values(COUNTRIES).forEach(c => {
+    if (c.risk === 'catastrophic' || c.risk === 'extreme') critical++;
+    else if (c.risk === 'severe' || c.risk === 'stormy') high++;
+    else stable++;
+  });
+
+  const statCritical = document.getElementById('statCritical');
+  const statHigh = document.getElementById('statHigh');
+  const statStable = document.getElementById('statStable');
+  if (statCritical) statCritical.textContent = critical;
+  if (statHigh) statHigh.textContent = high;
+  if (statStable) statStable.textContent = stable;
+}
+
+function showRiskToast(message) {
+  let toast = document.getElementById('riskToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'riskToast';
+    toast.className = 'risk-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = message;
+  toast.classList.add('active');
+  setTimeout(() => toast.classList.remove('active'), 5000);
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - Manual Override
+// ============================================================
+
+function overrideRisk(countryName, direction) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state) return;
+
+  const currentIdx = RISK_LEVELS_ORDERED.indexOf(COUNTRIES[countryName].risk);
+  const newIdx = Math.max(0, Math.min(5, currentIdx + direction));
+  if (newIdx === currentIdx) return;
+
+  const oldRisk = COUNTRIES[countryName].risk;
+  const newRisk = RISK_LEVELS_ORDERED[newIdx];
+
+  COUNTRIES[countryName].risk = newRisk;
+  state.currentRisk = newRisk;
+  state.riskValue = riskLevelToValue(newRisk);
+  state.overrideActive = true;
+  state.overrideReason = 'Manual analyst adjustment';
+  state.lastLevelChange = Date.now();
+
+  state.changeLog.push({
+    timestamp: Date.now(),
+    type: 'MANUAL_OVERRIDE',
+    from: oldRisk,
+    to: newRisk,
+    trigger: 'Manual adjustment'
+  });
+
+  // Refresh all UI
+  refreshRiskUI([{ name: countryName, from: oldRisk, to: newRisk }]);
+
+  // Refresh modal if it's open for this country
+  const modalTitle = document.getElementById('modalTitle');
+  if (modalTitle && modalTitle.textContent === countryName) {
+    openModal(countryName);
+  }
+}
+
+function clearRiskOverride(countryName) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state) return;
+
+  state.overrideActive = false;
+  state.overrideReason = '';
+
+  // Recalculate from accumulated data
+  const newRisk = calculateDynamicRisk(countryName);
+  const oldRisk = COUNTRIES[countryName].risk;
+  COUNTRIES[countryName].risk = newRisk;
+
+  state.changeLog.push({
+    timestamp: Date.now(),
+    type: 'OVERRIDE_CLEARED',
+    from: oldRisk,
+    to: newRisk,
+    trigger: 'Override cleared, reverted to automatic'
+  });
+
+  refreshRiskUI([{ name: countryName, from: oldRisk, to: newRisk }]);
+
+  const modalTitle = document.getElementById('modalTitle');
+  if (modalTitle && modalTitle.textContent === countryName) {
+    openModal(countryName);
+  }
+}
+
+// ============================================================
+// SANCTIONS DATA & RENDERING
+// ============================================================
+// Structure: each country key maps to { severity, on: [...], by: [...] }
+// severity: 'heavy' | 'moderate' | 'limited' | 'none'
+// on: sanctions imposed ON this country   → { by, reason, year }
+// by: sanctions imposed BY this country   → { target, reason, year }
+// Easy to update manually; designed for future API hookup (OFAC, EU, UN)
+
+const SANCTIONS_DATA = {
+  'Russia': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Invasion of Ukraine; energy, finance, tech export bans', year: 2022 },
+      { by: 'EU', reason: 'Full economic sanctions packages (14 rounds); oil price cap', year: 2022 },
+      { by: 'UK', reason: 'Asset freezes, trade restrictions, oligarch sanctions', year: 2022 },
+      { by: 'UN', reason: 'Limited measures; Security Council vetoes block broader action', year: 2014 },
+      { by: 'Canada', reason: 'Trade bans, asset freezes, sanctions on officials', year: 2022 },
+      { by: 'Japan', reason: 'Export controls on semiconductors and tech; asset freezes', year: 2022 },
+      { by: 'Australia', reason: 'Financial sanctions, travel bans, trade restrictions', year: 2022 },
+      { by: 'Switzerland', reason: 'Adopted EU sanctions packages; asset freezes', year: 2022 }
+    ],
+    by: [
+      { target: 'EU/Western nations', reason: 'Counter-sanctions on agricultural imports', year: 2014 },
+      { target: 'Various', reason: 'Retaliatory bans on Western officials and entities', year: 2022 }
+    ]
+  },
+  'Iran': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Nuclear program; support for terrorism; human rights abuses', year: 1979 },
+      { by: 'EU', reason: 'Nuclear proliferation; missile program; human rights', year: 2012 },
+      { by: 'UN', reason: 'Nuclear non-compliance (UNSC Resolutions)', year: 2006 },
+      { by: 'UK', reason: 'Nuclear program; regional destabilization', year: 2012 },
+      { by: 'Canada', reason: 'State sponsor of terrorism designation; nuclear concerns', year: 2012 },
+      { by: 'Australia', reason: 'Nuclear and missile proliferation concerns', year: 2008 }
+    ],
+    by: [
+      { target: 'Israel', reason: 'Full trade and diplomatic embargo', year: 1979 },
+      { target: 'US-allied entities', reason: 'Restrictions on Western companies operating in Iran', year: 2012 }
+    ]
+  },
+  'North Korea': {
+    severity: 'heavy',
+    on: [
+      { by: 'UN', reason: 'Nuclear weapons and ballistic missile programs (multiple UNSC resolutions)', year: 2006 },
+      { by: 'US', reason: 'WMD proliferation; human rights abuses; cyber attacks', year: 2008 },
+      { by: 'EU', reason: 'Nuclear and missile programs; arms embargo', year: 2006 },
+      { by: 'Japan', reason: 'Nuclear tests; abduction issue; full trade embargo', year: 2006 },
+      { by: 'South Korea', reason: 'Military provocations; nuclear tests', year: 2010 },
+      { by: 'Australia', reason: 'WMD proliferation; UN sanctions enforcement', year: 2006 }
+    ],
+    by: []
+  },
+  'Syria': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Civil war; chemical weapons use; terrorism support (Caesar Act)', year: 2004 },
+      { by: 'EU', reason: 'Violent repression of civilians; arms embargo; oil import ban', year: 2011 },
+      { by: 'Arab League', reason: 'Suspended membership; economic sanctions (later lifted 2023)', year: 2011 },
+      { by: 'Turkey', reason: 'Asset freezes on Syrian officials during civil war', year: 2011 },
+      { by: 'Canada', reason: 'Arms embargo; economic sanctions; asset freezes', year: 2011 }
+    ],
+    by: []
+  },
+  'Cuba': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Full economic embargo since 1962; Helms-Burton Act', year: 1962 },
+      { by: 'EU', reason: 'Common Position on human rights (partially lifted)', year: 1996 }
+    ],
+    by: []
+  },
+  'Venezuela': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Authoritarianism; corruption; narcotics trafficking; oil sector sanctions', year: 2015 },
+      { by: 'EU', reason: 'Human rights violations; undermining democracy; arms embargo', year: 2017 },
+      { by: 'Canada', reason: 'Human rights abuses; erosion of democratic institutions', year: 2017 },
+      { by: 'Switzerland', reason: 'Adopted targeted sanctions on officials', year: 2018 }
+    ],
+    by: []
+  },
+  'Myanmar': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Military coup; Rohingya genocide; human rights violations', year: 2021 },
+      { by: 'EU', reason: 'Military junta; arms embargo; targeted official sanctions', year: 2021 },
+      { by: 'UK', reason: 'Military coup; asset freezes on junta leaders', year: 2021 },
+      { by: 'Canada', reason: 'Rohingya crisis; military coup; arms embargo', year: 2018 }
+    ],
+    by: []
+  },
+  'Belarus': {
+    severity: 'heavy',
+    on: [
+      { by: 'US', reason: 'Election fraud; repression of dissent; aiding Russia', year: 2006 },
+      { by: 'EU', reason: 'Fraudulent elections; forced Ryanair diversion; migration weaponization', year: 2020 },
+      { by: 'UK', reason: 'Complicity in Ukraine invasion; human rights abuses', year: 2022 },
+      { by: 'Canada', reason: 'Serious human rights violations; support for Russian invasion', year: 2020 }
+    ],
+    by: [
+      { target: 'EU', reason: 'Counter-sanctions on European officials', year: 2021 }
+    ]
+  },
+  'Sudan': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Darfur conflict; human rights abuses (some lifted 2017, reimposed 2023)', year: 1997 },
+      { by: 'UN', reason: 'Darfur arms embargo; targeted sanctions on individuals', year: 2004 },
+      { by: 'EU', reason: 'Arms embargo; restrictive measures on Darfur-related actors', year: 2004 }
+    ],
+    by: []
+  },
+  'Yemen': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; targeted sanctions on Houthi leaders', year: 2014 },
+      { by: 'US', reason: 'Houthi-related sanctions; terrorism designation', year: 2024 },
+      { by: 'EU', reason: 'Targeted measures supporting UN sanctions', year: 2014 }
+    ],
+    by: []
+  },
+  'Afghanistan': {
+    severity: 'heavy',
+    on: [
+      { by: 'UN', reason: 'Taliban regime; terrorism; asset freezes on Taliban leaders', year: 1999 },
+      { by: 'US', reason: 'Taliban takeover; frozen central bank reserves (~$7B)', year: 2021 },
+      { by: 'EU', reason: 'Taliban regime; travel bans; asset freezes', year: 2001 }
+    ],
+    by: []
+  },
+  'China': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Uyghur human rights; tech/chip export controls; military-linked entities', year: 2019 },
+      { by: 'EU', reason: 'Xinjiang human rights abuses (targeted individuals)', year: 2021 },
+      { by: 'UK', reason: 'Xinjiang human rights; Hong Kong crackdown', year: 2021 },
+      { by: 'Canada', reason: 'Uyghur human rights abuses; targeted officials', year: 2021 }
+    ],
+    by: [
+      { target: 'US entities', reason: 'Counter-sanctions on defense companies and officials', year: 2020 },
+      { target: 'EU officials', reason: 'Retaliatory sanctions on European Parliament members', year: 2021 },
+      { target: 'Lithuania', reason: 'Economic coercion over Taiwan representative office', year: 2021 }
+    ]
+  },
+  'Ukraine': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Trade restrictions and sanctions on Russian entities', year: 2022 }
+    ]
+  },
+  'Israel': {
+    severity: 'limited',
+    on: [
+      { by: 'Arab League (historic)', reason: 'Economic boycott (largely defunct; some members normalized)', year: 1948 },
+      { by: 'EU (partial)', reason: 'Settlement product labeling; some investment restrictions', year: 2015 },
+      { by: 'US (targeted)', reason: 'Sanctions on extremist settlers in West Bank', year: 2024 }
+    ],
+    by: [
+      { target: 'Gaza', reason: 'Blockade on goods and movement (with Egypt)', year: 2007 },
+      { target: 'Iran/Hezbollah', reason: 'Enforcement of international sanctions; trade restrictions', year: 2010 }
+    ]
+  },
+  'Gaza': {
+    severity: 'heavy',
+    on: [
+      { by: 'Israel', reason: 'Land/sea/air blockade on Hamas-governed territory', year: 2007 },
+      { by: 'US', reason: 'Sanctions on Hamas as designated terrorist organization', year: 1997 },
+      { by: 'EU', reason: 'Hamas listed as terrorist organization; funding restrictions', year: 2003 }
+    ],
+    by: []
+  },
+  'Lebanon': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Hezbollah-related sanctions; corruption targeting officials', year: 2015 },
+      { by: 'EU', reason: 'Targeted sanctions on officials blocking reform', year: 2021 },
+      { by: 'Saudi Arabia', reason: 'Diplomatic rift; import bans over Hezbollah influence', year: 2021 }
+    ],
+    by: []
+  },
+  'Iraq': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted sanctions on Iran-aligned militias and corrupt officials', year: 2019 },
+      { by: 'UN', reason: 'Residual measures from Saddam era (mostly lifted)', year: 2003 }
+    ],
+    by: []
+  },
+  'Libya': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; asset freezes on spoilers of peace process', year: 2011 },
+      { by: 'US', reason: 'Targeted sanctions on militia leaders obstructing governance', year: 2018 },
+      { by: 'EU', reason: 'Arms embargo enforcement; migrant smuggling networks', year: 2011 }
+    ],
+    by: []
+  },
+  'Somalia': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo (ongoing since 1992); al-Shabaab sanctions', year: 1992 },
+      { by: 'US', reason: 'Al-Shabaab terrorism designations; targeted individual sanctions', year: 2010 }
+    ],
+    by: []
+  },
+  'DRC': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo on eastern DRC armed groups; conflict minerals', year: 2003 },
+      { by: 'US', reason: 'Targeted sanctions on militia leaders; conflict minerals (Dodd-Frank)', year: 2006 },
+      { by: 'EU', reason: 'Arms embargo; targeted measures on armed group leaders', year: 2003 }
+    ],
+    by: []
+  },
+  'Haiti': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Sanctions on gang leaders and corrupt elites fueling crisis', year: 2022 },
+      { by: 'UN', reason: 'Targeted sanctions on gang leaders destabilizing the country', year: 2022 },
+      { by: 'Canada', reason: 'Sanctions on elites and gang leaders', year: 2022 }
+    ],
+    by: []
+  },
+  'Pakistan': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted: nuclear proliferation-related entities (historic); terrorism financing', year: 2004 },
+      { by: 'FATF', reason: 'Grey-listed for terrorism financing deficiencies (removed 2022)', year: 2018 }
+    ],
+    by: [
+      { target: 'India', reason: 'Trade suspension over Kashmir dispute', year: 2019 }
+    ]
+  },
+  'Nigeria': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted: Boko Haram/ISWAP terrorism designations; visa restrictions', year: 2013 },
+      { by: 'UK', reason: 'Targeted sanctions on corruption-linked individuals', year: 2021 }
+    ],
+    by: []
+  },
+  'Turkey': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'CAATSA sanctions over S-400 purchase; defense sector restrictions', year: 2020 },
+      { by: 'EU (partial)', reason: 'Arms export restrictions over Syria operations', year: 2019 }
+    ],
+    by: [
+      { target: 'Syria (historic)', reason: 'Economic sanctions during civil war', year: 2011 }
+    ]
+  },
+  'Philippines': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Mexico': {
+    severity: 'limited',
+    on: [
+      { by: 'US', reason: 'Targeted: Kingpin Act designations on cartel leaders and entities', year: 2000 },
+      { by: 'US', reason: 'OFAC sanctions on fentanyl trafficking networks', year: 2023 }
+    ],
+    by: []
+  },
+  'India': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Pakistan', reason: 'Trade restrictions; MFN status revoked post-Pulwama', year: 2019 },
+      { target: 'China', reason: 'Banned 200+ Chinese apps; restricted Chinese investment', year: 2020 }
+    ]
+  },
+  'South Korea': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'North Korea', reason: 'Full sanctions enforcement aligned with UN/US', year: 2010 }
+    ]
+  },
+  'Japan': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Asset freezes; export controls; energy restrictions', year: 2022 },
+      { target: 'North Korea', reason: 'Full trade embargo; ship entry bans', year: 2006 }
+    ]
+  },
+  'Saudi Arabia': {
+    severity: 'limited',
+    on: [
+      { by: 'US (targeted)', reason: 'Magnitsky sanctions on individuals re: Khashoggi murder', year: 2018 },
+      { by: 'Canada', reason: 'Arms export review after Khashoggi killing', year: 2018 }
+    ],
+    by: [
+      { target: 'Qatar (historic)', reason: 'Diplomatic and economic blockade (resolved 2021)', year: 2017 },
+      { target: 'Canada', reason: 'Diplomatic retaliation; trade restrictions (resolved)', year: 2018 }
+    ]
+  },
+  'Ethiopia': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Tigray conflict; removed from AGOA trade benefits', year: 2022 },
+      { by: 'EU', reason: 'Suspended budget support over Tigray conflict', year: 2021 }
+    ],
+    by: []
+  },
+  'Eritrea': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Role in Tigray conflict; human rights abuses', year: 2021 },
+      { by: 'UN (historic)', reason: 'Arms embargo 2009-2018 for Somalia destabilization (lifted)', year: 2009 },
+      { by: 'EU', reason: 'Involvement in Tigray conflict; targeted sanctions', year: 2021 }
+    ],
+    by: []
+  },
+  'Nicaragua': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Authoritarian crackdown; election fraud; human rights abuses', year: 2018 },
+      { by: 'EU', reason: 'Democratic backsliding; repression of opposition', year: 2020 },
+      { by: 'Canada', reason: 'Human rights violations; sham elections', year: 2018 }
+    ],
+    by: []
+  },
+  'Zimbabwe': {
+    severity: 'moderate',
+    on: [
+      { by: 'US', reason: 'Governance; human rights; undermining democracy', year: 2003 },
+      { by: 'EU', reason: 'Arms embargo; targeted sanctions (partially eased)', year: 2002 }
+    ],
+    by: []
+  },
+  'Mali': {
+    severity: 'moderate',
+    on: [
+      { by: 'EU', reason: 'Military coup; use of Wagner mercenaries', year: 2022 },
+      { by: 'ECOWAS', reason: 'Sanctions over delayed democratic transition (lifted 2022)', year: 2022 },
+      { by: 'US', reason: 'Targeted sanctions on junta leaders', year: 2022 }
+    ],
+    by: []
+  },
+  'Central African Republic': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; targeted sanctions on armed group leaders', year: 2013 },
+      { by: 'US', reason: 'Targeted: individuals undermining peace process', year: 2014 }
+    ],
+    by: []
+  },
+  'South Sudan': {
+    severity: 'moderate',
+    on: [
+      { by: 'UN', reason: 'Arms embargo; targeted sanctions on conflict parties', year: 2018 },
+      { by: 'US', reason: 'Civil war; obstruction of peace process', year: 2014 },
+      { by: 'EU', reason: 'Targeted sanctions on individuals undermining peace', year: 2014 }
+    ],
+    by: []
+  },
+  'Burkina Faso': {
+    severity: 'limited',
+    on: [
+      { by: 'ECOWAS', reason: 'Military coups; suspended membership', year: 2022 },
+      { by: 'EU', reason: 'Suspended cooperation after military takeover', year: 2022 }
+    ],
+    by: []
+  },
+  'Guinea': {
+    severity: 'limited',
+    on: [
+      { by: 'ECOWAS', reason: 'Military coup; delayed transition to civilian rule', year: 2021 },
+      { by: 'US', reason: 'Targeted sanctions on junta officials', year: 2022 }
+    ],
+    by: []
+  },
+  'Niger': {
+    severity: 'limited',
+    on: [
+      { by: 'ECOWAS', reason: 'Military coup; suspended membership (sanctions later eased)', year: 2023 },
+      { by: 'EU', reason: 'Suspended cooperation after military coup', year: 2023 }
+    ],
+    by: []
+  }
+};
+
+// Retrieve sanctions for a country; returns standardized object even if no data exists
+function getSanctionsForCountry(countryName) {
+  return SANCTIONS_DATA[countryName] || { severity: 'none', on: [], by: [] };
+}
+
+// Build the collapsible sanctions HTML for a country modal
+function buildSanctionsSection(countryName) {
+  const data = getSanctionsForCountry(countryName);
+  const hasOn = data.on && data.on.length > 0;
+  const hasBy = data.by && data.by.length > 0;
+  const hasSanctions = hasOn || hasBy;
+
+  const severityLabel = data.severity.charAt(0).toUpperCase() + data.severity.slice(1);
+  const sectionId = 'sanctions-' + countryName.replace(/\s+/g, '-');
+
+  let html = `<div class="sanctions-section">`;
+  html += `<div class="sanctions-toggle" onclick="toggleSanctions('${sectionId}')">
+    <div class="sanctions-toggle-left">
+      <span class="sanctions-toggle-title">Sanctions</span>
+      <span class="sanctions-severity ${data.severity}">${severityLabel}</span>
+    </div>
+    <span class="sanctions-chevron" id="${sectionId}-chevron">&#9660;</span>
+  </div>`;
+
+  html += `<div class="sanctions-body" id="${sectionId}"><div class="sanctions-inner">`;
+
+  if (hasOn) {
+    html += `<div class="sanctions-group-title">Sanctions on ${countryName}</div>`;
+    for (const s of data.on) {
+      html += `<div class="sanction-item">
+        <div class="sanction-header"><span class="sanction-by">${s.by}</span><span class="sanction-year">${s.year}</span></div>
+        <div class="sanction-reason">${s.reason}</div>
+      </div>`;
+    }
+  }
+
+  if (hasBy) {
+    html += `<div class="sanctions-group-title">Sanctions by ${countryName}</div>`;
+    for (const s of data.by) {
+      html += `<div class="sanction-item">
+        <div class="sanction-header"><span class="sanction-by">${s.target}</span><span class="sanction-year">${s.year}</span></div>
+        <div class="sanction-reason">${s.reason}</div>
+      </div>`;
+    }
+  }
+
+  if (!hasSanctions) {
+    html += `<div class="sanctions-none">No active sanctions data for this country.</div>`;
+  }
+
+  html += `</div></div></div>`;
+  return html;
+}
+
+function toggleSanctions(sectionId) {
+  const body = document.getElementById(sectionId);
+  const chevron = document.getElementById(sectionId + '-chevron');
+  if (body) {
+    body.classList.toggle('open');
+    if (chevron) chevron.classList.toggle('open');
+  }
+}
+
+// ============================================================
+// DYNAMIC RISK SYSTEM - Modal UI Components
+// ============================================================
+
+function buildRiskOverrideControls(countryName) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state) return '';
+
+  const overrideStatus = state.overrideActive
+    ? `<span class="override-active-badge">Override Active</span><button class="override-btn override-clear" onclick="clearRiskOverride('${countryName}')">Reset</button>`
+    : `<span style="font-size:9px;color:#6b7280;">Automatic</span>`;
+
+  const score = state.accumulatedScore.toFixed(1);
+  const scoreColor = state.accumulatedScore > 2 ? '#fca5a5' : state.accumulatedScore < -2 ? '#86efac' : '#6b7280';
+
+  return `
+    <div class="risk-override-controls">
+      <span class="override-label">Risk Control</span>
+      <button class="override-btn" onclick="overrideRisk('${countryName}', -1)" title="Decrease risk">&#9660;</button>
+      ${overrideStatus}
+      <button class="override-btn" onclick="overrideRisk('${countryName}', 1)" title="Increase risk">&#9650;</button>
+      <span style="margin-left:auto;font-size:9px;color:${scoreColor};" title="Accumulated risk score">Score: ${score}</span>
+    </div>`;
+}
+
+function buildRiskChangeLog(countryName) {
+  const state = COUNTRY_RISK_STATE[countryName];
+  if (!state || state.changeLog.length === 0) return '';
+
+  const recent = state.changeLog.slice(-10).reverse();
+
+  let html = `<div class="section-title">Risk Change History</div><div class="risk-change-log">`;
+
+  for (const entry of recent) {
+    let icon = '', iconClass = '', label = '';
+
+    if (entry.type === 'LEVEL_CHANGE') {
+      const up = RISK_LEVELS_ORDERED.indexOf(entry.to) > RISK_LEVELS_ORDERED.indexOf(entry.from);
+      icon = up ? '&#9650;' : '&#9660;';
+      iconClass = up ? 'up' : 'down';
+      label = `${entry.from} &rarr; ${entry.to}`;
+      if (entry.trigger) label += `<br><span class="risk-change-time">${entry.trigger.slice(0, 80)}</span>`;
+    } else if (entry.type === 'MANUAL_OVERRIDE') {
+      icon = '&#9998;';
+      iconClass = 'manual';
+      label = `Manual: ${entry.from} &rarr; ${entry.to}`;
+    } else if (entry.type === 'OVERRIDE_CLEARED') {
+      icon = '&#8634;';
+      iconClass = 'down';
+      label = `Override cleared &rarr; ${entry.to}`;
+    }
+
+    const time = new Date(entry.timestamp).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    html += `
+      <div class="risk-change-entry">
+        <div class="risk-change-icon ${iconClass}">${icon}</div>
+        <div>
+          <div class="risk-change-text">${label}</div>
+          <div class="risk-change-time">${time}</div>
+        </div>
+      </div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
 // Format source name nicely
 function formatSourceName(sourceId) {
   if (!sourceId) return 'News';
@@ -2270,6 +3219,11 @@ async function fetchLiveNews() {
       }
       updateNewsTimestamp();
       checkBreakingNews(DAILY_BRIEFING);
+
+      // Dynamic risk: analyze fetched articles
+      if (typeof updateDynamicRisks === 'function') {
+        updateDynamicRisks(DAILY_BRIEFING);
+      }
       return;
     }
   } catch (error) {
@@ -2299,6 +3253,11 @@ async function fetchLiveNews() {
         lastNewsUpdate = new Date();
         if (currentTab === 'daily') renderSidebar();
         updateNewsTimestamp();
+
+        // Dynamic risk: analyze fetched articles
+        if (typeof updateDynamicRisks === 'function') {
+          updateDynamicRisks(DAILY_BRIEFING);
+        }
         return;
       }
     }
@@ -2320,6 +3279,9 @@ function updateNewsTimestamp() {
     timestampEl.innerHTML = `<span style="color:#22c55e;">●</span> Live · Updated ${lastNewsUpdate.toLocaleTimeString()} · <span style="color:#6b7280;">${DAILY_BRIEFING.length} articles</span>`;
   }
 }
+
+// Initialize dynamic risk state system
+initializeRiskState();
 
 // Initialize live news and set up auto-refresh
 fetchLiveNews();
@@ -3199,6 +4161,12 @@ function openModal(name) {
   // Add risk trend chart with indicators
   html += `<div class="section-title">Risk Trend & Indicators</div>${renderTrendChart(name, c.risk)}`;
 
+  // Dynamic risk: manual override controls
+  html += buildRiskOverrideControls(name);
+
+  // Dynamic risk: change log
+  html += buildRiskChangeLog(name);
+
   if (c.analysis) {
     html += `<div class="section-title">Situation Analysis</div>
       <div class="analysis-block"><div class="analysis-header"><div class="analysis-num n1">1</div><div class="analysis-title">What Happened</div></div><p class="analysis-text">${c.analysis.what}</p></div>
@@ -3214,6 +4182,9 @@ function openModal(name) {
 
   // Add placeholder for live country news
   html += `<div class="country-news-section"><div class="country-news-title">LIVE NEWS FOR ${name.toUpperCase()}</div><div id="countryNewsContent" class="country-news-loading">Loading latest news...</div></div>`;
+
+  // Sanctions section (collapsible, below news)
+  html += buildSanctionsSection(name);
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('active');
