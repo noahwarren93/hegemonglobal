@@ -2806,7 +2806,445 @@ const SANCTIONS_DATA = {
     severity: 'none',
     on: [],
     by: []
-  }
+  },
+  // === MAJOR WESTERN SANCTIONERS (no sanctions ON them) ===
+  'United Kingdom': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: '28 autonomous sanctions regimes; aligned with EU rounds; unified UK Sanctions List Jan 2026', year: 2022 },
+      { target: 'Iran', reason: 'Nuclear program; triggered JCPOA snapback Aug 2025', year: 2012 },
+      { target: 'Myanmar', reason: 'Military coup; asset freezes on junta leaders', year: 2021 },
+      { target: 'Belarus', reason: 'Complicity in Ukraine invasion; human rights', year: 2022 },
+      { target: 'North Korea', reason: 'WMD programs; cyber threats', year: 2006 }
+    ]
+  },
+  'Canada': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: '77 individuals + 39 entities + 201 vessels sanctioned Jun 2025; secondary sanctions', year: 2022 },
+      { target: 'Iran', reason: '4 officials sanctioned Dec 2025 for human rights; SEMA regime', year: 2012 },
+      { target: 'Myanmar', reason: '13 officials and 3 entities sanctioned Mar 2025', year: 2018 },
+      { target: 'Belarus', reason: 'Human rights violations; support for Russian invasion', year: 2020 },
+      { target: 'Haiti', reason: 'Gang leaders and corrupt elites', year: 2022 }
+    ]
+  },
+  'Australia': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Over 50% of Australia sanctions focus; financial/trade restrictions', year: 2022 },
+      { target: 'Afghanistan', reason: 'World-first autonomous framework Dec 2025; 4 Taliban officials designated for oppression of women', year: 2025 },
+      { target: 'North Korea', reason: 'WMD proliferation; maritime enforcement coalition', year: 2006 },
+      { target: 'Iran', reason: 'Nuclear program; UN sanctions enforcement', year: 2008 },
+      { target: 'Myanmar', reason: 'Military coup; targeted sanctions', year: 2021 }
+    ]
+  },
+  'Switzerland': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Implements EU packages; 16th package Feb 2025; 18th package Oct 2025; 28 sanctions regimes', year: 2022 },
+      { target: 'Iran', reason: 'Expanded Dec 2025 following JCPOA snapback', year: 2012 },
+      { target: 'Syria', reason: 'Lifted Jun 2025 aligned with EU', year: 2011 },
+      { target: 'Belarus', reason: 'Implements EU measures; Oct 2025 package', year: 2022 }
+    ]
+  },
+  'France': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements all EU sanctions; limited autonomous authority under Monetary and Financial Code for counter-terrorism', year: 2022 },
+      { target: 'Terrorism-related', reason: 'Registre National Des Gels (National Freeze Registry) for domestic terror finance freezes', year: 2015 }
+    ]
+  },
+  'Germany': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions only; no autonomous sanctions program; coalition revising foreign trade laws May 2025', year: 2022 }
+    ]
+  },
+  'Taiwan': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Export restrictions on 77 machine tool items; increased penalties for military-linked sales; joined international sanctions 2022', year: 2022 }
+    ]
+  },
+  // === OTHER COUNTRIES ===
+  'UAE': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'UN-mandated targets', reason: 'Enforces UN sanctions; major financial compliance hub; anti-money laundering frameworks', year: 2020 }
+    ]
+  },
+  'Singapore': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Rare Asian nation to impose autonomous sanctions on Russia; export controls on electronics/tech', year: 2022 },
+      { target: 'North Korea', reason: 'UN sanctions enforcement; financial compliance', year: 2006 }
+    ]
+  },
+  'Norway': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Aligned with EU sanctions as EEA member; energy sector restrictions', year: 2022 },
+      { target: 'Belarus', reason: 'Aligned with EU measures', year: 2022 }
+    ]
+  },
+  'Brazil': {
+    severity: 'limited',
+    on: [
+      { by: 'US (targeted)', reason: 'Sanctions on Justice Alexandre de Moraes and family Jul 2025 for judicial overreach; 50% tariff increase on select goods', year: 2025 }
+    ],
+    by: []
+  },
+  'South Africa': {
+    severity: 'limited',
+    on: [
+      { by: 'US (proposed)', reason: 'H.R.2633 bill targeting government/ANC officials; 30% tariff (highest Sub-Saharan Africa); additional bills re: antisemitic conduct', year: 2025 }
+    ],
+    by: []
+  },
+  'Hungary': {
+    severity: 'limited',
+    on: [
+      { by: 'EU', reason: 'Rule-of-law conditionality; frozen EU recovery funds over democratic backsliding and judicial independence concerns', year: 2022 }
+    ],
+    by: []
+  },
+  'Serbia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Egypt': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Terrorism-related', reason: 'Maintains List of Terrorist Entities; implements UN sanctions; FATF compliant', year: 2020 }
+    ]
+  },
+  'Bangladesh': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Argentina': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Kenya': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Colombia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Peru': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Thailand': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'El Salvador': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Sri Lanka': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Bolivia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Guyana': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Italy': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions; active enforcement through Banca d\'Italia', year: 2022 }
+    ]
+  },
+  'Poland': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Russia', reason: 'Implements EU sanctions; additional national restrictions on Russian transport and trade', year: 2022 }
+    ]
+  },
+  'Spain': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Netherlands': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU sanctions; key ASML chip export controls affecting China', year: 2022 }
+    ]
+  },
+  'Indonesia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Vietnam': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Malaysia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Romania': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Greece': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Sweden': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Finland': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Austria': {
+    severity: 'none',
+    on: [],
+    by: [
+      { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+    ]
+  },
+  'Chile': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Algeria': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Tunisia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Ecuador': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Georgia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Armenia': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  'Moldova': {
+    severity: 'none',
+    on: [],
+    by: []
+  },
+  // === ADDITIONAL SANCTIONERS & EU MEMBERS ===
+  'Estonia': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Among most hawkish EU members; implements EU measures; vocal advocate for stronger enforcement', year: 2022 }
+  ]},
+  'Latvia': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Implements EU sanctions; closed border crossings; expelled Russian diplomats', year: 2022 }
+  ]},
+  'Lithuania': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Implements EU sanctions; Kaliningrad transit restrictions; strong enforcement', year: 2022 },
+    { target: 'China (targeted by)', reason: 'Subject to Chinese economic coercion over Taiwan office; EU backed Lithuania', year: 2021 }
+  ]},
+  'Denmark': { severity: 'none', on: [], by: [
+    { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions; active on Russia maritime enforcement in Baltic', year: 2022 }
+  ]},
+  'Belgium': { severity: 'none', on: [], by: [
+    { target: 'Various (via EU)', reason: 'EU headquarters; key role in sanctions coordination; hosts SWIFT messaging system', year: 2022 }
+  ]},
+  'Ireland': { severity: 'none', on: [], by: [
+    { target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }
+  ]},
+  'Czech Republic': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Implements EU sanctions; expelled Russian diplomats over Vrbetice explosion', year: 2021 }
+  ]},
+  'New Zealand': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Autonomous Russia Sanctions Act 2022; travel bans; asset freezes; trade restrictions', year: 2022 },
+    { target: 'North Korea', reason: 'UN sanctions enforcement', year: 2006 }
+  ]},
+  'Qatar': { severity: 'none', on: [], by: [
+    { target: 'Terrorism-related', reason: 'Counter-terrorism financing framework; was subject to Saudi-led blockade 2017-2021 (resolved)', year: 2017 }
+  ]},
+  'Jordan': { severity: 'none', on: [], by: [
+    { target: 'UN-mandated targets', reason: 'Implements UN sanctions; key anti-smuggling enforcement on Syria/Iraq borders', year: 2014 }
+  ]},
+  'Kazakhstan': { severity: 'none', on: [], by: [
+    { target: 'Russia (compliance)', reason: 'Strengthened sanctions compliance to avoid secondary sanctions; restricted parallel imports to Russia', year: 2023 }
+  ]},
+  'Croatia': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }] },
+  'Slovenia': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }] },
+  'Slovakia': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }] },
+  'Bulgaria': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }] },
+  'Portugal': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU and UN sanctions', year: 2022 }] },
+  'Luxembourg': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU sanctions; major financial center for asset freezes', year: 2022 }] },
+  'Cyprus': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU sanctions; past scrutiny over Russian oligarch assets', year: 2022 }] },
+  'Malta': { severity: 'none', on: [], by: [{ target: 'Various (via EU)', reason: 'Implements EU sanctions; shipping registry enforcement', year: 2022 }] },
+  'Iceland': { severity: 'none', on: [], by: [{ target: 'Russia', reason: 'Aligned with EU sanctions as EEA member', year: 2022 }] },
+  // === REMAINING COUNTRIES (no significant sanctions involvement) ===
+  'Kuwait': { severity: 'none', on: [], by: [] },
+  'Bahrain': { severity: 'none', on: [], by: [] },
+  'Oman': { severity: 'none', on: [], by: [] },
+  'Morocco': { severity: 'none', on: [], by: [] },
+  'Senegal': { severity: 'none', on: [], by: [] },
+  'Tanzania': { severity: 'none', on: [], by: [] },
+  'Ghana': { severity: 'none', on: [], by: [] },
+  'Ivory Coast': { severity: 'none', on: [], by: [] },
+  'Cameroon': { severity: 'none', on: [], by: [] },
+  'Uganda': { severity: 'none', on: [], by: [] },
+  'Rwanda': { severity: 'none', on: [], by: [] },
+  'Costa Rica': { severity: 'none', on: [], by: [] },
+  'Panama': { severity: 'none', on: [], by: [] },
+  'Uruguay': { severity: 'none', on: [], by: [] },
+  'Dominican Republic': { severity: 'none', on: [], by: [] },
+  'Jamaica': { severity: 'none', on: [], by: [] },
+  'Guatemala': { severity: 'none', on: [], by: [] },
+  'Honduras': { severity: 'none', on: [], by: [] },
+  'Paraguay': { severity: 'none', on: [], by: [] },
+  'Albania': { severity: 'none', on: [], by: [] },
+  'North Macedonia': { severity: 'none', on: [], by: [] },
+  'Montenegro': { severity: 'none', on: [], by: [] },
+  'Kosovo': { severity: 'none', on: [], by: [] },
+  'Bosnia and Herzegovina': { severity: 'none', on: [], by: [] },
+  'Cambodia': { severity: 'none', on: [], by: [] },
+  'Laos': { severity: 'none', on: [], by: [] },
+  'Nepal': { severity: 'none', on: [], by: [] },
+  'Uzbekistan': { severity: 'none', on: [], by: [] },
+  'Botswana': { severity: 'none', on: [], by: [] },
+  'Zambia': { severity: 'none', on: [], by: [] },
+  'Mozambique': { severity: 'none', on: [], by: [] },
+  'Angola': { severity: 'none', on: [], by: [] },
+  'Namibia': { severity: 'none', on: [], by: [] },
+  'Madagascar': { severity: 'none', on: [], by: [] },
+  'Suriname': { severity: 'none', on: [], by: [] },
+  'Belize': { severity: 'none', on: [], by: [] },
+  'Brunei': { severity: 'none', on: [], by: [] },
+  'Chad': { severity: 'none', on: [], by: [] },
+  'Djibouti': { severity: 'none', on: [], by: [] },
+  'Gabon': { severity: 'none', on: [], by: [] },
+  'Mauritania': { severity: 'none', on: [], by: [] },
+  'Mongolia': { severity: 'none', on: [], by: [] },
+  'Turkmenistan': { severity: 'none', on: [], by: [] },
+  'Tajikistan': { severity: 'none', on: [], by: [] },
+  'Kyrgyzstan': { severity: 'none', on: [], by: [] },
+  'Trinidad and Tobago': { severity: 'none', on: [], by: [] },
+  'Bahamas': { severity: 'none', on: [], by: [] },
+  'Barbados': { severity: 'none', on: [], by: [] },
+  'Republic of Congo': { severity: 'limited', on: [
+    { by: 'EU', reason: 'Arms embargo (conflict prevention)', year: 2023 }
+  ], by: [] },
+  'Equatorial Guinea': { severity: 'limited', on: [
+    { by: 'US', reason: 'Corruption and human rights abuses (Magnitsky)', year: 2024 }
+  ], by: [] },
+  'Burundi': { severity: 'moderate', on: [
+    { by: 'US', reason: 'Political repression and human rights abuses', year: 2023 },
+    { by: 'EU', reason: 'Political crisis and violence', year: 2022 }
+  ], by: [] },
+  'Gambia': { severity: 'none', on: [], by: [] },
+  'Guinea-Bissau': { severity: 'limited', on: [
+    { by: 'UN', reason: 'Political instability and drug trafficking (travel ban on individuals)', year: 2023 }
+  ], by: [] },
+  'Sierra Leone': { severity: 'none', on: [], by: [] },
+  'Liberia': { severity: 'none', on: [], by: [] },
+  'Togo': { severity: 'none', on: [], by: [] },
+  'Benin': { severity: 'none', on: [], by: [] },
+  'Cape Verde': { severity: 'none', on: [], by: [] },
+  'Mauritius': { severity: 'none', on: [], by: [] },
+  'Seychelles': { severity: 'none', on: [], by: [] },
+  'Malawi': { severity: 'none', on: [], by: [] },
+  'Bhutan': { severity: 'none', on: [], by: [] },
+  'Maldives': { severity: 'none', on: [], by: [] },
+  'Timor-Leste': { severity: 'none', on: [], by: [] },
+  'Papua New Guinea': { severity: 'none', on: [], by: [] },
+  'Fiji': { severity: 'none', on: [], by: [] },
+  'Solomon Islands': { severity: 'none', on: [], by: [] },
+  'Vanuatu': { severity: 'none', on: [], by: [] },
+  'Samoa': { severity: 'none', on: [], by: [] },
+  'Tonga': { severity: 'none', on: [], by: [] },
+  'Kiribati': { severity: 'none', on: [], by: [] },
+  'Marshall Islands': { severity: 'none', on: [], by: [] },
+  'Micronesia': { severity: 'none', on: [], by: [] },
+  'Palau': { severity: 'none', on: [], by: [] },
+  'Nauru': { severity: 'none', on: [], by: [] },
+  'Tuvalu': { severity: 'none', on: [], by: [] },
+  'Andorra': { severity: 'none', on: [], by: [] },
+  'Antigua and Barbuda': { severity: 'none', on: [], by: [] },
+  'Comoros': { severity: 'none', on: [], by: [] },
+  'Dominica': { severity: 'none', on: [], by: [] },
+  'Eswatini': { severity: 'none', on: [], by: [] },
+  'Grenada': { severity: 'none', on: [], by: [] },
+  'Lesotho': { severity: 'none', on: [], by: [] },
+  'Liechtenstein': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Aligned with EU/Swiss sanctions on Russia-Ukraine war', year: 2022 },
+    { target: 'Belarus', reason: 'Aligned with EU/Swiss sanctions', year: 2022 }
+  ] },
+  'Monaco': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Aligned with EU sanctions on Russia-Ukraine war', year: 2022 }
+  ] },
+  'San Marino': { severity: 'none', on: [], by: [
+    { target: 'Russia', reason: 'Aligned with EU sanctions on Russia-Ukraine war', year: 2022 }
+  ] },
+  'Sao Tome and Principe': { severity: 'none', on: [], by: [] },
+  'Saint Kitts and Nevis': { severity: 'none', on: [], by: [] },
+  'Saint Lucia': { severity: 'none', on: [], by: [] },
+  'Saint Vincent and the Grenadines': { severity: 'none', on: [], by: [] }
 };
 
 // Retrieve sanctions for a country; returns standardized object even if no data exists
