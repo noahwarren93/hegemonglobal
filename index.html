@@ -2062,18 +2062,61 @@ const RSS_FEEDS = {
 // RSS to JSON proxy (free tier: 10,000 req/day)
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
-// Backup News APIs (if RSS fails)
+// Multiple backup News APIs for robust fallback
 const NEWS_APIS = {
   newsdata: {
     key: 'pub_7c217680d0cb4730af5530a2e86e2474',
     buildUrl: (key, query) => `https://newsdata.io/api/1/news?apikey=${key}&language=en&q=${encodeURIComponent(query)}&size=30`,
     buildDailyUrl: (key) => `https://newsdata.io/api/1/news?apikey=${key}&language=en&category=world,politics,business,technology&size=50`,
     parseResults: (data) => data.status === 'success' ? data.results : null
+  },
+  gnews: {
+    key: 'e67a04b89b39458db2aba2de73cd4e52',
+    buildUrl: (key, query) => `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=15&apikey=${key}`,
+    buildDailyUrl: (key) => `https://gnews.io/api/v4/top-headlines?lang=en&max=50&apikey=${key}`,
+    parseResults: (data) => data.articles ? data.articles.map(a => ({
+      title: a.title,
+      description: a.description || '',
+      link: a.url,
+      source_id: a.source?.name || 'GNews',
+      pubDate: a.publishedAt
+    })) : null
+  },
+  mediastack: {
+    key: 'a03d02da70b2f5e91f0d8e3c71e1f604',
+    buildUrl: (key, query) => `https://api.mediastack.com/v1/news?access_key=${key}&keywords=${encodeURIComponent(query)}&languages=en&limit=15`,
+    buildDailyUrl: (key) => `https://api.mediastack.com/v1/news?access_key=${key}&languages=en&categories=general,politics,business,technology&limit=50`,
+    parseResults: (data) => data.data ? data.data.map(a => ({
+      title: a.title,
+      description: a.description || '',
+      link: a.url,
+      source_id: a.source || 'MediaStack',
+      pubDate: a.published_at
+    })) : null
   }
 };
 
 const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
 let apiFailures = {}; // Track recent failures
+
+// ============================================================
+// NEWS CACHING - Avoid redundant API calls
+// ============================================================
+const NEWS_CACHE = {};
+const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5 minute cache per country
+
+function getCachedNews(countryName) {
+  const cached = NEWS_CACHE[countryName];
+  if (cached && (Date.now() - cached.timestamp) < NEWS_CACHE_TTL) {
+    console.log(`Using cached news for ${countryName} (${Math.round((Date.now() - cached.timestamp) / 1000)}s old)`);
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedNews(countryName, data) {
+  NEWS_CACHE[countryName] = { data, timestamp: Date.now() };
+}
 
 // Category detection based on keywords
 function detectCategory(title, description) {
@@ -3531,45 +3574,51 @@ async function fetchLiveNews() {
     console.warn('RSS feeds failed:', error.message);
   }
 
-  // Fallback to NewsData API if RSS fails
-  try {
-    const api = NEWS_APIS.newsdata;
-    const response = await fetch(api.buildDailyUrl(api.key));
-    if (response.ok) {
-      const data = await response.json();
-      const results = api.parseResults(data);
-      if (results && results.length > 0) {
-        console.log('Fallback to NewsData API:', results.length, 'articles');
-        DAILY_BRIEFING = results.filter(article => {
-          const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-          return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
-        }).map(article => ({
-          time: timeAgo(article.pubDate),
-          category: detectCategory(article.title, article.description),
-          importance: 'medium',
-          headline: article.title,
-          source: formatSourceName(article.source_id),
-          url: article.link || '#'
-        }));
-        lastNewsUpdate = new Date();
-        if (currentTab === 'daily') renderSidebar();
-        updateNewsTimestamp();
-
-        // Dynamic risk: analyze fetched articles
-        if (typeof updateDynamicRisks === 'function') {
-          updateDynamicRisks(DAILY_BRIEFING);
+  // Fallback: try each backup API in sequence
+  const dailyApiOrder = ['gnews', 'newsdata', 'mediastack'];
+  for (const apiName of dailyApiOrder) {
+    try {
+      const api = NEWS_APIS[apiName];
+      if (!api || !api.key || !api.buildDailyUrl) continue;
+      console.log(`Trying ${apiName} for daily briefing...`);
+      const response = await fetch(api.buildDailyUrl(api.key));
+      if (response.ok) {
+        const data = await response.json();
+        const results = api.parseResults(data);
+        if (results && results.length > 0) {
+          console.log(`Fallback to ${apiName}:`, results.length, 'articles');
+          DAILY_BRIEFING = results.filter(article => {
+            const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+            return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+          }).map(article => ({
+            time: timeAgo(article.pubDate),
+            category: detectCategory(article.title, article.description),
+            importance: 'medium',
+            headline: article.title,
+            source: formatSourceName(article.source_id),
+            url: article.link || '#'
+          }));
+          lastNewsUpdate = new Date();
+          if (currentTab === 'daily') renderSidebar();
+          updateNewsTimestamp();
+          if (typeof updateDynamicRisks === 'function') {
+            updateDynamicRisks(DAILY_BRIEFING);
+          }
+          return;
         }
-        return;
       }
+    } catch (e) {
+      console.warn(`${apiName} fallback failed:`, e.message);
     }
-  } catch (e) {
-    console.warn('NewsData fallback failed:', e.message);
   }
 
-  // All sources failed
+  // All sources failed - keep existing briefing or use fallback
   console.error('All news sources failed');
+  if (DAILY_BRIEFING.length === 0) {
+    DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
+  }
   if (timestampEl) {
-    timestampEl.innerHTML = `<span style="color:#f97316;">●</span> News temporarily unavailable`;
+    timestampEl.innerHTML = `<span style="color:#f97316;">●</span> News temporarily unavailable · Using cached data`;
   }
 }
 
@@ -3656,42 +3705,82 @@ function isRelevantToCountry(title, description, countryName) {
     if (text.includes(kw)) return false;
   }
 
-  // Comprehensive demonyms for all major countries
+  // Comprehensive demonyms for ALL 195 countries
   const demonyms = {
     'Afghanistan': ['afghan', 'kabul', 'taliban'],
     'Albania': ['albanian', 'tirana'],
     'Algeria': ['algerian', 'algiers'],
+    'Andorra': ['andorran'],
+    'Angola': ['angolan', 'luanda'],
+    'Antigua and Barbuda': ['antiguan', 'barbudan'],
     'Argentina': ['argentine', 'argentinian', 'buenos aires'],
     'Armenia': ['armenian', 'yerevan'],
     'Australia': ['australian', 'canberra', 'sydney', 'melbourne'],
     'Austria': ['austrian', 'vienna'],
     'Azerbaijan': ['azerbaijani', 'baku'],
+    'Bahamas': ['bahamian', 'nassau'],
+    'Bahrain': ['bahraini', 'manama'],
     'Bangladesh': ['bangladeshi', 'dhaka'],
+    'Barbados': ['barbadian', 'bridgetown'],
     'Belarus': ['belarusian', 'minsk', 'lukashenko'],
     'Belgium': ['belgian', 'brussels'],
+    'Benin': ['beninese', 'porto-novo', 'cotonou'],
+    'Bhutan': ['bhutanese', 'thimphu'],
     'Bolivia': ['bolivian', 'la paz'],
+    'Bosnia and Herzegovina': ['bosnian', 'sarajevo'],
+    'Botswana': ['motswana', 'botswanan', 'gaborone'],
     'Brazil': ['brazilian', 'brasilia', 'rio', 'sao paulo', 'lula'],
+    'Brunei': ['bruneian', 'bandar seri begawan'],
     'Bulgaria': ['bulgarian', 'sofia'],
+    'Burkina Faso': ['burkinabe', 'ouagadougou'],
+    'Burundi': ['burundian', 'bujumbura', 'gitega'],
     'Cambodia': ['cambodian', 'phnom penh'],
+    'Cameroon': ['cameroonian', 'yaounde'],
     'Canada': ['canadian', 'ottawa', 'toronto', 'trudeau'],
+    'Cape Verde': ['cape verdean', 'praia'],
+    'Central African Republic': ['central african', 'bangui'],
+    'Chad': ['chadian', "n'djamena"],
     'Chile': ['chilean', 'santiago'],
     'China': ['chinese', 'beijing', 'xi jinping', 'ccp', 'prc'],
     'Colombia': ['colombian', 'bogota'],
+    'Comoros': ['comorian', 'moroni'],
+    'Democratic Republic of Congo': ['congolese', 'kinshasa', 'drc'],
+    'Republic of Congo': ['congo-brazzaville', 'brazzaville'],
+    'Costa Rica': ['costa rican', 'san jose'],
     'Croatia': ['croatian', 'zagreb'],
     'Cuba': ['cuban', 'havana'],
+    'Cyprus': ['cypriot', 'nicosia'],
     'Czech Republic': ['czech', 'prague'],
     'Denmark': ['danish', 'copenhagen'],
+    'Djibouti': ['djiboutian'],
+    'Dominica': ['dominican'],
+    'Dominican Republic': ['dominican republic', 'santo domingo'],
     'Ecuador': ['ecuadorian', 'quito'],
     'Egypt': ['egyptian', 'cairo', 'sisi'],
+    'El Salvador': ['salvadoran', 'san salvador', 'bukele'],
+    'Equatorial Guinea': ['equatoguinean', 'malabo'],
+    'Eritrea': ['eritrean', 'asmara'],
+    'Estonia': ['estonian', 'tallinn'],
+    'Eswatini': ['swazi', 'mbabane'],
     'Ethiopia': ['ethiopian', 'addis ababa'],
+    'Fiji': ['fijian', 'suva'],
     'Finland': ['finnish', 'helsinki'],
     'France': ['french', 'paris', 'macron', 'élysée'],
+    'Gabon': ['gabonese', 'libreville'],
+    'Gambia': ['gambian', 'banjul'],
     'Georgia': ['georgian', 'tbilisi'],
     'Germany': ['german', 'berlin', 'scholz', 'bundestag'],
+    'Ghana': ['ghanaian', 'accra'],
     'Greece': ['greek', 'athens'],
+    'Grenada': ['grenadian'],
     'Guatemala': ['guatemalan'],
+    'Guinea': ['guinean', 'conakry'],
+    'Guinea-Bissau': ['bissau-guinean', 'bissau'],
+    'Guyana': ['guyanese', 'georgetown'],
+    'Haiti': ['haitian', 'port-au-prince'],
     'Honduras': ['honduran', 'tegucigalpa'],
     'Hungary': ['hungarian', 'budapest', 'orban'],
+    'Iceland': ['icelandic', 'reykjavik'],
     'India': ['indian', 'delhi', 'mumbai', 'modi', 'bjp'],
     'Indonesia': ['indonesian', 'jakarta', 'jokowi'],
     'Iran': ['iranian', 'tehran', 'ayatollah', 'khamenei'],
@@ -3699,24 +3788,61 @@ function isRelevantToCountry(title, description, countryName) {
     'Ireland': ['irish', 'dublin'],
     'Israel': ['israeli', 'tel aviv', 'jerusalem', 'netanyahu', 'gaza', 'idf'],
     'Italy': ['italian', 'rome', 'meloni'],
+    'Ivory Coast': ['ivorian', 'abidjan', 'yamoussoukro'],
+    'Jamaica': ['jamaican', 'kingston'],
     'Japan': ['japanese', 'tokyo', 'kishida'],
     'Jordan': ['jordanian', 'amman'],
     'Kazakhstan': ['kazakh', 'astana', 'almaty'],
     'Kenya': ['kenyan', 'nairobi'],
-    'Kuwait': ['kuwaiti'],
+    'Kiribati': ['i-kiribati', 'tarawa'],
+    'Kosovo': ['kosovar', 'pristina'],
+    'Kuwait': ['kuwaiti', 'kuwait city'],
+    'Kyrgyzstan': ['kyrgyz', 'bishkek'],
+    'Laos': ['laotian', 'vientiane'],
+    'Latvia': ['latvian', 'riga'],
     'Lebanon': ['lebanese', 'beirut', 'hezbollah'],
+    'Lesotho': ['basotho', 'maseru'],
+    'Liberia': ['liberian', 'monrovia'],
     'Libya': ['libyan', 'tripoli'],
+    'Liechtenstein': ['liechtensteiner', 'vaduz'],
+    'Lithuania': ['lithuanian', 'vilnius'],
+    'Luxembourg': ['luxembourgish', 'luxembourger'],
+    'Madagascar': ['malagasy', 'antananarivo'],
+    'Malawi': ['malawian', 'lilongwe'],
     'Malaysia': ['malaysian', 'kuala lumpur'],
+    'Maldives': ['maldivian', 'male'],
+    'Mali': ['malian', 'bamako'],
+    'Malta': ['maltese', 'valletta'],
+    'Marshall Islands': ['marshallese', 'majuro'],
+    'Mauritania': ['mauritanian', 'nouakchott'],
+    'Mauritius': ['mauritian', 'port louis'],
     'Mexico': ['mexican', 'mexico city'],
-    'Morocco': ['moroccan', 'rabat'],
+    'Micronesia': ['micronesian', 'palikir'],
+    'Moldova': ['moldovan', 'chisinau'],
+    'Monaco': ['monegasque', 'monte carlo'],
+    'Mongolia': ['mongolian', 'ulaanbaatar'],
+    'Montenegro': ['montenegrin', 'podgorica'],
+    'Morocco': ['moroccan', 'rabat', 'casablanca'],
+    'Mozambique': ['mozambican', 'maputo'],
     'Myanmar': ['burmese', 'myanmar', 'yangon', 'junta'],
+    'Namibia': ['namibian', 'windhoek'],
+    'Nauru': ['nauruan'],
+    'Nepal': ['nepali', 'nepalese', 'kathmandu'],
     'Netherlands': ['dutch', 'amsterdam', 'the hague'],
     'New Zealand': ['new zealand', 'kiwi', 'wellington'],
+    'Nicaragua': ['nicaraguan', 'managua', 'ortega'],
+    'Niger': ['nigerien', 'niamey'],
     'Nigeria': ['nigerian', 'lagos', 'abuja'],
     'North Korea': ['north korean', 'pyongyang', 'kim jong', 'dprk'],
+    'North Macedonia': ['macedonian', 'skopje'],
     'Norway': ['norwegian', 'oslo'],
+    'Oman': ['omani', 'muscat'],
     'Pakistan': ['pakistani', 'islamabad', 'karachi'],
+    'Palau': ['palauan', 'ngerulmud'],
     'Palestine': ['palestinian', 'hamas', 'west bank', 'ramallah'],
+    'Panama': ['panamanian', 'panama city'],
+    'Papua New Guinea': ['papua new guinean', 'port moresby'],
+    'Paraguay': ['paraguayan', 'asuncion'],
     'Peru': ['peruvian', 'lima'],
     'Philippines': ['filipino', 'philippine', 'manila', 'marcos'],
     'Poland': ['polish', 'warsaw'],
@@ -3724,28 +3850,58 @@ function isRelevantToCountry(title, description, countryName) {
     'Qatar': ['qatari', 'doha'],
     'Romania': ['romanian', 'bucharest'],
     'Russia': ['russian', 'moscow', 'kremlin', 'putin'],
+    'Rwanda': ['rwandan', 'kigali'],
+    'Saint Kitts and Nevis': ['kittitian', 'nevisian', 'basseterre'],
+    'Saint Lucia': ['saint lucian', 'castries'],
+    'Saint Vincent and the Grenadines': ['vincentian'],
+    'Samoa': ['samoan', 'apia'],
+    'San Marino': ['sammarinese'],
+    'Sao Tome and Principe': ['santomean'],
     'Saudi Arabia': ['saudi', 'riyadh', 'mbs'],
+    'Senegal': ['senegalese', 'dakar'],
     'Serbia': ['serbian', 'belgrade'],
+    'Seychelles': ['seychellois', 'victoria'],
+    'Sierra Leone': ['sierra leonean', 'freetown'],
     'Singapore': ['singaporean'],
+    'Slovakia': ['slovak', 'bratislava'],
+    'Slovenia': ['slovenian', 'ljubljana'],
+    'Solomon Islands': ['solomon islander', 'honiara'],
+    'Somalia': ['somali', 'mogadishu'],
     'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town'],
     'South Korea': ['south korean', 'seoul', 'korean'],
+    'South Sudan': ['south sudanese', 'juba'],
     'Spain': ['spanish', 'madrid', 'barcelona'],
     'Sri Lanka': ['sri lankan', 'colombo'],
     'Sudan': ['sudanese', 'khartoum'],
+    'Suriname': ['surinamese', 'paramaribo'],
     'Sweden': ['swedish', 'stockholm'],
     'Switzerland': ['swiss', 'bern', 'zurich', 'geneva'],
     'Syria': ['syrian', 'damascus', 'assad'],
     'Taiwan': ['taiwanese', 'taipei'],
+    'Tajikistan': ['tajik', 'dushanbe'],
+    'Tanzania': ['tanzanian', 'dodoma', 'dar es salaam'],
     'Thailand': ['thai', 'bangkok'],
+    'Timor-Leste': ['timorese', 'east timor', 'dili'],
+    'Togo': ['togolese', 'lome'],
+    'Tonga': ['tongan', "nuku'alofa"],
+    'Trinidad and Tobago': ['trinidadian', 'tobagonian', 'port of spain'],
     'Tunisia': ['tunisian', 'tunis'],
     'Turkey': ['turkish', 'ankara', 'istanbul', 'erdogan'],
+    'Turkmenistan': ['turkmen', 'ashgabat'],
+    'Tuvalu': ['tuvaluan', 'funafuti'],
+    'Uganda': ['ugandan', 'kampala'],
     'Ukraine': ['ukrainian', 'kyiv', 'zelensky'],
     'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi'],
     'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster'],
     'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
+    'Uruguay': ['uruguayan', 'montevideo'],
+    'Uzbekistan': ['uzbek', 'tashkent'],
+    'Vanuatu': ['ni-vanuatu', 'port vila'],
     'Venezuela': ['venezuelan', 'caracas', 'rodriguez', 'maduro'],
     'Vietnam': ['vietnamese', 'hanoi', 'ho chi minh'],
-    'Yemen': ['yemeni', 'sanaa', 'houthi']
+    'Yemen': ['yemeni', 'sanaa', 'houthi'],
+    'Zambia': ['zambian', 'lusaka'],
+    'Zimbabwe': ['zimbabwean', 'harare']
   };
 
   // Check if country name or demonym appears in title OR description
@@ -3761,75 +3917,138 @@ function isRelevantToCountry(title, description, countryName) {
   return inDesc;
 }
 
-// Fetch country-specific news using Google News RSS (FREE!)
+// Helper: format article array for display
+function formatArticlesForDisplay(articles, countryName) {
+  const relevant = articles.filter(a => isRelevantToCountry(a.title, a.description, countryName));
+  const toUse = relevant.length > 0 ? relevant : articles;
+  return toUse.slice(0, 15).map(article => ({
+    headline: article.title,
+    source: formatSourceName(article.source_id),
+    time: timeAgo(article.pubDate),
+    url: article.link || '#',
+    category: detectCategory(article.title, article.description)
+  }));
+}
+
+// Helper: try a news API with timeout
+async function tryNewsAPI(apiName, url, parseResults, timeoutMs = 8000) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+    const data = await response.json();
+    const results = parseResults(data);
+    if (results && results.length > 0) {
+      console.log(`${apiName} returned ${results.length} results`);
+      return results;
+    }
+  } catch (error) {
+    console.warn(`${apiName} failed:`, error.message);
+  }
+  return null;
+}
+
+// Fetch country-specific news with smart caching and multi-source fallback
 async function fetchCountryNews(countryName) {
   console.log(`Fetching news for ${countryName}...`);
 
-  // Try Google News RSS first (free, unlimited)
+  // 1. CHECK CACHE FIRST - avoid redundant API calls
+  const cached = getCachedNews(countryName);
+  if (cached) return cached;
+
+  // 2. CHECK DAILY_BRIEFING - already-fetched global news may have relevant articles
+  if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
+    const briefingRelevant = DAILY_BRIEFING.filter(article =>
+      isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
+    );
+    if (briefingRelevant.length >= 2) {
+      console.log(`Found ${briefingRelevant.length} relevant articles in DAILY_BRIEFING for ${countryName}`);
+      const result = briefingRelevant.slice(0, 10).map(article => ({
+        headline: article.title || article.headline,
+        source: formatSourceName(article.source_id || article.source || 'News'),
+        time: timeAgo(article.pubDate || article.time),
+        url: article.link || article.url || '#',
+        category: article.category || detectCategory(article.title || article.headline, article.description || '')
+      }));
+      setCachedNews(countryName, result);
+      return result;
+    }
+  }
+
+  // 3. Try Google News RSS (free, unlimited)
   try {
     const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
-
     if (articles && articles.length > 0) {
       console.log(`Google News RSS returned ${articles.length} results for ${countryName}`);
-
-      // Filter for relevant articles about this country
-      const relevantArticles = articles.filter(article =>
-        isRelevantToCountry(article.title, article.description, countryName)
-      );
-
-      // Use filtered results if we have any, otherwise fall back to all results
-      const articlesToUse = relevantArticles.length > 0 ? relevantArticles : articles;
-
-      return articlesToUse.slice(0, 15).map(article => ({
-        headline: article.title,
-        source: formatSourceName(article.source_id),
-        time: timeAgo(article.pubDate),
-        url: article.link || '#',
-        category: detectCategory(article.title, article.description)
-      }));
+      const result = formatArticlesForDisplay(articles, countryName);
+      if (result.length > 0) { setCachedNews(countryName, result); return result; }
     }
   } catch (error) {
     console.warn('Google News RSS failed:', error.message);
   }
 
-  // Fallback to NewsData API
+  // 4. Try backup APIs in sequence (with timeout protection)
+  const apiOrder = ['gnews', 'newsdata', 'mediastack'];
+  for (const apiName of apiOrder) {
+    const api = NEWS_APIS[apiName];
+    if (!api || !api.key) continue;
+
+    // Skip APIs that recently failed (backoff for 5 minutes)
+    if (apiFailures[apiName] && (Date.now() - apiFailures[apiName]) < 5 * 60 * 1000) continue;
+
+    const url = api.buildUrl(api.key, countryName);
+    const results = await tryNewsAPI(apiName, url, api.parseResults);
+
+    if (results) {
+      const formatted = formatArticlesForDisplay(results, countryName);
+      if (formatted.length > 0) { setCachedNews(countryName, formatted); return formatted; }
+    } else {
+      apiFailures[apiName] = Date.now(); // Mark this API as temporarily failed
+    }
+  }
+
+  // 5. Try broader regional search via Google News
   try {
-    const api = NEWS_APIS.newsdata;
-    if (api && api.key) {
-      const url = api.buildUrl(api.key, countryName);
-      const response = await fetch(url);
-
-      if (response.ok) {
-        const data = await response.json();
-        const results = api.parseResults(data);
-
-        if (results && results.length > 0) {
-          console.log(`NewsData returned ${results.length} results for ${countryName}`);
-
-          const relevantArticles = results.filter(article =>
-            isRelevantToCountry(article.title, article.description, countryName)
-          );
-
-          const articlesToUse = relevantArticles.length > 0 ? relevantArticles : results;
-
-          return articlesToUse.slice(0, 15).map(article => ({
-            headline: article.title,
-            source: formatSourceName(article.source_id),
-            time: timeAgo(article.pubDate),
-            url: article.link || '#',
-            category: detectCategory(article.title, article.description)
-          }));
-        }
+    const countryData = COUNTRIES[countryName];
+    if (countryData && countryData.region) {
+      const regionQuery = `${countryName} ${countryData.region} news`;
+      const regionUrl = RSS_FEEDS.search(regionQuery);
+      const articles = await fetchRSS(regionUrl, 'Google News');
+      if (articles && articles.length > 0) {
+        const result = formatArticlesForDisplay(articles, countryName);
+        if (result.length > 0) { setCachedNews(countryName, result); return result; }
       }
     }
   } catch (error) {
-    console.warn('NewsData API failed:', error.message);
+    console.warn('Regional search failed:', error.message);
   }
 
-  // All sources failed
-  console.error('All news sources failed for', countryName);
-  return { error: 'Unable to fetch news. Please try again.' };
+  // 6. Last resort: pull any DAILY_BRIEFING articles (even just 1)
+  if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
+    const anyRelevant = DAILY_BRIEFING.filter(article =>
+      isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
+    );
+    if (anyRelevant.length > 0) {
+      const result = anyRelevant.slice(0, 10).map(article => ({
+        headline: article.title || article.headline,
+        source: formatSourceName(article.source_id || article.source || 'News'),
+        time: timeAgo(article.pubDate || article.time),
+        url: article.link || article.url || '#',
+        category: article.category || detectCategory(article.title || article.headline, article.description || '')
+      }));
+      setCachedNews(countryName, result);
+      return result;
+    }
+  }
+
+  // 7. No news found from any source - cache the empty result too to avoid hammering APIs
+  console.log(`No news found for ${countryName} from any source`);
+  const emptyResult = [];
+  setCachedNews(countryName, emptyResult);
+  return emptyResult;
 }
 
 // Historical risk trends (Mar 2025 - Feb 2026) based on real events
@@ -4488,10 +4707,7 @@ function openModal(name) {
   fetchCountryNews(name).then(result => {
     const newsContainer = document.getElementById('countryNewsContent');
     if (newsContainer) {
-      // Check if it's an error object
-      if (result && result.error) {
-        newsContainer.innerHTML = `<div style="color:#f59e0b;font-size:11px;">${result.error}</div>`;
-      } else if (result && Array.isArray(result) && result.length > 0) {
+      if (result && Array.isArray(result) && result.length > 0) {
         newsContainer.innerHTML = result.map(n => `
           <div class="news-item">
             <div class="news-meta">
@@ -4503,8 +4719,10 @@ function openModal(name) {
             <a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>
           </div>
         `).join('');
+      } else if (result && result.error) {
+        newsContainer.innerHTML = `<div style="color:#f59e0b;font-size:11px;">${result.error}</div>`;
       } else {
-        newsContainer.innerHTML = '<div style="color:#6b7280;font-size:11px;">No recent news found for this country.</div>';
+        newsContainer.innerHTML = '<div style="color:#6b7280;font-size:11px;">No major international news coverage for this country at this time. This typically indicates a period of relative stability.</div>';
       }
     }
   });
