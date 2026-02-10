@@ -1882,33 +1882,202 @@ function categorizeNewsByRegion(articles) {
   return regionNews;
 }
 
-// Generate region summary based on articles
-function generateRegionSummary(region, articles) {
-  if (articles.length === 0) return 'No significant developments reported in the past 24 hours.';
+// ============================================================
+// BRIEFING NARRATIVE ENGINE - Generate prose summaries from headlines
+// ============================================================
 
-  const categories = {};
-  articles.forEach(a => {
-    const cat = a.category || 'WORLD';
-    categories[cat] = (categories[cat] || 0) + 1;
-  });
+// Extract key entities (countries, orgs) from headline text
+function extractEntities(text) {
+  const t = text.toLowerCase();
+  const entities = [];
+  const allCountries = Object.keys(COUNTRIES);
+  allCountries.forEach(c => { if (t.includes(c.toLowerCase())) entities.push(c); });
+  // Check common shorthand/orgs
+  const orgs = { 'NATO': /\bnato\b/i, 'EU': /\beu\b|\beuropean union\b/i, 'UN': /\bun\b|\bunited nations\b/i,
+    'G7': /\bg7\b/i, 'BRICS': /\bbrics\b/i, 'IMF': /\bimf\b/i, 'OPEC': /\bopec\b/i };
+  Object.entries(orgs).forEach(([name, rx]) => { if (rx.test(text)) entities.push(name); });
+  return [...new Set(entities)];
+}
 
-  const topCategory = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
-  const highPriority = articles.filter(a => a.importance === 'high').length;
+// Classify a headline's tone/action
+function classifyHeadline(headline) {
+  const h = headline.toLowerCase();
+  if (h.match(/attack|strike|bomb|shell|raid|kill|dead|casualt|wound|massacre|assault/)) return 'violence';
+  if (h.match(/ceasefire|peace|truce|agreement|deal|negotiat|talks|summit|diplomat/)) return 'diplomacy';
+  if (h.match(/protest|demonstrat|rally|unrest|riot|dissent|opposition/)) return 'unrest';
+  if (h.match(/sanction|embargo|tariff|ban|restrict|penalt/)) return 'sanctions';
+  if (h.match(/elect|vote|ballot|campaign|inaugurati|sworn|president|prime minister/)) return 'politics';
+  if (h.match(/economy|market|stock|trade|gdp|inflation|recession|growth|rate/)) return 'economic';
+  if (h.match(/humanitarian|refugee|famine|aid|crisis|disaster|flood|earthquake/)) return 'humanitarian';
+  if (h.match(/military|troops|deploy|defense|weapon|missile|nuclear|navy|army/)) return 'military';
+  if (h.match(/tech|ai |cyber|chip|data|digital|space/)) return 'technology';
+  if (h.match(/climate|carbon|emission|energy|oil|gas|renewable/)) return 'energy';
+  return 'general';
+}
 
-  let summary = '';
+// Generate a 3-5 sentence narrative summary for a region
+function generateRegionNarrative(region, articles) {
+  if (articles.length === 0) return 'No significant developments were reported in this region over the past 24 hours.';
 
-  if (highPriority > 0) {
-    summary += `${highPriority} high-priority development${highPriority > 1 ? 's' : ''} reported. `;
+  // Classify all headlines
+  const classified = articles.map(a => ({
+    headline: a.headline || a.title || '',
+    source: a.source || '',
+    category: a.category || 'WORLD',
+    importance: a.importance || 'medium',
+    type: classifyHeadline(a.headline || a.title || ''),
+    entities: extractEntities(a.headline || a.title || '')
+  }));
+
+  const high = classified.filter(a => a.importance === 'high');
+  const types = {};
+  classified.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
+  const topTypes = Object.entries(types).sort((a, b) => b[1] - a[1]);
+
+  // Collect all mentioned entities for cross-referencing
+  const allEntities = [...new Set(classified.flatMap(a => a.entities))];
+
+  // Build narrative sentences
+  const sentences = [];
+
+  // Sentence 1: Lead with the most critical/numerous theme
+  const lead = topTypes[0];
+  const leadArticles = classified.filter(a => a.type === lead[0]);
+  const leadHeadline = (high.length > 0 ? high[0] : leadArticles[0]).headline;
+
+  const themeIntros = {
+    'violence': 'Escalating violence dominated developments',
+    'diplomacy': 'Diplomatic activity was at the forefront',
+    'unrest': 'Civil unrest and political tensions intensified',
+    'sanctions': 'Economic sanctions and trade restrictions shaped the landscape',
+    'politics': 'Political developments drove the news cycle',
+    'economic': 'Economic concerns took center stage',
+    'humanitarian': 'Humanitarian pressures continued to mount',
+    'military': 'Military posturing and defense matters were prominent',
+    'technology': 'Technology and cyber developments drew attention',
+    'energy': 'Energy and climate issues were in focus',
+    'general': 'Several notable developments unfolded'
+  };
+
+  sentences.push(`${themeIntros[lead[0]] || 'Several developments unfolded'} in ${region}, with ${leadArticles.length > 1 ? 'multiple reports' : 'reports'} highlighting ${cleanHeadlineForProse(leadHeadline)}.`);
+
+  // Sentence 2: Reference specific story with source attribution
+  if (classified.length > 1) {
+    const second = classified.find(a => a.type !== lead[0]) || classified[1];
+    if (second) {
+      const sourceRef = second.source ? `, according to ${second.source}` : '';
+      sentences.push(`Meanwhile, ${cleanHeadlineForProse(second.headline)}${sourceRef}.`);
+    }
   }
 
-  if (topCategory) {
-    const catName = topCategory[0].charAt(0) + topCategory[0].slice(1).toLowerCase();
-    summary += `Primary focus: ${catName} (${topCategory[1]} ${topCategory[1] > 1 ? 'stories' : 'story'}). `;
+  // Sentence 3: Additional context — second theme or escalation/de-escalation
+  if (topTypes.length > 1 && topTypes[1][1] >= 2) {
+    const secondTheme = topTypes[1][0];
+    const themeNames = {
+      'violence': 'security concerns', 'diplomacy': 'diplomatic efforts', 'unrest': 'public unrest',
+      'sanctions': 'sanctions developments', 'politics': 'political shifts', 'economic': 'economic pressures',
+      'humanitarian': 'humanitarian needs', 'military': 'military movements', 'technology': 'tech developments',
+      'energy': 'energy dynamics', 'general': 'broader developments'
+    };
+    sentences.push(`${themeNames[secondTheme] || 'Other developments'} also featured prominently, with ${topTypes[1][1]} related updates tracked across the region.`);
+  } else if (classified.length > 2) {
+    const third = classified[2];
+    sentences.push(`Additionally, reports indicated ${cleanHeadlineForProse(third.headline)}.`);
   }
 
-  summary += `${articles.length} total update${articles.length > 1 ? 's' : ''} in the past 24 hours.`;
+  // Sentence 4: Entities/actors involved
+  if (allEntities.length > 1) {
+    const entityStr = allEntities.length <= 3 ? allEntities.join(' and ') : allEntities.slice(0, 3).join(', ') + ' and others';
+    sentences.push(`Key actors in the region's developments include ${entityStr}.`);
+  }
 
-  return summary;
+  // Sentence 5: High-priority urgency note if warranted
+  if (high.length >= 2) {
+    sentences.push(`With ${high.length} high-priority developments, the situation in ${region} warrants close monitoring in the coming days.`);
+  } else if (articles.length >= 5) {
+    sentences.push(`The volume of reporting from this region suggests an elevated level of activity that bears continued attention.`);
+  }
+
+  return sentences.slice(0, 5).join(' ');
+}
+
+// Clean a headline for embedding in prose (lowercase start, remove trailing punctuation quirks)
+function cleanHeadlineForProse(headline) {
+  if (!headline) return 'ongoing developments';
+  // Strip source prefixes like "Reuters: " or "BBC - "
+  let clean = headline.replace(/^[A-Z][A-Za-z\s]+[\-:]\s*/, '');
+  // Lowercase the first letter for mid-sentence embedding
+  clean = clean.charAt(0).toLowerCase() + clean.slice(1);
+  // Remove trailing periods if present (we add our own)
+  clean = clean.replace(/\.\s*$/, '');
+  return clean;
+}
+
+// Generate a Global Ramifications section tying all regions together
+function generateGlobalRamifications(regionData) {
+  const allArticles = regionData.flatMap(([_, arts]) => arts);
+  if (allArticles.length === 0) return '';
+
+  const classified = allArticles.map(a => ({
+    headline: a.headline || a.title || '',
+    type: classifyHeadline(a.headline || a.title || ''),
+    category: a.category || 'WORLD',
+    importance: a.importance || 'medium',
+    entities: extractEntities(a.headline || a.title || '')
+  }));
+
+  const high = classified.filter(a => a.importance === 'high');
+  const types = {};
+  classified.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
+  const topTypes = Object.entries(types).sort((a, b) => b[1] - a[1]);
+  const activeRegions = regionData.filter(([_, arts]) => arts.length > 0).map(([r]) => r);
+  const allEntities = [...new Set(classified.flatMap(a => a.entities))];
+
+  const sentences = [];
+
+  // Sentence 1: Overall global temperature
+  if (high.length >= 5) {
+    sentences.push(`The global risk environment remains significantly elevated, with ${high.length} high-priority developments reported across ${activeRegions.length} regions in the past 24 hours.`);
+  } else if (high.length >= 2) {
+    sentences.push(`The global security landscape showed notable activity over the past 24 hours, with ${high.length} high-priority developments tracked across multiple regions.`);
+  } else {
+    sentences.push(`Global developments over the past 24 hours reflected a ${allArticles.length > 20 ? 'busy' : 'relatively measured'} news cycle, with ${allArticles.length} updates tracked across ${activeRegions.length} regions.`);
+  }
+
+  // Sentence 2: Dominant global theme
+  if (topTypes.length > 0) {
+    const themeDescriptions = {
+      'violence': 'armed conflict and security incidents', 'diplomacy': 'diplomatic negotiations and international talks',
+      'unrest': 'civil unrest and political instability', 'sanctions': 'economic sanctions and trade policy',
+      'politics': 'political transitions and governance', 'economic': 'macroeconomic shifts and market pressures',
+      'humanitarian': 'humanitarian crises and aid operations', 'military': 'military posturing and defense developments',
+      'technology': 'technology competition and cyber activity', 'energy': 'energy markets and climate policy',
+      'general': 'a broad mix of geopolitical activity'
+    };
+    const topTheme = themeDescriptions[topTypes[0][0]] || 'geopolitical developments';
+    sentences.push(`The dominant theme globally was ${topTheme}, accounting for ${topTypes[0][1]} of the ${allArticles.length} total reports monitored.`);
+  }
+
+  // Sentence 3: Cross-regional linkages
+  const conflictRegions = regionData.filter(([_, arts]) => arts.some(a => a.importance === 'high')).map(([r]) => r);
+  if (conflictRegions.length >= 2) {
+    sentences.push(`Elevated activity was observed simultaneously in ${conflictRegions.slice(0, 3).join(', ')}, suggesting interconnected pressures across these theaters.`);
+  }
+
+  // Sentence 4: Key actors on the global stage
+  const majorPowers = allEntities.filter(e => ['United States', 'China', 'Russia', 'EU', 'NATO', 'UN', 'United Kingdom', 'France', 'Germany', 'India', 'Iran', 'Israel'].includes(e));
+  if (majorPowers.length >= 2) {
+    sentences.push(`Major powers active in today's developments include ${majorPowers.slice(0, 4).join(', ')}, underscoring the geopolitical significance of the events reported.`);
+  }
+
+  // Sentence 5: Forward-looking
+  if (high.length >= 3) {
+    sentences.push(`Given the concentration of high-priority events, the coming 48 hours will be critical in determining whether current tensions escalate or stabilize.`);
+  } else {
+    sentences.push(`While no single flashpoint dominated the cycle, the breadth of activity across regions highlights the importance of sustained monitoring.`);
+  }
+
+  return sentences.slice(0, 5).join(' ');
 }
 
 // Render a single briefing's regional content (reusable for current + past)
@@ -1932,33 +2101,40 @@ function renderBriefingContent(articles) {
   }
 
   let html = '';
+
+  // Regional narrative summaries
   sortedRegions.forEach(([region, arts]) => {
     const highPriority = arts.filter(a => a.importance === 'high');
-    const topStories = [...highPriority, ...arts.filter(a => a.importance !== 'high')].slice(0, 3);
+    const narrative = generateRegionNarrative(region, arts);
 
     html += `
-      <div class="newsletter-region">
+      <div class="newsletter-region" style="margin-bottom:16px;">
         <div class="newsletter-region-header">
           <span class="newsletter-region-name">${region.toUpperCase()}</span>
           ${highPriority.length > 0 ? `<span style="font-size:8px;background:#7f1d1d;color:#fca5a5;padding:2px 6px;border-radius:3px;">${highPriority.length} CRITICAL</span>` : ''}
           <span class="newsletter-region-count">${arts.length} update${arts.length > 1 ? 's' : ''}</span>
         </div>
-        <div class="newsletter-summary">${generateRegionSummary(region, arts)}</div>
-        <div class="newsletter-stories">
-          ${topStories.map(story => `
-            <div class="newsletter-story ${story.importance || 'medium'}">
-              <div class="newsletter-story-headline">${story.headline}</div>
-              <div class="newsletter-story-meta">
-                <span class="card-cat ${story.category}" style="font-size:7px;padding:1px 4px;">${story.category}</span>
-                <span>${story.source}</span>
-                <span>${story.time}</span>
-              </div>
-            </div>
-          `).join('')}
+        <div style="font-size:11px;color:#c9cdd4;line-height:1.7;padding:8px 12px 12px;letter-spacing:0.01em;">
+          ${narrative}
         </div>
       </div>
     `;
   });
+
+  // Global Ramifications section
+  const ramifications = generateGlobalRamifications(sortedRegions);
+  if (ramifications) {
+    html += `
+      <div style="margin-top:8px;border-top:1px solid #1f2937;padding-top:14px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%);border-left:3px solid #06b6d4;margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:700;color:#06b6d4;letter-spacing:1px;">GLOBAL RAMIFICATIONS</span>
+        </div>
+        <div style="font-size:11px;color:#c9cdd4;line-height:1.7;padding:8px 12px 12px;letter-spacing:0.01em;">
+          ${ramifications}
+        </div>
+      </div>
+    `;
+  }
 
   return html;
 }
