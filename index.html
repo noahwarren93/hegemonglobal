@@ -5091,9 +5091,6 @@ function renderSidebar() {
       html += `<button onclick="loadMoreNews()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#1f2937 0%,#111827 100%);border:1px solid #374151;border-radius:8px;color:#9ca3af;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;">LOAD MORE (${DAILY_BRIEFING.length - newsDisplayCount} remaining)</button>`;
     }
 
-    // Past briefings (collapsible dropdowns)
-    html += renderPastBriefingsHTML();
-
     content.innerHTML = html;
   } else if (currentTab === 'forecast') {
     content.innerHTML = FORECASTS.map(f => `
