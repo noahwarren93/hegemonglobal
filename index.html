@@ -359,7 +359,8 @@
       <button class="tab active" data-tab="daily">Daily</button>
       <button class="tab" data-tab="newsletter">Brief</button>
       <button class="tab" data-tab="forecast">Forecast</button>
-      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="events">Watchlist</button>
+      <button class="tab" data-tab="horizon">Horizon</button>
       <button class="tab" data-tab="elections">Elections</button>
       <button class="tab" data-tab="search">Search</button>
     </div>
@@ -1795,6 +1796,54 @@ const FORECASTS = [
   { region: 'Sahel Africa', risk: 'extreme', current: 'Military coups across region. Wagner/Africa Corps presence expanding. Jihadi groups gaining ground.', forecast: 'Further destabilization likely. Western influence declining. Watch for spillover effects into coastal West Africa.', indicators: [{ text: 'Instability', dir: 'up' }, { text: 'Terrorism', dir: 'up' }, { text: 'Migration', dir: 'up' }] },
   { region: 'Global Economy', risk: 'stormy', current: 'Mixed signals with inflation cooling but debt concerns rising. China slowdown affects global growth.', forecast: 'Soft landing increasingly likely in US/EU. China structural challenges persist. Watch for emerging market debt crises.', indicators: [{ text: 'Inflation', dir: 'down' }, { text: 'Growth', dir: 'stable' }, { text: 'Debt Risk', dir: 'up' }] },
   { region: 'Climate Hotspots', risk: 'severe', current: 'Record temperatures, extreme weather events increasing. COP commitments falling short.', forecast: 'More frequent climate disasters expected. Watch for climate migration from vulnerable regions and food security impacts.', indicators: [{ text: 'Extreme Weather', dir: 'up' }, { text: 'Adaptation', dir: 'stable' }, { text: 'Emissions', dir: 'up' }] }
+];
+
+// ============================================================
+// HORIZON - Upcoming Geopolitical Events (Feb 2026 - Feb 2027)
+// ============================================================
+const HORIZON_EVENTS = [
+  { date: '2026-02-05', name: 'New START Treaty Expiration', location: 'Global', category: 'treaty', description: 'US-Russia nuclear arms treaty expires — first time since 1970s with no binding limits on strategic nuclear forces' },
+  { date: '2026-02-12', name: 'Bangladesh Constitutional Referendum & Election', location: 'Dhaka, Bangladesh', category: 'election', description: 'Constitutional referendum on July Charter reforms and parliamentary election under interim government' },
+  { date: '2026-02-12', name: 'EU Informal Leaders Retreat', location: 'Brussels, EU', category: 'summit', description: 'EU leaders convene to discuss single market strengthening and economic competitiveness strategy' },
+  { date: '2026-02-14', name: 'African Union Assembly (39th Summit)', location: 'Addis Ababa, Ethiopia', category: 'summit', description: 'Annual AU heads-of-state summit focusing on Agenda 2063 development priorities across the continent' },
+  { date: '2026-02-15', name: 'France Municipal Elections (Round 1)', location: 'France', category: 'election', description: 'First round of mayoral elections across French municipalities — key indicator ahead of 2027 presidential race' },
+  { date: '2026-02-22', name: 'France Municipal Elections (Round 2)', location: 'France', category: 'election', description: 'Final round determining new mayors in major French cities with national political implications' },
+  { date: '2026-02-23', name: 'ICC Duterte Confirmation Hearing', location: 'The Hague, Netherlands', category: 'legal', description: 'International Criminal Court hearing on charges against former Philippine President Rodrigo Duterte' },
+  { date: '2026-03-08', name: 'Colombia Parliamentary Elections', location: 'Bogotá, Colombia', category: 'election', description: 'Election of 188 House members with primaries determining presidential candidates for May vote' },
+  { date: '2026-03-19', name: 'European Council Summit', location: 'Brussels, EU', category: 'summit', description: 'Quarterly meeting of EU heads of state setting strategic direction on defense, trade, and enlargement' },
+  { date: '2026-04-13', name: 'IMF / World Bank Spring Meetings', location: 'Washington D.C., USA', category: 'economic', description: 'Annual spring meetings addressing global economic outlook, debt sustainability, and development finance' },
+  { date: '2026-04-27', name: 'NPT Review Conference Opens', location: 'New York, USA', category: 'treaty', description: 'Eleventh Nuclear Non-Proliferation Treaty review — critical amid New START expiration and rising nuclear tensions' },
+  { date: '2026-05-08', name: '48th ASEAN Leaders Summit', location: 'Cebu, Philippines', category: 'summit', description: 'ASEAN summit under Philippine chairmanship addressing South China Sea disputes and economic integration' },
+  { date: '2026-05-10', name: 'Lebanese Parliamentary Elections', location: 'Beirut, Lebanon', category: 'election', description: 'First parliamentary elections since Hezbollah\'s weakening — 128 seats contested amid political realignment' },
+  { date: '2026-05-22', name: 'NPT Review Conference Concludes', location: 'New York, USA', category: 'treaty', description: 'Final negotiated outcome on nuclear disarmament and non-proliferation commitments for the next cycle' },
+  { date: '2026-05-31', name: 'Colombia Presidential Election', location: 'Bogotá, Colombia', category: 'election', description: 'Presidential vote where incumbent Petro is barred from re-election — direction of Latin American left at stake' },
+  { date: '2026-06-01', name: 'Ethiopia General Election', location: 'Addis Ababa, Ethiopia', category: 'election', description: 'Seventh national election with digital voter registration amid ongoing post-Tigray recovery efforts' },
+  { date: '2026-06-07', name: 'Armenia Parliamentary Election', location: 'Yerevan, Armenia', category: 'election', description: 'Parliamentary elections under PM Pashinyan — crucial for South Caucasus stability and Russia-West alignment' },
+  { date: '2026-06-15', name: '52nd G7 Summit', location: 'Évian-les-Bains, France', category: 'summit', description: 'Leaders of advanced democracies convene on Ukraine, China trade, AI governance, and climate commitments' },
+  { date: '2026-06-26', name: 'RIMPAC 2026 Begins', location: 'Hawaii, USA', category: 'military', description: 'World\'s largest multinational maritime exercise — 29 nations, 25,000+ personnel signaling Indo-Pacific readiness' },
+  { date: '2026-06-30', name: 'UK-EU TCA Energy & Fishing Provisions Expire', location: 'Global', category: 'treaty', description: 'Brexit-era energy cooperation and fishing access provisions expire — renewal negotiations critical for both sides' },
+  { date: '2026-07-01', name: 'USMCA Six-Year Review Window Opens', location: 'Global', category: 'trade', description: 'Mandatory review of US-Mexico-Canada free trade agreement begins — potential renegotiation of key provisions' },
+  { date: '2026-07-07', name: 'NATO Summit', location: 'Ankara, Turkey', category: 'summit', description: 'Alliance leaders summit at Beştepe Presidential Complex addressing defense spending, Ukraine, and Arctic strategy' },
+  { date: '2026-08-01', name: 'BRICS Summit (Expected)', location: 'New Delhi, India', category: 'summit', description: '18th BRICS leaders summit under Indian chairmanship — expanded bloc testing cohesion on trade and dedollarization' },
+  { date: '2026-08-13', name: 'Zambia General Election', location: 'Lusaka, Zambia', category: 'election', description: 'Presidential, parliamentary, and local elections — test of democratic consolidation in Southern Africa' },
+  { date: '2026-08-30', name: 'Haiti Presidential Election (Round 1)', location: 'Port-au-Prince, Haiti', category: 'election', description: 'Haiti\'s first general election in a decade amid ongoing gang violence and security crisis' },
+  { date: '2026-09-13', name: 'Sweden General Election', location: 'Stockholm, Sweden', category: 'election', description: 'Riksdag election with 349 seats — test of right-wing coalition and NATO-era defense priorities' },
+  { date: '2026-09-15', name: 'UN General Assembly (81st Session Opens)', location: 'New York, USA', category: 'summit', description: 'Annual UNGA high-level segment with world leaders addressing conflicts, climate, and reform of multilateral institutions' },
+  { date: '2026-09-18', name: 'Russia State Duma Elections Begin', location: 'Moscow, Russia', category: 'election', description: 'Three-day voting for State Duma and 39 regional assemblies — managed elections amid ongoing Ukraine war' },
+  { date: '2026-10-04', name: 'Brazil General Election (Round 1)', location: 'Brasília, Brazil', category: 'election', description: 'Presidential, congressional, and gubernatorial elections — Lula seeks fourth term amid polarized electorate' },
+  { date: '2026-10-09', name: 'IMF / World Bank Annual Meetings', location: 'Bangkok, Thailand', category: 'economic', description: 'Annual meetings addressing global financial stability, emerging market debt, and development priorities' },
+  { date: '2026-10-09', name: 'EU Russia Sanctions Renewal Deadline', location: 'Brussels, EU', category: 'sanctions', description: 'Expiration deadline for EU restrictive measures on Russian destabilizing actions — renewal vote required' },
+  { date: '2026-10-25', name: 'Brazil General Election (Runoff)', location: 'Brasília, Brazil', category: 'election', description: 'Presidential and gubernatorial runoff if no first-round majority — could reshape Latin America\'s largest economy' },
+  { date: '2026-10-31', name: 'EU ISIL/Al-Qaeda Sanctions Renewal', location: 'Brussels, EU', category: 'sanctions', description: 'Renewal deadline for EU counterterrorism sanctions regime targeting ISIL (Da\'esh) and Al-Qaeda networks' },
+  { date: '2026-11-03', name: 'United States Midterm Elections', location: 'United States', category: 'election', description: 'All 435 House seats and 35 Senate seats contested — referendum on Trump\'s second term and Congressional control' },
+  { date: '2026-11-09', name: 'COP31 Climate Conference Opens', location: 'Antalya, Turkey', category: 'summit', description: 'UN Climate Change Conference with Australia leading negotiations on emissions targets and climate finance' },
+  { date: '2026-11-10', name: '49th ASEAN Leaders Summit', location: 'Manila, Philippines', category: 'summit', description: 'Second ASEAN summit of the year addressing regional security architecture and economic integration' },
+  { date: '2026-11-18', name: 'APEC Economic Leaders Meeting', location: 'Shenzhen, China', category: 'summit', description: 'Asia-Pacific summit in China\'s tech hub — US-China dynamics and trade architecture in focus' },
+  { date: '2026-11-20', name: 'COP31 Climate Conference Concludes', location: 'Antalya, Turkey', category: 'summit', description: 'Final negotiated climate commitments expected on emissions reduction timelines and developing nation finance' },
+  { date: '2026-12-06', name: 'Haiti Presidential Election (Runoff)', location: 'Port-au-Prince, Haiti', category: 'election', description: 'Runoff round to determine Haiti\'s first elected president in years — stability of Caribbean at stake' },
+  { date: '2026-12-14', name: 'G20 Leaders Summit', location: 'Miami, USA', category: 'summit', description: 'Summit of world\'s largest economies under US presidency — trade, AI regulation, and development on the agenda' },
+  { date: '2027-01-01', name: 'EU Russian LNG Ban Takes Full Effect', location: 'EU', category: 'sanctions', description: 'Complete ban on Russian LNG imports for long-term contracts — reshapes European energy supply chains' },
+  { date: '2027-02-07', name: 'Haiti Presidential Inauguration', location: 'Port-au-Prince, Haiti', category: 'election', description: 'Inauguration of newly elected Haitian president — first democratic transfer of power in over a decade' }
 ];
 
 // NEWSLETTER SYSTEM
@@ -3731,14 +3780,12 @@ function buildSanctionsSection(countryName) {
   const hasBy = data.by && data.by.length > 0;
   const hasSanctions = hasOn || hasBy;
 
-  const severityLabel = data.severity.charAt(0).toUpperCase() + data.severity.slice(1);
   const sectionId = 'sanctions-' + countryName.replace(/\s+/g, '-');
 
   let html = `<div class="sanctions-section">`;
   html += `<div class="sanctions-toggle" onclick="toggleSanctions('${sectionId}')">
     <div class="sanctions-toggle-left">
       <span class="sanctions-toggle-title">Sanctions</span>
-      <span class="sanctions-severity ${data.severity}">${severityLabel}</span>
     </div>
     <span class="sanctions-chevron" id="${sectionId}-chevron">&#9660;</span>
   </div>`;
@@ -5089,6 +5136,97 @@ function renderSidebar() {
           <div class="election-stakes">${e.stakes}</div>
         </div>
       `).join('');
+  } else if (currentTab === 'horizon') {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
+    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
+
+    const catIcons = { summit: '🏛', election: '🗳', treaty: '📜', trade: '📊', military: '⚔', economic: '💰', sanctions: '🚫', legal: '⚖' };
+    const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', trade: '#22c55e', military: '#ef4444', economic: '#3b82f6', sanctions: '#f97316', legal: '#8b5cf6' };
+
+    function renderHorizonEvent(e, isPast) {
+      const d = new Date(e.date + 'T12:00:00');
+      const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const day = d.getDate();
+      const icon = catIcons[e.category] || '📌';
+      const color = catColors[e.category] || '#6b7280';
+      const opacity = isPast ? 'opacity:0.5;' : '';
+
+      // Days until/since
+      const diffMs = new Date(e.date + 'T00:00:00') - new Date(todayStr + 'T00:00:00');
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      let countdown = '';
+      if (diffDays === 0) countdown = '<span style="color:#22c55e;font-weight:700;font-size:8px;">TODAY</span>';
+      else if (diffDays === 1) countdown = '<span style="color:#f59e0b;font-size:8px;">TOMORROW</span>';
+      else if (diffDays > 1 && diffDays <= 7) countdown = `<span style="color:#f59e0b;font-size:8px;">${diffDays}d</span>`;
+      else if (diffDays > 7 && diffDays <= 30) countdown = `<span style="color:#6b7280;font-size:8px;">${Math.ceil(diffDays / 7)}w</span>`;
+      else if (diffDays > 30) countdown = `<span style="color:#4b5563;font-size:8px;">${Math.ceil(diffDays / 30)}mo</span>`;
+      else if (isPast) countdown = `<span style="color:#374151;font-size:8px;">${Math.abs(diffDays)}d ago</span>`;
+
+      return `
+        <div style="display:flex;gap:10px;padding:10px 8px;border-bottom:1px solid #111827;${opacity}">
+          <div style="min-width:42px;text-align:center;">
+            <div style="font-size:9px;font-weight:700;color:${color};letter-spacing:0.5px;">${month}</div>
+            <div style="font-size:18px;font-weight:700;color:#e5e7eb;line-height:1.1;">${day}</div>
+            <div style="margin-top:2px;">${countdown}</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+              <span style="font-size:10px;">${icon}</span>
+              <span style="font-size:10px;font-weight:600;color:#e5e7eb;line-height:1.3;">${e.name}</span>
+            </div>
+            <div style="font-size:9px;color:#9ca3af;margin-bottom:3px;">${e.location}</div>
+            <div style="font-size:9px;color:#6b7280;line-height:1.5;">${e.description}</div>
+          </div>
+        </div>`;
+    }
+
+    let horizonHtml = '';
+
+    // Header
+    horizonHtml += `<div style="padding:8px 12px;background:linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%);border-left:3px solid #06b6d4;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:#06b6d4;letter-spacing:1px;">GEOPOLITICAL HORIZON</div>
+      <div style="font-size:9px;color:#6b7280;margin-top:2px;">${upcoming.length} upcoming events tracked</div>
+    </div>`;
+
+    // Category legend
+    horizonHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px;border-bottom:1px solid #1f2937;margin-bottom:4px;">`;
+    Object.entries(catIcons).forEach(([cat, icon]) => {
+      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="font-size:9px;">${icon}</span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
+    });
+    horizonHtml += `</div>`;
+
+    // Upcoming events
+    if (upcoming.length > 0) {
+      // Group by month
+      let currentMonth = '';
+      upcoming.forEach(e => {
+        const d = new Date(e.date + 'T12:00:00');
+        const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        if (monthYear !== currentMonth) {
+          currentMonth = monthYear;
+          horizonHtml += `<div style="font-size:9px;font-weight:700;color:#9ca3af;letter-spacing:1px;padding:10px 8px 4px;border-top:1px solid #1f2937;margin-top:4px;">${monthYear.toUpperCase()}</div>`;
+        }
+        horizonHtml += renderHorizonEvent(e, false);
+      });
+    }
+
+    // Past events (collapsed)
+    if (past.length > 0) {
+      horizonHtml += `
+        <div style="margin-top:12px;border-top:1px solid #1f2937;padding-top:10px;">
+          <div onclick="toggleBriefDropdown('horizon-past')" style="display:flex;align-items:center;justify-content:space-between;padding:8px;cursor:pointer;background:#0d0d14;border-radius:6px;" onmouseover="this.style.background='#131320'" onmouseout="this.style.background='#0d0d14'">
+            <span style="font-size:9px;font-weight:600;color:#6b7280;letter-spacing:0.5px;">PAST EVENTS (${past.length})</span>
+            <span id="horizon-past-arrow" style="color:#6b7280;font-size:10px;transition:transform 0.3s;">▼</span>
+          </div>
+          <div id="horizon-past" style="max-height:0px;opacity:0;overflow:hidden;transition:max-height 0.4s ease, opacity 0.3s ease;">
+            ${past.map(e => renderHorizonEvent(e, true)).join('')}
+          </div>
+        </div>`;
+    }
+
+    content.innerHTML = horizonHtml;
   } else if (currentTab === 'search') {
     content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
   } else if (currentTab === 'newsletter') {
