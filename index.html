@@ -356,13 +356,7 @@
 
   <div class="sidebar">
     <div class="tabs">
-      <button class="tab active" data-tab="daily">Daily</button>
-      <button class="tab" data-tab="newsletter">Brief</button>
-      <button class="tab" data-tab="forecast">Forecast</button>
-      <button class="tab" data-tab="events">Watchlist</button>
-      <button class="tab" data-tab="horizon">Horizon</button>
-      <button class="tab" data-tab="elections">Elections</button>
-      <button class="tab" data-tab="search">Search</button>
+      <button class="tab active" data-tab="daily">Daily</button><button class="tab" data-tab="newsletter">Brief</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="search">Search</button>
     </div>
     <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">Loading live news...</div>
     <div class="sidebar-content" id="sidebarContent"></div>
@@ -5110,14 +5104,6 @@ function renderSidebar() {
         <div class="forecast-indicators">${f.indicators.map(i => `<span class="forecast-indicator ${i.dir}">${i.dir === 'up' ? '↑' : i.dir === 'down' ? '↓' : '→'} ${i.text}</span>`).join('')}</div>
       </div>
     `).join('');
-  } else if (currentTab === 'events') {
-    const sorted = Object.entries(COUNTRIES).sort((a, b) => ({ catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[a[1].risk] - { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 }[b[1].risk]));
-    content.innerHTML = sorted.map(([name, c]) => `
-      <div class="card" onclick="openModal('${name}')">
-        <div class="event-header"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country">${c.flag} ${name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>
-        <div class="event-title">${c.title || c.region}</div>
-      </div>
-    `).join('');
   } else if (currentTab === 'elections') {
     content.innerHTML = `<div style="font-size:9px;color:#22c55e;font-weight:600;letter-spacing:1px;margin-bottom:12px">RECENT RESULTS</div>` +
       RECENT_ELECTIONS.map(e => `
@@ -5142,14 +5128,12 @@ function renderSidebar() {
     const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
     const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
 
-    const catIcons = { summit: '🏛', election: '🗳', treaty: '📜', trade: '📊', military: '⚔', economic: '💰', sanctions: '🚫', legal: '⚖' };
     const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', trade: '#22c55e', military: '#ef4444', economic: '#3b82f6', sanctions: '#f97316', legal: '#8b5cf6' };
 
     function renderHorizonEvent(e, isPast) {
       const d = new Date(e.date + 'T12:00:00');
       const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
       const day = d.getDate();
-      const icon = catIcons[e.category] || '📌';
       const color = catColors[e.category] || '#6b7280';
       const opacity = isPast ? 'opacity:0.5;' : '';
 
@@ -5173,7 +5157,6 @@ function renderSidebar() {
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
-              <span style="font-size:10px;">${icon}</span>
               <span style="font-size:10px;font-weight:600;color:#e5e7eb;line-height:1.3;">${e.name}</span>
             </div>
             <div style="font-size:9px;color:#9ca3af;margin-bottom:3px;">${e.location}</div>
@@ -5192,8 +5175,8 @@ function renderSidebar() {
 
     // Category legend
     horizonHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px;border-bottom:1px solid #1f2937;margin-bottom:4px;">`;
-    Object.entries(catIcons).forEach(([cat, icon]) => {
-      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="font-size:9px;">${icon}</span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
+    Object.entries(catColors).forEach(([cat, color]) => {
+      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
     });
     horizonHtml += `</div>`;
 
