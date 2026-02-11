@@ -1802,7 +1802,7 @@ const HORIZON_EVENTS = [
   { date: '2026-02-14', name: 'African Union Assembly (39th Summit)', location: 'Addis Ababa, Ethiopia', category: 'summit', description: 'Annual AU heads-of-state summit focusing on Agenda 2063 development priorities across the continent' },
   { date: '2026-02-15', name: 'France Municipal Elections (Round 1)', location: 'France', category: 'election', description: 'First round of mayoral elections across French municipalities — key indicator ahead of 2027 presidential race' },
   { date: '2026-02-22', name: 'France Municipal Elections (Round 2)', location: 'France', category: 'election', description: 'Final round determining new mayors in major French cities with national political implications' },
-  { date: '2026-02-23', name: 'ICC Duterte Confirmation Hearing', location: 'The Hague, Netherlands', category: 'legal', description: 'International Criminal Court hearing on charges against former Philippine President Rodrigo Duterte' },
+  { date: '2026-02-23', name: 'ICC Duterte Confirmation Hearing', location: 'The Hague, Netherlands', category: 'treaty', description: 'International Criminal Court hearing on charges against former Philippine President Rodrigo Duterte' },
   { date: '2026-03-08', name: 'Colombia Parliamentary Elections', location: 'Bogotá, Colombia', category: 'election', description: 'Election of 188 House members with primaries determining presidential candidates for May vote' },
   { date: '2026-03-19', name: 'European Council Summit', location: 'Brussels, EU', category: 'summit', description: 'Quarterly meeting of EU heads of state setting strategic direction on defense, trade, and enlargement' },
   { date: '2026-04-13', name: 'IMF / World Bank Spring Meetings', location: 'Washington D.C., USA', category: 'economic', description: 'Annual spring meetings addressing global economic outlook, debt sustainability, and development finance' },
@@ -1816,7 +1816,7 @@ const HORIZON_EVENTS = [
   { date: '2026-06-15', name: '52nd G7 Summit', location: 'Évian-les-Bains, France', category: 'summit', description: 'Leaders of advanced democracies convene on Ukraine, China trade, AI governance, and climate commitments' },
   { date: '2026-06-26', name: 'RIMPAC 2026 Begins', location: 'Hawaii, USA', category: 'military', description: 'World\'s largest multinational maritime exercise — 29 nations, 25,000+ personnel signaling Indo-Pacific readiness' },
   { date: '2026-06-30', name: 'UK-EU TCA Energy & Fishing Provisions Expire', location: 'Global', category: 'treaty', description: 'Brexit-era energy cooperation and fishing access provisions expire — renewal negotiations critical for both sides' },
-  { date: '2026-07-01', name: 'USMCA Six-Year Review Window Opens', location: 'Global', category: 'trade', description: 'Mandatory review of US-Mexico-Canada free trade agreement begins — potential renegotiation of key provisions' },
+  { date: '2026-07-01', name: 'USMCA Six-Year Review Window Opens', location: 'Global', category: 'economic', description: 'Mandatory review of US-Mexico-Canada free trade agreement begins — potential renegotiation of key provisions' },
   { date: '2026-07-07', name: 'NATO Summit', location: 'Ankara, Turkey', category: 'summit', description: 'Alliance leaders summit at Beştepe Presidential Complex addressing defense spending, Ukraine, and Arctic strategy' },
   { date: '2026-08-01', name: 'BRICS Summit (Expected)', location: 'New Delhi, India', category: 'summit', description: '18th BRICS leaders summit under Indian chairmanship — expanded bloc testing cohesion on trade and dedollarization' },
   { date: '2026-08-13', name: 'Zambia General Election', location: 'Lusaka, Zambia', category: 'election', description: 'Presidential, parliamentary, and local elections — test of democratic consolidation in Southern Africa' },
@@ -5128,7 +5128,7 @@ function renderSidebar() {
     const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
     const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
 
-    const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', trade: '#22c55e', military: '#ef4444', economic: '#3b82f6', sanctions: '#f97316', legal: '#8b5cf6' };
+    const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
     function renderHorizonEvent(e, isPast) {
       const d = new Date(e.date + 'T12:00:00');
