@@ -356,7 +356,7 @@
 
   <div class="sidebar">
     <div class="tabs">
-      <button class="tab active" data-tab="daily">Daily</button><button class="tab" data-tab="newsletter">Brief</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="search">Search</button>
+      <button class="tab active" data-tab="newsletter">Brief</button><button class="tab" data-tab="daily">Daily</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="search">Search</button>
     </div>
     <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">Loading live news...</div>
     <div class="sidebar-content" id="sidebarContent"></div>
@@ -5050,7 +5050,7 @@ function animate() {
 }
 
 // Sidebar tabs
-let currentTab = 'daily';
+let currentTab = 'newsletter';
 // Track how many news items to show
 let newsDisplayCount = 20;
 
@@ -5128,14 +5128,12 @@ function renderSidebar() {
     const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
     const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
 
-    const catIcons = { summit: '▣', election: '▪', treaty: '◆', trade: '▲', military: '✦', economic: '●', sanctions: '◼', legal: '◇' };
     const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', trade: '#22c55e', military: '#ef4444', economic: '#3b82f6', sanctions: '#f97316', legal: '#8b5cf6' };
 
     function renderHorizonEvent(e, isPast) {
       const d = new Date(e.date + 'T12:00:00');
       const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
       const day = d.getDate();
-      const icon = catIcons[e.category] || '•';
       const color = catColors[e.category] || '#6b7280';
       const opacity = isPast ? 'opacity:0.5;' : '';
 
@@ -5145,10 +5143,10 @@ function renderSidebar() {
       let countdown = '';
       if (diffDays === 0) countdown = '<span style="color:#22c55e;font-weight:700;font-size:8px;">TODAY</span>';
       else if (diffDays === 1) countdown = '<span style="color:#f59e0b;font-size:8px;">TOMORROW</span>';
-      else if (diffDays > 1 && diffDays <= 7) countdown = `<span style="color:#f59e0b;font-size:8px;">${diffDays}d</span>`;
-      else if (diffDays > 7 && diffDays <= 30) countdown = `<span style="color:#6b7280;font-size:8px;">${Math.ceil(diffDays / 7)}w</span>`;
-      else if (diffDays > 30) countdown = `<span style="color:#4b5563;font-size:8px;">${Math.ceil(diffDays / 30)}mo</span>`;
-      else if (isPast) countdown = `<span style="color:#374151;font-size:8px;">${Math.abs(diffDays)}d ago</span>`;
+      else if (diffDays > 1 && diffDays <= 7) countdown = `<span style="color:#f59e0b;font-size:8px;">${diffDays} Day${diffDays === 1 ? '' : 's'}</span>`;
+      else if (diffDays > 7 && diffDays <= 30) { const w = Math.ceil(diffDays / 7); countdown = `<span style="color:#6b7280;font-size:8px;">${w} Week${w === 1 ? '' : 's'}</span>`; }
+      else if (diffDays > 30) { const mo = Math.ceil(diffDays / 30); countdown = `<span style="color:#4b5563;font-size:8px;">${mo} Month${mo === 1 ? '' : 's'}</span>`; }
+      else if (isPast) { const abs = Math.abs(diffDays); countdown = `<span style="color:#374151;font-size:8px;">${abs} Day${abs === 1 ? '' : 's'} Ago</span>`; }
 
       return `
         <div style="display:flex;gap:10px;padding:10px 8px;border-bottom:1px solid #111827;${opacity}">
@@ -5159,7 +5157,6 @@ function renderSidebar() {
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
-              <span style="font-size:10px;color:${color};">${icon}</span>
               <span style="font-size:10px;font-weight:600;color:#e5e7eb;line-height:1.3;">${e.name}</span>
             </div>
             <div style="font-size:9px;color:#9ca3af;margin-bottom:3px;">${e.location}</div>
@@ -5178,8 +5175,8 @@ function renderSidebar() {
 
     // Category legend
     horizonHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px;border-bottom:1px solid #1f2937;margin-bottom:4px;">`;
-    Object.entries(catIcons).forEach(([cat, icon]) => {
-      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="font-size:9px;color:${catColors[cat] || '#6b7280'}">${icon}</span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
+    Object.entries(catColors).forEach(([cat, color]) => {
+      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
     });
     horizonHtml += `</div>`;
 
