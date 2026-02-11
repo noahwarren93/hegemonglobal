@@ -5128,12 +5128,14 @@ function renderSidebar() {
     const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
     const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
 
+    const catIcons = { summit: '▣', election: '▪', treaty: '◆', trade: '▲', military: '✦', economic: '●', sanctions: '◼', legal: '◇' };
     const catColors = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', trade: '#22c55e', military: '#ef4444', economic: '#3b82f6', sanctions: '#f97316', legal: '#8b5cf6' };
 
     function renderHorizonEvent(e, isPast) {
       const d = new Date(e.date + 'T12:00:00');
       const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
       const day = d.getDate();
+      const icon = catIcons[e.category] || '•';
       const color = catColors[e.category] || '#6b7280';
       const opacity = isPast ? 'opacity:0.5;' : '';
 
@@ -5157,6 +5159,7 @@ function renderSidebar() {
           </div>
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+              <span style="font-size:10px;color:${color};">${icon}</span>
               <span style="font-size:10px;font-weight:600;color:#e5e7eb;line-height:1.3;">${e.name}</span>
             </div>
             <div style="font-size:9px;color:#9ca3af;margin-bottom:3px;">${e.location}</div>
@@ -5175,8 +5178,8 @@ function renderSidebar() {
 
     // Category legend
     horizonHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 10px;border-bottom:1px solid #1f2937;margin-bottom:4px;">`;
-    Object.entries(catColors).forEach(([cat, color]) => {
-      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
+    Object.entries(catIcons).forEach(([cat, icon]) => {
+      horizonHtml += `<span style="font-size:8px;color:#6b7280;display:flex;align-items:center;gap:2px;"><span style="font-size:9px;color:${catColors[cat] || '#6b7280'}">${icon}</span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
     });
     horizonHtml += `</div>`;
 
