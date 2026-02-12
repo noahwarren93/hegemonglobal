@@ -4202,9 +4202,9 @@ function formatSourceName(sourceId) {
 
 // Calculate time ago with cleaner display
 function timeAgo(dateString) {
-  if (!dateString) return 'Today';
+  if (!dateString) return 'Recent';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Today';
+  if (isNaN(date.getTime())) return 'Recent';
 
   const now = new Date();
   const diffMs = now - date;
@@ -4311,7 +4311,7 @@ async function fetchLiveNews() {
           importance: importance,
           headline: article.title,
           source: sourceName,
-          url: article.link || '#'
+          url: article.link || ''
         };
       });
 
@@ -4393,7 +4393,7 @@ async function fetchLiveNews() {
             importance: 'medium',
             headline: article.title,
             source: formatSourceName(article.source_id),
-            url: article.link || '#'
+            url: article.link || ''
           }));
           lastNewsUpdate = new Date();
           saveBriefingSnapshot();
@@ -4843,7 +4843,7 @@ function formatArticlesForDisplay(articles, countryName) {
     headline: article.title,
     source: formatSourceName(article.source_id),
     time: timeAgo(article.pubDate),
-    url: article.link || '#',
+    url: article.link || '',
     category: detectCategory(article.title, article.description)
   }));
 }
@@ -4887,7 +4887,7 @@ async function fetchCountryNews(countryName) {
         headline: article.title || article.headline,
         source: formatSourceName(article.source_id || article.source || 'News'),
         time: timeAgo(article.pubDate || article.time),
-        url: article.link || article.url || '#',
+        url: article.link || article.url || '',
         category: article.category || detectCategory(article.title || article.headline, article.description || '')
       }));
       setCachedNews(countryName, result);
@@ -4954,7 +4954,7 @@ async function fetchCountryNews(countryName) {
         headline: article.title || article.headline,
         source: formatSourceName(article.source_id || article.source || 'News'),
         time: timeAgo(article.pubDate || article.time),
-        url: article.link || article.url || '#',
+        url: article.link || article.url || '',
         category: article.category || detectCategory(article.title || article.headline, article.description || '')
       }));
       setCachedNews(countryName, result);
@@ -5564,7 +5564,7 @@ function renderSidebar() {
         <div class="card" style="border-left:2px solid ${item.category === 'CONFLICT' ? '#ef4444' : item.category === 'CRISIS' ? '#f97316' : '#eab308'};">
           <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
           <div class="card-headline" style="font-weight:600;">${item.headline}</div>
-          <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+          <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
           <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
         </div>
       `).join('');
@@ -5576,7 +5576,7 @@ function renderSidebar() {
       <div class="card">
         <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
         <div class="card-headline">${item.headline}</div>
-        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+        <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
         <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
       </div>
     `).join('');
@@ -5760,7 +5760,7 @@ function openModal(name) {
   // Show cached news first
   if (c.news && c.news.length) {
     html += `<div class="section-title">Recent Coverage</div>`;
-    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div>${renderBiasTag(n.source)}<div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
+    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div>${renderBiasTag(n.source)}<div class="news-headline">${n.headline}</div>${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>` : ''}</div>`; });
   }
 
   // Add placeholder for live country news
@@ -5786,7 +5786,7 @@ function openModal(name) {
             </div>
             ${renderBiasTag(n.source)}
             <div class="news-headline">${n.headline}</div>
-            <a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>
+            ${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>` : ''}
           </div>
         `).join('');
       } else if (result && result.error) {
