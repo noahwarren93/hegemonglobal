@@ -2112,7 +2112,7 @@ function generateRegionNarrative(region, articles) {
 
   // WHY IT MATTERS: Use only region-relevant entities
   const dominantType = topTypes[0][0];
-  const entityStr = allEntities.length >= 2 ? ` involving ${allEntities.slice(0, 3).join(' and ')}` : (allEntities.length === 1 ? ` regarding ${allEntities[0]}` : '');
+  const entityStr = allEntities.length >= 2 ? ` involving ${formatEntityList(allEntities.slice(0, 3))}` : (allEntities.length === 1 ? ` regarding ${allEntities[0]}` : '');
   if (classified.length >= 2) {
     const analysis = {
       'violence': `The active conflict situation${entityStr} risks further displacement, economic disruption, and potential external involvement.`,
@@ -2226,6 +2226,42 @@ function addLeaderTitles(text) {
   return result;
 }
 
+// Format a list with Oxford comma: ["A","B","C"] → "A, B, and C"
+function formatEntityList(items) {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return items[0] + ' and ' + items[1];
+  return items.slice(0, -1).join(', ') + ', and ' + items[items.length - 1];
+}
+
+// Add missing articles (a/an/the) that headlines drop for brevity
+function addMissingArticles(text) {
+  // Add "the" before geographic features: Sea of X, Strait of X, Gulf of X, etc.
+  text = text.replace(/\b(over|near|across|through|in|at|along|around|off|into|from|toward|towards|between|beyond|throughout)\s+((?:Sea|Gulf|Strait|Bay|Cape|Horn|Canal|Channel|Peninsula|Coast)\s+of\s+\w+)/gi, (m, prep, geo) => {
+    return prep + ' the ' + geo;
+  });
+  // Named geographic features: Taiwan Strait, English Channel, Suez Canal, etc.
+  text = text.replace(/\b(over|near|across|through|in|at|along|around|off|into|from|toward|towards|between|beyond)\s+(Taiwan Strait|English Channel|Suez Canal|Panama Canal|Korean Peninsula|Sinai Peninsula|Arabian Peninsula|Bering Strait|South China Sea|East China Sea|Yellow Sea|Red Sea|Black Sea|Caspian Sea|Dead Sea|Persian Gulf|Gulf of Aden|Gulf of Mexico|Indian Ocean|Pacific Ocean|Atlantic Ocean|Arctic Ocean|Mediterranean Sea|Sea of Japan|Strait of Hormuz|Strait of Malacca|Cape of Good Hope)/gi, (m, prep, geo) => {
+    return prep + ' the ' + geo;
+  });
+  // Add "the" before standalone geographic nouns after prepositions
+  // Capitalize proper features (Strait, Canal, Channel, Peninsula); keep common nouns lowercase (coast, border)
+  const properGeoNouns = new Set(['strait','canal','channel','peninsula']);
+  text = text.replace(/\b(over|near|across|through|along|around|off|into|from|toward|towards|beyond)\s+(strait|coast|border|peninsula|canal|channel|coastline|frontier)\b/gi, (m, prep, noun) => {
+    const formatted = properGeoNouns.has(noun.toLowerCase()) ? noun.charAt(0).toUpperCase() + noun.slice(1).toLowerCase() : noun.toLowerCase();
+    return prep + ' the ' + formatted;
+  });
+  // Add "a/an" after transitive verbs before adjective+noun phrases (headline→prose)
+  const verbs = 'signals?|conducts?|launches?|announces?|proposes?|unveils?|signs?|stages?|holds?|tests?|fires?|strikes?|reaches?|orders?|declares?|faces?|seeks?|passes?|approves?|rejects?|adopts?|drafts?|releases?|presents?|issues?|begins?|starts?|opens?|plans?|builds?|creates?|forms?|calls?|makes?|sends?|sets?|targets?|secures?|deploys?|initiates?|negotiates?|brokers?';
+  const adjectives = 'major|minor|new|key|massive|significant|potential|critical|large|joint|historic|landmark|formal|fresh|preliminary|strategic|sweeping|broad|controversial|surprise|bold|ambitious|record|emergency|special|temporary|permanent|bilateral|unilateral|ballistic|nuclear|diplomatic|military|ceasefire|peace|trade|economic|political|humanitarian|long-awaited|nationwide|partial|full|limited|comprehensive|retaliatory|preemptive|multinational';
+  const regex = new RegExp('\\b(' + verbs + ')\\s+(' + adjectives + ')\\s+', 'gi');
+  text = text.replace(regex, (match, verb, adj) => {
+    const article = /^[aeiou]/i.test(adj) ? 'an' : 'a';
+    return verb + ' ' + article + ' ' + adj + ' ';
+  });
+  return text;
+}
+
 // Clean a headline for embedding in prose
 function cleanHeadlineForProse(headline) {
   if (!headline) return 'ongoing developments';
@@ -2240,6 +2276,8 @@ function cleanHeadlineForProse(headline) {
   clean = clean.replace(/^(BREAKING|EXCLUSIVE|WATCH|UPDATE|JUST IN|ALERT|DEVELOPING|OPINION|ANALYSIS)\s*[:\-–]\s*/i, '');
   // Convert Title Case headlines to sentence case for natural prose
   clean = toSentenceCase(clean);
+  // Add missing articles (a/an/the) that headlines drop for brevity
+  clean = addMissingArticles(clean);
   // Remove trailing periods, dashes, pipes
   clean = clean.replace(/[\.\-–|]\s*$/, '').trim();
   return clean || 'ongoing developments';
@@ -2295,7 +2333,7 @@ function generateGlobalRamifications(regionData, globalArticles) {
 
   // PARAGRAPH 2: Cross-regional connections — the analytical core
   if (conflictRegions.length >= 2) {
-    sentences.push(`The most consequential pattern in this cycle is the simultaneity of high-priority activity in ${conflictRegions.slice(0, 4).map(fmtRegion).join(' and ')}. When crises unfold in multiple theaters at once, the practical effect is a stretching of diplomatic bandwidth and military readiness. Policymakers cannot give full attention to any one situation, and the risk increases that a secondary crisis escalates precisely because primary attention is directed elsewhere.`);
+    sentences.push(`The most consequential pattern in this cycle is the simultaneity of high-priority activity in ${formatEntityList(conflictRegions.slice(0, 4).map(fmtRegion))}. When crises unfold in multiple theaters at once, the practical effect is a stretching of diplomatic bandwidth and military readiness. Policymakers cannot give full attention to any one situation, and the risk increases that a secondary crisis escalates precisely because primary attention is directed elsewhere.`);
   } else if (activeRegions.length >= 3) {
     sentences.push(`Activity was spread across ${activeRegions.map(fmtRegion).join(', ')}, each contributing distinct threads. While the situations in these regions are not directly connected in most cases, they share an underlying dynamic: a global order under strain, where local instability increasingly has international dimensions and where the capacity for coordinated response has not kept pace with the number of active situations.`);
   }
