@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hegemon Global — TV Dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #050508; color: #fff; overflow: hidden; height: 100vh; width: 100vw; }
+
+    /* ===== TOP BAR ===== */
+    .tv-topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: linear-gradient(180deg, rgba(5,5,8,0.98) 0%, rgba(5,5,8,0.85) 100%); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 100; border-bottom: 1px solid #1f2937; }
+    .tv-logo { font-size: 22px; font-weight: 800; color: #06b6d4; letter-spacing: 3px; display: flex; align-items: center; gap: 12px; }
+    .tv-logo-sub { font-size: 9px; color: #64748b; letter-spacing: 2px; font-weight: 600; }
+    .tv-live { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #22c55e; font-weight: 700; letter-spacing: 1px; }
+    .tv-live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 10px #22c55e; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .tv-center { text-align: center; }
+    .tv-clock { font-size: 28px; font-weight: 300; color: #f3f4f6; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+    .tv-date { font-size: 11px; color: #6b7280; margin-top: 2px; letter-spacing: 1px; }
+    .tv-right { display: flex; align-items: center; gap: 20px; }
+    .tv-screen-label { font-size: 10px; color: #9ca3af; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; }
+    .tv-screen-dots { display: flex; gap: 6px; margin-top: 4px; }
+    .tv-dot { width: 8px; height: 8px; border-radius: 50%; background: #1f2937; transition: all 0.3s; }
+    .tv-dot.active { background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
+
+    /* ===== PROGRESS BAR ===== */
+    .tv-progress { position: fixed; top: 56px; left: 0; right: 0; height: 3px; background: #111827; z-index: 100; }
+    .tv-progress-bar { height: 100%; background: linear-gradient(90deg, #06b6d4, #3b82f6); width: 0%; transition: width 0.3s linear; }
+
+    /* ===== MAIN CONTENT ===== */
+    .tv-main { position: fixed; top: 59px; left: 0; right: 0; bottom: 48px; overflow: hidden; }
+    .tv-screen { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; padding: 24px 32px; overflow: hidden; }
+    .tv-screen.active { opacity: 1; pointer-events: auto; }
+
+    /* ===== BOTTOM TICKER ===== */
+    .tv-ticker { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: linear-gradient(0deg, rgba(5,5,8,0.98) 0%, rgba(5,5,8,0.9) 100%); backdrop-filter: blur(12px); border-top: 1px solid #1f2937; display: flex; align-items: center; overflow: hidden; z-index: 100; }
+    .tv-ticker-label { background: #06b6d4; color: #000; font-size: 10px; font-weight: 800; padding: 4px 12px; letter-spacing: 1px; flex-shrink: 0; height: 100%; display: flex; align-items: center; }
+    .tv-ticker-scroll { display: flex; animation: tickerScroll var(--ticker-duration, 60s) linear infinite; white-space: nowrap; }
+    .tv-ticker-item { display: flex; align-items: center; gap: 8px; padding: 0 24px; font-size: 13px; flex-shrink: 0; }
+    .tv-ticker-name { color: #9ca3af; font-weight: 500; }
+    .tv-ticker-value { color: #e5e7eb; font-weight: 700; }
+    .tv-ticker-change { font-weight: 700; font-size: 12px; }
+    .tv-ticker-change.up { color: #22c55e; }
+    .tv-ticker-change.down { color: #ef4444; }
+    .tv-ticker-sep { color: #374151; font-size: 18px; flex-shrink: 0; }
+    @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ===== SCREEN 1: GLOBE OVERVIEW ===== */
+    .globe-screen { display: flex; gap: 24px; height: 100%; }
+    .globe-3d { flex: 1; position: relative; border-radius: 16px; overflow: hidden; background: #070710; }
+    .globe-3d canvas { width: 100% !important; height: 100% !important; }
+    .globe-stats { width: 320px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .globe-stat-card { background: rgba(15,15,25,0.9); border: 1px solid #1f2937; border-radius: 12px; padding: 16px; }
+    .globe-stat-title { font-size: 10px; color: #6b7280; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .globe-stat-value { font-size: 32px; font-weight: 700; }
+    .globe-stat-label { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .globe-risk-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #1f293744; }
+    .globe-risk-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .globe-risk-name { font-size: 11px; color: #d1d5db; flex: 1; }
+    .globe-risk-count { font-size: 14px; font-weight: 700; }
+
+    /* ===== SCREEN 2: MARKETS ===== */
+    .markets-screen { height: 100%; overflow: hidden; }
+    .markets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; height: 100%; overflow-y: auto; align-content: start; }
+    .market-card { background: rgba(15,15,25,0.9); border: 1px solid #1f2937; border-radius: 12px; padding: 18px; transition: border-color 0.3s; }
+    .market-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .market-flag { font-size: 28px; }
+    .market-country { font-size: 14px; font-weight: 700; color: #e5e7eb; }
+    .market-sentiment { font-size: 9px; color: #6b7280; font-style: italic; margin-top: 2px; }
+    .market-indices { display: flex; flex-direction: column; gap: 8px; }
+    .market-index { display: flex; align-items: center; justify-content: space-between; }
+    .market-index-name { font-size: 11px; color: #9ca3af; font-weight: 500; }
+    .market-index-val { font-size: 14px; font-weight: 700; color: #e5e7eb; }
+    .market-index-change { font-size: 12px; font-weight: 700; }
+    .market-index-change.up { color: #22c55e; }
+    .market-index-change.down { color: #ef4444; }
+    .market-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 10px; }
+    .market-spark-bar { width: 4px; border-radius: 1px; min-height: 2px; }
+
+    /* ===== SCREEN 3: NEWS FEED ===== */
+    .news-screen { height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+    .news-header-row { display: flex; align-items: center; justify-content: space-between; }
+    .news-title { font-size: 18px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; }
+    .news-subtitle { font-size: 11px; color: #6b7280; }
+    .news-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; flex: 1; overflow: hidden; align-content: start; }
+    .news-card { background: rgba(15,15,25,0.9); border: 1px solid #1f2937; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; }
+    .news-card-cat { font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; width: fit-content; text-transform: uppercase; }
+    .news-card-cat.CONFLICT { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .news-card-cat.CRISIS { background: rgba(249,115,22,0.15); color: #f97316; }
+    .news-card-cat.SECURITY { background: rgba(234,179,8,0.15); color: #eab308; }
+    .news-card-cat.POLITICS { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .news-card-cat.ECONOMY { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .news-card-cat.DIPLOMACY { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+    .news-card-cat.SOCIETY { background: rgba(6,182,212,0.15); color: #06b6d4; }
+    .news-card-cat.ENVIRONMENT { background: rgba(16,185,129,0.15); color: #10b981; }
+    .news-card-headline { font-size: 14px; font-weight: 600; color: #e5e7eb; line-height: 1.4; flex: 1; }
+    .news-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 10px; color: #6b7280; }
+
+    /* ===== SCREEN 4: RISK MATRIX ===== */
+    .risk-screen { height: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 16px; }
+    .risk-tiers { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+    .risk-tier { background: rgba(15,15,25,0.6); border: 1px solid #1f2937; border-radius: 10px; padding: 12px 16px; }
+    .risk-tier-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .risk-tier-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .risk-tier-name { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .risk-tier-count { font-size: 11px; color: #6b7280; margin-left: auto; }
+    .risk-tier-countries { display: flex; flex-wrap: wrap; gap: 6px; }
+    .risk-country-chip { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); border: 1px solid #1f293766; border-radius: 6px; padding: 4px 10px; font-size: 11px; color: #d1d5db; }
+    .risk-country-chip .flag { font-size: 14px; }
+
+    /* ===== SCREEN 5: TRADE FLOWS ===== */
+    .trade-screen { height: 100%; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+    .trade-header { font-size: 18px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; }
+    .trade-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; flex: 1; overflow-y: auto; align-content: start; }
+    .trade-card { background: rgba(15,15,25,0.9); border: 1px solid #1f2937; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .trade-route-line { display: flex; align-items: center; gap: 12px; }
+    .trade-country-name { font-size: 13px; font-weight: 600; color: #e5e7eb; min-width: 100px; }
+    .trade-arrow { display: flex; align-items: center; gap: 4px; flex: 1; }
+    .trade-arrow-line { flex: 1; height: 2px; border-radius: 1px; }
+    .trade-arrow-line.healthy { background: linear-gradient(90deg, #22c55e, #22c55e88); }
+    .trade-arrow-line.tension { background: linear-gradient(90deg, #f59e0b, #f59e0b88); }
+    .trade-arrow-line.sanctioned { background: linear-gradient(90deg, #ef4444, #ef444488); }
+    .trade-arrow-tip { font-size: 14px; }
+    .trade-arrow-tip.healthy { color: #22c55e; }
+    .trade-arrow-tip.tension { color: #f59e0b; }
+    .trade-arrow-tip.sanctioned { color: #ef4444; }
+    .trade-volume { font-size: 18px; font-weight: 800; color: #06b6d4; }
+    .trade-goods { font-size: 10px; color: #6b7280; }
+    .trade-status { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+    .trade-status.healthy { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .trade-status.tension { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .trade-status.sanctioned { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+    /* ===== WATERMARK ===== */
+    .tv-watermark { position: fixed; bottom: 56px; right: 20px; font-size: 10px; color: #1f2937; letter-spacing: 2px; font-weight: 600; z-index: 50; pointer-events: none; }
+
+    /* ===== THEME: LIGHT ===== */
+    body.theme-light { background: #f8fafc; color: #1e293b; }
+    body.theme-light .tv-topbar { background: rgba(248,250,252,0.95); border-bottom-color: #e2e8f0; }
+    body.theme-light .tv-logo { color: #0891b2; }
+    body.theme-light .tv-clock { color: #1e293b; }
+    body.theme-light .tv-date { color: #64748b; }
+    body.theme-light .tv-progress { background: #e2e8f0; }
+    body.theme-light .tv-ticker { background: rgba(248,250,252,0.95); border-top-color: #e2e8f0; }
+    body.theme-light .tv-ticker-name { color: #475569; }
+    body.theme-light .tv-ticker-value { color: #1e293b; }
+    body.theme-light .market-card, body.theme-light .news-card, body.theme-light .risk-tier, body.theme-light .trade-card, body.theme-light .globe-stat-card { background: rgba(255,255,255,0.9); border-color: #e2e8f0; }
+    body.theme-light .market-country, body.theme-light .market-index-val, body.theme-light .news-card-headline, body.theme-light .trade-country-name { color: #1e293b; }
+    body.theme-light .risk-country-chip { background: rgba(0,0,0,0.04); border-color: #e2e8f0; color: #334155; }
+    body.theme-light .tv-watermark { color: #cbd5e1; }
+    body.theme-light .globe-3d { background: #f0f4f8; }
+    body.theme-light .tv-dot { background: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="tv-topbar">
+    <div>
+      <div class="tv-logo">
+        HEGEMON
+        <span class="tv-logo-sub">TV DASHBOARD</span>
+      </div>
+    </div>
+    <div class="tv-center">
+      <div class="tv-clock" id="tvClock">00:00:00</div>
+      <div class="tv-date" id="tvDate"></div>
+    </div>
+    <div class="tv-right">
+      <div class="tv-live"><div class="tv-live-dot"></div>LIVE</div>
+      <div>
+        <div class="tv-screen-label" id="screenLabel">GLOBE OVERVIEW</div>
+        <div class="tv-screen-dots" id="screenDots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="tv-progress"><div class="tv-progress-bar" id="progressBar"></div></div>
+
+  <!-- Main Content -->
+  <div class="tv-main">
+    <!-- Screen 1: Globe Overview -->
+    <div class="tv-screen active" id="screen-globe">
+      <div class="globe-screen">
+        <div class="globe-3d" id="tvGlobe"></div>
+        <div class="globe-stats" id="globeStats"></div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Markets -->
+    <div class="tv-screen" id="screen-markets">
+      <div class="markets-screen">
+        <div class="markets-grid" id="marketsGrid"></div>
+      </div>
+    </div>
+
+    <!-- Screen 3: News -->
+    <div class="tv-screen" id="screen-news">
+      <div class="news-screen">
+        <div class="news-header-row">
+          <div class="news-title">LIVE NEWS FEED</div>
+          <div class="news-subtitle" id="newsTimestamp">Updated just now</div>
+        </div>
+        <div class="news-grid" id="newsGrid"></div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Risk Matrix -->
+    <div class="tv-screen" id="screen-risk">
+      <div class="risk-screen">
+        <div class="risk-tiers" id="riskTiers"></div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Trade Flows -->
+    <div class="tv-screen" id="screen-trade">
+      <div class="trade-screen">
+        <div class="trade-header">GLOBAL TRADE FLOWS</div>
+        <div class="trade-grid" id="tradeGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Ticker -->
+  <div class="tv-ticker">
+    <div class="tv-ticker-label">MARKETS</div>
+    <div style="overflow:hidden;flex:1;">
+      <div class="tv-ticker-scroll" id="tickerScroll"></div>
+    </div>
+  </div>
+
+  <!-- Watermark -->
+  <div class="tv-watermark">HEGEMON GLOBAL</div>
+
+  <!-- Load shared data -->
+  <script src="/js/data.js"></script>
+
+  <script>
+    // ==========================================
+    // HEGEMON GLOBAL — TV DASHBOARD
+    // Memory-safe, 24/7 auto-rotating display
+    // ==========================================
+
+    // ----- CONFIG FROM URL PARAMS -----
+    const urlParams = new URLSearchParams(window.location.search);
+    const INTERVAL = Math.max(10, Math.min(120, parseInt(urlParams.get('interval')) || 30)) * 1000;
+    const SCREEN_PARAM = urlParams.get('screens');
+    const REGION_FILTER = urlParams.get('region') || 'all';
+    const THEME = urlParams.get('theme') || 'dark';
+
+    if (THEME === 'light') document.body.classList.add('theme-light');
+
+    const ALL_SCREENS = ['globe', 'markets', 'news', 'risk', 'trade'];
+    const ACTIVE_SCREENS = SCREEN_PARAM ? SCREEN_PARAM.split(',').filter(s => ALL_SCREENS.includes(s)) : ALL_SCREENS;
+    if (ACTIVE_SCREENS.length === 0) ACTIVE_SCREENS.push(...ALL_SCREENS);
+
+    const SCREEN_LABELS = { globe: 'GLOBE OVERVIEW', markets: 'MARKET DASHBOARD', news: 'LIVE NEWS FEED', risk: 'RISK ASSESSMENT', trade: 'TRADE FLOWS' };
+
+    let currentScreenIdx = 0;
+    let progressInterval = null;
+    let rotationTimer = null;
+    let progressStart = 0;
+    let globeAnimId = null;
+
+    // ----- RISK COLORS -----
+    const RISK_COLORS = {
+      catastrophic: '#dc2626', extreme: '#f97316', severe: '#eab308',
+      stormy: '#8b5cf6', cloudy: '#3b82f6', clear: '#22c55e'
+    };
+    const RISK_ORDER = ['catastrophic', 'extreme', 'severe', 'stormy', 'cloudy', 'clear'];
+
+    // ----- STOCKS DATA -----
+    const STOCKS_DATA = [
+      { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', indices: [
+        { name: 'Dow Jones', value: '43,287.54', change: '+0.87%', positive: true },
+        { name: 'S&P 500', value: '5,918.23', change: '+0.92%', positive: true },
+        { name: 'NASDAQ', value: '18,847.61', change: '+1.14%', positive: true }
+      ], sentiment: 'Tech rally lifts markets amid strong earnings', sparkline: [40,55,45,60,65,58,70,75,68,80,78,85] },
+      { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', indices: [
+        { name: 'SSE Composite', value: '3,318.07', change: '-0.34%', positive: false },
+        { name: 'Hang Seng', value: '21,543.89', change: '+0.67%', positive: true }
+      ], sentiment: 'Mixed signals as property sector under pressure', sparkline: [60,55,50,48,52,45,40,42,38,44,40,43] },
+      { country: 'Japan', flag: '\u{1F1EF}\u{1F1F5}', indices: [
+        { name: 'Nikkei 225', value: '39,149.43', change: '+1.23%', positive: true },
+        { name: 'TOPIX', value: '2,756.12', change: '+0.89%', positive: true }
+      ], sentiment: 'Yen weakness boosts exporters', sparkline: [50,55,60,58,65,70,68,75,72,78,80,82] },
+      { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', indices: [
+        { name: 'FTSE 100', value: '8,765.43', change: '+0.45%', positive: true }
+      ], sentiment: 'BOE rate cut expectations support sentiment', sparkline: [60,62,58,65,63,68,70,67,72,71,74,73] },
+      { country: 'European Union', flag: '\u{1F1EA}\u{1F1FA}', indices: [
+        { name: 'Euro Stoxx 50', value: '5,287.34', change: '+0.56%', positive: true },
+        { name: 'DAX', value: '22,147.89', change: '+0.73%', positive: true }
+      ], sentiment: 'Defense stocks surge on NATO spending', sparkline: [55,58,60,62,59,65,68,64,70,72,69,74] },
+      { country: 'India', flag: '\u{1F1EE}\u{1F1F3}', indices: [
+        { name: 'BSE Sensex', value: '76,543.21', change: '-0.28%', positive: false },
+        { name: 'Nifty 50', value: '23,187.65', change: '-0.31%', positive: false }
+      ], sentiment: 'FII outflows weigh on broader market', sparkline: [70,72,68,65,63,60,58,62,55,52,54,50] },
+      { country: 'Brazil', flag: '\u{1F1E7}\u{1F1F7}', indices: [
+        { name: 'Bovespa', value: '127,543.21', change: '+0.89%', positive: true }
+      ], sentiment: 'Commodities boost resource stocks', sparkline: [45,50,48,55,52,58,60,57,63,65,62,68] },
+      { country: 'Australia', flag: '\u{1F1E6}\u{1F1FA}', indices: [
+        { name: 'ASX 200', value: '8,234.56', change: '+0.34%', positive: true }
+      ], sentiment: 'Mining sector leads modest gains', sparkline: [55,58,56,60,62,59,63,65,61,66,64,67] },
+      { country: 'South Korea', flag: '\u{1F1F0}\u{1F1F7}', indices: [
+        { name: 'KOSPI', value: '2,634.78', change: '-0.52%', positive: false }
+      ], sentiment: 'Chip stocks retreat on demand concerns', sparkline: [65,62,60,58,55,53,50,52,48,46,49,45] },
+      { country: 'Saudi Arabia', flag: '\u{1F1F8}\u{1F1E6}', indices: [
+        { name: 'Tadawul', value: '12,187.43', change: '+0.41%', positive: true }
+      ], sentiment: 'Oil price stability supports gains', sparkline: [50,52,55,53,58,60,57,62,64,61,65,63] }
+    ];
+
+    // ----- TRADE ROUTES DATA -----
+    const TRADE_ROUTES = [
+      { from: 'United States', to: 'China', volume: '$582B', goods: 'Electronics, Agriculture', status: 'tension' },
+      { from: 'United States', to: 'Canada', volume: '$783B', goods: 'Vehicles, Oil', status: 'healthy' },
+      { from: 'United States', to: 'Mexico', volume: '$687B', goods: 'Vehicles, Electronics', status: 'healthy' },
+      { from: 'China', to: 'Japan', volume: '$318B', goods: 'Electronics, Chemicals', status: 'tension' },
+      { from: 'United States', to: 'Japan', volume: '$248B', goods: 'Vehicles, Machinery', status: 'healthy' },
+      { from: 'United States', to: 'United Kingdom', volume: '$295B', goods: 'Finance, Pharma', status: 'healthy' },
+      { from: 'Russia', to: 'China', volume: '$240B', goods: 'Oil, Gas', status: 'healthy' },
+      { from: 'United States', to: 'Russia', volume: '$12B', goods: 'Limited', status: 'sanctioned' },
+      { from: 'Saudi Arabia', to: 'China', volume: '$98B', goods: 'Crude Oil', status: 'healthy' },
+      { from: 'India', to: 'United States', volume: '$128B', goods: 'IT, Pharma', status: 'healthy' },
+      { from: 'Brazil', to: 'China', volume: '$157B', goods: 'Soybeans, Iron Ore', status: 'healthy' }
+    ];
+
+    // ----- CLOCK -----
+    function updateClock() {
+      var now = new Date();
+      document.getElementById('tvClock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+      document.getElementById('tvDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ----- SCREEN DOTS -----
+    function renderDots() {
+      var html = '';
+      ACTIVE_SCREENS.forEach(function(_, i) {
+        html += '<div class="tv-dot' + (i === currentScreenIdx ? ' active' : '') + '"></div>';
+      });
+      document.getElementById('screenDots').innerHTML = html;
+    }
+    renderDots();
+
+    // ----- SCREEN ROTATION -----
+    function switchScreen(idx) {
+      currentScreenIdx = idx % ACTIVE_SCREENS.length;
+      var screenName = ACTIVE_SCREENS[currentScreenIdx];
+
+      // Hide all screens
+      ALL_SCREENS.forEach(function(s) {
+        var el = document.getElementById('screen-' + s);
+        if (el) el.classList.remove('active');
+      });
+
+      // Show active screen
+      var activeEl = document.getElementById('screen-' + screenName);
+      if (activeEl) activeEl.classList.add('active');
+
+      document.getElementById('screenLabel').textContent = SCREEN_LABELS[screenName] || screenName.toUpperCase();
+      renderDots();
+
+      // Manage globe animation (memory safety)
+      if (screenName === 'globe') {
+        startGlobeAnimation();
+      } else {
+        stopGlobeAnimation();
+      }
+
+      // Reset progress
+      progressStart = Date.now();
+    }
+
+    function nextScreen() {
+      switchScreen(currentScreenIdx + 1);
+    }
+
+    function startRotation() {
+      progressStart = Date.now();
+
+      // Clear any existing
+      if (rotationTimer) clearInterval(rotationTimer);
+      if (progressInterval) clearInterval(progressInterval);
+
+      rotationTimer = setInterval(nextScreen, INTERVAL);
+      progressInterval = setInterval(function() {
+        var elapsed = Date.now() - progressStart;
+        var pct = Math.min(100, (elapsed / INTERVAL) * 100);
+        document.getElementById('progressBar').style.width = pct + '%';
+      }, 50);
+    }
+
+    // ----- GLOBE (SCREEN 1) -----
+    var tvScene, tvCamera, tvRenderer, tvGlobe, tvCountryMeshes = [];
+
+    function initTVGlobe() {
+      var container = document.getElementById('tvGlobe');
+      if (!container) return;
+      var w = container.clientWidth;
+      var h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+
+      tvScene = new THREE.Scene();
+      tvCamera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+      tvCamera.position.z = 2.6;
+
+      tvRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      tvRenderer.setSize(w, h);
+      tvRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(tvRenderer.domElement);
+
+      var ambient = new THREE.AmbientLight(0xffffff, 0.8);
+      tvScene.add(ambient);
+      var dir = new THREE.DirectionalLight(0xffffff, 0.6);
+      dir.position.set(5, 3, 5);
+      tvScene.add(dir);
+
+      // Earth sphere
+      var earthGeom = new THREE.SphereGeometry(1, 64, 64);
+      var textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = 'anonymous';
+      var earthMat = new THREE.MeshPhongMaterial({ color: 0x111122, emissive: 0x050510, specular: 0x222244, shininess: 15 });
+      tvGlobe = new THREE.Mesh(earthGeom, earthMat);
+      tvScene.add(tvGlobe);
+
+      textureLoader.load('https://unpkg.com/three-globe@2.24.4/example/img/earth-blue-marble.jpg', function(tex) {
+        earthMat.map = tex;
+        earthMat.color.set(0xffffff);
+        earthMat.emissive.set(0x000000);
+        earthMat.needsUpdate = true;
+      });
+
+      // Atmosphere glow
+      var glowGeom = new THREE.SphereGeometry(1.02, 64, 64);
+      var glowMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.04, side: THREE.BackSide });
+      tvScene.add(new THREE.Mesh(glowGeom, glowMat));
+
+      // Country markers
+      var countries = getFilteredCountries();
+      Object.entries(countries).forEach(function(entry) {
+        var name = entry[0], c = entry[1];
+        var phi = (90 - c.lat) * Math.PI / 180;
+        var theta = (c.lng + 180) * Math.PI / 180;
+        var x = -(1.02) * Math.sin(phi) * Math.cos(theta);
+        var y = (1.02) * Math.cos(phi);
+        var z = (1.02) * Math.sin(phi) * Math.sin(theta);
+
+        var markerGeom = new THREE.SphereGeometry(0.015, 8, 8);
+        var col = RISK_COLORS[c.risk] || '#3b82f6';
+        var markerMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(col) });
+        var marker = new THREE.Mesh(markerGeom, markerMat);
+        marker.position.set(x, y, z);
+        tvGlobe.add(marker);
+        tvCountryMeshes.push(marker);
+      });
+
+      startGlobeAnimation();
+    }
+
+    function startGlobeAnimation() {
+      if (globeAnimId) return;
+      function animate() {
+        globeAnimId = requestAnimationFrame(animate);
+        if (tvGlobe) tvGlobe.rotation.y += 0.001;
+        if (tvRenderer && tvScene && tvCamera) tvRenderer.render(tvScene, tvCamera);
+      }
+      animate();
+    }
+
+    function stopGlobeAnimation() {
+      if (globeAnimId) {
+        cancelAnimationFrame(globeAnimId);
+        globeAnimId = null;
+      }
+    }
+
+    // Handle resize for globe
+    window.addEventListener('resize', function() {
+      var container = document.getElementById('tvGlobe');
+      if (!container || !tvRenderer || !tvCamera) return;
+      var w = container.clientWidth;
+      var h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      tvCamera.aspect = w / h;
+      tvCamera.updateProjectionMatrix();
+      tvRenderer.setSize(w, h);
+    });
+
+    // ----- HELPER: FILTER COUNTRIES -----
+    function getFilteredCountries() {
+      if (REGION_FILTER === 'all') return COUNTRIES;
+      var filtered = {};
+      Object.entries(COUNTRIES).forEach(function(entry) {
+        if (entry[1].region && entry[1].region.toLowerCase().includes(REGION_FILTER.toLowerCase())) {
+          filtered[entry[0]] = entry[1];
+        }
+      });
+      return Object.keys(filtered).length > 0 ? filtered : COUNTRIES;
+    }
+
+    // ----- RENDER GLOBE STATS -----
+    function renderGlobeStats() {
+      var countries = getFilteredCountries();
+      var counts = {};
+      RISK_ORDER.forEach(function(r) { counts[r] = 0; });
+      Object.values(countries).forEach(function(c) { if (counts[c.risk] !== undefined) counts[c.risk]++; });
+
+      var total = Object.keys(countries).length;
+      var critical = (counts.catastrophic || 0) + (counts.extreme || 0);
+
+      var html = '<div class="globe-stat-card"><div class="globe-stat-title">Countries Monitored</div><div class="globe-stat-value" style="color:#06b6d4">' + total + '</div></div>';
+      html += '<div class="globe-stat-card"><div class="globe-stat-title">Critical Alerts</div><div class="globe-stat-value" style="color:#ef4444">' + critical + '</div></div>';
+      html += '<div class="globe-stat-card"><div class="globe-stat-title">Risk Breakdown</div>';
+      RISK_ORDER.forEach(function(risk) {
+        if (counts[risk] > 0) {
+          html += '<div class="globe-risk-row"><div class="globe-risk-dot" style="background:' + RISK_COLORS[risk] + '"></div><div class="globe-risk-name">' + risk.charAt(0).toUpperCase() + risk.slice(1) + '</div><div class="globe-risk-count" style="color:' + RISK_COLORS[risk] + '">' + counts[risk] + '</div></div>';
+        }
+      });
+      html += '</div>';
+
+      // Top critical watchlist
+      var watchlist = Object.entries(countries).filter(function(e) { return e[1].risk === 'catastrophic' || e[1].risk === 'extreme'; }).slice(0, 8);
+      if (watchlist.length > 0) {
+        html += '<div class="globe-stat-card"><div class="globe-stat-title">Critical Watchlist</div>';
+        watchlist.forEach(function(e) {
+          html += '<div class="globe-risk-row"><span style="font-size:14px;">' + e[1].flag + '</span><div class="globe-risk-name">' + e[0] + '</div><div style="font-size:9px;color:' + RISK_COLORS[e[1].risk] + ';font-weight:700;text-transform:uppercase;">' + e[1].risk + '</div></div>';
+        });
+        html += '</div>';
+      }
+
+      document.getElementById('globeStats').innerHTML = html;
+    }
+
+    // ----- RENDER MARKETS (SCREEN 2) -----
+    function renderMarkets() {
+      var html = '';
+      STOCKS_DATA.forEach(function(s) {
+        html += '<div class="market-card">';
+        html += '<div class="market-card-header"><span class="market-flag">' + s.flag + '</span><div><div class="market-country">' + s.country + '</div><div class="market-sentiment">' + s.sentiment + '</div></div></div>';
+        html += '<div class="market-indices">';
+        s.indices.forEach(function(idx) {
+          html += '<div class="market-index"><span class="market-index-name">' + idx.name + '</span><span class="market-index-val">' + idx.value + '</span><span class="market-index-change ' + (idx.positive ? 'up' : 'down') + '">' + idx.change + '</span></div>';
+        });
+        html += '</div>';
+        // Sparkline
+        if (s.sparkline) {
+          var max = Math.max.apply(null, s.sparkline);
+          var min = Math.min.apply(null, s.sparkline);
+          var range = max - min || 1;
+          var lastVal = s.sparkline[s.sparkline.length - 1];
+          var firstVal = s.sparkline[0];
+          var isUp = lastVal >= firstVal;
+          html += '<div class="market-sparkline">';
+          s.sparkline.forEach(function(v) {
+            var h = Math.max(3, ((v - min) / range) * 28);
+            var color = isUp ? '#22c55e' : '#ef4444';
+            html += '<div class="market-spark-bar" style="height:' + h + 'px;background:' + color + ';opacity:0.7;"></div>';
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+      document.getElementById('marketsGrid').innerHTML = html;
+    }
+
+    // ----- RENDER NEWS (SCREEN 3) -----
+    var newsItems = [];
+
+    function renderNews() {
+      // Use DAILY_BRIEFING if available (from api.js), or fallback data
+      var items = newsItems.length > 0 ? newsItems : generateFallbackNews();
+      var html = '';
+      items.slice(0, 12).forEach(function(item) {
+        html += '<div class="news-card">';
+        html += '<span class="news-card-cat ' + (item.category || 'POLITICS') + '">' + (item.category || 'NEWS') + '</span>';
+        html += '<div class="news-card-headline">' + (item.headline || item.title || '') + '</div>';
+        html += '<div class="news-card-meta"><span>' + (item.source || 'Unknown') + '</span><span>' + (item.time || '') + '</span></div>';
+        html += '</div>';
+      });
+      document.getElementById('newsGrid').innerHTML = html;
+    }
+
+    function generateFallbackNews() {
+      // Generate news from country data
+      var items = [];
+      var countries = getFilteredCountries();
+      Object.entries(countries).forEach(function(entry) {
+        var name = entry[0], c = entry[1];
+        if (c.news && c.news.length > 0) {
+          c.news.forEach(function(n) {
+            items.push({ headline: n.headline, source: n.source, time: n.time, category: mapRiskToCategory(c.risk), country: name });
+          });
+        }
+      });
+      // Sort by time relevance
+      items.sort(function() { return Math.random() - 0.5; });
+      return items.slice(0, 20);
+    }
+
+    function mapRiskToCategory(risk) {
+      var map = { catastrophic: 'CONFLICT', extreme: 'CRISIS', severe: 'SECURITY', stormy: 'POLITICS', cloudy: 'ECONOMY', clear: 'DIPLOMACY' };
+      return map[risk] || 'POLITICS';
+    }
+
+    // Fetch live news
+    function fetchTVNews() {
+      var API_KEY_NEWSDATA = 'pub_61516b6c8b0b9e45f81c5a2cd35e8c825a9d7';
+      var url = 'https://newsdata.io/api/1/latest?apikey=' + API_KEY_NEWSDATA + '&language=en&category=politics,world&size=20';
+
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.results && data.results.length > 0) {
+          newsItems = data.results.map(function(a) {
+            return {
+              headline: a.title || '',
+              source: (a.source_id || a.source_name || 'Unknown').replace(/_/g, ' '),
+              time: a.pubDate ? timeAgo(new Date(a.pubDate)) : '',
+              category: classifyCategory(a.title || '', a.category || [])
+            };
+          });
+          renderNews();
+          document.getElementById('newsTimestamp').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        }
+      }).catch(function() {
+        // Silently use fallback
+      });
+    }
+
+    function timeAgo(date) {
+      var diff = (Date.now() - date.getTime()) / 1000;
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function classifyCategory(title, cats) {
+      var t = title.toLowerCase();
+      if (/war|attack|strike|bomb|milit|troops|invasion|combat/.test(t)) return 'CONFLICT';
+      if (/crisis|emergency|disaster|flood|earthquake|famine/.test(t)) return 'CRISIS';
+      if (/security|terror|threat|weapon|nuclear|cyber/.test(t)) return 'SECURITY';
+      if (/election|vote|parliament|president|minister|government|political/.test(t)) return 'POLITICS';
+      if (/economy|trade|market|gdp|inflation|bank|currency/.test(t)) return 'ECONOMY';
+      if (/diplomat|treaty|agreement|summit|negotiat|alliance/.test(t)) return 'DIPLOMACY';
+      if (/climate|environment|carbon|pollution|energy/.test(t)) return 'ENVIRONMENT';
+      if (cats && cats.includes('politics')) return 'POLITICS';
+      return 'POLITICS';
+    }
+
+    // ----- RENDER RISK MATRIX (SCREEN 4) -----
+    function renderRiskMatrix() {
+      var countries = getFilteredCountries();
+      var tiers = {};
+      RISK_ORDER.forEach(function(r) { tiers[r] = []; });
+      Object.entries(countries).forEach(function(e) {
+        var risk = e[1].risk;
+        if (tiers[risk]) tiers[risk].push({ name: e[0], flag: e[1].flag, region: e[1].region });
+      });
+
+      var html = '';
+      RISK_ORDER.forEach(function(risk) {
+        if (tiers[risk].length === 0) return;
+        html += '<div class="risk-tier">';
+        html += '<div class="risk-tier-header"><div class="risk-tier-dot" style="background:' + RISK_COLORS[risk] + '"></div>';
+        html += '<div class="risk-tier-name" style="color:' + RISK_COLORS[risk] + '">' + risk + '</div>';
+        html += '<div class="risk-tier-count">' + tiers[risk].length + ' countries</div></div>';
+        html += '<div class="risk-tier-countries">';
+        tiers[risk].forEach(function(c) {
+          html += '<div class="risk-country-chip"><span class="flag">' + c.flag + '</span>' + c.name + '</div>';
+        });
+        html += '</div></div>';
+      });
+      document.getElementById('riskTiers').innerHTML = html;
+    }
+
+    // ----- RENDER TRADE FLOWS (SCREEN 5) -----
+    function renderTradeFlows() {
+      var html = '';
+      // Sort by volume
+      var sorted = TRADE_ROUTES.slice().sort(function(a, b) {
+        return parseFloat(b.volume.replace(/[^0-9.]/g, '')) - parseFloat(a.volume.replace(/[^0-9.]/g, ''));
+      });
+
+      sorted.forEach(function(route) {
+        html += '<div class="trade-card">';
+        html += '<div class="trade-route-line">';
+        html += '<div class="trade-country-name">' + route.from + '</div>';
+        html += '<div class="trade-arrow"><div class="trade-arrow-line ' + route.status + '"></div><span class="trade-arrow-tip ' + route.status + '">\u25B6</span></div>';
+        html += '<div class="trade-country-name">' + route.to + '</div>';
+        html += '</div>';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<div class="trade-volume">' + route.volume + '</div>';
+        html += '<div class="trade-status ' + route.status + '">' + route.status + '</div>';
+        html += '</div>';
+        html += '<div class="trade-goods">' + route.goods + '</div>';
+        html += '</div>';
+      });
+      document.getElementById('tradeGrid').innerHTML = html;
+    }
+
+    // ----- RENDER TICKER -----
+    function renderTicker() {
+      var html = '';
+      // Double the items for seamless loop
+      for (var r = 0; r < 2; r++) {
+        STOCKS_DATA.forEach(function(s) {
+          s.indices.forEach(function(idx) {
+            html += '<div class="tv-ticker-item">';
+            html += '<span class="tv-ticker-name">' + idx.name + '</span>';
+            html += '<span class="tv-ticker-value">' + idx.value + '</span>';
+            html += '<span class="tv-ticker-change ' + (idx.positive ? 'up' : 'down') + '">' + idx.change + '</span>';
+            html += '</div>';
+            html += '<span class="tv-ticker-sep">\u00B7</span>';
+          });
+        });
+      }
+      var el = document.getElementById('tickerScroll');
+      el.innerHTML = html;
+      // Set duration based on content
+      var itemCount = STOCKS_DATA.reduce(function(sum, s) { return sum + s.indices.length; }, 0);
+      el.style.setProperty('--ticker-duration', Math.max(30, itemCount * 3) + 's');
+    }
+
+    // ----- DATA REFRESH (memory-safe) -----
+    function refreshData() {
+      fetchTVNews();
+      // Re-render screens that might have stale data
+      renderGlobeStats();
+      renderMarkets();
+      renderRiskMatrix();
+      renderTradeFlows();
+      renderTicker();
+    }
+
+    // ----- MEMORY CLEANUP (for 24/7 operation) -----
+    function memoryCleanup() {
+      // Clear any orphaned DOM references
+      if (typeof gc === 'function') gc();
+    }
+    setInterval(memoryCleanup, 300000); // Every 5 minutes
+
+    // ----- INITIALIZE -----
+    function init() {
+      renderGlobeStats();
+      renderMarkets();
+      renderNews();
+      renderRiskMatrix();
+      renderTradeFlows();
+      renderTicker();
+
+      // Initialize globe after a brief delay to ensure container is sized
+      setTimeout(initTVGlobe, 200);
+
+      // Start rotation
+      switchScreen(0);
+      startRotation();
+
+      // Fetch live news
+      fetchTVNews();
+
+      // Refresh data periodically (every 5 minutes)
+      setInterval(refreshData, 300000);
+
+      // Full page refresh every 6 hours for memory safety
+      setTimeout(function() { window.location.reload(); }, 6 * 60 * 60 * 1000);
+    }
+
+    // Wait for data.js to load
+    if (typeof COUNTRIES !== 'undefined') {
+      init();
+    } else {
+      window.addEventListener('load', init);
+    }
+  </script>
+</body>
+</html>

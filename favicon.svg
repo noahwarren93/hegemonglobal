@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#020617;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Globe gradient from teal to indigo -->
+    <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="url(#bgGradient)" />
+  
+  <!-- Main globe circle -->
+  <circle cx="32" cy="32" r="26" fill="url(#globeGradient)" opacity="0.9" />
+  
+  <!-- Latitude lines -->
+  <ellipse cx="32" cy="32" rx="24" ry="8" fill="none" stroke="#0a0a0f" stroke-width="0.8" opacity="0.6" />
+  <ellipse cx="32" cy="18" rx="20" ry="5" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+  <ellipse cx="32" cy="46" rx="20" ry="5" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+  
+  <!-- Longitude lines -->
+  <ellipse cx="32" cy="32" rx="8" ry="24" fill="none" stroke="#0a0a0f" stroke-width="0.8" opacity="0.6" />
+  <ellipse cx="18" cy="32" rx="5" ry="20" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+  <ellipse cx="46" cy="32" rx="5" ry="20" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+  
+  <!-- Simplified continents (dark shapes) -->
+  <!-- Americas -->
+  <path d="M 20 20 Q 18 25 18 32 Q 18 38 20 43 Q 22 40 22 35 Q 22 28 20 20" fill="#0a0a0f" opacity="0.5" />
+  
+  <!-- Europe/Africa -->
+  <path d="M 32 18 Q 34 22 35 28 Q 36 32 35 38 Q 34 42 32 44 Q 30 40 30 32 Q 30 24 32 18" fill="#0a0a0f" opacity="0.5" />
+  
+  <!-- Asia -->
+  <path d="M 42 22 Q 45 25 46 32 Q 45 38 43 42 Q 40 40 40 32 Q 40 26 42 22" fill="#0a0a0f" opacity="0.5" />
+  
+  <!-- Outer rim highlight -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.3" />
+  
+  <!-- Rotation animation -->
+  <g>
+    <circle cx="32" cy="32" r="26" fill="url(#globeGradient)" opacity="0.9" />
+    
+    <!-- Latitude lines animated -->
+    <ellipse cx="32" cy="32" rx="24" ry="8" fill="none" stroke="#0a0a0f" stroke-width="0.8" opacity="0.6" />
+    <ellipse cx="32" cy="18" rx="20" ry="5" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+    <ellipse cx="32" cy="46" rx="20" ry="5" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+    
+    <!-- Longitude lines animated -->
+    <ellipse cx="32" cy="32" rx="8" ry="24" fill="none" stroke="#0a0a0f" stroke-width="0.8" opacity="0.6" />
+    <ellipse cx="18" cy="32" rx="5" ry="20" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+    <ellipse cx="46" cy="32" rx="5" ry="20" fill="none" stroke="#0a0a0f" stroke-width="0.7" opacity="0.4" />
+    
+    <!-- Simplified continents animated -->
+    <path d="M 20 20 Q 18 25 18 32 Q 18 38 20 43 Q 22 40 22 35 Q 22 28 20 20" fill="#0a0a0f" opacity="0.5" />
+    <path d="M 32 18 Q 34 22 35 28 Q 36 32 35 38 Q 34 42 32 44 Q 30 40 30 32 Q 30 24 32 18" fill="#0a0a0f" opacity="0.5" />
+    <path d="M 42 22 Q 45 25 46 32 Q 45 38 43 42 Q 40 40 40 32 Q 40 26 42 22" fill="#0a0a0f" opacity="0.5" />
+    
+    <!-- Outer rim highlight animated -->
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.3" />
+    
+    <!-- Rotation animation -->
+    <animateTransform
+      attributeName="transform"
+      attributeType="XML"
+      type="rotate"
+      from="0 32 32"
+      to="360 32 32"
+      dur="5s"
+      repeatCount="indefinite" />
+  </g>
+</svg>
