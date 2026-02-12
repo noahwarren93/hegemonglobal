@@ -1,6 +1,6 @@
 /* Trade-Routes & Globe Tools Styles - Hegemon Global */
 
-    .globe-feature-btn { position: absolute; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 8px 12px; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; }
+    .globe-feature-btn { background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 8px 12px; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; white-space: nowrap; }
 
     .globe-feature-btn:hover { border-color: #374151; color: #e5e7eb; }
 

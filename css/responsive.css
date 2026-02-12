@@ -13,13 +13,20 @@
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
 
-      /* Globe tool buttons - bottom right on mobile */
-      .globe-tools { right: 10px; bottom: 10px; top: auto; }
+      /* Stats (Critical, High, Stable, Countries) - bottom left, compact */
+      .stats { bottom: 8px; left: 8px; right: auto; gap: 4px; flex-wrap: wrap; max-width: 55%; }
+      .stat-card { padding: 6px 8px; min-width: 50px; }
+      .stat-value { font-size: 14px; }
+      .stat-label { font-size: 5px; }
+      .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
+
+      /* Globe tool buttons (TOS, Search, Rotate) - bottom right */
+      .globe-tools { right: 8px; bottom: 8px; top: auto; }
       .globe-tool-btn { width: 28px; height: 28px; padding: 6px; }
 
-      /* Feature buttons - right side, stacked above tools */
-      #featureBtnsDesktop { left: auto !important; right: 10px; bottom: 48px; top: auto !important; flex-direction: column; gap: 4px; }
-      .globe-feature-btn { padding: 6px 8px; font-size: 7px; }
+      /* Feature buttons (Trade Routes, Compare Mode) - left side above stats */
+      #featureBtnsDesktop { left: 8px !important; right: auto !important; bottom: 70px; top: auto !important; flex-direction: row; gap: 4px; }
+      .globe-feature-btn { padding: 5px 8px; font-size: 7px; }
 
       /* Search overlay on mobile */
       .search-overlay { right: 10px; top: auto; bottom: 80px; width: 250px; max-height: 300px; }
@@ -27,18 +34,10 @@
       /* Trade info panel on mobile */
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
-      /* Compare instruction on mobile - keep centered and visible */
-      .compare-instruction { font-size: 13px; padding: 10px 18px; top: 40%; }
-
       /* Compare panel mobile - slide up from bottom */
       .compare-panel { position: fixed; width: 100%; max-width: 100vw; bottom: 0; left: 0; right: 0; top: auto; height: 65vh; transform: translateY(100%); border-left: none; border-top: 1px solid #1f2937; border-radius: 16px 16px 0 0; z-index: 55; }
       .compare-panel.active { transform: translateY(0); }
 
-      .stats { bottom: 10px; left: 10px; right: auto; gap: 6px; }
-      .stat-card { padding: 8px 10px; }
-      .stat-value { font-size: 16px; }
-      .stat-label { font-size: 6px; }
-      .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .tabs { flex-wrap: nowrap; overflow-x: auto; }
       .tab { min-width: auto; padding: 8px 6px; font-size: 7.5px; white-space: nowrap; }
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
@@ -56,11 +55,21 @@
       .live { font-size: 9px; }
       .date { font-size: 10px; }
       .legend { display: none; }
+
+      /* Stats even more compact */
+      .stats { max-width: 50%; gap: 3px; }
+      .stat-card { padding: 5px 6px; min-width: 44px; }
+      .stat-value { font-size: 12px; }
+      .stat-label { font-size: 5px; }
+
       .globe-tools { right: 8px; bottom: 8px; gap: 4px; }
       .globe-tool-btn { width: 26px; height: 26px; }
-      #featureBtnsDesktop { right: 8px; bottom: 42px; gap: 3px; }
-      .globe-feature-btn { padding: 5px 6px; font-size: 6px; gap: 3px; }
+
+      /* Feature buttons - row layout above stats on left */
+      #featureBtnsDesktop { left: 8px !important; bottom: 60px; gap: 3px; }
+      .globe-feature-btn { padding: 4px 6px; font-size: 6px; gap: 3px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
+
       .globe-container { height: 52vh; }
       .sidebar { height: 48vh; }
       .search-overlay { right: 8px; width: 220px; }
