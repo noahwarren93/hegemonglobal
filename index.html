@@ -301,6 +301,13 @@
 
 <div class="app">
   <div class="globe-container">
+    <div id="globeLoader" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#070710;display:flex;align-items:center;justify-content:center;z-index:10;transition:opacity 0.8s ease;">
+      <div style="text-align:center;">
+        <div style="width:40px;height:40px;border:3px solid #1f2937;border-top:3px solid #06b6d4;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>
+        <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">LOADING GLOBE</div>
+      </div>
+    </div>
+    <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
     <div id="globe"></div>
     <div class="header">
       <div class="header-content">
@@ -1866,15 +1873,15 @@ const NEWSLETTER_REGIONS = {
 // Source political bias ratings: L=Left, LC=Left-Center, C=Center, RC=Right-Center, R=Right
 const SOURCE_BIAS = {
   // Left
-  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L',
+  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L', 'Raw Story': 'L', 'The Wire': 'L', 'Middle East Monitor': 'L', 'Haaretz': 'L',
   // Left-Center
-  'New York Times': 'LC', 'The New York Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'The Guardian': 'LC', 'Guardian': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'Politico': 'LC', 'The Atlantic': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'The Economist': 'LC',
+  'New York Times': 'LC', 'The New York Times': 'LC', 'NY Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'The Guardian': 'LC', 'Guardian': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'TIME': 'LC', 'Politico': 'LC', 'The Atlantic': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'BuzzFeed': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'LA Times': 'LC', 'The Economist': 'LC', 'Newsweek': 'LC', 'Daily Beast': 'LC', 'Mediaite': 'LC', 'Business Insider': 'LC', 'Insider': 'LC', 'The New Yorker': 'LC', 'NDTV': 'LC', 'India Today': 'LC', 'Hindustan Times': 'LC', 'The Print': 'LC', 'Scroll': 'LC', 'Firstpost': 'LC', 'Kyiv Independent': 'LC', 'Kyiv Post': 'LC', 'Le Monde': 'LC', 'Der Spiegel': 'LC', 'El País': 'LC', 'Middle East Eye': 'LC', 'Folha': 'LC', 'CNBC': 'LC', 'ABC Australia': 'LC', 'Sydney Morning Herald': 'LC', 'Politico EU': 'LC', 'Irish Times': 'LC', 'Deccan Herald': 'LC', 'Indian Express': 'LC', 'Asahi Shimbun': 'LC', 'Live Mint': 'LC', 'The Conversation': 'LC', 'Times of Israel': 'LC', 'Sky News': 'LC', 'Chicago Tribune': 'LC',
   // Center
-  'Reuters': 'C', 'AP News': 'C', 'Associated Press': 'C', 'Al Jazeera': 'C', 'France 24': 'C', 'DW News': 'C', 'The Hill': 'C', 'Axios': 'C', 'PBS': 'C', 'Nikkei Asia': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'C', 'Korea Times': 'C', 'South China Morning Post': 'C', 'Euronews': 'C',
+  'Reuters': 'C', 'AP News': 'C', 'Associated Press': 'C', 'AFP': 'C', 'Al Jazeera': 'C', 'France 24': 'C', 'DW News': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'Axios': 'C', 'PBS': 'C', 'Nikkei Asia': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'C', 'Korea Times': 'C', 'Korea Herald': 'C', 'South China Morning Post': 'C', 'Euronews': 'C', 'UPI': 'C', 'PTI': 'C', 'ANI': 'C', 'IANS': 'C', 'DPA': 'C', 'EFE': 'C', 'ANSA': 'C', 'Dawn': 'C', 'Express Tribune': 'C', 'Geo News': 'C', 'Pakistan Today': 'C', 'The News': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Japan Times': 'C', 'Bangkok Post': 'C', 'Bernama': 'C', 'VnExpress': 'C', 'NZ Herald': 'C', 'RNZ': 'C', 'RTÉ': 'C', 'Semafor': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Defense One': 'C', 'Defense News': 'C', 'Breaking Defense': 'C', 'Clarín': 'C', 'Premium Times': 'C', 'News24': 'C', 'Times Live': 'C', 'Mail & Guardian': 'C', 'East African': 'C', 'Standard Media': 'C', 'Daily Nation': 'C', 'PhilStar': 'C', 'Inquirer': 'C', 'Manila Times': 'C', 'The Star Malaysia': 'C', 'Stuff NZ': 'C', 'Nine News': 'C', 'Dutch News': 'C', 'The Local': 'C', 'WION': 'C', 'Economic Times': 'C', 'Money Control': 'C', 'MarketWatch': 'C', 'Fortune': 'C', 'Barrons': 'C', 'Seeking Alpha': 'C', 'The Conversation': 'C',
   // Right-Center
-  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'Forbes': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC',
+  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'Forbes': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC',
   // Right
-  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'Washington Examiner': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R'
+  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'Washington Examiner': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R'
 };
 
 function getSourceBias(source) {
@@ -2136,8 +2143,8 @@ function generateRegionNarrative(region, articles) {
     sentences.push(`These developments are worth monitoring as the situation continues to evolve.`);
   }
 
-  // Post-process: add formal titles on first mention
-  return addLeaderTitles(sentences.slice(0, 6).join(' '));
+  // Post-process: add formal titles and grammar connectors
+  return addThatConnector(addLeaderTitles(sentences.slice(0, 6).join(' ')));
 }
 
 // Convert Title Case headlines to sentence case for prose embedding
@@ -2171,7 +2178,7 @@ function toSentenceCase(text) {
    'Wall','Street','Reuters','BBC','CNN','OPEC','WHO','IMF','NATO','BRICS',
    'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday',
    'January','February','March','April','May','June','July','August','September','October','November','December',
-   'Revolution','Republic','Federation','Assembly','Union','Kingdom','Nations','Commonwealth',
+   'Republic','Federation','Assembly','Union','Kingdom','Nations','Commonwealth',
    'Sea','Gulf','Strait','Red','Cross','Crescent','Bank','West','East','Horn','Sahel','Levant','Peninsula','Mount'
   ].forEach(w => keepCaps.add(w));
   return text.replace(/\S+/g, (word, offset) => {
@@ -2224,6 +2231,15 @@ function addLeaderTitles(text) {
     result = result.replace(new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`), `${title} ${name}`);
   }
   return result;
+}
+
+// Add "that" connector after reporting verbs for natural prose flow
+function addThatConnector(text) {
+  // After "tells/told [Titled Name]" + clause starting with proper noun, insert "that"
+  text = text.replace(/\b(tells?|told)\s+((?:President|Prime Minister|Chancellor)\s+[\w]+)\s+(?!that\b)([A-Z])/g, '$1 $2 that $3');
+  // After reporting verbs + clause starting with proper noun (not already followed by that/the/a/pronouns/prepositions)
+  text = text.replace(/\b(says?|said|warns?|warned|claims?|claimed|announces?|announced|confirms?|confirmed|denies?|denied|suggests?|suggested|indicates?|indicated|signals?|signaled|reveals?|revealed|declares?|declared|states?|stated|acknowledges?|acknowledged|reports?|reported)\s+(?!that |the |a |an |it |he |she |they |this |these |there |his |her |its |to |in |on |at |for |of |with |from |no |not |more )([A-Z])/g, '$1 that $2');
+  return text;
 }
 
 // Format a list with Oxford comma: ["A","B","C"] → "A, B, and C"
@@ -2373,7 +2389,7 @@ function generateGlobalRamifications(regionData, globalArticles) {
     sentences.push(`While the global risk level is not at its highest, several of these threads have the potential to develop into more significant stories. The coming days will be worth watching, particularly where domestic pressures intersect with international dynamics.`);
   }
 
-  return addLeaderTitles(sentences.join(' '));
+  return addThatConnector(addLeaderTitles(sentences.join(' ')));
 }
 
 // Render a single briefing's regional content (reusable for current + past)
@@ -4996,7 +5012,8 @@ function initGlobe() {
 
   // Load Earth texture
   const textureLoader = new THREE.TextureLoader();
-  const earthTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+  const hideLoader = () => { const el = document.getElementById('globeLoader'); if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 800); } };
+  const earthTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', hideLoader);
   const earthBump = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-topology.png');
 
   const earthMat = new THREE.MeshPhongMaterial({
