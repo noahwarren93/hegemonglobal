@@ -2797,7 +2797,7 @@ const RSS_FEEDS = {
     { url: 'https://thehill.com/feed/', source: 'The Hill' },                               // Center
     { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },                // Right
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },            // Left-Center
-    { url: 'https://nypost.com/feed/', source: 'New York Post' },                          // Right-Center
+    { url: 'https://nypost.com/tag/world-news/feed/', source: 'New York Post' },              // Right-Center
     { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },               // Left
     { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' } // Right-Center
   ],
@@ -4550,7 +4550,19 @@ const IRRELEVANT_KEYWORDS = [
   'fifth-grade', 'goes viral', 'epic response', 'mic drop', 'walk of shame',
   'gop lawmaker', 'dem lawmaker', 'liberal tears', 'conservative meltdown',
   'twitter feud', 'social media feud', 'online backlash', 'cancel culture',
-  'hot take', 'opinion:', 'op-ed:', 'column:', 'commentary:'
+  'hot take', 'opinion:', 'op-ed:', 'column:', 'commentary:',
+  // Advice columns, tabloid fluff, human drama
+  'dear abby', 'ask amy', 'advice column', 'agony aunt', 'dear ann',
+  'miss manners', 'carolyn hax', 'dan savage', 'relationship expert',
+  'you won\'t believe', 'jaw-dropping', 'mind-blowing', 'insane video',
+  'shocking photo', 'unbelievable', 'craziest', 'wildest',
+  'side hustle', 'passive income', 'work from home', 'make money fast',
+  'zodiac sign', 'spirit animal', 'personality test', 'iq test',
+  'mugshot', 'florida man', 'karen', 'entitled', 'neighbor from hell',
+  'baby name', 'gender reveal', 'wedding disaster', 'bridezilla',
+  'food hack', 'life hack', 'cleaning hack', 'ikea hack',
+  'ranked worst', 'ranked best', 'top 10', 'listicle',
+  'royal family', 'meghan markle', 'prince harry', 'kate middleton'
 ];
 
 // Geopolitical relevance signals - articles must contain at least one to pass
