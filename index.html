@@ -138,18 +138,34 @@
       </div>
     </div>
 
-    <button class="tos-btn" onclick="openTOS()" title="Terms of Service & Privacy Policy">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-      TOS
-    </button>
-
-    <div class="globe-controls">
-      <button class="globe-toggle active" id="rotateToggle" onclick="toggleRotation()">
-        <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/>
-        </svg>
-        <span class="toggle-text">AUTO-ROTATE</span>
+    <div class="globe-tools" id="globeTools">
+      <button class="globe-tool-btn" onclick="openTOS()" title="Terms of Service">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       </button>
+      <button class="globe-tool-btn" id="searchBtn" onclick="openSearchOverlay()" title="Search Countries">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </button>
+      <button class="globe-tool-btn active" id="rotateToggle" onclick="toggleRotation()" title="Auto-Rotate">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/></svg>
+      </button>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+      <div class="search-overlay-header">
+        <input type="text" id="globeSearchInput" placeholder="Search countries..." oninput="searchCountriesGlobe(this.value)">
+        <button onclick="closeSearchOverlay()">&times;</button>
+      </div>
+      <div class="search-overlay-results" id="globeSearchResults"></div>
+    </div>
+
+    <!-- Trade Route Info Panel -->
+    <div class="trade-info-panel" id="tradeInfoPanel">
+      <div class="trade-info-header">
+        <span class="trade-info-title" id="tradeInfoTitle">Trade Route</span>
+        <button class="trade-info-close" onclick="closeTradeInfoPanel()">&times;</button>
+      </div>
+      <div class="trade-info-body" id="tradeInfoBody"></div>
     </div>
 
     <div class="stats">
@@ -170,7 +186,7 @@
 
   <div class="sidebar">
     <div class="tabs">
-      <button class="tab active" data-tab="daily">Articles</button><button class="tab" data-tab="newsletter">Brief</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="stocks">Stocks</button><button class="tab" data-tab="search">Search</button>
+      <button class="tab active" data-tab="daily">Articles</button><button class="tab" data-tab="newsletter">Brief</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="stocks">Stocks</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 12px;background:#0a0a0f;border-bottom:1px solid #1f2937;">
       <div id="newsTimestamp" style="font-size:10px;color:#6b7280;">Loading live news...</div>

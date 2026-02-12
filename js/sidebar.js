@@ -317,7 +317,7 @@ function openModal(name) {
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
 document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); if (typeof closeStatPopup === 'function') closeStatPopup(); if (typeof closeStocksModal === 'function') closeStocksModal(); if (typeof compareModeActive !== 'undefined' && compareModeActive && typeof toggleCompareMode === 'function') toggleCompareMode(); } });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); if (typeof closeStatPopup === 'function') closeStatPopup(); if (typeof closeStocksModal === 'function') closeStocksModal(); if (typeof closeSearchOverlay === 'function') closeSearchOverlay(); if (typeof closeTradeInfoPanel === 'function') closeTradeInfoPanel(); if (typeof compareModeActive !== 'undefined' && compareModeActive && typeof toggleCompareMode === 'function') toggleCompareMode(); } });
 
 // Stat popup functions
 

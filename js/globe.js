@@ -211,6 +211,25 @@ function onMouseMove(event) {
   const intersects = raycaster.intersectObjects(countryMeshes);
 
   if (!tooltip) tooltip = document.getElementById('tooltip');
+
+  // Check trade route line hover when trade routes are active
+  if (typeof tradeRoutesActive !== 'undefined' && tradeRoutesActive && tradeRouteMeshes && tradeRouteMeshes.length > 0) {
+    raycaster.params.Line = raycaster.params.Line || {};
+    var origThreshold = raycaster.params.Line.threshold;
+    raycaster.params.Line.threshold = 0.02; // Wider detection for lines
+    var tradeHits = raycaster.intersectObjects(tradeRouteMeshes);
+    raycaster.params.Line.threshold = origThreshold || 0;
+    if (tradeHits.length > 0 && tradeHits[0].object.userData.route) {
+      var hitRoute = tradeHits[0].object.userData.route;
+      if (typeof showTradeRouteTooltip === 'function') showTradeRouteTooltip(hitRoute, event.clientX, event.clientY);
+      if (tooltip) tooltip.style.display = 'none';
+      renderer.domElement.style.cursor = 'pointer';
+      return;
+    } else {
+      if (typeof hideTradeRouteTooltip === 'function') hideTradeRouteTooltip();
+    }
+  }
+
   if (intersects.length > 0) {
     var ud = intersects[0].object.userData;
     if (tooltip) {
@@ -258,6 +277,7 @@ function onClick(event) {
   if (intersects.length > 0) {
     const clickedName = intersects[0].object.userData.name;
     if (typeof compareModeActive !== 'undefined' && compareModeActive) { addCountryToCompare(clickedName); return; }
+    if (typeof handleTradeClick === 'function' && handleTradeClick(clickedName)) return;
     openModal(clickedName);
     return;
   }
@@ -276,6 +296,7 @@ function onClick(event) {
     const country = findNearestCountry(lat, lng);
     if (country) {
       if (typeof compareModeActive !== 'undefined' && compareModeActive) { addCountryToCompare(country); return; }
+      if (typeof handleTradeClick === 'function' && handleTradeClick(country)) return;
       openModal(country);
     }
   }
@@ -402,7 +423,10 @@ if (_globeEl) _globeEl.addEventListener('touchend', function(e) {
       // Priority: try marker dots first
       const intersects = raycaster.intersectObjects(countryMeshes);
       if (intersects.length > 0) {
-        openModal(intersects[0].object.userData.name);
+        var tappedName = intersects[0].object.userData.name;
+        if (typeof compareModeActive !== 'undefined' && compareModeActive) { addCountryToCompare(tappedName); return; }
+        if (typeof handleTradeClick === 'function' && handleTradeClick(tappedName)) return;
+        openModal(tappedName);
         return;
       }
       // Try globe surface - find nearest tracked country
@@ -410,7 +434,11 @@ if (_globeEl) _globeEl.addEventListener('touchend', function(e) {
       if (globeHits.length > 0) {
         const { lat, lng } = vector3ToLatLng(globeHits[0].point);
         const country = findNearestCountry(lat, lng);
-        if (country) openModal(country);
+        if (country) {
+          if (typeof compareModeActive !== 'undefined' && compareModeActive) { addCountryToCompare(country); return; }
+          if (typeof handleTradeClick === 'function' && handleTradeClick(country)) return;
+          openModal(country);
+        }
       }
     }
   }
