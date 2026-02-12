@@ -4079,6 +4079,7 @@ function formatSourceName(sourceId) {
     'cnn': 'CNN', 'nytimes': 'NY Times', 'washingtonpost': 'Washington Post', 'wsj': 'Wall Street Journal',
     'usatoday': 'USA Today', 'latimes': 'LA Times', 'chicagotribune': 'Chicago Tribune',
     'abc': 'ABC News', 'nbc': 'NBC News', 'cbs': 'CBS News', 'fox': 'Fox News', 'foxnews': 'Fox News',
+    'nypost': 'New York Post', 'newyorkpost': 'New York Post', 'newsmax': 'Newsmax',
     'npr': 'NPR', 'pbs': 'PBS', 'politico': 'Politico', 'thehill': 'The Hill', 'axios': 'Axios',
     'huffpost': 'HuffPost', 'buzzfeed': 'BuzzFeed', 'vox': 'Vox', 'slate': 'Slate',
     'yardbarker': 'Yardbarker', 'espn': 'ESPN', 'cbssports': 'CBS Sports', 'si': 'Sports Illustrated',
@@ -4266,6 +4267,24 @@ async function fetchLiveNews() {
           url: article.link || '#'
         };
       });
+
+      // Ensure political diversity - inject RC/R fallback articles if live feeds lack them
+      const rcCount = DAILY_BRIEFING.filter(a => { const b = getSourceBias(a.source); return b === 'RC' || b === 'R'; }).length;
+      if (rcCount < 3) {
+        const rightFallbacks = DAILY_BRIEFING_FALLBACK.filter(a => {
+          const b = getSourceBias(a.source);
+          return b === 'RC' || b === 'R';
+        });
+        const needed = Math.min(4 - rcCount, rightFallbacks.length);
+        if (needed > 0) {
+          const interval = Math.max(1, Math.floor(DAILY_BRIEFING.length / (needed + 1)));
+          for (let i = 0; i < needed; i++) {
+            const pos = Math.min((i + 1) * interval + i, DAILY_BRIEFING.length);
+            DAILY_BRIEFING.splice(pos, 0, rightFallbacks[i]);
+          }
+          console.log(`Injected ${needed} right-leaning articles for bias balance`);
+        }
+      }
 
       lastNewsUpdate = new Date();
       console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
