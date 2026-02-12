@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HEGEMON - Global Intelligence Network</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='50%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1117' stroke='url(%23g)' stroke-width='2.5'/%3E%3Cellipse cx='32' cy='32' rx='12' ry='28' fill='none' stroke='%2306b6d4' stroke-width='1.5' opacity='0.7'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='28' fill='none' stroke='%233b82f6' stroke-width='1' opacity='0.5'/%3E%3Cpath d='M4 24h56M4 40h56' stroke='%2306b6d4' stroke-width='1' opacity='0.5'/%3E%3Cpath d='M4 32h56' stroke='%233b82f6' stroke-width='1.2' opacity='0.6'/%3E%3Ccircle cx='20' cy='22' r='2' fill='%23ef4444' opacity='0.9'/%3E%3Ccircle cx='40' cy='28' r='1.5' fill='%23f97316' opacity='0.9'/%3E%3Ccircle cx='28' cy='38' r='1.5' fill='%2322c55e' opacity='0.9'/%3E%3Ccircle cx='44' cy='36' r='1.8' fill='%23eab308' opacity='0.9'/%3E%3C/svg%3E">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -246,6 +247,28 @@
     .newsletter-story-meta { font-size: 8px; color: #6b7280; margin-top: 4px; display: flex; gap: 8px; }
     /* countdown styles removed — countdown is now inline in the header */
 
+    /* Terms of Service / Privacy Policy */
+    .tos-btn { position: absolute; bottom: 16px; left: 180px; z-index: 10; background: rgba(10,10,15,0.85); backdrop-filter: blur(8px); border: 1px solid #1f2937; border-radius: 6px; padding: 4px 7px; cursor: pointer; color: #6b7280; font-size: 9px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+    .tos-btn:hover { border-color: #374151; color: #9ca3af; }
+    .tos-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .tos-overlay.active { display: flex; }
+    .tos-modal { background: #0d0d14; border: 1px solid #1f2937; border-radius: 12px; width: 90%; max-width: 680px; max-height: 80vh; display: flex; flex-direction: column; }
+    .tos-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1f2937; }
+    .tos-tabs { display: flex; gap: 12px; }
+    .tos-tab { background: none; border: none; color: #6b7280; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tos-tab.active { color: #06b6d4; border-bottom-color: #06b6d4; }
+    .tos-close { background: none; border: none; color: #6b7280; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+    .tos-close:hover { color: #e5e7eb; }
+    .tos-body { padding: 18px; overflow-y: auto; flex: 1; }
+    .tos-body::-webkit-scrollbar { width: 4px; }
+    .tos-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    .tos-body h2 { font-size: 14px; color: #e5e7eb; margin: 18px 0 8px 0; font-weight: 700; }
+    .tos-body h2:first-child { margin-top: 0; }
+    .tos-body h3 { font-size: 12px; color: #d1d5db; margin: 14px 0 6px 0; font-weight: 600; }
+    .tos-body p, .tos-body li { font-size: 11px; color: #9ca3af; line-height: 1.7; margin-bottom: 6px; }
+    .tos-body ul { padding-left: 18px; margin-bottom: 8px; }
+    .tos-body a { color: #06b6d4; text-decoration: none; }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .app { flex-direction: column; }
@@ -263,6 +286,7 @@
       .globe-toggle { padding: 5px 8px; font-size: 7px; }
       .toggle-icon { width: 10px; height: 10px; }
       .toggle-text { display: none; }
+      .tos-btn { bottom: auto; top: 70px; left: 120px; font-size: 8px; padding: 3px 5px; }
       .stats { bottom: 10px; left: 10px; right: 10px; gap: 6px; }
       .stat-card { padding: 8px 10px; }
       .stat-value { font-size: 16px; }
@@ -336,6 +360,11 @@
       </div>
     </div>
 
+    <button class="tos-btn" onclick="openTOS()" title="Terms of Service & Privacy Policy">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      TOS
+    </button>
+
     <div class="globe-controls">
       <button class="globe-toggle active" id="rotateToggle" onclick="toggleRotation()">
         <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -389,6 +418,20 @@
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Terms of Service / Privacy Policy Modal -->
+<div class="tos-overlay" id="tosOverlay" onclick="if(event.target===this)closeTOS()">
+  <div class="tos-modal">
+    <div class="tos-header">
+      <div class="tos-tabs">
+        <button class="tos-tab active" onclick="switchTosTab('terms')">Terms of Service</button>
+        <button class="tos-tab" onclick="switchTosTab('privacy')">Privacy Policy</button>
+      </div>
+      <button class="tos-close" onclick="closeTOS()">&times;</button>
+    </div>
+    <div class="tos-body" id="tosBody"></div>
   </div>
 </div>
 
@@ -5787,6 +5830,127 @@ document.querySelectorAll('.tab').forEach(tab => {
     renderSidebar();
   });
 });
+
+// Terms of Service / Privacy Policy
+const TOS_CONTENT = {
+  terms: `<h2>TERMS OF SERVICE</h2>
+<p><strong>Effective Date: February 13, 2026</strong></p>
+<p>Welcome to Hegemon Global Intelligence Network ("Hegemon Global," "we," "us," or "our"). These Terms of Service ("Terms") govern your access to and use of hegemonglobal.com and any related services, content, features, and functionality (collectively, the "Site").</p>
+<p>By accessing or using the Site, you agree to be bound by these Terms. If you do not agree, you must not use the Site.</p>
+
+<h3>1. Nature of the Site</h3>
+<p>Hegemon Global provides geopolitical analysis, risk commentary, research summaries, forecasts, election tracking, sanctions tracking, and related informational content. All content on this Site is provided for informational and educational purposes only.</p>
+<p>Nothing on this Site constitutes:</p>
+<ul><li>Financial advice</li><li>Investment advice</li><li>Legal advice</li><li>Strategic advisory services</li><li>Government or policy recommendations</li><li>Professional consulting services</li></ul>
+<p>You acknowledge that you are solely responsible for any decisions made based on the information provided on this Site.</p>
+
+<h3>2. No Professional or Investment Advice</h3>
+<p>The Risk Levels, Forecasts, Articles, Briefs, Elections tracking, Horizon calendar entries, sanctions information, and any other materials published on this Site are analytical opinions and informational summaries only.</p>
+<p>They are not intended to serve as:</p>
+<ul><li>Investment recommendations</li><li>Trading signals</li><li>Economic advisory guidance</li><li>Security or defense recommendations</li><li>Political endorsements</li></ul>
+<p>You agree that you will not rely on any content on this Site as a substitute for independent professional advice.</p>
+
+<h3>3. Limitation of Liability</h3>
+<p>To the fullest extent permitted by law: Hegemon Global, its owner, affiliates, contributors, agents, and representatives shall not be liable for any direct, indirect, incidental, consequential, special, punitive, or exemplary damages arising out of or related to:</p>
+<ul><li>Your use of or inability to use the Site</li><li>Reliance on any analysis, risk assessment, or forecast</li><li>Errors or omissions in content</li><li>Changes in geopolitical conditions</li><li>Data inaccuracies</li><li>Third-party links or referenced materials</li></ul>
+<p>Use of the Site is at your own risk.</p>
+
+<h3>4. No Warranties</h3>
+<p>The Site and all content are provided "as is" and "as available" without warranties of any kind, express or implied, including but not limited to: accuracy, completeness, reliability, timeliness, fitness for a particular purpose, and non-infringement.</p>
+<p>We do not guarantee that the Site will be uninterrupted, secure, or error-free.</p>
+
+<h3>5. Intellectual Property</h3>
+<p>All content on the Site, including articles, briefs, forecasts, risk level classifications, structural frameworks, country analyses, layout design, graphics, text, logos, and trademarks are the intellectual property of Hegemon Global unless otherwise stated.</p>
+<p>You may not copy, reproduce, redistribute, republish, scrape, extract data, or create derivative works without prior written permission. Limited quotation with attribution and link-back is permitted for non-commercial use. Unauthorized commercial use is strictly prohibited.</p>
+
+<h3>6. Data Scraping and Automated Access</h3>
+<p>You may not use bots, crawlers, scraping tools, AI harvesting systems, or automated methods to extract data from the Site without express written consent. We reserve the right to block IP addresses or pursue legal remedies against unauthorized data harvesting.</p>
+
+<h3>7. External Links</h3>
+<p>The Site may contain links to third-party websites. Hegemon Global does not control and is not responsible for the content, policies, or practices of third-party sites. Accessing third-party links is done at your own risk.</p>
+
+<h3>8. Modifications to Content</h3>
+<p>We reserve the right to modify risk levels, update forecasts, change classifications, remove or edit content, and modify or discontinue features at any time without notice. Geopolitical conditions evolve rapidly, and content may become outdated.</p>
+
+<h3>9. Indemnification</h3>
+<p>You agree to indemnify and hold harmless Hegemon Global and its affiliates from any claims, damages, liabilities, losses, or expenses arising from your use of the Site, your reliance on Site content, or your violation of these Terms.</p>
+
+<h3>10. No Government Affiliation</h3>
+<p>Hegemon Global is an independent informational platform. It is not affiliated with any government, intelligence agency, defense institution, financial institution, or political organization. Any resemblance to official classification systems is coincidental and analytical in nature.</p>
+
+<h3>11. Governing Law</h3>
+<p>These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law principles.</p>
+
+<h3>12. Changes to These Terms</h3>
+<p>We reserve the right to modify these Terms at any time. Updated Terms will be posted with a revised Effective Date. Continued use of the Site constitutes acceptance of updated Terms.</p>
+
+<h3>13. Contact</h3>
+<p>For questions regarding these Terms, contact: <a href="mailto:hegemonglobal0@gmail.com">hegemonglobal0@gmail.com</a></p>
+
+<h2>DISCLAIMER</h2>
+<p>Hegemon Global provides geopolitical risk commentary and informational analysis only. All Risk Levels, Forecasts, Briefs, Articles, Elections tracking, Horizon entries, and related content represent analytical opinions and interpretations of publicly available information. Nothing on this Site constitutes financial advice, investment advice, legal advice, security advice, or professional consulting services. Users are solely responsible for decisions made based on Site content.</p>`,
+
+  privacy: `<h2>PRIVACY POLICY</h2>
+<p><strong>Effective Date: February 13, 2026</strong></p>
+<p>Hegemon Global Intelligence Network ("Hegemon Global," "we," "us," or "our") operates hegemonglobal.com (the "Site"). This Privacy Policy explains how information is collected, used, and protected when you access or interact with the Site.</p>
+<p>By using the Site, you consent to the practices described in this Policy.</p>
+
+<h3>1. Information We Collect</h3>
+<h3>A. Automatically Collected Information</h3>
+<p>When you visit the Site, certain information may be collected automatically, including: IP address, browser type and version, device type, operating system, pages viewed, time spent on pages, referring website, and general geographic location. This information is collected through analytics and server logs.</p>
+
+<h3>B. Analytics Services</h3>
+<p>We use Google Analytics (GA4), a web analytics service provided by Google LLC, to understand how users interact with the Site. Google Analytics may collect device and browser information, general geographic location, usage behavior, and traffic source data.</p>
+<p>Google Analytics uses cookies and similar technologies to collect and process data. Information generated may be transmitted to and stored by Google on servers in the United States.</p>
+<p>We use this information to analyze traffic patterns, improve site performance, and understand user engagement.</p>
+<p>You can learn more about how Google processes data at: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a></p>
+<p>You can opt out of Google Analytics by using the Google Analytics Opt-out Browser Add-on.</p>
+
+<h3>2. Cookies</h3>
+<p>The Site uses cookies and similar technologies to enable analytics functionality, improve user experience, and monitor site performance. You may disable cookies through your browser settings. Disabling cookies may limit certain functionality.</p>
+
+<h3>3. Use of Information</h3>
+<p>Information collected is used to operate and maintain the Site, improve content and structure, monitor security, prevent abuse, and analyze performance metrics. We do not sell, rent, or trade personal information.</p>
+
+<h3>4. Data Retention</h3>
+<p>Analytics data is retained only as long as necessary to fulfill operational and analytical purposes. Server logs may be retained for security and technical maintenance.</p>
+
+<h3>5. Data Security</h3>
+<p>We implement reasonable administrative and technical safeguards to protect information. However, no method of transmission over the internet is completely secure. Use of the Site is at your own risk.</p>
+
+<h3>6. International Users</h3>
+<p>If you access the Site from outside the United States, your information may be transferred to and processed in the United States. By using the Site, you consent to such transfer.</p>
+
+<h3>7. California Privacy Rights (CCPA)</h3>
+<p>If you are a California resident, you may have rights under the California Consumer Privacy Act, including the right to request disclosure or deletion of personal data. Hegemon Global does not sell personal information.</p>
+
+<h3>8. European Users (GDPR Notice)</h3>
+<p>If you are located in the European Economic Area, you may have the right to access your personal data, request correction or deletion, and restrict processing. Data is processed on the basis of legitimate interest in operating and improving the Site.</p>
+
+<h3>9. Children's Privacy</h3>
+<p>This Site is not intended for individuals under the age of 13. We do not knowingly collect personal information from children.</p>
+
+<h3>10. Changes to This Policy</h3>
+<p>We may update this Privacy Policy from time to time. The updated version will include a revised Effective Date. Continued use of the Site constitutes acceptance of changes.</p>
+
+<h3>11. Contact</h3>
+<p>For privacy-related questions, contact: <a href="mailto:hegemonglobal0@gmail.com">hegemonglobal0@gmail.com</a></p>`
+};
+
+let currentTosTab = 'terms';
+function openTOS() {
+  document.getElementById('tosOverlay').classList.add('active');
+  switchTosTab('terms');
+}
+function closeTOS() {
+  document.getElementById('tosOverlay').classList.remove('active');
+}
+function switchTosTab(tab) {
+  currentTosTab = tab;
+  document.getElementById('tosBody').innerHTML = TOS_CONTENT[tab];
+  document.querySelectorAll('.tos-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tos-tab').forEach(t => { if ((tab === 'terms' && t.textContent.includes('Terms')) || (tab === 'privacy' && t.textContent.includes('Privacy'))) t.classList.add('active'); });
+}
 
 function openModal(name) {
   const c = COUNTRIES[name];
