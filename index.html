@@ -1462,6 +1462,19 @@ const COUNTRIES = {
     ]
   },
 
+  'Greenland': { lat: 71.71, lng: -42.60, flag: '🇬🇱', risk: 'stormy', region: 'Arctic / North Atlantic', pop: '57K', gdp: '$3.1B', leader: 'Múte B. Egede', title: 'Arctic Sovereignty Dispute',
+    analysis: {
+      what: 'Greenland, an autonomous territory of Denmark, has become a focal point of US foreign policy under President Trump, who has repeatedly expressed interest in acquiring the island. Prime Minister Múte Egede has pushed back firmly, stating Greenland is not for sale while simultaneously advancing the independence debate. Denmark has responded by increasing defense spending in the Arctic and strengthening its military presence on the island.',
+      why: 'Greenland sits at the intersection of several major geopolitical trends. The Arctic is opening up due to climate change, creating new shipping routes between Asia and Europe that could reshape global trade. The island holds vast untapped mineral deposits including rare earth elements critical to technology and defense manufacturing. Its geographic position also makes it strategically important for missile defense and North Atlantic monitoring. As competition between the US, China, and Russia intensifies in the Arctic, Greenland\'s status has moved from a diplomatic curiosity to a serious geopolitical question.',
+      next: 'The independence movement in Greenland is accelerating, with Egede\'s government exploring options for full sovereignty from Denmark. Watch for continued US pressure, potential Chinese investment bids for mining operations, NATO Arctic defense expansion, and the outcome of Greenland\'s internal constitutional discussions. The island\'s future will be shaped by the broader Arctic great power competition.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Trump renews call for US acquisition of Greenland', url: '#' },
+      { source: 'BBC', bias: 'center', time: '6h ago', headline: 'Greenland PM rejects sale talk, pushes independence', url: '#' },
+      { source: 'Financial Times', bias: 'center', time: '1d ago', headline: 'Rare earth deposits fuel Arctic geopolitical competition', url: '#' }
+    ]
+  },
+
   'Ireland': { lat: 53.14, lng: -7.69, flag: '🇮🇪', risk: 'clear', region: 'Western Europe', pop: '5M', gdp: '$533B', leader: 'Simon Harris', title: 'Tech Hub',
     analysis: {
       what: 'Ireland is a major European tech hub, hosting headquarters for Apple, Google, Microsoft, and others drawn by low corporate taxes. GDP figures are distorted by multinational accounting but genuine prosperity is high. Housing and healthcare face serious challenges. Relations with Britain have stabilized post-Brexit.',
@@ -1843,7 +1856,7 @@ const HORIZON_EVENTS = [
 // NEWSLETTER SYSTEM
 // Region mapping for news categorization
 const NEWSLETTER_REGIONS = {
-  'Europe': ['Ukraine', 'Russia', 'Belarus', 'Moldova', 'Poland', 'Romania', 'Hungary', 'Balkans', 'UK', 'Britain', 'France', 'Germany', 'Italy', 'Spain', 'NATO', 'EU', 'European', 'Serbia', 'Kosovo', 'Greece', 'Turkey', 'Ankara', 'Istanbul', 'Sweden', 'Finland', 'Norway', 'Denmark', 'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Czech', 'Slovakia', 'Croatia', 'Bulgaria', 'Portugal', 'Ireland'],
+  'Europe': ['Ukraine', 'Russia', 'Belarus', 'Moldova', 'Poland', 'Romania', 'Hungary', 'Balkans', 'UK', 'Britain', 'France', 'Germany', 'Italy', 'Spain', 'NATO', 'EU', 'European', 'Serbia', 'Kosovo', 'Greece', 'Turkey', 'Ankara', 'Istanbul', 'Sweden', 'Finland', 'Norway', 'Denmark', 'Greenland', 'Arctic', 'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Czech', 'Slovakia', 'Croatia', 'Bulgaria', 'Portugal', 'Ireland'],
   'Asia': ['China', 'Taiwan', 'Japan', 'Korea', 'North Korea', 'South Korea', 'Hong Kong', 'Myanmar', 'Thailand', 'Vietnam', 'Philippines', 'Indonesia', 'Malaysia', 'Singapore', 'Cambodia', 'Laos', 'India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Afghanistan', 'Kabul', 'Delhi', 'Mumbai', 'Beijing', 'Tokyo', 'Seoul', 'Pyongyang', 'Manila', 'Jakarta', 'Bangkok'],
   'Middle East': ['Israel', 'Gaza', 'Palestine', 'Iran', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'UAE', 'Qatar', 'Jordan', 'Egypt', 'Houthi', 'Hezbollah', 'Tehran', 'Baghdad', 'Damascus', 'Beirut', 'Riyadh', 'Dubai', 'Oman', 'Bahrain', 'Kuwait'],
   'Africa': ['Sudan', 'Somalia', 'Ethiopia', 'DRC', 'Congo', 'Nigeria', 'Kenya', 'South Africa', 'Mali', 'Niger', 'Burkina', 'Sahel', 'Libya', 'Algeria', 'Morocco', 'Tunisia', 'Mozambique', 'Rwanda', 'Uganda', 'Tanzania', 'Ghana', 'Senegal', 'Cameroon', 'Zimbabwe', 'Eritrea'],
@@ -4320,6 +4333,7 @@ function isRelevantToCountry(title, description, countryName) {
     'Cyprus': ['cypriot', 'nicosia'],
     'Czech Republic': ['czech', 'prague'],
     'Denmark': ['danish', 'copenhagen'],
+    'Greenland': ['greenlandic', 'nuuk', 'inuit'],
     'Djibouti': ['djiboutian'],
     'Dominica': ['dominican'],
     'Dominican Republic': ['dominican republic', 'santo domingo'],
