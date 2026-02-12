@@ -2088,7 +2088,8 @@ function generateRegionNarrative(region, articles) {
       'humanitarian': 'On the humanitarian side,', 'military': 'In defense matters,',
       'technology': 'In technology,', 'energy': 'On energy,', 'general': 'Separately,'
     }[s.type] || 'Separately,') : 'Meanwhile,';
-    const src = s.source ? ` (${fmtSource(s.source)})` : '';
+    const srcFmt = fmtSource(s.source);
+    const src = s.source ? ` (${srcFmt.charAt(0).toUpperCase() + srcFmt.slice(1)})` : '';
     sentences.push(`${bridge} ${sClean}${src}.`);
   }
 
@@ -2097,7 +2098,8 @@ function generateRegionNarrative(region, articles) {
   if (thirdIdx >= 0 && classified.length >= 4) {
     const t = classified[thirdIdx];
     const tClean = cleanHeadlineForProse(t.headline);
-    const src = t.source ? ` (${fmtSource(t.source)})` : '';
+    const srcFmt2 = fmtSource(t.source);
+    const src = t.source ? ` (${srcFmt2.charAt(0).toUpperCase() + srcFmt2.slice(1)})` : '';
     sentences.push(`Additionally, ${tClean}${src}.`);
   }
 
@@ -2107,17 +2109,17 @@ function generateRegionNarrative(region, articles) {
   if (classified.length >= 2) {
     const analysis = {
       'violence': `The active conflict situation${entityStr} risks further displacement, economic disruption, and potential external involvement.`,
-      'diplomacy': `Whether these diplomatic efforts${entityStr} produce binding commitments will shape stability in ${region} over the coming weeks.`,
+      'diplomacy': `Whether these diplomatic efforts${entityStr} produce binding commitments will shape stability in ${fmtRegion(region)} over the coming weeks.`,
       'unrest': `This pattern of civil unrest${entityStr} points to structural pressures unlikely to resolve without substantive policy changes.`,
-      'politics': `These political developments${entityStr} could shift governance trajectories and reshape international partnerships in ${region}.`,
-      'economic': `These economic pressures${entityStr} carry implications beyond ${region}, as changes in monetary policy and market confidence tend to produce ripple effects across connected economies.`,
+      'politics': `These political developments${entityStr} could shift governance trajectories and reshape international partnerships in ${fmtRegion(region)}.`,
+      'economic': `These economic pressures${entityStr} carry implications beyond ${fmtRegion(region)}, as changes in monetary policy and market confidence tend to produce ripple effects across connected economies.`,
       'military': `This military activity${entityStr} raises the risk of miscalculation, particularly when multiple actors are increasing their posture simultaneously.`,
       'humanitarian': `The humanitarian situation${entityStr} demands international attention, as conditions are likely to deteriorate without adequate intervention.`,
       'sanctions': `These economic measures${entityStr} are reshaping trade relationships and pushing affected governments toward alternative partnerships.`,
-      'technology': `Technology competition${entityStr} has direct implications for both economic positioning and national security in the region.`,
-      'energy': `Energy developments${entityStr} affect global supply chains and pricing, making them relevant well beyond ${region}.`
+      'technology': `Technology competition${entityStr} has direct implications for both economic positioning and national security in ${fmtRegion(region)}.`,
+      'energy': `Energy developments${entityStr} affect global supply chains and pricing, making them relevant well beyond ${fmtRegion(region)}.`
     };
-    sentences.push(analysis[dominantType] || `The range of developments${entityStr} reflects an evolving situation across ${region}.`);
+    sentences.push(analysis[dominantType] || `The range of developments${entityStr} reflects an evolving situation across ${fmtRegion(region)}.`);
   }
 
   // FORWARD LOOK
@@ -2127,7 +2129,94 @@ function generateRegionNarrative(region, articles) {
     sentences.push(`These developments are worth monitoring as the situation continues to evolve.`);
   }
 
-  return sentences.slice(0, 6).join(' ');
+  // Post-process: add formal titles on first mention
+  return addLeaderTitles(sentences.slice(0, 6).join(' '));
+}
+
+// Convert Title Case headlines to sentence case for prose embedding
+function toSentenceCase(text) {
+  if (!text || text.length < 2) return text;
+  // Detect Title Case: >60% of words with 4+ letters are capitalized
+  const words = text.split(/\s+/);
+  const longWords = words.filter(w => w.replace(/[^a-zA-Z]/g, '').length >= 4);
+  const capsLongWords = longWords.filter(w => /^[A-Z]/.test(w));
+  const isTitleCase = longWords.length >= 2 && (capsLongWords.length / longWords.length) > 0.6;
+  if (!isTitleCase) return text;
+  // Build set of words to keep capitalized
+  const keepCaps = new Set();
+  if (typeof COUNTRIES !== 'undefined') {
+    Object.keys(COUNTRIES).forEach(name => {
+      name.split(/\s+/).forEach(word => { if (word.length > 1) keepCaps.add(word); });
+    });
+  }
+  ['President','Prime','Minister','King','Queen','Prince','Princess','Pope','Senator','Secretary','General','Admiral','Colonel','Governor','Chancellor','Ambassador',
+   'Congress','Parliament','Senate','Pentagon','Kremlin','Vatican','Taliban','Hamas','Hezbollah','ISIS','Houthi','Houthis',
+   'Republican','Democrat','Democratic','Labour','Conservative','Liberal','Tory','Tories',
+   'European','African','Asian','American','Atlantic','Pacific','Arctic','Antarctic','Mediterranean','Caribbean',
+   'Islamic','Muslim','Christian','Jewish','Hindu','Buddhist','Orthodox','Sunni','Shia',
+   'Israeli','Iranian','Persian','Chinese','Russian','Ukrainian','Syrian','Iraqi','Afghan','Palestinian','Lebanese',
+   'Yemeni','Somali','Sudanese','Libyan','Nigerian','Egyptian','Saudi','Turkish','Japanese','Korean',
+   'Indian','Pakistani','Brazilian','Mexican','Cuban','Venezuelan','Colombian','British','French','German',
+   'Italian','Spanish','Polish','Dutch','Swedish','Norwegian','Finnish','Danish','Greek','Portuguese',
+   'Hungarian','Czech','Romanian','Serbian','Croatian','Bosnian','Albanian','Georgian','Armenian',
+   'Canadian','Australian','Taiwanese','Greenlandic','Kurdish','Rohingya','Uyghur','Tibetan','Arab',
+   'Trump','Biden','Putin','Xi','Macron','Zelensky','Netanyahu','Modi','Erdogan','Scholz','Starmer','Meloni','Kishida','Lula','Milei','Orban',
+   'Wall','Street','Reuters','BBC','CNN','OPEC','WHO','IMF','NATO','BRICS',
+   'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday',
+   'January','February','March','April','May','June','July','August','September','October','November','December',
+   'Revolution','Republic','Federation','Assembly','Union','Kingdom','Nations','Commonwealth',
+   'Sea','Gulf','Strait','Red','Cross','Crescent','Bank','West','East','Horn','Sahel','Levant','Peninsula','Mount'
+  ].forEach(w => keepCaps.add(w));
+  return text.replace(/\S+/g, (word, offset) => {
+    const cleanW = word.replace(/[^a-zA-Z]/g, '');
+    // Keep acronyms (2+ uppercase chars like NATO, U.S., BBC, EU)
+    if (/^[A-Z]{2,}\.?$/.test(cleanW)) return word;
+    // Keep words with internal dots (U.S., U.K.)
+    if (/[A-Z]\.[A-Z]/.test(word)) return word;
+    // Keep mixed-case brand names (TikTok, iPhone, YouTube)
+    if (/[a-z][A-Z]/.test(word)) return word;
+    // Keep known proper nouns
+    const base = word.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '');
+    if (keepCaps.has(base)) return word;
+    // Keep possessives of proper nouns (Iran's, Trump's)
+    const stem = base.replace(/'s$|'s$/i, '');
+    if (stem !== base && keepCaps.has(stem)) return word;
+    // Otherwise lowercase Title Case words
+    if (word[0] === word[0].toUpperCase() && word.length > 1) {
+      return word[0].toLowerCase() + word.slice(1);
+    }
+    return word;
+  });
+}
+
+// Format region name with "the" where grammatically required
+function fmtRegion(region) {
+  const needsThe = /^(Middle East|Americas|United States|United Kingdom|Philippines|Netherlands|Balkans|Caucasus|Caribbean|Sahel|Horn of Africa|Levant|Czech Republic|Dominican Republic)$/i;
+  return needsThe.test(region) ? 'the ' + region : region;
+}
+
+// Add formal titles to world leaders on first mention for professional prose
+function addLeaderTitles(text) {
+  const titles = [
+    ['Trump', 'President'], ['Biden', 'President'], ['Putin', 'President'],
+    ['Zelensky', 'President'], ['Xi Jinping', 'President'], ['Xi', 'President'],
+    ['Macron', 'President'], ['Erdogan', 'President'], ['Lula', 'President'],
+    ['Milei', 'President'], ['Sisi', 'President'], ['Assad', 'President'],
+    ['Netanyahu', 'Prime Minister'], ['Modi', 'Prime Minister'],
+    ['Starmer', 'Prime Minister'], ['Kishida', 'Prime Minister'],
+    ['Scholz', 'Chancellor'], ['Meloni', 'Prime Minister'],
+    ['Orban', 'Prime Minister'], ['Trudeau', 'Prime Minister']
+  ];
+  let result = text;
+  for (const [name, title] of titles) {
+    if (result.includes(`${title} ${name}`)) continue;
+    const idx = result.indexOf(name);
+    if (idx < 0) continue;
+    const before = result.substring(Math.max(0, idx - 25), idx).toLowerCase();
+    if (/\b(president|minister|chancellor|king|queen|pope|premier|secretary|prince|leader)\s*$/.test(before)) continue;
+    result = result.replace(new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`), `${title} ${name}`);
+  }
+  return result;
 }
 
 // Clean a headline for embedding in prose
@@ -2142,10 +2231,8 @@ function cleanHeadlineForProse(headline) {
   clean = clean.replace(/\s*[\(\[](photos?|videos?|watch|gallery|breaking|exclusive|updated?|opinion|analysis)[\)\]]\s*/gi, '');
   // Strip leading "BREAKING:" "EXCLUSIVE:" "WATCH:" "UPDATE:" etc.
   clean = clean.replace(/^(BREAKING|EXCLUSIVE|WATCH|UPDATE|JUST IN|ALERT|DEVELOPING|OPINION|ANALYSIS)\s*[:\-–]\s*/i, '');
-  // Lowercase the first letter ONLY if it's not part of an acronym (2+ uppercase letters)
-  if (clean.length >= 2 && clean[1] && clean[1] === clean[1].toLowerCase()) {
-    clean = clean.charAt(0).toLowerCase() + clean.slice(1);
-  }
+  // Convert Title Case headlines to sentence case for natural prose
+  clean = toSentenceCase(clean);
   // Remove trailing periods, dashes, pipes
   clean = clean.replace(/[\.\-–|]\s*$/, '').trim();
   return clean || 'ongoing developments';
@@ -2201,9 +2288,9 @@ function generateGlobalRamifications(regionData, globalArticles) {
 
   // PARAGRAPH 2: Cross-regional connections — the analytical core
   if (conflictRegions.length >= 2) {
-    sentences.push(`The most consequential pattern in this cycle is the simultaneity of high-priority activity in ${conflictRegions.slice(0, 4).join(' and ')}. When crises unfold in multiple theaters at once, the practical effect is a stretching of diplomatic bandwidth and military readiness. Policymakers cannot give full attention to any one situation, and the risk increases that a secondary crisis escalates precisely because primary attention is directed elsewhere.`);
+    sentences.push(`The most consequential pattern in this cycle is the simultaneity of high-priority activity in ${conflictRegions.slice(0, 4).map(fmtRegion).join(' and ')}. When crises unfold in multiple theaters at once, the practical effect is a stretching of diplomatic bandwidth and military readiness. Policymakers cannot give full attention to any one situation, and the risk increases that a secondary crisis escalates precisely because primary attention is directed elsewhere.`);
   } else if (activeRegions.length >= 3) {
-    sentences.push(`Activity was spread across ${activeRegions.join(', ')}, each contributing distinct threads. While the situations in these regions are not directly connected in most cases, they share an underlying dynamic: a global order under strain, where local instability increasingly has international dimensions and where the capacity for coordinated response has not kept pace with the number of active situations.`);
+    sentences.push(`Activity was spread across ${activeRegions.map(fmtRegion).join(', ')}, each contributing distinct threads. While the situations in these regions are not directly connected in most cases, they share an underlying dynamic: a global order under strain, where local instability increasingly has international dimensions and where the capacity for coordinated response has not kept pace with the number of active situations.`);
   }
 
   // PARAGRAPH 3: Major power dynamics
@@ -2241,7 +2328,7 @@ function generateGlobalRamifications(regionData, globalArticles) {
     sentences.push(`While the global risk level is not at its highest, several of these threads have the potential to develop into more significant stories. The coming days will be worth watching, particularly where domestic pressures intersect with international dynamics.`);
   }
 
-  return sentences.join(' ');
+  return addLeaderTitles(sentences.join(' '));
 }
 
 // Render a single briefing's regional content (reusable for current + past)
