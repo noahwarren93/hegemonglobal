@@ -520,7 +520,7 @@ const COUNTRIES = {
     ]
   },
 
-  'Somalia': { lat: 5.15, lng: 46.20, flag: '🇸🇴', risk: 'catastrophic', region: 'Africa', pop: '18M', gdp: '$8B', leader: 'Hassan Sheikh Mohamud', title: 'Al-Shabaab Threat',
+  'Somalia': { lat: 5.15, lng: 46.20, flag: '🇸🇴', risk: 'extreme', region: 'Africa', pop: '18M', gdp: '$8B', leader: 'Hassan Sheikh Mohamud', title: 'Al-Shabaab Threat',
     analysis: {
       what: 'Somalia has lacked effective central government since 1991. Al-Shabaab, an Al-Qaeda affiliate, controls large rural areas and conducts devastating attacks including car bombings in Mogadishu. President Hassan Sheikh Mohamud launched a major offensive against the group in 2022 with initial success, but Al-Shabaab has regrouped. Drought and famine have killed thousands. Clan politics complicate governance. The African Union mission is drawing down.',
       why: 'Al-Shabaab threatens regional stability, conducting attacks in Kenya and elsewhere. Somalia\'s coast is strategic for global shipping (Gulf of Aden). Failed state status makes it a potential terrorist haven. Climate change-induced drought creates humanitarian emergencies. Piracy, though reduced, can resurge.',
@@ -1886,10 +1886,18 @@ const SOURCE_BIAS = {
 
 function getSourceBias(source) {
   if (!source) return null;
-  // Try exact match first, then partial
+  // Try exact match first
   if (SOURCE_BIAS[source]) return SOURCE_BIAS[source];
-  const key = Object.keys(SOURCE_BIAS).find(k => source.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(source.toLowerCase()));
-  return key ? SOURCE_BIAS[key] : 'C';
+  // Partial match - prefer longest matching key for accuracy
+  const srcLower = source.toLowerCase();
+  let bestKey = null, bestLen = 0;
+  Object.keys(SOURCE_BIAS).forEach(k => {
+    const kLower = k.toLowerCase();
+    if (srcLower.includes(kLower) || kLower.includes(srcLower)) {
+      if (k.length > bestLen) { bestLen = k.length; bestKey = k; }
+    }
+  });
+  return bestKey ? SOURCE_BIAS[bestKey] : 'C';
 }
 
 function renderBiasTag(source) {
@@ -2741,13 +2749,21 @@ function renderPastBriefingsHTML() {
 
 // RSS Feed sources - FREE and UNLIMITED!
 const RSS_FEEDS = {
-  // Major world news RSS feeds
+  // Diverse world news RSS feeds across the political spectrum
   daily: [
+    // Left-Center
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
+    // Center
     { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
-    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' }
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },
+    // Right-Center
+    { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
+    // Right
+    { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' }
   ],
   // Country-specific search will use Google News RSS
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
