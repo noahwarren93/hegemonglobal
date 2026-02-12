@@ -1888,9 +1888,16 @@ function getSourceBias(source) {
 function renderBiasTag(source) {
   const bias = getSourceBias(source);
   if (!bias) return '';
-  const labels = { 'L': 'Left', 'LC': 'Left-Center', 'C': 'Center', 'RC': 'Right-Center', 'R': 'Right' };
-  const colors = { 'L': '#3b82f6', 'LC': '#60a5fa', 'C': '#9ca3af', 'RC': '#f87171', 'R': '#ef4444' };
-  return `<span style="font-size:7px;color:${colors[bias]};border:1px solid ${colors[bias]}33;padding:1px 4px;border-radius:3px;margin-left:6px;font-weight:600;letter-spacing:0.3px;">${labels[bias]}</span>`;
+  const labels = { 'L': 'Left Leaning', 'LC': 'Slight Left', 'C': 'Unbiased', 'RC': 'Slight Right', 'R': 'Right Leaning' };
+  const dotPos = { 'L': '8%', 'LC': '28%', 'C': '50%', 'RC': '72%', 'R': '92%' };
+  const dotColor = { 'L': '#2563eb', 'LC': '#60a5fa', 'C': '#9ca3af', 'RC': '#f87171', 'R': '#dc2626' };
+  const labelColor = { 'L': '#60a5fa', 'LC': '#93c5fd', 'C': '#9ca3af', 'RC': '#fca5a5', 'R': '#f87171' };
+  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;">`
+    + `<span style="display:inline-block;width:48px;height:4px;border-radius:2px;background:linear-gradient(to right,#2563eb 0%,#60a5fa 20%,#93c5fd 35%,#d1d5db 50%,#fca5a5 65%,#f87171 80%,#dc2626 100%);position:relative;">`
+    + `<span style="position:absolute;top:50%;left:${dotPos[bias]};width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid ${dotColor[bias]};transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,0.4);"></span>`
+    + `</span>`
+    + `<span style="font-size:7px;color:${labelColor[bias]};font-weight:600;white-space:nowrap;">${labels[bias]}</span>`
+    + `</span>`;
 }
 
 // Store last newsletter data
@@ -5233,7 +5240,8 @@ function renderSidebar() {
         <div class="card" style="border-left:2px solid ${item.category === 'CONFLICT' ? '#ef4444' : item.category === 'CRISIS' ? '#f97316' : '#eab308'};">
           <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
           <div class="card-headline" style="font-weight:600;">${item.headline}</div>
-          <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a>${renderBiasTag(item.source)}</div>
+          <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+          <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
         </div>
       `).join('');
     }
@@ -5244,7 +5252,8 @@ function renderSidebar() {
       <div class="card">
         <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
         <div class="card-headline">${item.headline}</div>
-        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a>${renderBiasTag(item.source)}</div>
+        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+        <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
       </div>
     `).join('');
 
@@ -5427,7 +5436,7 @@ function openModal(name) {
   // Show cached news first
   if (c.news && c.news.length) {
     html += `<div class="section-title">Recent Coverage</div>`;
-    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-bias" style="background:${BIAS_COLORS[n.bias]}"></span><span class="news-source">${n.source}${renderBiasTag(n.source)}</span><span class="news-time">${n.time}</span></div><div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
+    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div>${renderBiasTag(n.source)}<div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
   }
 
   // Add placeholder for live country news
@@ -5448,9 +5457,10 @@ function openModal(name) {
           <div class="news-item">
             <div class="news-meta">
               <span class="card-cat ${n.category}" style="font-size:7px;padding:1px 4px;">${n.category}</span>
-              <span class="news-source">${n.source}${renderBiasTag(n.source)}</span>
+              <span class="news-source">${n.source}</span>
               <span class="news-time">${n.time}</span>
             </div>
+            ${renderBiasTag(n.source)}
             <div class="news-headline">${n.headline}</div>
             <a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>
           </div>
