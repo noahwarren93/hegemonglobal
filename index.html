@@ -1850,6 +1850,36 @@ const NEWSLETTER_REGIONS = {
   'Americas': ['United States', 'US', 'Brazil', 'Mexico', 'Venezuela', 'Colombia', 'Argentina', 'Haiti', 'Cuba', 'Canada', 'Chile', 'Peru', 'Ecuador', 'Bolivia', 'Panama', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Dominican', 'Puerto Rico', 'Washington', 'Congress', 'White House']
 };
 
+// Source political bias ratings: L=Left, LC=Left-Center, C=Center, RC=Right-Center, R=Right
+const SOURCE_BIAS = {
+  // Left
+  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L',
+  // Left-Center
+  'New York Times': 'LC', 'The New York Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'The Guardian': 'LC', 'Guardian': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'Politico': 'LC', 'The Atlantic': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'The Economist': 'LC',
+  // Center
+  'Reuters': 'C', 'AP News': 'C', 'Associated Press': 'C', 'Al Jazeera': 'C', 'France 24': 'C', 'DW News': 'C', 'The Hill': 'C', 'Axios': 'C', 'PBS': 'C', 'Nikkei Asia': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'C', 'Korea Times': 'C', 'South China Morning Post': 'C', 'Euronews': 'C',
+  // Right-Center
+  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'Forbes': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC',
+  // Right
+  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'Washington Examiner': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R'
+};
+
+function getSourceBias(source) {
+  if (!source) return null;
+  // Try exact match first, then partial
+  if (SOURCE_BIAS[source]) return SOURCE_BIAS[source];
+  const key = Object.keys(SOURCE_BIAS).find(k => source.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(source.toLowerCase()));
+  return key ? SOURCE_BIAS[key] : null;
+}
+
+function renderBiasTag(source) {
+  const bias = getSourceBias(source);
+  if (!bias) return '';
+  const labels = { 'L': 'Left', 'LC': 'Left-Center', 'C': 'Center', 'RC': 'Right-Center', 'R': 'Right' };
+  const colors = { 'L': '#3b82f6', 'LC': '#60a5fa', 'C': '#9ca3af', 'RC': '#f87171', 'R': '#ef4444' };
+  return `<span style="font-size:7px;color:${colors[bias]};border:1px solid ${colors[bias]}33;padding:1px 4px;border-radius:3px;margin-left:6px;font-weight:600;letter-spacing:0.3px;">${labels[bias]}</span>`;
+}
+
 // Store last newsletter data
 let lastNewsletterData = null;
 let lastNewsletterTime = null;
@@ -1903,11 +1933,15 @@ function categorizeNewsByRegion(articles) {
   regionNews['Global'] = []; // For uncategorized news
 
   articles.forEach(article => {
-    const text = (article.headline || article.title || '').toLowerCase();
+    const text = (article.headline || article.title || '');
     let matched = false;
 
     for (const [region, keywords] of Object.entries(NEWSLETTER_REGIONS)) {
-      if (keywords.some(kw => text.includes(kw.toLowerCase()))) {
+      // Use word-boundary matching to prevent "US" matching inside "suspect", "focus", etc.
+      if (keywords.some(kw => {
+        const rx = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+        return rx.test(text);
+      })) {
         regionNews[region].push(article);
         matched = true;
         break; // Only assign to first matching region
@@ -1957,7 +1991,7 @@ function getRegionEntities(entities, region) {
 // Classify a headline's tone/action
 function classifyHeadline(headline) {
   const h = headline.toLowerCase();
-  if (h.match(/attack|strike|bomb|shell|raid|kill|dead|casualt|wound|massacre|assault/)) return 'violence';
+  if (h.match(/attack|strike|bomb|shell|raid|kill|dead|casualt|wound|massacre|assault|shoot|shot|gunfire|stabbing|hostage|murder|execution|slain|slay|terror|explos|arson|ambush/)) return 'violence';
   if (h.match(/ceasefire|peace|truce|agreement|deal|negotiat|talks|summit|diplomat/)) return 'diplomacy';
   if (h.match(/protest|demonstrat|rally|unrest|riot|dissent|opposition/)) return 'unrest';
   if (h.match(/sanction|embargo|tariff|ban|restrict|penalt/)) return 'sanctions';
@@ -2010,12 +2044,19 @@ function generateRegionNarrative(region, articles) {
   const sentences = [];
   const usedIdx = new Set();
 
+  // Helper: format source name with "the" where appropriate
+  function fmtSource(src) {
+    if (!src) return '';
+    const needsThe = /^(New York Times|Washington Post|Guardian|Wall Street Journal|Financial Times|Associated Press|Hindu|Telegraph|Economist|Independent|Atlantic|Intercept|Hill|Times|Sun|Mirror|Observer|Spectator|Globe and Mail|National Post|Japan Times|Jerusalem Post|Moscow Times)$/i;
+    return needsThe.test(src) ? 'the ' + src : src;
+  }
+
   // LEAD: Most important story
   const leadStory = high.length > 0 ? high[0] : classified[0];
   usedIdx.add(classified.indexOf(leadStory));
   const leadClean = cleanHeadlineForProse(leadStory.headline);
   if (leadStory.source) {
-    sentences.push(`According to ${leadStory.source}, ${leadClean}.`);
+    sentences.push(`According to ${fmtSource(leadStory.source)}, ${leadClean}.`);
   } else {
     sentences.push(`${leadClean.charAt(0).toUpperCase() + leadClean.slice(1)}.`);
   }
@@ -2034,7 +2075,7 @@ function generateRegionNarrative(region, articles) {
       'humanitarian': 'On the humanitarian side,', 'military': 'In defense matters,',
       'technology': 'In technology,', 'energy': 'On energy,', 'general': 'Separately,'
     }[s.type] || 'Separately,') : 'Meanwhile,';
-    const src = s.source ? ` (${s.source})` : '';
+    const src = s.source ? ` (${fmtSource(s.source)})` : '';
     sentences.push(`${bridge} ${sClean}${src}.`);
   }
 
@@ -2043,7 +2084,7 @@ function generateRegionNarrative(region, articles) {
   if (thirdIdx >= 0 && classified.length >= 4) {
     const t = classified[thirdIdx];
     const tClean = cleanHeadlineForProse(t.headline);
-    const src = t.source ? ` (${t.source})` : '';
+    const src = t.source ? ` (${fmtSource(t.source)})` : '';
     sentences.push(`Additionally, ${tClean}${src}.`);
   }
 
@@ -5091,7 +5132,7 @@ function renderSidebar() {
         <div class="card" style="border-left:2px solid ${item.category === 'CONFLICT' ? '#ef4444' : item.category === 'CRISIS' ? '#f97316' : '#eab308'};">
           <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
           <div class="card-headline" style="font-weight:600;">${item.headline}</div>
-          <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+          <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a>${renderBiasTag(item.source)}</div>
         </div>
       `).join('');
     }
@@ -5102,7 +5143,7 @@ function renderSidebar() {
       <div class="card">
         <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
         <div class="card-headline">${item.headline}</div>
-        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a></div>
+        <div class="card-source"><a href="${item.url}" target="_blank">${item.source} ↗</a>${renderBiasTag(item.source)}</div>
       </div>
     `).join('');
 
@@ -5285,7 +5326,7 @@ function openModal(name) {
   // Show cached news first
   if (c.news && c.news.length) {
     html += `<div class="section-title">Recent Coverage</div>`;
-    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-bias" style="background:${BIAS_COLORS[n.bias]}"></span><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div><div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
+    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-bias" style="background:${BIAS_COLORS[n.bias]}"></span><span class="news-source">${n.source}${renderBiasTag(n.source)}</span><span class="news-time">${n.time}</span></div><div class="news-headline">${n.headline}</div><a class="news-link" href="${n.url}" target="_blank">Read more ↗</a></div>`; });
   }
 
   // Add placeholder for live country news
@@ -5306,7 +5347,7 @@ function openModal(name) {
           <div class="news-item">
             <div class="news-meta">
               <span class="card-cat ${n.category}" style="font-size:7px;padding:1px 4px;">${n.category}</span>
-              <span class="news-source">${n.source}</span>
+              <span class="news-source">${n.source}${renderBiasTag(n.source)}</span>
               <span class="news-time">${n.time}</span>
             </div>
             <div class="news-headline">${n.headline}</div>
