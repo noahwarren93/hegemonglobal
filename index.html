@@ -1959,106 +1959,90 @@ function classifyHeadline(headline) {
 function generateRegionNarrative(region, articles) {
   if (articles.length === 0) return 'No significant developments were reported in this region over the past 24 hours.';
 
-  // Classify all headlines
-  const classified = articles.map(a => ({
-    headline: a.headline || a.title || '',
-    source: a.source || '',
-    category: a.category || 'WORLD',
-    importance: a.importance || 'medium',
-    type: classifyHeadline(a.headline || a.title || ''),
-    entities: extractEntities(a.headline || a.title || '')
-  }));
+  // Classify and deduplicate headlines
+  const seen = new Set();
+  const classified = [];
+  articles.forEach(a => {
+    const headline = a.headline || a.title || '';
+    const key = headline.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
+    if (seen.has(key) || !headline) return;
+    seen.add(key);
+    classified.push({
+      headline, source: a.source || '', category: a.category || 'WORLD',
+      importance: a.importance || 'medium', type: classifyHeadline(headline),
+      entities: extractEntities(headline)
+    });
+  });
+
+  if (classified.length === 0) return 'No significant developments were reported in this region over the past 24 hours.';
 
   const high = classified.filter(a => a.importance === 'high');
   const types = {};
   classified.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
   const topTypes = Object.entries(types).sort((a, b) => b[1] - a[1]);
-
-  // Collect all mentioned entities for cross-referencing
   const allEntities = [...new Set(classified.flatMap(a => a.entities))];
 
-  // Build narrative sentences (targeting 5-7)
+  // Build narrative: what happened, why it matters, what might happen
   const sentences = [];
+  const usedHeadlines = new Set();
 
-  // Sentence 1: Lead with the most critical/numerous theme
-  const lead = topTypes[0];
-  const leadArticles = classified.filter(a => a.type === lead[0]);
-  const leadHeadline = (high.length > 0 ? high[0] : leadArticles[0]).headline;
+  // Lead: most important story
+  const leadStory = high.length > 0 ? high[0] : classified[0];
+  usedHeadlines.add(leadStory.headline);
+  const leadClean = cleanHeadlineForProse(leadStory.headline);
+  const leadSource = leadStory.source ? `, according to ${leadStory.source}` : '';
+  sentences.push(`In ${region}, ${leadClean}${leadSource}.`);
 
-  const themeIntros = {
-    'violence': 'Escalating violence dominated developments',
-    'diplomacy': 'Diplomatic activity was at the forefront',
-    'unrest': 'Civil unrest and political tensions intensified',
-    'sanctions': 'Economic sanctions and trade restrictions shaped the landscape',
-    'politics': 'Political developments drove the news cycle',
-    'economic': 'Economic concerns took center stage',
-    'humanitarian': 'Humanitarian pressures continued to mount',
-    'military': 'Military posturing and defense matters were prominent',
-    'technology': 'Technology and cyber developments drew attention',
-    'energy': 'Energy and climate issues were in focus',
-    'general': 'Several notable developments unfolded'
-  };
-
-  sentences.push(`${themeIntros[lead[0]] || 'Several developments unfolded'} across ${region}, with ${leadArticles.length > 1 ? 'multiple reports' : 'reports'} centered on ${cleanHeadlineForProse(leadHeadline)}.`);
-
-  // Sentence 2: Expand on the lead story with source attribution
-  if (classified.length > 1) {
-    const second = high.length > 1 ? high[1] : (classified.find(a => a !== classified[0] && a.type === lead[0]) || classified[1]);
-    if (second) {
-      const sourceRef = second.source ? `, as reported by ${second.source}` : '';
-      sentences.push(`In a related development, ${cleanHeadlineForProse(second.headline)}${sourceRef}.`);
-    }
+  // Second story: different from lead
+  const secondStory = classified.find(a => !usedHeadlines.has(a.headline) && (a.importance === 'high' || a.type !== leadStory.type));
+  if (secondStory) {
+    usedHeadlines.add(secondStory.headline);
+    const secondClean = cleanHeadlineForProse(secondStory.headline);
+    const secondSource = secondStory.source ? ` (${secondStory.source})` : '';
+    const transitions = { 'violence': 'On the security front', 'diplomacy': 'Diplomatically', 'unrest': 'Domestically',
+      'sanctions': 'Regarding sanctions', 'politics': 'Politically', 'economic': 'Economically',
+      'humanitarian': 'On the humanitarian front', 'military': 'In defense matters', 'technology': 'In technology',
+      'energy': 'On energy', 'general': 'Separately' };
+    const transition = secondStory.type !== leadStory.type ? (transitions[secondStory.type] || 'Meanwhile') : 'Meanwhile';
+    sentences.push(`${transition}, ${secondClean}${secondSource}.`);
   }
 
-  // Sentence 3: Second theme with its own story reference
-  if (topTypes.length > 1) {
-    const secondTheme = topTypes[1][0];
-    const secondThemeArticles = classified.filter(a => a.type === secondTheme);
-    const themeNames = {
-      'violence': 'On the security front', 'diplomacy': 'On the diplomatic front', 'unrest': 'Amid growing civil tensions',
-      'sanctions': 'On the economic pressure front', 'politics': 'In political developments', 'economic': 'Economically',
-      'humanitarian': 'On the humanitarian front', 'military': 'In defense matters', 'technology': 'In the technology sphere',
-      'energy': 'On energy and climate', 'general': 'Separately'
+  // Third story: if available and distinct
+  const thirdStory = classified.find(a => !usedHeadlines.has(a.headline));
+  if (thirdStory && classified.length >= 3) {
+    usedHeadlines.add(thirdStory.headline);
+    const thirdClean = cleanHeadlineForProse(thirdStory.headline);
+    const thirdSource = thirdStory.source ? ` (${thirdStory.source})` : '';
+    sentences.push(`Additionally, ${thirdClean}${thirdSource}.`);
+  }
+
+  // Why it matters: context based on what types of stories dominate
+  if (high.length >= 2) {
+    const dominantType = topTypes[0][0];
+    const whyItMatters = {
+      'violence': `The concentration of ${high.length} high-priority security developments across ${region} signals an active and potentially worsening conflict environment.`,
+      'diplomacy': `These diplomatic efforts could reshape the political balance in ${region} depending on whether negotiations produce concrete outcomes.`,
+      'unrest': `The pattern of civil unrest suggests deepening public frustration that could pressure governments into policy changes or further crackdowns.`,
+      'politics': `These political shifts could alter governance trajectories across ${region} and affect international partnerships.`,
+      'economic': `These economic pressures have implications for markets and livelihoods well beyond ${region}.`,
+      'military': `This level of military activity raises the risk of miscalculation between regional and international actors.`,
+      'humanitarian': `The humanitarian situation requires urgent international attention, as conditions continue to deteriorate for affected populations.`,
+      'sanctions': `These economic measures are reshaping trade flows and could accelerate realignment among affected nations.`,
+      'technology': `Technology competition in this space has direct implications for national security and economic positioning.`,
+      'energy': `Energy developments in ${region} have downstream effects on global markets and climate policy.`
     };
-    const intro = themeNames[secondTheme] || 'Separately';
-    if (secondThemeArticles.length > 0) {
-      sentences.push(`${intro}, ${cleanHeadlineForProse(secondThemeArticles[0].headline)}${secondThemeArticles.length > 1 ? ', among ' + secondThemeArticles.length + ' related reports' : ''}.`);
-    }
+    sentences.push(whyItMatters[dominantType] || `With ${high.length} high-priority developments, the situation in ${region} warrants close attention.`);
+  } else if (allEntities.length >= 2) {
+    sentences.push(`The involvement of ${allEntities.slice(0, 3).join(', ')} in these developments reflects the interconnected nature of the challenges facing ${region}.`);
   }
 
-  // Sentence 4: Third story or additional detail
-  if (classified.length > 3) {
-    const usedTypes = [topTypes[0][0], topTypes.length > 1 ? topTypes[1][0] : null];
-    const thirdStory = classified.find(a => !usedTypes.includes(a.type)) || classified[3];
-    if (thirdStory) {
-      const sourceRef = thirdStory.source ? ` (${thirdStory.source})` : '';
-      sentences.push(`Additionally, ${cleanHeadlineForProse(thirdStory.headline)}${sourceRef}.`);
-    }
-  }
-
-  // Sentence 5: Key actors and entities
-  if (allEntities.length > 1) {
-    const entityStr = allEntities.length <= 3 ? allEntities.join(' and ') : allEntities.slice(0, 4).join(', ') + ' among others';
-    sentences.push(`Key actors across the region's developments include ${entityStr}, reflecting the breadth of activity monitored.`);
-  } else if (allEntities.length === 1) {
-    sentences.push(`${allEntities[0]} remained at the center of the region's news cycle.`);
-  }
-
-  // Sentence 6: Volume and pattern assessment
-  if (articles.length >= 4) {
-    const catCounts = Object.entries(types).filter(([_, c]) => c >= 2).map(([t, c]) => `${c} ${t}`);
-    if (catCounts.length >= 2) {
-      sentences.push(`The reporting pattern across ${region} was distributed across ${catCounts.slice(0, 3).join(', ')} developments, indicating a multi-faceted situation.`);
-    }
-  }
-
-  // Sentence 7: Forward outlook / urgency
+  // Forward look
   if (high.length >= 3) {
-    sentences.push(`With ${high.length} high-priority developments concentrated in this region, the coming 48 hours will be critical for determining whether current trajectories escalate or begin to stabilize.`);
+    sentences.push(`The next 48 hours will be important in determining whether these situations escalate or move toward resolution.`);
   } else if (high.length >= 1) {
-    sentences.push(`The presence of high-priority reporting warrants continued attention, particularly as events develop over the next several days.`);
-  } else if (articles.length >= 5) {
-    sentences.push(`While no single flashpoint dominated, the volume of activity suggests an elevated baseline that merits sustained monitoring.`);
+    sentences.push(`These developments merit continued monitoring as the situation evolves.`);
+  } else if (classified.length >= 4) {
+    sentences.push(`While no single event dominated, the range of activity across ${region} suggests a period of sustained, low-level tension.`);
   }
 
   return sentences.slice(0, 7).join(' ');
@@ -2083,14 +2067,20 @@ function generateGlobalRamifications(regionData, globalArticles) {
   const combined = [...allArticles, ...uncategorized];
   if (combined.length === 0) return '';
 
-  const classified = combined.map(a => ({
-    headline: a.headline || a.title || '',
-    source: a.source || '',
-    type: classifyHeadline(a.headline || a.title || ''),
-    category: a.category || 'WORLD',
-    importance: a.importance || 'medium',
-    entities: extractEntities(a.headline || a.title || '')
-  }));
+  // Deduplicate
+  const seen = new Set();
+  const classified = [];
+  combined.forEach(a => {
+    const headline = a.headline || a.title || '';
+    const key = headline.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
+    if (seen.has(key) || !headline) return;
+    seen.add(key);
+    classified.push({
+      headline, source: a.source || '', type: classifyHeadline(headline),
+      category: a.category || 'WORLD', importance: a.importance || 'medium',
+      entities: extractEntities(headline)
+    });
+  });
 
   const high = classified.filter(a => a.importance === 'high');
   const types = {};
@@ -2098,73 +2088,84 @@ function generateGlobalRamifications(regionData, globalArticles) {
   const topTypes = Object.entries(types).sort((a, b) => b[1] - a[1]);
   const activeRegions = regionData.filter(([_, arts]) => arts.length > 0).map(([r]) => r);
   const allEntities = [...new Set(classified.flatMap(a => a.entities))];
-  const uncatClassified = uncategorized.map(a => ({ headline: a.headline || a.title || '', source: a.source || '', type: classifyHeadline(a.headline || a.title || '') }));
+  const majorPowers = allEntities.filter(e => ['United States', 'China', 'Russia', 'EU', 'NATO', 'UN', 'United Kingdom', 'France', 'Germany', 'India', 'Iran', 'Israel', 'Saudi Arabia', 'Turkey', 'Japan'].includes(e));
 
   const sentences = [];
 
-  // Sentence 1: Overall global temperature
+  // Sentence 1: Global temperature — factual, measured
   if (high.length >= 5) {
-    sentences.push(`The global risk environment remains significantly elevated, with ${high.length} high-priority developments reported across ${activeRegions.length} regions in the past 24 hours.`);
+    sentences.push(`Across ${activeRegions.length} regions, ${high.length} high-priority developments were recorded in the past 24 hours, placing the global risk environment at an elevated level.`);
   } else if (high.length >= 2) {
-    sentences.push(`The global security landscape showed notable activity over the past 24 hours, with ${high.length} high-priority developments tracked across ${activeRegions.length} active regions.`);
+    sentences.push(`The past 24 hours produced ${high.length} high-priority developments across ${activeRegions.length} regions, reflecting a period of sustained geopolitical activity.`);
   } else {
-    sentences.push(`Global developments over the past 24 hours reflected a ${combined.length > 20 ? 'busy' : 'relatively measured'} news cycle, with ${combined.length} updates tracked across ${activeRegions.length} regions.`);
+    sentences.push(`Activity over the past 24 hours was spread across ${activeRegions.length} regions, with ${classified.length} developments tracked in total.`);
   }
 
-  // Sentence 2: Dominant global theme
+  // Sentence 2: What the dominant theme tells us
   if (topTypes.length > 0) {
-    const themeDescriptions = {
-      'violence': 'armed conflict and security incidents', 'diplomacy': 'diplomatic negotiations and international talks',
-      'unrest': 'civil unrest and political instability', 'sanctions': 'economic sanctions and trade policy',
-      'politics': 'political transitions and governance', 'economic': 'macroeconomic shifts and market pressures',
-      'humanitarian': 'humanitarian crises and aid operations', 'military': 'military posturing and defense developments',
-      'technology': 'technology competition and cyber activity', 'energy': 'energy markets and climate policy',
-      'general': 'a broad mix of geopolitical activity'
+    const themeAnalysis = {
+      'violence': 'Armed conflict remains the primary driver of instability, with active fighting in multiple theaters creating compounding humanitarian and economic consequences.',
+      'diplomacy': 'Diplomatic engagement was the defining feature of the cycle, suggesting that key actors are seeking negotiated outcomes, though the durability of these efforts remains uncertain.',
+      'unrest': 'Civil unrest and political instability accounted for most of the activity, indicating that domestic pressures in several countries are reaching levels that could affect governance and regional stability.',
+      'politics': 'Political developments dominated the news cycle, with elections, leadership changes, and legislative actions shaping the direction of governance across multiple countries.',
+      'economic': 'Economic pressures were the primary theme, with market movements, trade tensions, and fiscal policy decisions carrying implications for global growth and financial stability.',
+      'military': 'Military posturing and defense activity defined the cycle, raising concerns about miscalculation and the potential for existing tensions to cross into open confrontation.',
+      'humanitarian': 'Humanitarian crises drove much of the reporting, with famine, displacement, and infrastructure collapse creating urgent needs that the international community has been slow to address.',
+      'sanctions': 'Sanctions and economic restrictions were central to the cycle, reflecting the continued use of economic tools as instruments of foreign policy with significant downstream effects on trade and civilian populations.',
+      'technology': 'Technology competition and regulation featured prominently, underscoring how digital infrastructure and AI governance are becoming central to national security calculations.',
+      'energy': 'Energy and climate developments shaped the cycle, with supply disruptions and policy decisions carrying consequences for both markets and long-term environmental commitments.'
     };
-    const topTheme = themeDescriptions[topTypes[0][0]] || 'geopolitical developments';
-    sentences.push(`The dominant theme globally was ${topTheme}, accounting for ${topTypes[0][1]} of the ${combined.length} total reports monitored.`);
+    sentences.push(themeAnalysis[topTypes[0][0]] || `The reporting was spread across ${topTypes.length} categories, with no single theme dominating the global picture.`);
   }
 
-  // Sentence 3: Cross-regional linkages
+  // Sentence 3: Cross-regional connections
   const conflictRegions = regionData.filter(([_, arts]) => arts.some(a => a.importance === 'high')).map(([r]) => r);
   if (conflictRegions.length >= 2) {
-    sentences.push(`Elevated activity was observed simultaneously in ${conflictRegions.slice(0, 4).join(', ')}, suggesting interconnected pressures that transcend individual theaters and could produce cascading effects.`);
+    sentences.push(`Notably, high-priority activity occurred simultaneously in ${conflictRegions.slice(0, 4).join(', ')}. This matters because crises in multiple regions simultaneously stretch international response capacity and increase the risk of developments in one theater affecting outcomes in another.`);
   } else if (activeRegions.length >= 3) {
-    sentences.push(`Activity was distributed across ${activeRegions.join(', ')}, with no single region monopolizing the global attention but each contributing distinct threads to the broader picture.`);
+    sentences.push(`Reporting was distributed across ${activeRegions.join(', ')}, with each region contributing distinct developments to the broader global picture.`);
   }
 
-  // Sentence 4: Reference uncategorized/global stories that didn't fit a continent
-  if (uncatClassified.length > 0) {
-    const topGlobal = uncatClassified[0];
+  // Sentence 4: Uncategorized global stories
+  const uncatDedupe = [];
+  const uncatSeen = new Set();
+  uncategorized.forEach(a => {
+    const headline = a.headline || a.title || '';
+    const key = headline.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
+    if (!uncatSeen.has(key) && headline) { uncatSeen.add(key); uncatDedupe.push({ headline, source: a.source || '' }); }
+  });
+  if (uncatDedupe.length > 0) {
+    const topGlobal = uncatDedupe[0];
     const sourceRef = topGlobal.source ? `, per ${topGlobal.source}` : '';
-    sentences.push(`Beyond the regional breakdowns, global-level reporting included ${cleanHeadlineForProse(topGlobal.headline)}${sourceRef}${uncatClassified.length > 1 ? ', among ' + uncatClassified.length + ' cross-cutting stories' : ''}.`);
+    sentences.push(`Outside of regional categories, ${cleanHeadlineForProse(topGlobal.headline)}${sourceRef}.`);
   }
 
-  // Sentence 5: Key actors on the global stage
-  const majorPowers = allEntities.filter(e => ['United States', 'China', 'Russia', 'EU', 'NATO', 'UN', 'United Kingdom', 'France', 'Germany', 'India', 'Iran', 'Israel', 'Saudi Arabia', 'Turkey', 'Japan'].includes(e));
-  if (majorPowers.length >= 2) {
-    sentences.push(`Major powers visible in today's reporting include ${majorPowers.slice(0, 5).join(', ')}, underscoring the multi-polar nature of the current geopolitical landscape.`);
+  // Sentence 5: Key actors — analytical, not just a list
+  if (majorPowers.length >= 3) {
+    sentences.push(`The involvement of ${majorPowers.slice(0, 4).join(', ')} across these developments illustrates the multi-polar nature of the current environment, where actions by any one major power carry consequences for the others.`);
+  } else if (majorPowers.length >= 1) {
+    sentences.push(`${majorPowers[0]} featured prominently in the cycle, with its actions and positions influencing developments across multiple regions.`);
   }
 
-  // Sentence 6: Secondary theme or economic/trade undercurrents
+  // Sentence 6: Secondary theme — why it matters alongside the primary
   if (topTypes.length > 1) {
-    const secondTheme = topTypes[1];
-    const themeNames = {
-      'violence': 'security incidents', 'diplomacy': 'diplomatic maneuvering', 'unrest': 'domestic instability',
-      'sanctions': 'economic coercion', 'politics': 'political realignments', 'economic': 'economic headwinds',
-      'humanitarian': 'humanitarian strain', 'military': 'military signaling', 'technology': 'technological competition',
-      'energy': 'energy disruptions', 'general': 'general developments'
+    const secondNames = {
+      'violence': 'security threats', 'diplomacy': 'diplomatic efforts', 'unrest': 'domestic instability',
+      'sanctions': 'economic restrictions', 'politics': 'political transitions', 'economic': 'economic pressures',
+      'humanitarian': 'humanitarian needs', 'military': 'military activity', 'technology': 'technology developments',
+      'energy': 'energy concerns', 'general': 'broader developments'
     };
-    sentences.push(`Running beneath the primary narrative, ${themeNames[secondTheme[0]] || 'secondary developments'} accounted for ${secondTheme[1]} additional reports, creating a dual-track dynamic that policymakers and analysts will be watching closely.`);
+    const secondName = secondNames[topTypes[1][0]] || 'other developments';
+    sentences.push(`Alongside the primary theme, ${secondName} accounted for a significant share of reporting, creating a layered situation where progress on one front does not necessarily translate to stability on others.`);
   }
 
-  // Sentence 7: Forward-looking
+  // Sentence 7: Forward look — what to watch
   if (high.length >= 3) {
-    sentences.push(`Given the concentration of high-priority events, the coming 48 hours will be critical in determining whether current tensions escalate further or show signs of stabilization.`);
-  } else if (combined.length >= 15) {
-    sentences.push(`While no singular crisis dominated the cycle, the sheer volume and geographic spread of activity underscores the importance of sustained monitoring heading into the next 24-hour period.`);
+    sentences.push(`With multiple high-priority situations unresolved, the next 48 hours will be important in determining whether current trajectories stabilize or deteriorate further.`);
+  } else if (classified.length >= 15) {
+    sentences.push(`The volume and geographic spread of activity, even in the absence of a single dominant crisis, suggests that the coming days will require close monitoring across several fronts.`);
   } else {
-    sentences.push(`The overall trajectory suggests a watchful posture is warranted, with several threads that could develop into larger stories in the days ahead.`);
+    sentences.push(`Several of these threads have the potential to develop into larger stories in the coming days, making sustained attention warranted even during quieter periods.`);
   }
 
   return sentences.slice(0, 7).join(' ');
