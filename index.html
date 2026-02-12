@@ -108,9 +108,15 @@
         <span class="compare-title">Country Comparison</span>
         <button class="compare-close" onclick="toggleCompareMode()">&times;</button>
       </div>
+      <div class="compare-search-wrap">
+        <input type="text" id="compareSearchInput" class="compare-search" placeholder="Search to add country..." oninput="searchCompareCountry(this.value)">
+        <div class="compare-search-results" id="compareSearchResults"></div>
+      </div>
       <div class="compare-countries" id="compareCountries"></div>
-      <div class="compare-radar-container"><canvas id="radarChart" width="300" height="300"></canvas></div>
-      <div id="compareContent"></div>
+      <div class="compare-data-area" id="compareDataArea">
+        <div class="compare-radar-container"><canvas id="radarChart" width="300" height="300"></canvas></div>
+        <div id="compareContent"></div>
+      </div>
     </div>
     <div class="stocks-modal-overlay" id="stocksModalOverlay" onclick="if(event.target===this)closeStocksModal()">
       <div class="stocks-modal">

@@ -63,33 +63,72 @@ function renderComparePanel() {
   var panel = document.getElementById('comparePanel');
   var chipsEl = document.getElementById('compareCountries');
   var contentEl = document.getElementById('compareContent');
-  if (compareCountries.length === 0) { panel.classList.remove('active'); return; }
+  var dataArea = document.getElementById('compareDataArea');
+  if (compareCountries.length === 0) { panel.classList.remove('active'); panel.classList.remove('expanded'); return; }
   panel.classList.add('active');
+
+  // Expand panel when 2+ countries are selected (show radar + tables)
+  if (compareCountries.length >= 2) {
+    panel.classList.add('expanded');
+  } else {
+    panel.classList.remove('expanded');
+  }
+
   chipsEl.innerHTML = compareCountries.map(function(name, i) {
     var c = COUNTRIES[name];
     return '<div class="compare-country-chip" style="background:' + COMPARE_COLORS[i] + '33;border:1px solid ' + COMPARE_COLORS[i] + ';">' + (c ? c.flag : '') + ' ' + name + ' <button onclick="removeCountryFromCompare(\'' + name + '\')">&times;</button></div>';
   }).join('');
-  drawRadarChart();
-  var sections = [
-    { title: 'Economic', rows: [['GDP','gdp'],['GDP Growth','gdpGrowth'],['GDP/Capita','gdpPerCapita'],['Inflation','inflation'],['Unemployment','unemployment'],['Debt %GDP','debt']] },
-    { title: 'Military', rows: [['Spending','milSpend'],['% GDP','milPercent'],['Personnel','milPersonnel'],['Nuclear','nuclear'],['Alliances','alliances']] },
-    { title: 'Demographics', rows: [['Population','pop'],['Median Age','medianAge']] },
-    { title: 'Governance', rows: [['Democracy','democracy'],['Press Freedom','pressFreedom'],['HDI','hdi']] },
-    { title: 'Markets', rows: [['Stock YTD','stockYTD'],['FDI','fdi']] }
-  ];
-  var h = '';
-  sections.forEach(function(s) {
-    h += '<div class="compare-section"><div class="compare-section-title">' + s.title + '</div><table class="compare-table"><thead><tr><th>Metric</th>';
-    compareCountries.forEach(function(n, i) { h += '<th style="color:' + COMPARE_COLORS[i] + '">' + n + '</th>'; });
-    h += '</tr></thead><tbody>';
-    s.rows.forEach(function(r) {
-      h += '<tr><td style="color:#6b7280;font-size:9px;">' + r[0] + '</td>';
-      compareCountries.forEach(function(n) { var d = COMPARE_DATA[n]; h += '<td>' + (d ? (d[r[1]] || 'N/A') : 'N/A') + '</td>'; });
-      h += '</tr>';
+
+  // Only render full data when 2+ countries
+  if (compareCountries.length >= 2) {
+    if (dataArea) dataArea.style.display = 'block';
+    drawRadarChart();
+    var sections = [
+      { title: 'Economic', rows: [['GDP','gdp'],['GDP Growth','gdpGrowth'],['GDP/Capita','gdpPerCapita'],['Inflation','inflation'],['Unemployment','unemployment'],['Debt %GDP','debt']] },
+      { title: 'Military', rows: [['Spending','milSpend'],['% GDP','milPercent'],['Personnel','milPersonnel'],['Nuclear','nuclear'],['Alliances','alliances']] },
+      { title: 'Demographics', rows: [['Population','pop'],['Median Age','medianAge']] },
+      { title: 'Governance', rows: [['Democracy','democracy'],['Press Freedom','pressFreedom'],['HDI','hdi']] },
+      { title: 'Markets', rows: [['Stock YTD','stockYTD'],['FDI','fdi']] }
+    ];
+    var h = '';
+    sections.forEach(function(s) {
+      h += '<div class="compare-section"><div class="compare-section-title">' + s.title + '</div><table class="compare-table"><thead><tr><th>Metric</th>';
+      compareCountries.forEach(function(n, i) { h += '<th style="color:' + COMPARE_COLORS[i] + '">' + n + '</th>'; });
+      h += '</tr></thead><tbody>';
+      s.rows.forEach(function(r) {
+        h += '<tr><td style="color:#6b7280;font-size:9px;">' + r[0] + '</td>';
+        compareCountries.forEach(function(n) { var d = COMPARE_DATA[n]; h += '<td>' + (d ? (d[r[1]] || 'N/A') : 'N/A') + '</td>'; });
+        h += '</tr>';
+      });
+      h += '</tbody></table></div>';
     });
-    h += '</tbody></table></div>';
-  });
-  contentEl.innerHTML = h;
+    contentEl.innerHTML = h;
+  } else {
+    if (dataArea) dataArea.style.display = 'none';
+    contentEl.innerHTML = '<div style="color:#6b7280;font-size:10px;text-align:center;padding:8px;">Tap another country or search above to compare</div>';
+  }
+}
+
+// Search inside compare panel
+function searchCompareCountry(query) {
+  var results = document.getElementById('compareSearchResults');
+  if (!results) return;
+  if (!query || query.length < 1) { results.innerHTML = ''; results.style.display = 'none'; return; }
+  var matches = Object.entries(COUNTRIES).filter(function(e) {
+    return e[0].toLowerCase().includes(query.toLowerCase()) || e[1].region.toLowerCase().includes(query.toLowerCase());
+  }).filter(function(e) {
+    return !compareCountries.includes(e[0]);
+  }).slice(0, 6);
+  if (matches.length) {
+    results.style.display = 'block';
+    results.innerHTML = matches.map(function(e) {
+      var name = e[0], c = e[1];
+      return '<div class="compare-search-item" onclick="addCountryToCompare(\'' + name.replace(/'/g, "\\'") + '\');document.getElementById(\'compareSearchInput\').value=\'\';document.getElementById(\'compareSearchResults\').style.display=\'none\';">' + c.flag + ' ' + name + '</div>';
+    }).join('');
+  } else {
+    results.innerHTML = '<div style="color:#6b7280;font-size:10px;padding:8px;text-align:center;">No matches</div>';
+    results.style.display = 'block';
+  }
 }
 
 function drawRadarChart() {

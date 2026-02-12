@@ -79,6 +79,56 @@ var TRADE_ROUTES = [
   { from:'Brazil', to:'China', volume:157, goods:'Soybeans, Iron Ore, Crude Oil, Meat', status:'healthy',
     desc:'China is Brazil\'s largest trade partner. Brazil supplies agricultural and mineral commodities.',
     sanctions:'', recent:'Bilateral trade hit record levels. De-dollarization experiments with yuan settlements.' },
+  // Additional Global Routes
+  { from:'China', to:'Indonesia', volume:132, goods:'Electronics, Metals, Machinery, Chemicals', status:'healthy',
+    desc:'Indonesia is ASEAN\'s largest economy. Major Belt and Road recipient.',
+    sanctions:'', recent:'Chinese investment in Indonesian nickel processing for EV batteries surging.' },
+  { from:'Japan', to:'Thailand', volume:65, goods:'Vehicles, Machinery, Electronics, Auto Parts', status:'healthy',
+    desc:'Japan is Thailand\'s largest investor. Thai auto industry dominated by Japanese brands.',
+    sanctions:'', recent:'Japanese firms expanding EV manufacturing in Thailand.' },
+  { from:'Germany', to:'Poland', volume:158, goods:'Vehicles, Machinery, Electronics, Chemicals', status:'healthy',
+    desc:'Poland is Germany\'s key eastern supply chain partner. Rapidly growing trade corridor.',
+    sanctions:'', recent:'Polish manufacturing integration with German auto industry deepening.' },
+  { from:'Germany', to:'Italy', volume:145, goods:'Vehicles, Machinery, Chemicals, Pharmaceuticals', status:'healthy',
+    desc:'Core EU single market corridor. Italy is Germany\'s 5th largest trade partner.',
+    sanctions:'', recent:'Joint EU industrial policy initiatives strengthening bilateral ties.' },
+  { from:'France', to:'China', volume:82, goods:'Aerospace, Luxury Goods, Wine, Agriculture', status:'healthy',
+    desc:'France is a key EU-China trade partner. Airbus and luxury exports dominate.',
+    sanctions:'', recent:'Macron pursuing balanced approach between US and China on trade policy.' },
+  { from:'Turkey', to:'Russia', volume:68, goods:'Agriculture, Textiles, Construction, Energy', status:'tension',
+    desc:'Turkey maintaining trade ties despite Western sanctions. Key energy transit route.',
+    sanctions:'Western pressure on Turkey over sanctions evasion.', recent:'Turkish banks facing secondary sanctions risk for Russian trade facilitation.' },
+  { from:'Turkey', to:'Germany', volume:48, goods:'Vehicles, Textiles, Machinery, Agriculture', status:'healthy',
+    desc:'Germany hosts 3M+ Turkish diaspora. Deep economic and cultural ties.',
+    sanctions:'', recent:'EU customs union modernization talks with Turkey ongoing.' },
+  { from:'India', to:'Russia', volume:65, goods:'Crude Oil, Fertilizers, Diamonds, Arms', status:'healthy',
+    desc:'India dramatically increased Russian oil imports since 2022 sanctions.',
+    sanctions:'', recent:'India now Russia\'s second largest oil customer. Rupee-ruble trade expanding.' },
+  { from:'South Korea', to:'Vietnam', volume:78, goods:'Electronics Components, Machinery, Chemicals', status:'healthy',
+    desc:'Vietnam is Samsung\'s largest manufacturing base outside Korea.',
+    sanctions:'', recent:'Korean tech firms expanding Vietnam operations as China alternative.' },
+  { from:'United States', to:'Taiwan', volume:115, goods:'Semiconductors, Electronics, Machinery', status:'tension',
+    desc:'Critical semiconductor supply chain. TSMC supplies most advanced chips globally.',
+    sanctions:'', recent:'US CHIPS Act driving TSMC investment in Arizona fabs. China tensions rising.' },
+  { from:'China', to:'Brazil', volume:157, goods:'Electronics, Machinery, Textiles, Chemicals', status:'healthy',
+    desc:'China is Brazil\'s top import source. Growing dependency on Chinese manufactured goods.',
+    sanctions:'', recent:'BRICS expansion strengthening China-Brazil economic coordination.' },
+  { from:'Saudi Arabia', to:'Japan', volume:42, goods:'Crude Oil, LNG, Petrochemicals', status:'healthy',
+    desc:'Japan remains a major Saudi oil customer despite diversification efforts.',
+    sanctions:'', recent:'Saudi-Japan clean energy partnership expanding beyond fossil fuels.' },
+  { from:'United Kingdom', to:'Netherlands', volume:78, goods:'Oil, Financial Services, Machinery, Chemicals', status:'healthy',
+    desc:'Major North Sea trade corridor. Post-Brexit trade adjustments ongoing.',
+    sanctions:'', recent:'UK-EU trade friction continuing to affect cross-Channel commerce.' },
+  { from:'Mexico', to:'China', volume:92, goods:'Electronics, Machinery, Auto Parts, Chemicals', status:'tension',
+    desc:'Mexico importing heavily from China while US pushes nearshoring agenda.',
+    sanctions:'', recent:'Concerns over Chinese goods transshipped through Mexico to circumvent US tariffs.' },
+  { from:'India', to:'Saudi Arabia', volume:52, goods:'Textiles, Rice, Machinery, Refined Petroleum', status:'healthy',
+    desc:'India exports diverse goods to Saudi Arabia while importing energy.',
+    sanctions:'', recent:'Indian workers form largest expatriate community in Saudi Arabia.' },
+  { from:'Argentina', to:'Brazil', volume:26, goods:'Vehicles, Agricultural Products, Chemicals', status:'healthy',
+    desc:'Mercosur backbone. Deeply integrated automotive supply chain.',
+    sanctions:'', recent:'Mercosur-EU trade agreement negotiations in final stages.' },
+
   // Sanctioned/Restricted (Red)
   { from:'United States', to:'Russia', volume:12, goods:'Limited — Agricultural Products', status:'sanctioned',
     desc:'Comprehensive sanctions regime since 2022 invasion of Ukraine. Trade collapsed from $35B pre-war.',
@@ -94,7 +144,10 @@ var TRADE_ROUTES = [
     sanctions:'Oil import ban, coal ban, technology export restrictions, diamond ban, luxury goods ban.', recent:'14th sanctions package targeting circumvention routes through Central Asia.' },
   { from:'United States', to:'Cuba', volume:0.3, goods:'Agricultural Products, Medicine', status:'sanctioned',
     desc:'US trade embargo since 1962. Longest-running embargo in modern history.',
-    sanctions:'Full trade embargo under Helms-Burton Act. Travel restrictions.', recent:'No significant policy changes. Embargo remains in full effect.' }
+    sanctions:'Full trade embargo under Helms-Burton Act. Travel restrictions.', recent:'No significant policy changes. Embargo remains in full effect.' },
+  { from:'Iran', to:'China', volume:30, goods:'Crude Oil (gray market), Petrochemicals', status:'sanctioned',
+    desc:'Iran exports oil to China despite US sanctions via ship-to-ship transfers.',
+    sanctions:'US secondary sanctions on entities facilitating Iran oil trade.', recent:'Iran oil reaching China at ~1.5M barrels/day through gray market channels.' }
 ];
 
 // Country trade profiles for click-to-highlight feature
@@ -117,7 +170,11 @@ function getCountryCoords(name) {
     'European Union':{lat:50.85,lng:4.35},'South Korea':{lat:35.91,lng:127.77},
     'Australia':{lat:-25.27,lng:133.78},'Canada':{lat:56.13,lng:-106.35},
     'Mexico':{lat:23.63,lng:-102.55},'Cuba':{lat:21.52,lng:-77.78},
-    'North Korea':{lat:40.34,lng:127.51}
+    'North Korea':{lat:40.34,lng:127.51},'Indonesia':{lat:-6.21,lng:106.85},
+    'Thailand':{lat:13.76,lng:100.50},'Vietnam':{lat:21.03,lng:105.85},
+    'Poland':{lat:52.23,lng:21.01},'Italy':{lat:41.90,lng:12.50},
+    'France':{lat:48.86,lng:2.35},'Netherlands':{lat:52.37,lng:4.90},
+    'Taiwan':{lat:25.03,lng:121.57},'Argentina':{lat:-34.60,lng:-58.38}
   };
   return fb[name] || { lat: 0, lng: 0 };
 }
@@ -176,18 +233,28 @@ function showTradeRoutes(highlightCountry) {
       lineOpacity = 0.08;
     }
 
-    var geom = new THREE.BufferGeometry().setFromPoints(pts);
-    var mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: lineOpacity, linewidth: 2 });
-    var line = new THREE.Line(geom, mat);
-    line.userData = { routeIndex: idx, route: route };
-    tradeRouteGroup.add(line);
-    tradeRouteMeshes.push(line);
+    // Draw main line + parallel offset lines for visual thickness (WebGL ignores linewidth > 1)
+    var offsets = [0, 0.0012, -0.0012];
+    for (var oi = 0; oi < offsets.length; oi++) {
+      var drawPts = pts;
+      if (offsets[oi] !== 0) {
+        drawPts = pts.map(function(p) { return new THREE.Vector3(p.x + offsets[oi], p.y + offsets[oi] * 0.5, p.z); });
+      }
+      var geom = new THREE.BufferGeometry().setFromPoints(drawPts);
+      var mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: oi === 0 ? lineOpacity : lineOpacity * 0.6, linewidth: 2 });
+      var line = new THREE.Line(geom, mat);
+      if (oi === 0) {
+        line.userData = { routeIndex: idx, route: route };
+        tradeRouteMeshes.push(line);
+      }
+      tradeRouteGroup.add(line);
+    }
 
     // Add animated flowing dots along the route
     if (lineOpacity > 0.1) {
       var dotCount = Math.max(1, Math.min(4, Math.floor(vol / 200)));
       for (var d = 0; d < dotCount; d++) {
-        var dotGeom = new THREE.SphereGeometry(0.006, 6, 6);
+        var dotGeom = new THREE.SphereGeometry(0.008, 6, 6);
         var dotMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
         var dot = new THREE.Mesh(dotGeom, dotMat);
         dot.userData = { arcPoints: pts, offset: d / dotCount, speed: 0.003 + Math.random() * 0.002 };

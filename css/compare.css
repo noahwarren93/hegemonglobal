@@ -8,7 +8,7 @@
 
     .compare-panel::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
 
-    .compare-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #1f2937; }
+    .compare-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #1f2937; }
 
     .compare-title { font-size: 12px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; text-transform: uppercase; }
 
@@ -16,11 +16,27 @@
 
     .compare-close:hover { color: #fff; }
 
-    .compare-countries { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    /* Compare search bar */
+    .compare-search-wrap { position: relative; margin-bottom: 10px; }
+
+    .compare-search { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 6px; padding: 8px 10px; color: #fff; font-size: 11px; outline: none; }
+
+    .compare-search:focus { border-color: #06b6d4; }
+
+    .compare-search-results { position: absolute; top: 100%; left: 0; right: 0; background: #0a0a0d; border: 1px solid #374151; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; }
+
+    .compare-search-item { padding: 8px 10px; font-size: 11px; color: #e5e7eb; cursor: pointer; border-bottom: 1px solid #1f293755; }
+
+    .compare-search-item:hover { background: #1f293766; }
+
+    .compare-countries { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 
     .compare-country-chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; }
 
     .compare-country-chip button { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 14px; margin-left: 4px; }
+
+    /* Data area hidden until 2+ countries */
+    .compare-data-area { display: none; }
 
     .compare-section { margin-bottom: 16px; }
 
@@ -34,5 +50,5 @@
 
     .compare-radar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 16px; }
 
-    .compare-instruction { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 15; background: rgba(6,182,212,0.25); backdrop-filter: blur(8px); color: #22d3ee; font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 10px; border: 2px solid #06b6d4; display: none; text-align: center; letter-spacing: 0.5px; pointer-events: none; animation: comparePulse 2s ease-in-out infinite; text-shadow: 0 0 10px rgba(6,182,212,0.5); box-shadow: 0 0 20px rgba(6,182,212,0.2); }
-    @keyframes comparePulse { 0%, 100% { opacity: 1; border-color: #06b6d4; box-shadow: 0 0 20px rgba(6,182,212,0.3); } 50% { opacity: 0.8; border-color: #22d3ee; box-shadow: 0 0 30px rgba(6,182,212,0.5); } }
+    /* Compare instruction - permanently hidden */
+    .compare-instruction { display: none !important; }

@@ -225,6 +225,9 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     currentTab = tab.dataset.tab;
     renderSidebar();
+    // Reset scroll to top when switching tabs
+    var sc = document.getElementById('sidebarContent');
+    if (sc) sc.scrollTop = 0;
   });
 });
 
