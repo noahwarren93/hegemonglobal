@@ -10,7 +10,7 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #050508; color: #fff; overflow: hidden; height: 100vh; }
     .app { display: flex; height: 100vh; }
     .globe-container { flex: 1; position: relative; }
-    #globe { width: 100%; height: 100%; }
+    #globe { width: 100%; height: 100%; touch-action: none; }
 
     .header { position: absolute; top: 0; left: 0; right: 320px; z-index: 10; padding: 16px 20px; background: transparent; }
     .header-content { display: flex; justify-content: space-between; align-items: center; }
@@ -69,7 +69,7 @@
 
     .sidebar { width: 320px; background: #0a0a0d; border-left: 1px solid #1f2937; display: flex; flex-direction: column; }
     .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid #1f2937; }
-    .tab { flex: 1; min-width: 12%; padding: 10px 1px; font-size: 7px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0; text-transform: uppercase; }
+    .tab { flex: 1; min-width: 12%; padding: 10px 1px; font-size: 8px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0; text-transform: uppercase; }
     .tab:hover { color: #9ca3af; }
     .tab.active { color: #06b6d4; border-bottom-color: #06b6d4; }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
@@ -79,7 +79,7 @@
     .card { background: #0d0d12; border: 1px solid #1f293755; border-radius: 8px; padding: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; }
     .card:hover { border-color: #374151; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .card-cat { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
+    .card-cat { font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
     .card-cat.high { background: #7f1d1d; color: #fca5a5; }
     .card-cat.medium { background: #374151; color: #9ca3af; }
     /* Category color coding */
@@ -92,9 +92,9 @@
     .card-cat.TECH { background: #0e7490; color: #67e8f9; }
     .card-cat.CLIMATE { background: #065f46; color: #6ee7b7; }
     .card-cat.WORLD { background: #374151; color: #d1d5db; }
-    .card-time { font-size: 8px; color: #6b7280; }
-    .card-headline { font-size: 10px; color: #e5e7eb; line-height: 1.4; }
-    .card-source { font-size: 8px; color: #6b7280; margin-top: 4px; }
+    .card-time { font-size: 9px; color: #6b7280; }
+    .card-headline { font-size: 12px; color: #e5e7eb; line-height: 1.4; }
+    .card-source { font-size: 9px; color: #6b7280; margin-top: 4px; }
     .card-source a { color: #06b6d4; text-decoration: none; }
 
     .event-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
@@ -192,15 +192,15 @@
     .analysis-num.n2 { background: #1e3a5f; color: #93c5fd; }
     .analysis-num.n3 { background: #713f12; color: #fde047; }
     .analysis-title { font-size: 11px; font-weight: 600; color: #e5e7eb; }
-    .analysis-text { font-size: 11px; color: #9ca3af; line-height: 1.6; }
+    .analysis-text { font-size: 12px; color: #9ca3af; line-height: 1.6; }
 
     .news-item { background: #0d0d14; border-radius: 8px; padding: 10px; margin-bottom: 8px; border: 1px solid #1f293755; }
     .news-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .news-bias { width: 8px; height: 8px; border-radius: 50%; }
-    .news-source { font-size: 10px; font-weight: 600; color: #e5e7eb; }
-    .news-time { font-size: 9px; color: #6b7280; margin-left: auto; }
-    .news-headline { font-size: 11px; color: #d1d5db; line-height: 1.5; }
-    .news-link { font-size: 9px; color: #06b6d4; text-decoration: none; display: inline-block; margin-top: 6px; }
+    .news-source { font-size: 11px; font-weight: 600; color: #e5e7eb; }
+    .news-time { font-size: 10px; color: #6b7280; margin-left: auto; }
+    .news-headline { font-size: 13px; color: #d1d5db; line-height: 1.5; }
+    .news-link { font-size: 10px; color: #06b6d4; text-decoration: none; display: inline-block; margin-top: 6px; }
 
     /* Breaking News Banner */
     .breaking-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%); padding: 8px 20px; display: none; animation: bannerPulse 2s infinite; }
@@ -249,8 +249,8 @@
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .app { flex-direction: column; }
-      .globe-container { height: 50vh; }
-      .sidebar { width: 100%; height: 50vh; border-left: none; border-top: 1px solid #1f2937; }
+      .globe-container { height: 65vh; }
+      .sidebar { width: 100%; height: 35vh; border-left: none; border-top: 1px solid #1f2937; }
       .header { right: 0; padding: 10px 12px; }
       .header-right { right: 12px; top: 12px; }
       .logo { font-size: 20px; }
@@ -286,8 +286,8 @@
       .globe-controls { left: 10px; bottom: 65px; }
       .globe-toggle { padding: 4px 6px; }
       .toggle-icon { width: 12px; height: 12px; }
-      .globe-container { height: 45vh; }
-      .sidebar { height: 55vh; }
+      .globe-container { height: 65vh; }
+      .sidebar { height: 35vh; }
     }
   </style>
 </head>
@@ -365,7 +365,13 @@
     <div class="tabs">
       <button class="tab active" data-tab="daily">Articles</button><button class="tab" data-tab="newsletter">Brief</button><button class="tab" data-tab="elections">Elections</button><button class="tab" data-tab="forecast">Forecast</button><button class="tab" data-tab="horizon">Horizon</button><button class="tab" data-tab="search">Search</button>
     </div>
-    <div id="newsTimestamp" style="font-size:9px;color:#6b7280;padding:4px 16px;background:#0a0a0f;border-bottom:1px solid #1f2937;">Loading live news...</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 12px;background:#0a0a0f;border-bottom:1px solid #1f2937;">
+      <div id="newsTimestamp" style="font-size:10px;color:#6b7280;">Loading live news...</div>
+      <div id="fontControls" style="display:flex;gap:4px;align-items:center;">
+        <button onclick="adjustFontSize(-1)" style="width:22px;height:22px;border-radius:4px;border:1px solid #374151;background:#111827;color:#9ca3af;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" title="Decrease text size">A-</button>
+        <button onclick="adjustFontSize(1)" style="width:22px;height:22px;border-radius:4px;border:1px solid #374151;background:#111827;color:#9ca3af;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;" title="Increase text size">A+</button>
+      </div>
+    </div>
     <div class="sidebar-content" id="sidebarContent"></div>
   </div>
 </div>
@@ -439,6 +445,19 @@ const COUNTRIES = {
       { source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns famine conditions spreading in northern Gaza', url: '#' },
       { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Ceasefire talks resume in Cairo with US mediation', url: '#' },
       { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Humanitarian aid deliveries remain severely restricted', url: '#' }
+    ]
+  },
+
+  'Palestine': { lat: 31.95, lng: 35.23, flag: '🇵🇸', risk: 'extreme', region: 'Middle East', pop: '3.2M', gdp: '$18B', leader: 'Mahmoud Abbas', title: 'Occupied Territories',
+    analysis: {
+      what: 'The Palestinian Authority governs parts of the West Bank under Israeli military occupation. Settlement expansion continues with over 700,000 Israeli settlers in the West Bank and East Jerusalem. The PA faces a legitimacy crisis with no elections held since 2006. West Bank raids and settler violence have intensified since October 2023.',
+      why: 'The Israeli-Palestinian conflict remains central to Middle East stability. West Bank tensions risk a third intifada. Palestinian statehood recognition has gained momentum internationally. The humanitarian situation and restrictions on movement affect daily life for millions.',
+      next: 'Post-Abbas succession planning is critical. International pressure for two-state solution continues but settlements make it increasingly difficult. Watch for PA governance reforms, settler violence trends, and international recognition moves.'
+    },
+    news: [
+      { source: 'Al Jazeera', bias: 'left', time: '2h ago', headline: 'West Bank raids intensify amid rising tensions', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'Settlement expansion plans draw international criticism', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Palestinian Authority faces governance challenges', url: '#' }
     ]
   },
 
@@ -2757,7 +2776,7 @@ function renderPastBriefingsHTML() {
               <span style="font-size:8px;color:#6b7280;">${a.source}</span>
             </div>
             <div style="font-size:10px;color:#d1d5db;line-height:1.4;">${a.headline}</div>
-            ${a.url && a.url !== '#' ? `<a href="${a.url}" target="_blank" style="font-size:8px;color:#06b6d4;text-decoration:none;">Read more ↗</a>` : ''}
+            ${a.url && a.url !== '#' ? `<a href="${a.url}" target="_blank" rel="noopener noreferrer" style="font-size:8px;color:#06b6d4;text-decoration:none;">Read more ↗</a>` : ''}
           </div>
         `).join('');
       }
@@ -4975,6 +4994,7 @@ const COUNTRY_TRENDS = {
   // Active conflicts - consistently high
   'Ukraine': [90, 92, 88, 90, 95, 92, 90, 88, 90, 92, 90, 92], // Ongoing war, fluctuates with offensives
   'Russia': [85, 88, 85, 88, 90, 88, 85, 88, 90, 88, 90, 92], // Tied to Ukraine war
+  'Palestine': [70, 72, 75, 78, 80, 82, 80, 78, 80, 82, 80, 78], // West Bank tensions elevated
   'Gaza': [95, 98, 95, 92, 90, 88, 85, 88, 92, 95, 92, 90], // Post-Oct 2023, gradually stabilizing
   'Israel': [80, 85, 82, 78, 75, 72, 70, 72, 75, 78, 75, 78], // Regional tensions persist
   'Sudan': [75, 80, 85, 90, 92, 95, 95, 95, 92, 92, 95, 95], // Civil war escalated Apr 2023
@@ -5011,6 +5031,7 @@ const COUNTRY_TRENDS = {
 const COUNTRY_INDICATORS = {
   'Ukraine': [{ text: 'Conflict', dir: 'up' }, { text: 'Aid Flow', dir: 'stable' }, { text: 'Diplomacy', dir: 'down' }],
   'Russia': [{ text: 'Sanctions', dir: 'up' }, { text: 'Economy', dir: 'down' }, { text: 'Military', dir: 'stable' }],
+  'Palestine': [{ text: 'Occupation', dir: 'up' }, { text: 'Settlements', dir: 'up' }, { text: 'Statehood', dir: 'stable' }],
   'Gaza': [{ text: 'Humanitarian', dir: 'up' }, { text: 'Ceasefire', dir: 'stable' }, { text: 'Rebuilding', dir: 'down' }],
   'Israel': [{ text: 'Security', dir: 'up' }, { text: 'Politics', dir: 'down' }, { text: 'Regional', dir: 'up' }],
   'Sudan': [{ text: 'Violence', dir: 'up' }, { text: 'Famine', dir: 'up' }, { text: 'Displacement', dir: 'up' }],
@@ -5459,6 +5480,18 @@ function onResize() {
   renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
+// Font size adjustment tool (min level -1, max level +3)
+let fontSizeLevel = 0;
+function adjustFontSize(delta) {
+  fontSizeLevel = Math.max(-1, Math.min(3, fontSizeLevel + delta));
+  const scale = 1 + (fontSizeLevel * 0.1); // 0.9x to 1.3x
+  document.querySelector('.sidebar-content').style.zoom = scale;
+  // Visual feedback on buttons
+  const btns = document.querySelectorAll('#fontControls button');
+  if (btns[0]) btns[0].style.opacity = fontSizeLevel <= -1 ? '0.3' : '1';
+  if (btns[1]) btns[1].style.opacity = fontSizeLevel >= 3 ? '0.3' : '1';
+}
+
 // Globe controls
 let isDragging = false, prevMouse = { x: 0, y: 0 };
 let globeClickStart = { x: 0, y: 0 };
@@ -5480,8 +5513,9 @@ document.addEventListener('mousemove', (e) => {
   prevMouse = { x: e.clientX, y: e.clientY };
 });
 
-// Touch events for mobile globe rotation
+// Touch events for mobile globe rotation + pinch zoom
 let touchStart = { x: 0, y: 0 };
+let isPinching = false, lastPinchDist = 0;
 document.getElementById('globe').addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -5490,15 +5524,39 @@ document.getElementById('globe').addEventListener('touchstart', (e) => {
   }
 }, { passive: true });
 
-document.addEventListener('touchend', () => { isDragging = false; });
+document.addEventListener('touchend', () => { isDragging = false; isPinching = false; });
 
 document.addEventListener('touchmove', (e) => {
-  if (!isDragging || !globe || e.touches.length !== 1) return;
+  if (!globe) return;
+  // Pinch-to-zoom (two fingers)
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (isPinching && lastPinchDist > 0) {
+      const delta = (lastPinchDist - dist) * 0.01;
+      camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
+    }
+    isPinching = true;
+    lastPinchDist = dist;
+    isDragging = false;
+    return;
+  }
+  // Single finger drag rotation
+  if (!isDragging || e.touches.length !== 1) return;
   const touch = e.touches[0];
   globe.rotation.y += (touch.clientX - prevMouse.x) * 0.005;
   globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + (touch.clientY - prevMouse.y) * 0.005));
   prevMouse = { x: touch.clientX, y: touch.clientY };
 }, { passive: true });
+
+// Scroll-wheel zoom for desktop
+document.getElementById('globe').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (!camera) return;
+  const delta = e.deltaY * 0.002;
+  camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
+}, { passive: false });
 
 // Touch tap on markers and globe surface for mobile
 document.getElementById('globe').addEventListener('touchend', (e) => {
@@ -5564,7 +5622,7 @@ function renderSidebar() {
         <div class="card" style="border-left:2px solid ${item.category === 'CONFLICT' ? '#ef4444' : item.category === 'CRISIS' ? '#f97316' : '#eab308'};">
           <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
           <div class="card-headline" style="font-weight:600;">${item.headline}</div>
-          <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
+          <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
           <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
         </div>
       `).join('');
@@ -5576,7 +5634,7 @@ function renderSidebar() {
       <div class="card">
         <div class="card-header"><span class="card-cat ${item.category}">${item.category}</span><span class="card-time">${item.time}</span></div>
         <div class="card-headline">${item.headline}</div>
-        <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
+        <div class="card-source">${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.source} ↗</a>` : `<span style="color:#9ca3af">${item.source}</span>`}</div>
         <div style="margin-top:4px;">${renderBiasTag(item.source)}</div>
       </div>
     `).join('');
@@ -5760,7 +5818,7 @@ function openModal(name) {
   // Show cached news first
   if (c.news && c.news.length) {
     html += `<div class="section-title">Recent Coverage</div>`;
-    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div>${renderBiasTag(n.source)}<div class="news-headline">${n.headline}</div>${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>` : ''}</div>`; });
+    c.news.forEach(n => { html += `<div class="news-item"><div class="news-meta"><span class="news-source">${n.source}</span><span class="news-time">${n.time}</span></div>${renderBiasTag(n.source)}<div class="news-headline">${n.headline}</div>${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank" rel="noopener noreferrer">Read more ↗</a>` : ''}</div>`; });
   }
 
   // Add placeholder for live country news
@@ -5786,7 +5844,7 @@ function openModal(name) {
             </div>
             ${renderBiasTag(n.source)}
             <div class="news-headline">${n.headline}</div>
-            ${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank">Read more ↗</a>` : ''}
+            ${n.url && n.url !== '#' ? `<a class="news-link" href="${n.url}" target="_blank" rel="noopener noreferrer">Read more ↗</a>` : ''}
           </div>
         `).join('');
       } else if (result && result.error) {
