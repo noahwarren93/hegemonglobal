@@ -28,6 +28,9 @@
       #featureBtnsDesktop { left: 8px !important; right: auto !important; bottom: 70px; top: auto !important; flex-direction: row; gap: 4px; }
       .globe-feature-btn { padding: 5px 8px; font-size: 7px; }
 
+      /* Compare hint on mobile - above feature buttons */
+      .compare-hint { left: 8px; top: auto; bottom: 95px; font-size: 8px; padding: 5px 10px; }
+
       /* Search overlay on mobile */
       .search-overlay { right: 10px; top: auto; bottom: 80px; width: 250px; max-height: 300px; }
 
@@ -35,7 +38,8 @@
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
       /* Compare panel mobile - compact when 1 country, full when 2+ */
-      .compare-panel { position: fixed; width: 100%; max-width: 100vw; bottom: 0; left: 0; right: 0; top: auto; height: auto; max-height: 25vh; transform: translateY(100%); border-left: none; border-top: 1px solid #1f2937; border-radius: 16px 16px 0 0; z-index: 55; padding: 12px; }
+      /* z-index: 200 ensures it sits above all globe elements */
+      .compare-panel { position: fixed; width: 100%; max-width: 100vw; bottom: 0; left: 0; right: 0; top: auto; height: auto; max-height: 25vh; transform: translateY(100%); border-left: none; border-top: 1px solid #1f2937; border-radius: 16px 16px 0 0; z-index: 200; padding: 12px; }
       .compare-panel.active { transform: translateY(0); }
       .compare-panel.expanded { max-height: 65vh; overflow-y: auto; }
 
@@ -70,6 +74,9 @@
       #featureBtnsDesktop { left: 8px !important; bottom: 60px; gap: 3px; }
       .globe-feature-btn { padding: 4px 6px; font-size: 6px; gap: 3px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
+
+      /* Compare hint smaller on small screens */
+      .compare-hint { bottom: 82px; font-size: 7px; padding: 4px 8px; }
 
       .globe-container { height: 52vh; }
       .sidebar { height: 48vh; }
