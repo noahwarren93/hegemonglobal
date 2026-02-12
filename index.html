@@ -1926,17 +1926,32 @@ function categorizeNewsByRegion(articles) {
 // BRIEFING NARRATIVE ENGINE - Generate prose summaries from headlines
 // ============================================================
 
-// Extract key entities (countries, orgs) from headline text
+// Extract key entities (countries, orgs) from headline text — word-boundary matching only
 function extractEntities(text) {
-  const t = text.toLowerCase();
   const entities = [];
   const allCountries = Object.keys(COUNTRIES);
-  allCountries.forEach(c => { if (t.includes(c.toLowerCase())) entities.push(c); });
+  allCountries.forEach(c => {
+    // Use word boundary regex to avoid substring matches (e.g. "Mali" inside "Somalia")
+    const rx = new RegExp('\\b' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+    if (rx.test(text)) entities.push(c);
+  });
   // Check common shorthand/orgs
-  const orgs = { 'NATO': /\bnato\b/i, 'EU': /\beu\b|\beuropean union\b/i, 'UN': /\bun\b|\bunited nations\b/i,
-    'G7': /\bg7\b/i, 'BRICS': /\bbrics\b/i, 'IMF': /\bimf\b/i, 'OPEC': /\bopec\b/i };
+  const orgs = { 'NATO': /\bNATO\b/i, 'EU': /\bEU\b|\bEuropean Union\b/i, 'UN': /\bUN\b|\bUnited Nations\b/i,
+    'G7': /\bG7\b/i, 'BRICS': /\bBRICS\b/i, 'IMF': /\bIMF\b/i, 'OPEC': /\bOPEC\b/i };
   Object.entries(orgs).forEach(([name, rx]) => { if (rx.test(text)) entities.push(name); });
   return [...new Set(entities)];
+}
+
+// Filter entities to only those belonging to a specific region
+function getRegionEntities(entities, region) {
+  const regionCountries = NEWSLETTER_REGIONS[region] || [];
+  return entities.filter(e => {
+    // Check if entity is in this region's keyword list
+    if (regionCountries.some(kw => kw.toLowerCase() === e.toLowerCase())) return true;
+    // Also allow orgs that are relevant globally
+    if (['NATO', 'EU', 'UN', 'G7', 'BRICS', 'IMF', 'OPEC'].includes(e)) return true;
+    return false;
+  });
 }
 
 // Classify a headline's tone/action
@@ -1955,21 +1970,27 @@ function classifyHeadline(headline) {
   return 'general';
 }
 
-// Generate a 3-5 sentence narrative summary for a region
+// Generate a narrative summary for a region
 function generateRegionNarrative(region, articles) {
   if (articles.length === 0) return 'No significant developments were reported in this region over the past 24 hours.';
 
-  // Aggressive deduplication: normalize heavily, catch similar headlines
-  const seen = new Set();
+  // Strong deduplication: compare subject words with 50% overlap threshold
+  const stopWords = new Set(['the','a','an','in','on','at','to','for','of','and','or','is','are','was','were','has','have','had','with','by','from','that','this','as','it','its','but','not','be','been','will','would','could','should','may','might','after','before','over','into','about','than','also','just','more','most','some','new','other','says','said','amid','during','between','reports','reported','report','latest','live','updates','happened']);
   const classified = [];
+  const seenSubjects = [];
+
   articles.forEach(a => {
     const headline = a.headline || a.title || '';
     if (!headline) return;
-    // Normalize: strip punctuation, extra spaces, lowercase, take meaningful words
-    const words = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-    const key = words.slice(0, 6).join('');
-    if (seen.has(key)) return;
-    seen.add(key);
+    const subjectWords = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w));
+    // Check 50%+ word overlap with any already-seen headline
+    const isDuplicate = seenSubjects.some(prev => {
+      const overlap = subjectWords.filter(w => prev.includes(w)).length;
+      return overlap >= Math.max(Math.min(subjectWords.length, prev.length) * 0.5, 2);
+    });
+    if (isDuplicate) return;
+    seenSubjects.push(subjectWords);
     classified.push({
       headline, source: a.source || '', category: a.category || 'WORLD',
       importance: a.importance || 'medium', type: classifyHeadline(headline),
@@ -1983,100 +2004,97 @@ function generateRegionNarrative(region, articles) {
   const types = {};
   classified.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
   const topTypes = Object.entries(types).sort((a, b) => b[1] - a[1]);
-  const allEntities = [...new Set(classified.flatMap(a => a.entities))];
-
-  // Group stories by type to synthesize rather than list
-  const byType = {};
-  classified.forEach(a => { if (!byType[a.type]) byType[a.type] = []; byType[a.type].push(a); });
+  // Only include entities that belong in this region
+  const allEntities = getRegionEntities([...new Set(classified.flatMap(a => a.entities))], region);
 
   const sentences = [];
-  const coveredTypes = new Set();
+  const usedIdx = new Set();
 
-  // WHAT HAPPENED: Lead with the most critical story, written as a complete thought
+  // LEAD: Most important story
   const leadStory = high.length > 0 ? high[0] : classified[0];
-  coveredTypes.add(leadStory.type);
+  usedIdx.add(classified.indexOf(leadStory));
   const leadClean = cleanHeadlineForProse(leadStory.headline);
-  const leadSource = leadStory.source ? ` ${leadStory.source} reported that` : '';
-  // Write the lead as a proper sentence, not a headline dump
-  sentences.push(`${region} saw significant activity over the past 24 hours.${leadSource} ${leadClean}.`);
-
-  // If there are multiple stories of the same type as the lead, synthesize them
-  const sameTypeStories = (byType[leadStory.type] || []).filter(a => a.headline !== leadStory.headline);
-  if (sameTypeStories.length > 0) {
-    const extra = cleanHeadlineForProse(sameTypeStories[0].headline);
-    const typeContext = {
-      'violence': 'This was compounded by reports that', 'diplomacy': 'Related diplomatic efforts included',
-      'unrest': 'Contributing to the instability,', 'politics': 'On the political front,',
-      'economic': 'Compounding economic concerns,', 'military': 'In a related military development,',
-      'humanitarian': 'Adding to humanitarian pressures,', 'sanctions': 'Further economic pressure came as',
-      'technology': 'In a related development,', 'energy': 'On the energy front,', 'general': 'Relatedly,'
-    };
-    sentences.push(`${typeContext[leadStory.type] || 'Relatedly,'} ${extra}.`);
+  if (leadStory.source) {
+    sentences.push(`According to ${leadStory.source}, ${leadClean}.`);
+  } else {
+    sentences.push(`${leadClean.charAt(0).toUpperCase() + leadClean.slice(1)}.`);
   }
 
-  // SECOND THEME: Pick a different category to broaden the picture
-  const secondType = topTypes.find(([t]) => !coveredTypes.has(t));
-  if (secondType) {
-    coveredTypes.add(secondType[0]);
-    const secondStories = byType[secondType[0]];
-    const secondLead = secondStories[0];
-    const secondClean = cleanHeadlineForProse(secondLead.headline);
-    const secondSource = secondLead.source ? `, as reported by ${secondLead.source}` : '';
-    const bridges = {
-      'violence': 'Separately, security concerns emerged as', 'diplomacy': 'On the diplomatic front,',
-      'unrest': 'Domestically,', 'sanctions': 'In terms of economic policy,', 'politics': 'Politically,',
-      'economic': 'On the economic front,', 'humanitarian': 'Humanitarian conditions also drew attention, as',
-      'military': 'In defense and security matters,', 'technology': 'In the technology space,',
-      'energy': 'Regarding energy and climate,', 'general': 'In other developments,'
-    };
-    sentences.push(`${bridges[secondType[0]] || 'In other developments,'} ${secondClean}${secondSource}.`);
+  // SECOND STORY: Different type preferred
+  const secondIdx = classified.findIndex((a, i) => !usedIdx.has(i) && a.type !== leadStory.type);
+  const altIdx = classified.findIndex((a, i) => !usedIdx.has(i));
+  const pickIdx = secondIdx >= 0 ? secondIdx : altIdx;
+  if (pickIdx >= 0) {
+    usedIdx.add(pickIdx);
+    const s = classified[pickIdx];
+    const sClean = cleanHeadlineForProse(s.headline);
+    const bridge = s.type !== leadStory.type ? ({
+      'violence': 'On the security front,', 'diplomacy': 'Diplomatically,', 'unrest': 'Domestically,',
+      'sanctions': 'Regarding sanctions,', 'politics': 'Politically,', 'economic': 'Economically,',
+      'humanitarian': 'On the humanitarian side,', 'military': 'In defense matters,',
+      'technology': 'In technology,', 'energy': 'On energy,', 'general': 'Separately,'
+    }[s.type] || 'Separately,') : 'Meanwhile,';
+    const src = s.source ? ` (${s.source})` : '';
+    sentences.push(`${bridge} ${sClean}${src}.`);
   }
 
-  // WHY IT MATTERS: Analytical paragraph connecting the dots, not a template
+  // THIRD STORY: Only if genuinely different and enough stories
+  const thirdIdx = classified.findIndex((a, i) => !usedIdx.has(i));
+  if (thirdIdx >= 0 && classified.length >= 4) {
+    const t = classified[thirdIdx];
+    const tClean = cleanHeadlineForProse(t.headline);
+    const src = t.source ? ` (${t.source})` : '';
+    sentences.push(`Additionally, ${tClean}${src}.`);
+  }
+
+  // WHY IT MATTERS: Use only region-relevant entities
+  const dominantType = topTypes[0][0];
+  const entityStr = allEntities.length >= 2 ? ` involving ${allEntities.slice(0, 3).join(' and ')}` : (allEntities.length === 1 ? ` regarding ${allEntities[0]}` : '');
   if (classified.length >= 2) {
-    const dominantType = topTypes[0][0];
-    const entityList = allEntities.slice(0, 3);
-    const entityMention = entityList.length >= 2 ? `, involving ${entityList.join(' and ')}` : (entityList.length === 1 ? `, particularly regarding ${entityList[0]}` : '');
-
     const analysis = {
-      'violence': `The persistence of armed conflict across ${region}${entityMention} carries consequences beyond the immediate theater. Continued fighting risks further displacement, economic disruption, and the potential to draw in external actors, each of which would complicate resolution efforts.`,
-      'diplomacy': `The diplomatic activity in ${region}${entityMention} is worth watching closely. Whether these negotiations produce binding commitments or stall at the rhetorical stage will determine the trajectory of stability in the region over the coming weeks.`,
-      'unrest': `The pattern of civil unrest in ${region}${entityMention} reflects underlying structural pressures, from governance failures to economic grievances, that are unlikely to dissipate without substantive policy responses.`,
-      'politics': `Political developments in ${region}${entityMention} have the potential to shift governance trajectories and realign international partnerships, depending on the outcomes of ongoing processes.`,
-      'economic': `Economic pressures in ${region}${entityMention} carry implications that extend beyond the region. Changes in monetary policy, trade flows, and market confidence in one country tend to produce ripple effects across connected economies.`,
-      'military': `Military developments in ${region}${entityMention} raise the baseline risk of miscalculation. When multiple actors increase their posture simultaneously, the margin for error narrows.`,
-      'humanitarian': `The humanitarian situation in ${region}${entityMention} continues to demand international attention. Without adequate intervention, conditions are likely to deteriorate further, creating longer-term stability challenges.`,
-      'sanctions': `The sanctions and economic measures affecting ${region}${entityMention} are reshaping trade relationships and forcing affected governments to seek alternative partners, a process that, once begun, is difficult to reverse.`,
-      'technology': `Technology developments in ${region}${entityMention} have implications for both economic competitiveness and national security, areas where even small shifts can alter the strategic balance.`,
-      'energy': `Energy dynamics in ${region}${entityMention} affect global supply chains and pricing, making these developments relevant well beyond the countries directly involved.`
+      'violence': `The active conflict situation${entityStr} risks further displacement, economic disruption, and potential external involvement.`,
+      'diplomacy': `Whether these diplomatic efforts${entityStr} produce binding commitments will shape stability in ${region} over the coming weeks.`,
+      'unrest': `This pattern of civil unrest${entityStr} points to structural pressures unlikely to resolve without substantive policy changes.`,
+      'politics': `These political developments${entityStr} could shift governance trajectories and reshape international partnerships in ${region}.`,
+      'economic': `These economic pressures${entityStr} carry implications beyond ${region}, as changes in monetary policy and market confidence tend to produce ripple effects across connected economies.`,
+      'military': `This military activity${entityStr} raises the risk of miscalculation, particularly when multiple actors are increasing their posture simultaneously.`,
+      'humanitarian': `The humanitarian situation${entityStr} demands international attention, as conditions are likely to deteriorate without adequate intervention.`,
+      'sanctions': `These economic measures${entityStr} are reshaping trade relationships and pushing affected governments toward alternative partnerships.`,
+      'technology': `Technology competition${entityStr} has direct implications for both economic positioning and national security in the region.`,
+      'energy': `Energy developments${entityStr} affect global supply chains and pricing, making them relevant well beyond ${region}.`
     };
-    sentences.push(analysis[dominantType] || `The breadth of developments in ${region}${entityMention} reflects a complex and evolving situation that warrants sustained attention.`);
+    sentences.push(analysis[dominantType] || `The range of developments${entityStr} reflects an evolving situation across ${region}.`);
   }
 
-  // WHAT MIGHT HAPPEN: Forward look grounded in specifics
+  // FORWARD LOOK
   if (high.length >= 3) {
-    sentences.push(`Given the number of active high-priority situations, the next several days will be important in determining whether the current trajectory moves toward escalation or stabilization.`);
+    sentences.push(`The next several days will be important in determining whether these situations escalate or move toward resolution.`);
   } else if (high.length >= 1) {
-    sentences.push(`The coming days will be worth watching, as the outcomes of these developments could set the tone for the region's stability through the rest of the month.`);
-  } else if (classified.length >= 4) {
-    sentences.push(`While no single crisis dominated the cycle, the volume of activity across ${region} suggests an elevated baseline that could produce larger developments if left unaddressed.`);
+    sentences.push(`These developments are worth monitoring as the situation continues to evolve.`);
   }
 
-  return sentences.slice(0, 7).join(' ');
+  return sentences.slice(0, 6).join(' ');
 }
 
 // Clean a headline for embedding in prose
 function cleanHeadlineForProse(headline) {
   if (!headline) return 'ongoing developments';
+  let clean = headline;
   // Strip source prefixes like "Reuters: " or "BBC - "
-  let clean = headline.replace(/^[A-Z][A-Za-z\s]+[\-:]\s*/, '');
+  clean = clean.replace(/^[A-Z][A-Za-z\s]+[\-:]\s*/, '');
+  // Strip live-blog suffixes: "– as it happened", "| Live updates", "- live", etc.
+  clean = clean.replace(/\s*[\-–|]+\s*(as it happened|live updates?|live blog|breaking|developing story|watch live|latest|updates?)\s*$/i, '');
+  // Strip "(PHOTOS)", "(VIDEO)", "[WATCH]", etc.
+  clean = clean.replace(/\s*[\(\[](photos?|videos?|watch|gallery|breaking|exclusive|updated?|opinion|analysis)[\)\]]\s*/gi, '');
+  // Strip leading "BREAKING:" "EXCLUSIVE:" "WATCH:" "UPDATE:" etc.
+  clean = clean.replace(/^(BREAKING|EXCLUSIVE|WATCH|UPDATE|JUST IN|ALERT|DEVELOPING|OPINION|ANALYSIS)\s*[:\-–]\s*/i, '');
   // Lowercase the first letter ONLY if it's not part of an acronym (2+ uppercase letters)
   if (clean.length >= 2 && clean[1] && clean[1] === clean[1].toLowerCase()) {
     clean = clean.charAt(0).toLowerCase() + clean.slice(1);
   }
-  // Remove trailing periods if present (we add our own)
-  clean = clean.replace(/\.\s*$/, '');
-  return clean;
+  // Remove trailing periods, dashes, pipes
+  clean = clean.replace(/[\.\-–|]\s*$/, '').trim();
+  return clean || 'ongoing developments';
 }
 
 // Generate a Global Ramifications section tying all regions together + uncategorized stories
@@ -2086,16 +2104,20 @@ function generateGlobalRamifications(regionData, globalArticles) {
   const combined = [...allArticles, ...uncategorized];
   if (combined.length === 0) return '';
 
-  // Deduplicate aggressively
-  const seen = new Set();
+  // Deduplicate with 50% subject-word overlap
+  const stopWords = new Set(['the','a','an','in','on','at','to','for','of','and','or','is','are','was','were','has','have','had','with','by','from','that','this','as','it','its','but','not','be','been','will','would','could','should','may','might','after','before','over','into','about','than','also','just','more','most','some','new','other','says','said','amid','during','between','reports','reported','report','latest','live','updates','happened']);
   const classified = [];
+  const seenSubjects = [];
   combined.forEach(a => {
     const headline = a.headline || a.title || '';
     if (!headline) return;
-    const words = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-    const key = words.slice(0, 6).join('');
-    if (seen.has(key)) return;
-    seen.add(key);
+    const subjectWords = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const isDuplicate = seenSubjects.some(prev => {
+      const overlap = subjectWords.filter(w => prev.includes(w)).length;
+      return overlap >= Math.max(Math.min(subjectWords.length, prev.length) * 0.5, 2);
+    });
+    if (isDuplicate) return;
+    seenSubjects.push(subjectWords);
     classified.push({
       headline, source: a.source || '', type: classifyHeadline(headline),
       category: a.category || 'WORLD', importance: a.importance || 'medium',
@@ -2139,13 +2161,16 @@ function generateGlobalRamifications(regionData, globalArticles) {
 
   // PARAGRAPH 4: Uncategorized stories that didn't fit a continent
   const uncatDedupe = [];
-  const uncatSeen = new Set();
+  const uncatSeenSubjects = [];
   uncategorized.forEach(a => {
     const headline = a.headline || a.title || '';
     if (!headline) return;
-    const words = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-    const key = words.slice(0, 6).join('');
-    if (!uncatSeen.has(key)) { uncatSeen.add(key); uncatDedupe.push({ headline, source: a.source || '' }); }
+    const sw = headline.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const isDup = uncatSeenSubjects.some(prev => {
+      const ov = sw.filter(w => prev.includes(w)).length;
+      return ov >= Math.max(Math.min(sw.length, prev.length) * 0.5, 2);
+    });
+    if (!isDup) { uncatSeenSubjects.push(sw); uncatDedupe.push({ headline, source: a.source || '' }); }
   });
   if (uncatDedupe.length > 0) {
     const topGlobal = uncatDedupe[0];
