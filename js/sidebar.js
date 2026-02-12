@@ -166,7 +166,8 @@ function renderSidebar() {
   } else if (currentTab === 'search') {
     content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
   } else if (currentTab === 'stocks') {
-    let stocksHtml = '<div style="padding:8px 12px;background:linear-gradient(90deg,rgba(34,197,94,0.12) 0%,transparent 100%);border-left:3px solid #22c55e;margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:#22c55e;letter-spacing:1px;">GLOBAL MARKETS</div><div style="font-size:9px;color:#6b7280;margin-top:2px;">Ranked by economic importance</div></div>';
+    var stocksUpdated = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    let stocksHtml = '<div style="padding:8px 12px;background:linear-gradient(90deg,rgba(34,197,94,0.12) 0%,transparent 100%);border-left:3px solid #22c55e;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-size:11px;font-weight:700;color:#22c55e;letter-spacing:1px;">GLOBAL MARKETS</div><div style="font-size:8px;color:#6b7280;">Last updated: ' + stocksUpdated + '</div></div><div style="font-size:9px;color:#6b7280;margin-top:2px;">Ranked by economic importance</div></div>';
     if (typeof STOCKS_DATA !== 'undefined') {
       STOCKS_DATA.forEach(function(stock) {
         stocksHtml += '<div class="stocks-country" onclick="openStocksDetail(\'' + stock.country + '\')">' +

@@ -428,45 +428,8 @@ function updateNewsTimestamp() {
   }
 }
 
-// Initialize dynamic risk state system
-initializeRiskState();
-
-// Seed briefing history if empty — save fallback data as yesterday's briefing
-// so users see a past briefing immediately on first visit
-(function seedBriefingHistory() {
-  try {
-    const history = loadBriefingHistory();
-    const todayKey = getBriefingDateKey();
-    const pastKeys = Object.keys(history).filter(d => d !== todayKey);
-    if (pastKeys.length === 0) {
-      // No past briefings exist yet — seed yesterday
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = yesterday.toISOString().split('T')[0];
-      history[yesterdayKey] = {
-        date: yesterdayKey,
-        articles: DAILY_BRIEFING_FALLBACK.map(a => ({
-          time: a.time,
-          category: a.category,
-          importance: a.importance,
-          headline: a.headline,
-          source: a.source,
-          url: a.url
-        })),
-        savedAt: new Date().toISOString(),
-        articleCount: DAILY_BRIEFING_FALLBACK.length
-      };
-      localStorage.setItem(BRIEFING_HISTORY_KEY, JSON.stringify(history));
-      console.log('Seeded briefing history with yesterday\'s briefing');
-    }
-  } catch (e) {
-    console.warn('Could not seed briefing history:', e.message);
-  }
-})();
-
-// Initialize live news and set up auto-refresh
-fetchLiveNews();
-setInterval(fetchLiveNews, NEWS_REFRESH_INTERVAL);
+// NOTE: Initialization calls (initializeRiskState, fetchLiveNews, seedBriefingHistory)
+// are deferred to app.js to ensure all dependencies (api.js, data.js) are loaded first.
 
 // Breaking news detection keywords
 

@@ -6,8 +6,9 @@ const STOCKS_DATA = [
     { name: 'S&P 500', value: '5,918.23', change: '+0.92%', changeAbs: '+54.07', positive: true },
     { name: 'NASDAQ', value: '18,847.61', change: '+1.14%', changeAbs: '+212.89', positive: true },
     { name: 'Gold', value: '$2,941.30', change: '+0.23%', changeAbs: '+$6.70', positive: true },
-    { name: 'Silver', value: '$32.85', change: '-0.42%', changeAbs: '-$0.14', positive: false }
-  ], sentiment: 'Tech rally lifts markets amid strong earnings', sparkline: [40,55,45,60,65,58,70,75,68,80,78,85] },
+    { name: 'Silver', value: '$32.85', change: '-0.42%', changeAbs: '-$0.14', positive: false },
+    { name: 'Bitcoin', value: '$96,482.17', change: '+2.34%', changeAbs: '+$2,207.55', positive: true }
+  ], sentiment: 'Tech rally lifts markets; Bitcoin nears $100K', sparkline: [40,55,45,60,65,58,70,75,68,80,78,85] },
   { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', indices: [
     { name: 'SSE Composite', value: '3,318.07', change: '-0.34%', changeAbs: '-11.32', positive: false },
     { name: 'Shenzhen', value: '10,128.45', change: '-0.21%', changeAbs: '-21.55', positive: false },

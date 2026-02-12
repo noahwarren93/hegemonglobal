@@ -26,7 +26,7 @@
 
     .stats { position: absolute; bottom: 16px; left: 230px; z-index: 10; display: flex; gap: 8px; }
 
-    .tab { flex: 1; min-width: 12%; padding: 10px 1px; font-size: 8px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0; text-transform: uppercase; }
+    .tab { flex: 1; min-width: 0; padding: 10px 4px; font-size: 8.5px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase; text-align: center; white-space: nowrap; }
 
     /* Category color coding */
 
