@@ -1,7 +1,7 @@
 // globe.js - 3D globe rendering and interaction
 
-let scene, camera, renderer, globe, countryMeshes = [], raycaster, mouse;
-const tooltip = document.getElementById('tooltip');
+var scene, camera, renderer, globe, countryMeshes = [], raycaster, mouse;
+var tooltip = document.getElementById('tooltip');
 
 function initGlobe() {
   const container = document.getElementById('globe');
@@ -210,40 +210,37 @@ function onMouseMove(event) {
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(countryMeshes);
 
+  if (!tooltip) tooltip = document.getElementById('tooltip');
   if (intersects.length > 0) {
-    const { name, data } = intersects[0].object.userData;
-    tooltip.style.display = 'block';
-    tooltip.style.left = event.clientX + 15 + 'px';
-    tooltip.style.top = event.clientY + 15 + 'px';
-    tooltip.innerHTML = `
-      <div class="tooltip-name">${data.flag} ${name} <span class="tooltip-risk risk-${data.risk}">${data.risk.toUpperCase()}</span></div>
-      <div class="tooltip-region">${data.region} • ${data.title || ''}</div>
-      <div class="tooltip-hint">Click for details</div>
-    `;
+    var ud = intersects[0].object.userData;
+    if (tooltip) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.clientX + 15 + 'px';
+      tooltip.style.top = event.clientY + 15 + 'px';
+      tooltip.innerHTML = '<div class="tooltip-name">' + ud.data.flag + ' ' + ud.name + ' <span class="tooltip-risk risk-' + ud.data.risk + '">' + ud.data.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + ud.data.region + ' • ' + (ud.data.title || '') + '</div><div class="tooltip-hint">Click for details</div>';
+    }
     renderer.domElement.style.cursor = 'pointer';
   } else {
     // Check globe surface for nearby country
-    const globeHits = raycaster.intersectObject(globe);
+    var globeHits = raycaster.intersectObject(globe);
     if (globeHits.length > 0) {
-      const { lat, lng } = vector3ToLatLng(globeHits[0].point);
-      const country = findNearestCountry(lat, lng, 10);
+      var ll = vector3ToLatLng(globeHits[0].point);
+      var country = findNearestCountry(ll.lat, ll.lng, 10);
       if (country) {
-        const data = COUNTRIES[country];
-        tooltip.style.display = 'block';
-        tooltip.style.left = event.clientX + 15 + 'px';
-        tooltip.style.top = event.clientY + 15 + 'px';
-        tooltip.innerHTML = `
-          <div class="tooltip-name">${data.flag} ${country} <span class="tooltip-risk risk-${data.risk}">${data.risk.toUpperCase()}</span></div>
-          <div class="tooltip-region">${data.region} • ${data.title || ''}</div>
-          <div class="tooltip-hint">Click for details</div>
-        `;
+        var cdata = COUNTRIES[country];
+        if (tooltip) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = event.clientX + 15 + 'px';
+          tooltip.style.top = event.clientY + 15 + 'px';
+          tooltip.innerHTML = '<div class="tooltip-name">' + cdata.flag + ' ' + country + ' <span class="tooltip-risk risk-' + cdata.risk + '">' + cdata.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + cdata.region + ' • ' + (cdata.title || '') + '</div><div class="tooltip-hint">Click for details</div>';
+        }
         renderer.domElement.style.cursor = 'pointer';
       } else {
-        tooltip.style.display = 'none';
+        if (tooltip) tooltip.style.display = 'none';
         renderer.domElement.style.cursor = 'grab';
       }
     } else {
-      tooltip.style.display = 'none';
+      if (tooltip) tooltip.style.display = 'none';
       renderer.domElement.style.cursor = 'grab';
     }
   }
@@ -293,7 +290,7 @@ function onResize() {
 }
 
 // Font size adjustment tool (min level -1, max level +3)
-let fontSizeLevel = 0;
+var fontSizeLevel = 0;
 function applyFontScale() {
   const scale = 1 + (fontSizeLevel * 0.1); // 0.9x to 1.3x
   const sc = document.querySelector('.sidebar-content');
@@ -322,9 +319,9 @@ function resetFontSize() {
 }
 
 // Globe controls
-let isDragging = false, prevMouse = { x: 0, y: 0 };
-let globeClickStart = { x: 0, y: 0 };
-let autoRotate = true;
+var isDragging = false, prevMouse = { x: 0, y: 0 };
+var globeClickStart = { x: 0, y: 0 };
+var autoRotate = true;
 
 function toggleRotation() {
   autoRotate = !autoRotate;
@@ -333,9 +330,10 @@ function toggleRotation() {
 }
 
 // Drag rotation - Mouse events
-document.getElementById('globe').addEventListener('mousedown', (e) => { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; globeClickStart = { x: e.clientX, y: e.clientY }; });
-document.addEventListener('mouseup', () => { isDragging = false; });
-document.addEventListener('mousemove', (e) => {
+var _globeEl = document.getElementById('globe');
+if (_globeEl) _globeEl.addEventListener('mousedown', function(e) { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; globeClickStart = { x: e.clientX, y: e.clientY }; });
+document.addEventListener('mouseup', function() { isDragging = false; });
+document.addEventListener('mousemove', function(e) {
   if (!isDragging || !globe) return;
   globe.rotation.y += (e.clientX - prevMouse.x) * 0.005;
   globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + (e.clientY - prevMouse.y) * 0.005));
@@ -343,9 +341,9 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // Touch events for mobile globe rotation + pinch zoom
-let touchStart = { x: 0, y: 0 };
-let isPinching = false, lastPinchDist = 0;
-document.getElementById('globe').addEventListener('touchstart', (e) => {
+var touchStart = { x: 0, y: 0 };
+var isPinching = false, lastPinchDist = 0;
+if (_globeEl) _globeEl.addEventListener('touchstart', function(e) {
   if (e.touches.length === 1) {
     isDragging = true;
     touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -353,9 +351,9 @@ document.getElementById('globe').addEventListener('touchstart', (e) => {
   }
 }, { passive: true });
 
-document.addEventListener('touchend', () => { isDragging = false; isPinching = false; });
+document.addEventListener('touchend', function() { isDragging = false; isPinching = false; });
 
-document.addEventListener('touchmove', (e) => {
+document.addEventListener('touchmove', function(e) {
   if (!globe) return;
   // Pinch-to-zoom (two fingers)
   if (e.touches.length === 2) {
@@ -380,15 +378,15 @@ document.addEventListener('touchmove', (e) => {
 }, { passive: true });
 
 // Scroll-wheel zoom for desktop
-document.getElementById('globe').addEventListener('wheel', (e) => {
+if (_globeEl) _globeEl.addEventListener('wheel', function(e) {
   e.preventDefault();
   if (!camera) return;
-  const delta = e.deltaY * 0.002;
+  var delta = e.deltaY * 0.002;
   camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
 }, { passive: false });
 
 // Touch tap on markers and globe surface for mobile
-document.getElementById('globe').addEventListener('touchend', (e) => {
+if (_globeEl) _globeEl.addEventListener('touchend', function(e) {
   // Only handle single tap (not after drag)
   if (e.changedTouches.length === 1) {
     const touch = e.changedTouches[0];

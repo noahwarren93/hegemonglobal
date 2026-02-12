@@ -2467,18 +2467,6 @@ const TOS_CONTENT = {
 <p>For privacy-related questions, contact: <a href="mailto:hegemonglobal0@gmail.com">hegemonglobal0@gmail.com</a></p>`
 };
 
-let currentTosTab = 'terms';
-function openTOS() {
-  document.getElementById('tosOverlay').classList.add('active');
-  switchTosTab('terms');
-  if (fontSizeLevel !== 0) applyFontScale();
-}
-function closeTOS() {
-  document.getElementById('tosOverlay').classList.remove('active');
-}
-function switchTosTab(tab) {
-  currentTosTab = tab;
-
 const BREAKING_KEYWORDS = ['breaking', 'just in', 'urgent', 'developing', 'explosion', 'earthquake', 'tsunami', 'coup', 'assassination', 'war declared', 'nuclear'];
 
 // Check for breaking news - only shows for recent articles (within last 6 hours)
