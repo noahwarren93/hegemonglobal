@@ -507,7 +507,7 @@ const COUNTRIES = {
     ]
   },
 
-  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'catastrophic', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict',
+  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'extreme', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict',
     analysis: {
       what: 'The eastern Democratic Republic of Congo has been engulfed in conflict for decades, but violence has escalated dramatically since 2022. The M23 rebel group, backed by Rwanda, has seized significant territory near Goma. Over 100 armed groups operate in the region. Nearly 7 million people are internally displaced—more than any other country. Massacres, sexual violence, and child soldier recruitment are widespread. The Congolese army is ineffective despite UN peacekeeping presence.',
       why: 'DRC holds vast mineral wealth critical to global technology—cobalt for batteries, coltan for electronics, gold, and diamonds. Armed groups control many mining operations, fueling conflict. Rwanda\'s involvement creates regional tensions. The humanitarian crisis is among the world\'s worst but receives little attention. Instability affects all neighboring countries.',
@@ -1872,26 +1872,28 @@ const NEWSLETTER_REGIONS = {
 
 // Source political bias ratings: L=Left, LC=Left-Center, C=Center, RC=Right-Center, R=Right
 const SOURCE_BIAS = {
-  // Left
-  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L', 'Raw Story': 'L', 'The Wire': 'L', 'Middle East Monitor': 'L', 'Haaretz': 'L',
-  // Left-Center
-  'New York Times': 'LC', 'The New York Times': 'LC', 'NY Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'The Guardian': 'LC', 'Guardian': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'TIME': 'LC', 'Politico': 'LC', 'The Atlantic': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'BuzzFeed': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'LA Times': 'LC', 'The Economist': 'LC', 'Newsweek': 'LC', 'Daily Beast': 'LC', 'Mediaite': 'LC', 'Business Insider': 'LC', 'Insider': 'LC', 'The New Yorker': 'LC', 'NDTV': 'LC', 'India Today': 'LC', 'Hindustan Times': 'LC', 'The Print': 'LC', 'Scroll': 'LC', 'Firstpost': 'LC', 'Kyiv Independent': 'LC', 'Kyiv Post': 'LC', 'Le Monde': 'LC', 'Der Spiegel': 'LC', 'El País': 'LC', 'Middle East Eye': 'LC', 'Folha': 'LC', 'CNBC': 'LC', 'ABC Australia': 'LC', 'Sydney Morning Herald': 'LC', 'Politico EU': 'LC', 'Irish Times': 'LC', 'Deccan Herald': 'LC', 'Indian Express': 'LC', 'Asahi Shimbun': 'LC', 'Live Mint': 'LC', 'The Conversation': 'LC', 'Times of Israel': 'LC', 'Sky News': 'LC', 'Chicago Tribune': 'LC', 'Miami Herald': 'LC',
-  // Center
-  'Reuters': 'C', 'AP': 'C', 'AP News': 'C', 'Associated Press': 'C', 'AFP': 'C', 'Al Jazeera': 'C', 'France 24': 'C', 'France24': 'C', 'DW News': 'C', 'DW': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'Axios': 'C', 'PBS': 'C', 'Nikkei': 'C', 'Nikkei Asia': 'C', 'FT': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'C', 'Korea Times': 'C', 'Korea Herald': 'C', 'SCMP': 'C', 'South China Morning Post': 'C', 'Euronews': 'C', 'UPI': 'C', 'PTI': 'C', 'ANI': 'C', 'IANS': 'C', 'DPA': 'C', 'EFE': 'C', 'ANSA': 'C', 'Dawn': 'C', 'Express Tribune': 'C', 'Geo News': 'C', 'Pakistan Today': 'C', 'The News': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Japan Times': 'C', 'Bangkok Post': 'C', 'Bernama': 'C', 'VnExpress': 'C', 'NZ Herald': 'C', 'RNZ': 'C', 'RTÉ': 'C', 'Semafor': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Defense One': 'C', 'Defense News': 'C', 'Breaking Defense': 'C', 'Clarín': 'C', 'Premium Times': 'C', 'News24': 'C', 'Times Live': 'C', 'Mail & Guardian': 'C', 'East African': 'C', 'Standard Media': 'C', 'Daily Nation': 'C', 'PhilStar': 'C', 'Inquirer': 'C', 'Manila Times': 'C', 'The Star Malaysia': 'C', 'Stuff NZ': 'C', 'Nine News': 'C', 'Dutch News': 'C', 'The Local': 'C', 'WION': 'C', 'Economic Times': 'C', 'Money Control': 'C', 'MarketWatch': 'C', 'Fortune': 'C', 'Barrons': 'C', 'Seeking Alpha': 'C', 'The Conversation': 'C', 'Yonhap': 'C', 'Google News': 'C',
-  // Right-Center
-  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'Forbes': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC',
-  // Right
-  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'Washington Examiner': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R'
+  // Left (AllSides: Left)
+  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L', 'Raw Story': 'L', 'The Wire': 'L', 'Middle East Monitor': 'L', 'The Guardian': 'L', 'Guardian': 'L', 'The Atlantic': 'L',
+  // Left-Center (AllSides: Lean Left)
+  'New York Times': 'LC', 'The New York Times': 'LC', 'NY Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'TIME': 'LC', 'Politico': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'BuzzFeed': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'LA Times': 'LC', 'Daily Beast': 'LC', 'Mediaite': 'LC', 'Business Insider': 'LC', 'Insider': 'LC', 'The New Yorker': 'LC', 'NDTV': 'LC', 'India Today': 'LC', 'Hindustan Times': 'LC', 'The Print': 'LC', 'Scroll': 'LC', 'Firstpost': 'LC', 'Kyiv Independent': 'LC', 'Kyiv Post': 'LC', 'Le Monde': 'LC', 'Der Spiegel': 'LC', 'El País': 'LC', 'Middle East Eye': 'LC', 'Folha': 'LC', 'CNBC': 'LC', 'ABC Australia': 'LC', 'Sydney Morning Herald': 'LC', 'Politico EU': 'LC', 'Irish Times': 'LC', 'Deccan Herald': 'LC', 'Indian Express': 'LC', 'Asahi Shimbun': 'LC', 'Live Mint': 'LC', 'The Conversation': 'LC', 'Times of Israel': 'LC', 'Sky News': 'LC', 'Chicago Tribune': 'LC', 'Miami Herald': 'LC', 'Al Jazeera': 'LC', 'AP': 'LC', 'AP News': 'LC', 'Associated Press': 'LC', 'Axios': 'LC', 'Haaretz': 'LC',
+  // Center (AllSides: Center / MBFC: Least Biased)
+  'Reuters': 'C', 'France 24': 'C', 'France24': 'C', 'DW News': 'C', 'DW': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'PBS': 'C', 'Nikkei': 'C', 'Nikkei Asia': 'C', 'FT': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'C', 'Korea Times': 'C', 'Korea Herald': 'C', 'SCMP': 'C', 'South China Morning Post': 'C', 'Euronews': 'C', 'UPI': 'C', 'PTI': 'C', 'ANI': 'C', 'IANS': 'C', 'DPA': 'C', 'EFE': 'C', 'ANSA': 'C', 'Dawn': 'C', 'Express Tribune': 'C', 'Geo News': 'C', 'Pakistan Today': 'C', 'The News': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Japan Times': 'C', 'Bangkok Post': 'C', 'Bernama': 'C', 'VnExpress': 'C', 'NZ Herald': 'C', 'RNZ': 'C', 'RTÉ': 'C', 'Semafor': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Defense One': 'C', 'Defense News': 'C', 'Breaking Defense': 'C', 'Clarín': 'C', 'Premium Times': 'C', 'News24': 'C', 'Times Live': 'C', 'Mail & Guardian': 'C', 'East African': 'C', 'Standard Media': 'C', 'Daily Nation': 'C', 'PhilStar': 'C', 'Inquirer': 'C', 'Manila Times': 'C', 'The Star Malaysia': 'C', 'Stuff NZ': 'C', 'Nine News': 'C', 'Dutch News': 'C', 'The Local': 'C', 'WION': 'C', 'Economic Times': 'C', 'Money Control': 'C', 'MarketWatch': 'C', 'Fortune': 'C', 'Barrons': 'C', 'Seeking Alpha': 'C', 'Yonhap': 'C', 'Google News': 'C', 'AFP': 'C', 'Newsweek': 'C', 'The Economist': 'C', 'Forbes': 'C',
+  // Right-Center (AllSides: Lean Right)
+  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC', 'Washington Examiner': 'RC',
+  // Right (AllSides: Right)
+  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R'
 };
 
 function getSourceBias(source) {
   if (!source) return null;
   // Try exact match first
   if (SOURCE_BIAS[source]) return SOURCE_BIAS[source];
-  // Partial match - prefer longest matching key for accuracy
+  // Partial match - prefer longest matching key, skip short keys to avoid false positives
+  // (e.g., 'RT' matching inside 'Report', 'AP' inside 'Japan')
   const srcLower = source.toLowerCase();
   let bestKey = null, bestLen = 0;
   Object.keys(SOURCE_BIAS).forEach(k => {
+    if (k.length < 4) return; // Short keys (RT, AP, FT, DW) only match exactly
     const kLower = k.toLowerCase();
     if (srcLower.includes(kLower) || kLower.includes(srcLower)) {
       if (k.length > bestLen) { bestLen = k.length; bestKey = k; }
@@ -4993,7 +4995,10 @@ document.getElementById('statTotal').textContent = Object.keys(COUNTRIES).length
 const watchlistEl = document.getElementById('watchlist');
 const watchlistCountries = Object.entries(COUNTRIES)
   .filter(([_, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
-  .sort((a, b) => ({ catastrophic: 0, extreme: 1 }[a[1].risk] - { catastrophic: 0, extreme: 1 }[b[1].risk]));
+  .sort((a, b) => {
+    const tierDiff = ({ catastrophic: 0, extreme: 1 }[a[1].risk] - { catastrophic: 0, extreme: 1 }[b[1].risk]);
+    return tierDiff !== 0 ? tierDiff : a[0].localeCompare(b[0]);
+  });
 watchlistEl.innerHTML = `<div class="watchlist-title">CRITICAL WATCHLIST</div>` +
   watchlistCountries.map(([name, c]) => `<div class="watchlist-item" onclick="openModal('${name}')"><span class="wl-country">${c.flag} ${name}</span><span class="wl-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div>`).join('');
 
