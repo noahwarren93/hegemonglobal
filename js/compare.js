@@ -205,6 +205,26 @@ var compareModeActive = false;
 var compareCountries = [];
 var COMPARE_COLORS = ['#3b82f6', '#ef4444', '#22c55e'];
 
+function positionCompareHint() {
+  var hint = document.getElementById('compareHint');
+  var btn = document.getElementById('compareModeBtn');
+  if (!hint || !btn) return;
+  var globe = document.querySelector('.globe-container');
+  var globeRect = globe ? globe.getBoundingClientRect() : { left: 0, top: 0 };
+  var r = btn.getBoundingClientRect();
+  if (window.innerWidth > 768) {
+    // Desktop: to the right of the Compare Mode button
+    hint.style.left = (r.right - globeRect.left + 8) + 'px';
+    hint.style.top = (r.top - globeRect.top + (r.height / 2) - 14) + 'px';
+    hint.style.bottom = 'auto';
+  } else {
+    // Mobile: to the right of the button row, vertically centered with buttons
+    hint.style.left = (r.right - globeRect.left + 6) + 'px';
+    hint.style.bottom = 'auto';
+    hint.style.top = (r.top - globeRect.top + (r.height / 2) - 12) + 'px';
+  }
+}
+
 function toggleCompareMode() {
   compareModeActive = !compareModeActive;
   document.getElementById('compareModeBtn').classList.toggle('active', compareModeActive);
@@ -212,7 +232,7 @@ function toggleCompareMode() {
   var hint = document.getElementById('compareHint');
   if (compareModeActive) {
     compareCountries = []; renderComparePanel();
-    if (hint) hint.style.display = 'block';
+    if (hint) { hint.style.display = 'block'; positionCompareHint(); }
   } else {
     panel.classList.remove('active'); compareCountries = [];
     if (hint) hint.style.display = 'none';

@@ -28,8 +28,8 @@
       #featureBtnsDesktop { left: 8px !important; right: auto !important; bottom: 70px; top: auto !important; flex-direction: row; gap: 4px; }
       .globe-feature-btn { padding: 5px 8px; font-size: 7px; }
 
-      /* Compare hint on mobile - above feature buttons */
-      .compare-hint { left: 8px; top: auto; bottom: 95px; font-size: 8px; padding: 5px 10px; }
+      /* Compare hint on mobile - smaller text, JS handles positioning */
+      .compare-hint { font-size: 8px; padding: 5px 10px; }
 
       /* Search overlay on mobile */
       .search-overlay { right: 10px; top: auto; bottom: 80px; width: 250px; max-height: 300px; }
@@ -76,7 +76,7 @@
       .globe-feature-btn svg { width: 10px; height: 10px; }
 
       /* Compare hint smaller on small screens */
-      .compare-hint { bottom: 82px; font-size: 7px; padding: 4px 8px; }
+      .compare-hint { font-size: 7px; padding: 4px 8px; }
 
       .globe-container { height: 52vh; }
       .sidebar { height: 48vh; }
