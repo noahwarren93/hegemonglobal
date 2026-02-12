@@ -2554,24 +2554,24 @@ function renderNewsletter() {
 // Fallback static news (used if API fails)
 const DAILY_BRIEFING_FALLBACK = [
   { time: '1h ago', category: 'CONFLICT', importance: 'high', headline: 'Heavy fighting reported in eastern Ukraine as winter operations intensify', source: 'Reuters', url: '#' },
-  { time: '2h ago', category: 'ECONOMY', importance: 'high', headline: 'China signals major stimulus package amid property sector concerns', source: 'Financial Times', url: '#' },
-  { time: '3h ago', category: 'SECURITY', importance: 'high', headline: 'North Korea conducts ballistic missile test over Sea of Japan', source: 'AP News', url: '#' },
-  { time: '4h ago', category: 'DIPLOMACY', importance: 'medium', headline: 'UN Security Council holds emergency session on Middle East crisis', source: 'Al Jazeera', url: '#' },
+  { time: '2h ago', category: 'SECURITY', importance: 'high', headline: 'North Korea conducts ballistic missile test over Sea of Japan', source: 'AP News', url: '#' },
+  { time: '3h ago', category: 'TECH', importance: 'medium', headline: 'US expands AI chip export restrictions to additional countries', source: 'WSJ', url: '#' },
+  { time: '4h ago', category: 'ECONOMY', importance: 'high', headline: 'China signals major stimulus package amid property sector concerns', source: 'Financial Times', url: '#' },
   { time: '5h ago', category: 'POLITICS', importance: 'medium', headline: 'European leaders discuss expanded Ukraine military support', source: 'BBC', url: '#' },
-  { time: '6h ago', category: 'CRISIS', importance: 'high', headline: 'Humanitarian agencies warn of famine conditions in Sudan', source: 'UN News', url: '#' },
-  { time: '8h ago', category: 'ECONOMY', importance: 'medium', headline: 'Federal Reserve signals cautious approach to rate cuts in 2026', source: 'Bloomberg', url: '#' },
-  { time: '10h ago', category: 'SECURITY', importance: 'medium', headline: 'Taiwan reports increased Chinese military activity near strait', source: 'Nikkei Asia', url: '#' },
-  { time: '12h ago', category: 'POLITICS', importance: 'medium', headline: 'Venezuela opposition rejects latest government dialogue offer', source: 'Reuters', url: '#' },
-  { time: '14h ago', category: 'TECH', importance: 'medium', headline: 'US expands AI chip export restrictions to additional countries', source: 'WSJ', url: '#' },
-  { time: '15h ago', category: 'CONFLICT', importance: 'high', headline: 'Gaza ceasefire negotiations continue amid escalating violence', source: 'New York Post', url: '#' },
-  { time: '16h ago', category: 'CLIMATE', importance: 'medium', headline: 'Record temperatures recorded across Southeast Asia amid drought', source: 'The Guardian', url: '#' },
-  { time: '18h ago', category: 'SECURITY', importance: 'high', headline: 'Iran accelerates uranium enrichment, IAEA reports', source: 'Reuters', url: '#' },
-  { time: '20h ago', category: 'ECONOMY', importance: 'medium', headline: 'Oil prices surge on Middle East supply concerns', source: 'Washington Times', url: '#' },
-  { time: '22h ago', category: 'POLITICS', importance: 'medium', headline: 'South Korea opposition party gains momentum ahead of elections', source: 'Korea Times', url: '#' },
-  { time: '1d ago', category: 'CRISIS', importance: 'high', headline: 'Myanmar military launches major offensive against resistance forces', source: 'BBC', url: '#' },
+  { time: '6h ago', category: 'SECURITY', importance: 'medium', headline: 'NATO allies agree to increase defense spending targets', source: 'Fox News', url: '#' },
+  { time: '8h ago', category: 'CRISIS', importance: 'high', headline: 'Humanitarian agencies warn of famine conditions in Sudan', source: 'UN News', url: '#' },
+  { time: '10h ago', category: 'DIPLOMACY', importance: 'medium', headline: 'UN Security Council holds emergency session on Middle East crisis', source: 'Al Jazeera', url: '#' },
+  { time: '12h ago', category: 'ECONOMY', importance: 'medium', headline: 'Oil prices surge on Middle East supply concerns', source: 'Washington Times', url: '#' },
+  { time: '14h ago', category: 'SECURITY', importance: 'medium', headline: 'Taiwan reports increased Chinese military activity near strait', source: 'Nikkei Asia', url: '#' },
+  { time: '15h ago', category: 'POLITICS', importance: 'medium', headline: 'Venezuela opposition rejects latest government dialogue offer', source: 'Reuters', url: '#' },
+  { time: '16h ago', category: 'CONFLICT', importance: 'high', headline: 'Gaza ceasefire negotiations continue amid escalating violence', source: 'New York Post', url: '#' },
+  { time: '18h ago', category: 'CLIMATE', importance: 'medium', headline: 'Record temperatures recorded across Southeast Asia amid drought', source: 'The Guardian', url: '#' },
+  { time: '20h ago', category: 'POLITICS', importance: 'medium', headline: 'South Korea opposition party gains momentum ahead of elections', source: 'Korea Times', url: '#' },
+  { time: '22h ago', category: 'ECONOMY', importance: 'medium', headline: 'Federal Reserve signals cautious approach to rate cuts in 2026', source: 'Bloomberg', url: '#' },
+  { time: '1d ago', category: 'SECURITY', importance: 'high', headline: 'Iran accelerates uranium enrichment, IAEA reports', source: 'Reuters', url: '#' },
   { time: '1d ago', category: 'DIPLOMACY', importance: 'medium', headline: 'India-Pakistan tensions rise over water sharing dispute', source: 'The Hindu', url: '#' },
+  { time: '1d ago', category: 'CRISIS', importance: 'high', headline: 'Myanmar military launches major offensive against resistance forces', source: 'BBC', url: '#' },
   { time: '1d ago', category: 'ECONOMY', importance: 'medium', headline: 'Global shipping costs spike amid Red Sea disruptions', source: 'Financial Times', url: '#' },
-  { time: '1d ago', category: 'SECURITY', importance: 'medium', headline: 'NATO allies agree to increase defense spending targets', source: 'Fox News', url: '#' },
   { time: '1d ago', category: 'WORLD', importance: 'medium', headline: 'Ethiopian government and Tigray rebels resume peace talks', source: 'France 24', url: '#' },
   { time: '2d ago', category: 'TECH', importance: 'medium', headline: 'EU announces new regulations for artificial intelligence systems', source: 'DW News', url: '#' },
   { time: '2d ago', category: 'CONFLICT', importance: 'high', headline: 'Fighting intensifies in eastern DRC as M23 advances', source: 'Reuters', url: '#' },
@@ -2751,23 +2751,19 @@ function renderPastBriefingsHTML() {
 
 // RSS Feed sources - FREE and UNLIMITED!
 const RSS_FEEDS = {
-  // Diverse world news RSS feeds across the political spectrum
+  // Diverse world news RSS feeds - interleaved across the political spectrum
   daily: [
-    // Left / Left-Center
-    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
-    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
-    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
-    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
-    // Center
-    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },
-    { url: 'https://thehill.com/feed/', source: 'The Hill' },
-    // Right-Center
-    { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
-    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
-    { url: 'https://nypost.com/feed/', source: 'New York Post' },
-    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' },
-    // Right
-    { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' }
+    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },           // Center
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },         // Left-Center
+    { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' }, // Right-Center
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' }, // Left-Center
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },                             // Center
+    { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },              // Right
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },          // Left-Center
+    { url: 'https://nypost.com/feed/', source: 'New York Post' },                        // Right-Center
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },             // Left
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' }, // Right-Center
+    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' } // Right-Center
   ],
   // Country-specific search will use Google News RSS
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
