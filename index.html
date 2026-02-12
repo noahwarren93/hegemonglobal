@@ -2745,9 +2745,7 @@ function renderPastBriefingsHTML() {
 
     if (briefing.articles && briefing.articles.length > 0) {
       // Show top stories first
-      const topCands = briefing.articles.filter(a => a.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(a.category));
-      topCands.sort((a, b) => getArticleRiskScore(b.headline) - getArticleRiskScore(a.headline));
-      const topStories = topCands.slice(0, 3);
+      const topStories = briefing.articles.filter(a => a.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(a.category)).slice(0, 3);
       const otherArticles = briefing.articles.filter(a => !topStories.includes(a)).slice(0, 12);
 
       if (topStories.length > 0) {
@@ -2878,86 +2876,6 @@ function detectCategory(title, description) {
   if (text.match(/tech|ai|chip|cyber|digital|software|data/)) return 'TECH';
   if (text.match(/climate|environment|emission|carbon|green|energy/)) return 'CLIMATE';
   return 'WORLD';
-}
-
-// ============================================================
-// ARTICLE RISK-PRIORITY RANKING
-// Demotes stable-country articles from top positions
-// ============================================================
-
-function getCountryRiskPriority(riskLevel) {
-  const p = { catastrophic: 6, extreme: 5, severe: 4, stormy: 3, cloudy: 2, clear: 1 };
-  return p[riskLevel] || 3;
-}
-
-// Common demonyms for fast country detection in headlines
-const HEADLINE_DEMONYMS = {
-  'swiss': 'Switzerland', 'japanese': 'Japan', 'canadian': 'Canada',
-  'australian': 'Australia', 'norwegian': 'Norway', 'danish': 'Denmark',
-  'irish': 'Ireland', 'portuguese': 'Portugal', 'icelandic': 'Iceland',
-  'qatari': 'Qatar', 'singaporean': 'Singapore', 'kiwi': 'New Zealand',
-  'ukrainian': 'Ukraine', 'russian': 'Russia', 'chinese': 'China',
-  'iranian': 'Iran', 'israeli': 'Israel', 'syrian': 'Syria',
-  'afghan': 'Afghanistan', 'yemeni': 'Yemen', 'houthi': 'Yemen',
-  'haitian': 'Haiti', 'sudanese': 'Sudan', 'taiwanese': 'Taiwan',
-  'burmese': 'Myanmar', 'putin': 'Russia', 'kremlin': 'Russia',
-  'zelensky': 'Ukraine', 'netanyahu': 'Israel', 'hamas': 'Gaza',
-  'beijing': 'China', 'pyongyang': 'North Korea', 'kabul': 'Afghanistan',
-  'taliban': 'Afghanistan', 'turkish': 'Turkey', 'ankara': 'Turkey',
-  'indian': 'India', 'brazilian': 'Brazil', 'mexican': 'Mexico',
-  'british': 'United Kingdom', 'french': 'France', 'german': 'Germany',
-  'korean': 'South Korea', 'seoul': 'South Korea', 'pakistani': 'Pakistan',
-  'colombian': 'Colombia', 'venezuelan': 'Venezuela', 'maduro': 'Venezuela',
-  'somali': 'Somalia', 'congolese': 'DRC', 'ethiopian': 'Ethiopia',
-  'nigerian': 'Nigeria', 'philippine': 'Philippines', 'thai': 'Thailand',
-  'saudi': 'Saudi Arabia', 'emirati': 'UAE', 'dubai': 'UAE',
-  'egyptian': 'Egypt', 'cairo': 'Egypt', 'south african': 'South Africa',
-  'kenyan': 'Kenya', 'peruvian': 'Peru', 'chilean': 'Chile',
-  'zurich': 'Switzerland', 'geneva': 'Switzerland', 'bern': 'Switzerland',
-  'tokyo': 'Japan', 'ottawa': 'Canada', 'canberra': 'Australia',
-  'oslo': 'Norway', 'copenhagen': 'Denmark', 'dublin': 'Ireland',
-  'lisbon': 'Portugal', 'doha': 'Qatar', 'wellington': 'New Zealand'
-};
-
-// Returns numeric risk priority (1-6) for an article based on which country it's about
-function getArticleRiskScore(headline) {
-  const text = (headline || '').toLowerCase();
-  let best = -1;
-
-  // Check tracked country names directly
-  for (const [country, data] of Object.entries(COUNTRIES)) {
-    if (text.includes(country.toLowerCase())) {
-      const p = getCountryRiskPriority(data.risk);
-      if (p > best) best = p;
-    }
-  }
-
-  // Check demonyms for broader coverage
-  for (const [demonym, country] of Object.entries(HEADLINE_DEMONYMS)) {
-    if (text.includes(demonym) && COUNTRIES[country]) {
-      const p = getCountryRiskPriority(COUNTRIES[country].risk);
-      if (p > best) best = p;
-    }
-  }
-
-  return best > 0 ? best : 3; // undetected countries default to stormy-level (middle)
-}
-
-// Push clear-risk country articles out of the first 10 positions
-function demoteStableCountryArticles(articles) {
-  if (articles.length <= 10) return articles;
-  const result = [...articles];
-  let i = 0;
-  while (i < Math.min(10, result.length)) {
-    if (getArticleRiskScore(result[i].headline) <= 1) {
-      const [article] = result.splice(i, 1);
-      const insertPos = Math.min(12, result.length);
-      result.splice(insertPos, 0, article);
-    } else {
-      i++;
-    }
-  }
-  return result;
 }
 
 // ============================================================
@@ -5617,12 +5535,9 @@ function renderSidebar() {
   const content = document.getElementById('sidebarContent');
 
   if (currentTab === 'daily') {
-    // Separate high-importance and regular news — rank by country risk so stable-country stories don't dominate
-    const topCandidates = DAILY_BRIEFING.filter(item => item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category));
-    topCandidates.sort((a, b) => getArticleRiskScore(b.headline) - getArticleRiskScore(a.headline));
-    const topStories = topCandidates.slice(0, 5);
-    const prioritizedBriefing = demoteStableCountryArticles(DAILY_BRIEFING);
-    const allNews = prioritizedBriefing.slice(0, newsDisplayCount);
+    // Separate high-importance and regular news
+    const topStories = DAILY_BRIEFING.filter(item => item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category)).slice(0, 5);
+    const allNews = DAILY_BRIEFING.slice(0, newsDisplayCount);
 
     let html = '';
 
