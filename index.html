@@ -2751,19 +2751,19 @@ function renderPastBriefingsHTML() {
 
 // RSS Feed sources - FREE and UNLIMITED!
 const RSS_FEEDS = {
-  // Diverse world news RSS feeds - interleaved across the political spectrum
+  // Diverse world news RSS feeds - interleaved so no bias clusters together
   daily: [
-    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },           // Center
-    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },         // Left-Center
+    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },             // Center
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },           // Left-Center
     { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' }, // Right-Center
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' }, // Left-Center
-    { url: 'https://thehill.com/feed/', source: 'The Hill' },                             // Center
-    { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },              // Right
-    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },          // Left-Center
-    { url: 'https://nypost.com/feed/', source: 'New York Post' },                        // Right-Center
-    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },             // Left
-    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' }, // Right-Center
-    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' } // Right-Center
+    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' }, // Right-Center
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },                               // Center
+    { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },                // Right
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },            // Left-Center
+    { url: 'https://nypost.com/feed/', source: 'New York Post' },                          // Right-Center
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },               // Left
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' } // Right-Center
   ],
   // Country-specific search will use Google News RSS
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
