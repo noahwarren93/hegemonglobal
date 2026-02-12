@@ -4284,10 +4284,11 @@ async function fetchLiveNews() {
       // Sort by date (newest first)
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-      // Filter out irrelevant articles
+      // Filter out irrelevant articles and require geopolitical relevance
       const relevantArticles = allArticles.filter(article => {
         const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-        return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+        return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
       });
 
       // Remove duplicates by title similarity
@@ -4372,7 +4373,8 @@ async function fetchLiveNews() {
           console.log(`Fallback to ${apiName}:`, results.length, 'articles');
           DAILY_BRIEFING = results.filter(article => {
             const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-            return !IRRELEVANT_KEYWORDS.some(kw => text.includes(kw));
+            if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+            return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
           }).map(article => ({
             time: timeAgo(article.pubDate),
             category: detectCategory(article.title, article.description),
@@ -4526,7 +4528,55 @@ const IRRELEVANT_KEYWORDS = [
   'stock picks', 'buy now', 'shares up', 'otcmkts', 'penny stock', 'crypto pump',
   // Fan culture & non-news
   'fans react', 'fans are', 'fans say', 'fans think', 'fan base',
-  'best dressed', 'worst dressed', 'who wore it', 'style guide'
+  'best dressed', 'worst dressed', 'who wore it', 'style guide',
+  // Local/human interest fluff
+  'feel-good', 'heartwarming', 'uplifting', 'adorable', 'cute video',
+  'good samaritan', 'random act of kindness', 'local hero', 'community hero',
+  'odd news', 'weird news', 'quirky', 'bizarre video', 'caught on camera',
+  'puppy', 'kitten', 'rescue dog', 'rescue cat', 'pet owner',
+  'slipped into', 'fell into a', 'falls into',
+  // Local crime/incidents (not geopolitical)
+  'arrested for', 'charged with', 'sentenced to', 'mugshot',
+  'car crash', 'traffic accident', 'house fire', 'apartment fire',
+  'missing person', 'amber alert', 'silver alert',
+  // Weather fluff (not climate policy)
+  'weather forecast', 'pollen count', 'snow day', 'beach advisory',
+  // Shopping & consumer
+  'best deals', 'black friday', 'prime day', 'coupon', 'clearance sale',
+  'product review', 'buyer\'s guide', 'top picks', 'gift guide'
+];
+
+// Geopolitical relevance signals - articles must contain at least one to pass
+const GEOPOLITICAL_SIGNALS = [
+  // Government & politics
+  'government', 'president', 'prime minister', 'chancellor', 'parliament', 'congress', 'senate',
+  'election', 'vote', 'minister', 'diplomat', 'embassy', 'policy', 'legislation', 'sanction',
+  'treaty', 'alliance', 'coalition', 'opposition', 'regime', 'coup', 'protest', 'reform',
+  // Military & security
+  'military', 'army', 'navy', 'air force', 'war', 'conflict', 'attack', 'bomb', 'missile',
+  'nuclear', 'weapon', 'defense', 'troops', 'soldier', 'terror', 'intelligence', 'nato',
+  'security', 'ceasefire', 'offensive', 'drone', 'airstrike', 'insurgent', 'militia',
+  // International bodies & diplomacy
+  'united nations', 'european union', 'african union', 'summit', 'bilateral', 'diplomatic',
+  'foreign affairs', 'international', 'global', 'geopolit', 'multilateral', 'g7', 'g20',
+  'world bank', 'imf', 'iaea', 'who ', 'wto',
+  // Macro economy & trade
+  'economy', 'inflation', 'gdp', 'trade war', 'tariff', 'central bank', 'federal reserve',
+  'interest rate', 'recession', 'debt crisis', 'currency', 'oil price', 'opec', 'supply chain',
+  'energy crisis', 'gas pipeline', 'economic growth', 'fiscal', 'monetary',
+  // Crisis & humanitarian
+  'crisis', 'emergency', 'disaster', 'refugee', 'humanitarian', 'famine', 'drought',
+  'earthquake', 'tsunami', 'pandemic', 'outbreak', 'evacuation', 'displacement', 'siege',
+  // Key geopolitical terms
+  'sovereignty', 'territorial', 'border', 'annexation', 'occupation', 'independence',
+  'separatist', 'civil war', 'ethnic', 'genocide', 'human rights', 'war crime',
+  'espionage', 'cyber attack', 'disinformation', 'propaganda',
+  // Technology & power
+  'ai regulation', 'chip export', 'tech ban', 'surveillance', 'space program',
+  'hypersonic', 'submarine', 'aircraft carrier', 'arms deal', 'defense spending',
+  // Resources & climate policy
+  'climate change', 'emissions', 'carbon', 'renewable', 'fossil fuel', 'mining',
+  'rare earth', 'food security', 'water crisis', 'deforestation', 'sea level'
 ];
 
 // Check if article is relevant to the country and geopolitics
