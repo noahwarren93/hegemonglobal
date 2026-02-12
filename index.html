@@ -4336,6 +4336,18 @@ async function fetchLiveNews() {
       // Disperse any same-direction bias clusters (max 2 consecutive)
       DAILY_BRIEFING = disperseBiasArticles(DAILY_BRIEFING);
 
+      // Demote low-priority stories (stable countries, local incidents) out of top 10
+      const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
+      for (let i = 0; i < Math.min(10, DAILY_BRIEFING.length); i++) {
+        const h = (DAILY_BRIEFING[i].headline || '').toLowerCase();
+        if (DEMOTE_KEYWORDS.some(kw => h.includes(kw))) {
+          const [item] = DAILY_BRIEFING.splice(i, 1);
+          const dest = Math.min(14, DAILY_BRIEFING.length);
+          DAILY_BRIEFING.splice(dest, 0, item);
+          i--; // re-check this position since a new article slid in
+        }
+      }
+
       lastNewsUpdate = new Date();
       console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
 
@@ -5535,8 +5547,12 @@ function renderSidebar() {
   const content = document.getElementById('sidebarContent');
 
   if (currentTab === 'daily') {
-    // Separate high-importance and regular news
-    const topStories = DAILY_BRIEFING.filter(item => item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category)).slice(0, 5);
+    // Separate high-importance and regular news (exclude low-priority stable-country stories from top)
+    const _demote = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
+    const topStories = DAILY_BRIEFING.filter(item => {
+      if (_demote.some(kw => (item.headline || '').toLowerCase().includes(kw))) return false;
+      return item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category);
+    }).slice(0, 5);
     const allNews = DAILY_BRIEFING.slice(0, newsDisplayCount);
 
     let html = '';
