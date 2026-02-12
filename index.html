@@ -4499,15 +4499,34 @@ function closeBanner() {
 
 // Words that indicate an article is NOT about geopolitics
 const IRRELEVANT_KEYWORDS = [
-  'sports', 'football', 'soccer', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'nfl', 'nba', 'mlb',
-  'celebrity', 'entertainment', 'movie', 'film', 'music', 'concert', 'album', 'netflix', 'streaming',
+  // Sports - general
+  'sports', 'football', 'soccer', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'cricket',
+  'rugby', 'boxing', 'mma', 'ufc', 'wrestling', 'volleyball', 'swimming', 'marathon', 'triathlon',
+  'nfl', 'nba', 'mlb', 'nhl', 'mls', 'epl', 'la liga', 'serie a', 'bundesliga', 'ligue 1',
+  'premier league', 'champions league', 'world series', 'playoff', 'playoffs', 'touchdown',
+  'super bowl', 'world cup goal', 'hat trick', 'slam dunk', 'home run', 'grand slam',
+  'figure skating', 'ice skating', 'formula 1', 'f1 race', 'nascar', 'grand prix',
+  // Sports teams & athletes
+  'knicks', 'lakers', 'celtics', 'warriors', 'yankees', 'dodgers', 'cowboys', 'patriots',
+  'manchester united', 'real madrid', 'barcelona fc', 'man city',
+  'olympian', 'olympic medal', 'olympic athlete', 'gold medalist', 'silver medalist',
+  // Entertainment & celebrity
+  'celebrity', 'entertainment', 'movie', 'film review', 'box office', 'blockbuster',
+  'music', 'concert', 'album', 'grammy', 'oscar', 'emmy', 'golden globe',
+  'netflix', 'streaming', 'hulu', 'disney+', 'hbo max', 'prime video',
+  'tv show', 'reality tv', 'american idol', 'bachelor', 'bachelorette', 'survivor',
+  'kardashian', 'influencer', 'tiktok star', 'instagram', 'viral video', 'went viral',
+  'red carpet', 'paparazzi', 'tabloid', 'gossip', 'scandal',
+  // Lifestyle fluff
   'recipe', 'cooking', 'fashion', 'beauty', 'lifestyle', 'horoscope', 'zodiac',
-  'dating', 'relationship', 'wedding', 'divorce', 'kardashian', 'influencer',
-  'weight loss', 'diet', 'fitness', 'workout', 'yoga',
-  'lottery', 'powerball', 'mega millions', 'jackpot',
-  'figure skating', 'ice skating', 'world cup goal', 'super bowl',
-  'tv show', 'reality tv', 'american idol', 'bachelor', 'bachelorette',
-  'stock picks', 'buy now', 'shares up', 'otcmkts', 'penny stock'
+  'dating', 'relationship advice', 'wedding', 'divorce', 'weight loss', 'diet',
+  'fitness', 'workout', 'yoga', 'skincare', 'makeup', 'hairstyle',
+  // Gambling & finance spam
+  'lottery', 'powerball', 'mega millions', 'jackpot', 'casino',
+  'stock picks', 'buy now', 'shares up', 'otcmkts', 'penny stock', 'crypto pump',
+  // Fan culture & non-news
+  'fans react', 'fans are', 'fans say', 'fans think', 'fan base',
+  'best dressed', 'worst dressed', 'who wore it', 'style guide'
 ];
 
 // Check if article is relevant to the country and geopolitics
