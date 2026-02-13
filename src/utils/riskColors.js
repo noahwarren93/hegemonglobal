@@ -1,5 +1,7 @@
 // utils.js - Constants, colors, helper functions
 
+import * as THREE from 'three';
+
 export const RISK_COLORS = {
   catastrophic: { hex: '#dc2626', glow: 0xff3333 },
   extreme: { hex: '#f97316', glow: 0xff6600 },
