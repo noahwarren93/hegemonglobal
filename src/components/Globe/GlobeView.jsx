@@ -300,14 +300,20 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Try marker dots first
-      const markerHits = raycaster.intersectObjects(countryMeshesRef.current);
-      if (markerHits.length > 0) {
-        const ud = markerHits[0].object.userData;
-        if (ud && ud.name) return ud.name;
-      }
-      // Try globe surface
+      // Get globe surface hit distance to filter back-side markers
       const globeHits = raycaster.intersectObject(globe);
+      const globeSurfaceDist = globeHits.length > 0 ? globeHits[0].distance : Infinity;
+
+      // Try marker dots - only accept markers in FRONT of the globe surface
+      const markerHits = raycaster.intersectObjects(countryMeshesRef.current);
+      for (const hit of markerHits) {
+        if (hit.distance < globeSurfaceDist) {
+          const ud = hit.object.userData;
+          if (ud && ud.name) return ud.name;
+        }
+      }
+
+      // Try globe surface
       if (globeHits.length > 0) {
         const ll = vector3ToLatLng(globeHits[0].point, globe);
         return findNearestCountry(ll.lat, ll.lng);
@@ -341,21 +347,25 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Check marker dots
+      // Get globe surface hit distance to filter back-side markers
+      const globeHits = raycaster.intersectObject(globe);
+      const globeSurfaceDist = globeHits.length > 0 ? globeHits[0].distance : Infinity;
+
+      // Check marker dots - only front-side
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
-      if (intersects.length > 0) {
-        const ud = intersects[0].object.userData;
+      for (const hit of intersects) {
+        if (hit.distance >= globeSurfaceDist) break; // all remaining are behind globe
+        const ud = hit.object.userData;
         if (ud && ud.data && ud.name) {
           setTooltipData({ name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title });
           setMousePos({ x: event.clientX, y: event.clientY });
           if (onCountryHoverRef.current) onCountryHoverRef.current(ud.name, event);
+          renderer.domElement.style.cursor = 'pointer';
+          return;
         }
-        renderer.domElement.style.cursor = 'pointer';
-        return;
       }
 
       // Check globe surface for nearby country
-      const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
         const ll = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(ll.lat, ll.lng, 10);
@@ -549,12 +559,12 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   // Expose globe internals for external features (trade routes, etc.)
   useEffect(() => {
     window._globeView = {
-      globe: globeRef,
-      scene: sceneRef,
-      camera: cameraRef,
-      renderer: rendererRef,
-      countryMeshes: countryMeshesRef,
-      raycaster: raycasterRef,
+      globe: globeRef.current,
+      scene: sceneRef.current,
+      camera: cameraRef.current,
+      renderer: rendererRef.current,
+      countryMeshes: countryMeshesRef.current,
+      raycaster: raycasterRef.current,
       toggleRotation,
       autoRotateRef,
     };

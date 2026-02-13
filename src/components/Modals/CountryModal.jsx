@@ -42,24 +42,22 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   const sanctions = SANCTIONS_DATA[countryName];
   const riskColor = RISK_COLORS[country.risk]?.hex || '#888';
 
-  // Build facts grid
+  // Build facts grid (original order: Region, Population, GDP, Leader)
   const facts = [];
   if (country.region) facts.push({ label: 'Region', value: country.region });
-  if (country.title) facts.push({ label: 'Gov Type', value: country.title });
-  if (country.leader) facts.push({ label: 'Leader', value: country.leader });
   if (country.pop) facts.push({ label: 'Population', value: country.pop });
   if (country.gdp) facts.push({ label: 'GDP', value: country.gdp });
-  if (country.military) facts.push({ label: 'Military', value: country.military });
+  if (country.leader) facts.push({ label: 'Leader', value: country.leader });
 
   // Build analysis blocks
   const analysisBlocks = [];
   if (country.analysis) {
     if (typeof country.analysis === 'string') {
-      analysisBlocks.push({ num: 1, title: "WHAT'S HAPPENING", text: country.analysis });
+      analysisBlocks.push({ num: 1, title: 'What Happened', text: country.analysis });
     } else {
-      if (country.analysis.what) analysisBlocks.push({ num: 1, title: "WHAT'S HAPPENING", text: country.analysis.what });
-      if (country.analysis.why) analysisBlocks.push({ num: 2, title: 'WHY IT MATTERS', text: country.analysis.why });
-      if (country.analysis.next) analysisBlocks.push({ num: 3, title: 'WHAT TO WATCH', text: country.analysis.next });
+      if (country.analysis.what) analysisBlocks.push({ num: 1, title: 'What Happened', text: country.analysis.what });
+      if (country.analysis.why) analysisBlocks.push({ num: 2, title: 'Why It Matters', text: country.analysis.why });
+      if (country.analysis.next) analysisBlocks.push({ num: 3, title: 'What Might Happen', text: country.analysis.next });
     }
   }
 
@@ -95,70 +93,71 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </div>
           )}
 
-          {/* Analysis Blocks */}
-          {analysisBlocks.map((block) => (
-            <div key={block.num} className="analysis-block">
-              <div className="analysis-header">
-                <div className={`analysis-num n${block.num}`}>{block.num}</div>
-                <div className="analysis-title">{block.title}</div>
-              </div>
-              <div className="analysis-text">{block.text}</div>
-            </div>
-          ))}
-
-          {/* Sanctions */}
-          {sanctions && (sanctions.on?.length > 0 || sanctions.by?.length > 0) && (
-            <div className="sanctions-section">
-              <div className="sanctions-toggle" onClick={() => setSanctionsOpen(!sanctionsOpen)}>
-                <div className="sanctions-toggle-left">
-                  <span className="sanctions-toggle-title">SANCTIONS</span>
-                  {sanctions.severity && sanctions.severity !== 'none' && (
-                    <span className={`sanctions-severity ${sanctions.severity}`}>
-                      {sanctions.severity.toUpperCase()}
-                    </span>
-                  )}
+          {/* Situation Analysis */}
+          {analysisBlocks.length > 0 && (
+            <>
+              <div className="section-title">Situation Analysis</div>
+              {analysisBlocks.map((block) => (
+                <div key={block.num} className="analysis-block">
+                  <div className="analysis-header">
+                    <div className={`analysis-num n${block.num}`}>{block.num}</div>
+                    <div className="analysis-title">{block.title}</div>
+                  </div>
+                  <p className="analysis-text">{block.text}</p>
                 </div>
-                <span className={`sanctions-chevron${sanctionsOpen ? ' open' : ''}`}>&#9660;</span>
-              </div>
-              <div className={`sanctions-body${sanctionsOpen ? ' open' : ''}`}>
-                <div className="sanctions-inner">
-                  {sanctions.on && sanctions.on.length > 0 && (
-                    <>
-                      <div className="sanctions-group-title">Sanctions ON {countryName}</div>
-                      {sanctions.on.map((s, i) => (
-                        <div key={i} className="sanction-item">
-                          <div className="sanction-header">
-                            <span className="sanction-by">By {s.by}</span>
-                            <span className="sanction-year">{s.year}</span>
-                          </div>
-                          <div className="sanction-reason">{s.reason}</div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {sanctions.by && sanctions.by.length > 0 && (
-                    <>
-                      <div className="sanctions-group-title">Sanctions BY {countryName}</div>
-                      {sanctions.by.map((s, i) => (
-                        <div key={i} className="sanction-item">
-                          <div className="sanction-header">
-                            <span className="sanction-by">On {s.target}</span>
-                            <span className="sanction-year">{s.year}</span>
-                          </div>
-                          <div className="sanction-reason">{s.reason}</div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+              ))}
+            </>
           )}
 
-          {/* Trend Chart */}
+          {/* Trend Chart & Indicators */}
           <div style={{ marginTop: '16px' }}>
-            <div className="section-title">RISK TREND (12 MONTHS)</div>
+            <div className="section-title">Risk Trend & Indicators</div>
             <div dangerouslySetInnerHTML={{ __html: renderTrendChart(countryName, country.risk) }} />
+          </div>
+
+          {/* Sanctions - always shown */}
+          <div className="sanctions-section">
+            <div className="sanctions-toggle" onClick={() => setSanctionsOpen(!sanctionsOpen)}>
+              <div className="sanctions-toggle-left">
+                <span className="sanctions-toggle-title">Sanctions</span>
+              </div>
+              <span className={`sanctions-chevron${sanctionsOpen ? ' open' : ''}`}>&#9660;</span>
+            </div>
+            <div className={`sanctions-body${sanctionsOpen ? ' open' : ''}`}>
+              <div className="sanctions-inner">
+                {sanctions && sanctions.on && sanctions.on.length > 0 && (
+                  <>
+                    <div className="sanctions-group-title">Sanctions on {countryName}</div>
+                    {sanctions.on.map((s, i) => (
+                      <div key={i} className="sanction-item">
+                        <div className="sanction-header">
+                          <span className="sanction-by">{s.by}</span>
+                          <span className="sanction-year">{s.year}</span>
+                        </div>
+                        <div className="sanction-reason">{s.reason}</div>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {sanctions && sanctions.by && sanctions.by.length > 0 && (
+                  <>
+                    <div className="sanctions-group-title">Sanctions by {countryName}</div>
+                    {sanctions.by.map((s, i) => (
+                      <div key={i} className="sanction-item">
+                        <div className="sanction-header">
+                          <span className="sanction-by">{s.target}</span>
+                          <span className="sanction-year">{s.year}</span>
+                        </div>
+                        <div className="sanction-reason">{s.reason}</div>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {(!sanctions || (!sanctions.on?.length && !sanctions.by?.length)) && (
+                  <div className="sanctions-none">No active sanctions data for this country.</div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* News Coverage */}

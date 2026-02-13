@@ -73,67 +73,64 @@ export default function StocksTab({ onOpenStocksModal }) {
       )}
       {markets.map((market, i) => {
         const sparkline = market.sparkline || [];
-        const mainPositive = sparkline.length > 1 ? sparkline[sparkline.length - 1] >= sparkline[0] : true;
 
         return (
           <div
             key={i}
-            className="market-section"
+            className="stocks-country"
             onClick={() => onOpenStocksModal && onOpenStocksModal(market.country)}
-            style={{ cursor: 'pointer' }}
           >
-            <div className="market-country">
-              <span className="market-flag">{market.flag}</span>
-              {market.country}
+            <div className="stocks-country-header">
+              <span className="stocks-country-flag">{market.flag}</span>
+              <span className="stocks-country-name">{market.country}</span>
+              {market.sentiment && (
+                <span className="stocks-sentiment">{market.sentiment}</span>
+              )}
+            </div>
+
+            {/* Indices */}
+            <div className="stocks-indices">
+              {market.indices.map((idx, j) => {
+                if (idx.noData) {
+                  return (
+                    <div key={j} className="stock-index-row">
+                      <span className="stock-index-name">{idx.name}</span>
+                      <span className="stock-index-value" style={{ color: '#6b7280' }}>Unavailable</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={j} className="stock-index-row">
+                    <span className="stock-index-name">
+                      {idx.name}
+                      {idx.isStatic && <span style={{ fontSize: '7px', color: '#6b7280' }}> (sample)</span>}
+                    </span>
+                    <span className="stock-index-value">{idx.value}</span>
+                    <span className={`stock-index-change ${idx.positive ? 'positive' : 'negative'}`}>
+                      {idx.change}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Sparkline */}
             {sparkline.length > 1 && (
-              <div className="sparkline" style={{ marginBottom: '6px' }}>
+              <div className="stocks-sparkline">
                 {sparkline.map((val, k) => {
                   const max = Math.max(...sparkline);
                   const min = Math.min(...sparkline);
                   const range = max - min || 1;
-                  const height = ((val - min) / range) * 16 + 2;
+                  const h = ((val - min) / range) * 16 + 4;
+                  const isUp = k > 0 ? val >= sparkline[k - 1] : true;
                   return (
                     <div
                       key={k}
-                      className={`spark-bar ${mainPositive ? 'positive' : 'negative'}`}
-                      style={{ height: `${height}px` }}
+                      className="stocks-sparkline-bar"
+                      style={{ height: `${h}px`, background: isUp ? '#22c55e' : '#ef4444' }}
                     />
                   );
                 })}
-              </div>
-            )}
-
-            {/* Indices */}
-            {market.indices.map((idx, j) => {
-              if (idx.noData) {
-                return (
-                  <div key={j} className="stock-row">
-                    <div className="stock-name">{idx.name}</div>
-                    <div className="stock-price" style={{ color: '#6b7280' }}>Unavailable</div>
-                  </div>
-                );
-              }
-              return (
-                <div key={j} className="stock-row">
-                  <div className="stock-name">
-                    {idx.name}
-                    {idx.isStatic && <span style={{ fontSize: '7px', color: '#6b7280' }}> (sample)</span>}
-                  </div>
-                  <div className="stock-price">{idx.value}</div>
-                  <div className={`stock-change ${idx.positive ? 'positive' : 'negative'}`}>
-                    {idx.change}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Sentiment */}
-            {market.sentiment && (
-              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic' }}>
-                {market.sentiment}
               </div>
             )}
           </div>

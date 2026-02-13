@@ -115,7 +115,7 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
               </div>
               <div className="election-type">{e.type}</div>
               {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600 }}>Winner: {e.winner}</div>}
-              {e.notes && <div className="election-stakes">{e.notes}</div>}
+              {e.summary && <div className="election-stakes">{e.summary}</div>}
             </div>
           ))}
         </div>
@@ -130,7 +130,7 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
               <span className="election-date">{e.date}</span>
             </div>
             <div className="election-type">{e.type}</div>
-            {e.notes && <div className="election-stakes">{e.notes}</div>}
+            {e.stakes && <div className="election-stakes">{e.stakes}</div>}
           </div>
         ))}
       </div>

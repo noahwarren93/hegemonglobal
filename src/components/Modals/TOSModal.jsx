@@ -40,21 +40,7 @@ export default function TOSModal({ isOpen, onClose }) {
           </div>
           <button className="tos-close" onClick={onClose}>&times;</button>
         </div>
-        <div className="tos-body">
-          {content && content.map((section, i) => (
-            <div key={i}>
-              {section.title && <h2>{section.title}</h2>}
-              {section.text && <p>{section.text}</p>}
-              {section.items && (
-                <ul>
-                  {section.items.map((item, j) => (
-                    <li key={j}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </div>
+        <div className="tos-body" dangerouslySetInnerHTML={{ __html: content || '' }} />
       </div>
     </div>
   );

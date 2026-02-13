@@ -115,6 +115,73 @@ function StatsBar({ onStatClick }) {
 }
 
 // ============================================================
+// Stat Popup Component (country list by risk level)
+// ============================================================
+
+function StatPopup({ type, isOpen, onClose, onCountryClick }) {
+  const popupRef = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClick(e) {
+      if (popupRef.current && !popupRef.current.contains(e.target) && !e.target.closest('.stat-card')) {
+        onClose();
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [isOpen, onClose]);
+
+  const { title, color, countries } = useMemo(() => {
+    let title, color, filtered;
+    if (type === 'critical') {
+      title = 'Critical Countries';
+      color = '#ef4444';
+      filtered = Object.entries(COUNTRIES).filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme');
+    } else if (type === 'high') {
+      title = 'High Risk Countries';
+      color = '#f97316';
+      filtered = Object.entries(COUNTRIES).filter(([, c]) => c.risk === 'severe' || c.risk === 'stormy');
+    } else if (type === 'stable') {
+      title = 'Stable Countries';
+      color = '#22c55e';
+      filtered = Object.entries(COUNTRIES).filter(([, c]) => c.risk === 'cloudy' || c.risk === 'clear');
+    } else {
+      title = 'All Countries';
+      color = '#06b6d4';
+      filtered = Object.entries(COUNTRIES);
+    }
+    filtered.sort((a, b) => a[0].localeCompare(b[0]));
+    return { title, color, countries: filtered };
+  }, [type]);
+
+  return (
+    <div ref={popupRef} className={`stat-popup${isOpen ? ' active' : ''}`}>
+      <div className="stat-popup-header">
+        <div className="stat-popup-title" style={{ color }}>{title}</div>
+        <button className="stat-popup-close" onClick={onClose}>&times;</button>
+      </div>
+      {countries.map(([name, c]) => (
+        <div
+          key={name}
+          className="stat-popup-item"
+          onClick={() => { onCountryClick(name); onClose(); }}
+        >
+          <span>{c.flag} {name}</span>
+          <span
+            className={`wl-risk risk-${c.risk}`}
+            style={{ fontSize: '8px', padding: '2px 5px', borderRadius: '3px', fontWeight: 600, textTransform: 'uppercase' }}
+          >
+            {c.risk}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
 // Breaking News Banner
 // ============================================================
 
@@ -145,7 +212,7 @@ function Watchlist({ onCountryClick }) {
   }, []);
 
   return (
-    <div className="watchlist">
+    <div className="watchlist" style={{ position: 'relative', top: 'auto', left: 'auto' }}>
       <div className="watchlist-title">CRITICAL WATCHLIST</div>
       {watchlistCountries.map(([name, c]) => (
         <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
@@ -216,6 +283,10 @@ export default function HomePage() {
 
   // --- Breaking news ---
   const [breakingNews, setBreakingNews] = useState(null);
+
+  // --- Stat popup ---
+  const [statPopupType, setStatPopupType] = useState(null);
+  const [statPopupOpen, setStatPopupOpen] = useState(false);
 
   // --- Loading ---
   const [isLoading, setIsLoading] = useState(true);
@@ -338,6 +409,9 @@ export default function HomePage() {
     const newState = !tradeRoutesActive;
     setTradeRoutesActive(newState);
     if (newState) {
+      // Deactivate compare mode
+      setCompareMode(false);
+      setCompareCountries([]);
       showTradeRoutes();
     } else {
       hideTradeRoutes();
@@ -354,9 +428,16 @@ export default function HomePage() {
         setCompareCountries([]);
         return false;
       }
+      // Turning on — deactivate trade routes
+      if (tradeRoutesActive) {
+        setTradeRoutesActive(false);
+        hideTradeRoutes();
+        setTradeInfoCountry(null);
+        setTradeInfoOpen(false);
+      }
       return true;
     });
-  }, []);
+  }, [tradeRoutesActive, hideTradeRoutes]);
 
   // Compare panel handlers
   const handleAddCompareCountry = useCallback((name) => {
@@ -392,6 +473,7 @@ export default function HomePage() {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
+        if (statPopupOpen) { setStatPopupOpen(false); return; }
         if (stocksModalOpen) { setStocksModalOpen(false); return; }
         if (modalOpen) { setModalOpen(false); return; }
         if (tosOpen) { setTosOpen(false); return; }
@@ -405,7 +487,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -444,42 +526,44 @@ export default function HomePage() {
             <div className="date">{currentDate}</div>
           </div>
 
-          {/* Watchlist */}
-          <Watchlist onCountryClick={handleCountryClick} />
+          {/* Watchlist + Feature Buttons (stacked, no overlap) */}
+          <div style={{ position: 'absolute', left: 16, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - 200px)' }}>
+            <Watchlist onCountryClick={handleCountryClick} />
 
-          {/* Feature Buttons */}
-          <div style={{ position: 'absolute', left: 16, top: 380, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button
-              className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`}
-              onClick={handleToggleTradeRoutes}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-              Trade Routes
-            </button>
-            <button
-              className={`globe-feature-btn${compareMode ? ' active' : ''}`}
-              onClick={handleToggleCompare}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-              </svg>
-              Compare Mode
-            </button>
-          </div>
+            {/* Feature Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button
+                className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`}
+                onClick={handleToggleTradeRoutes}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Trade Routes
+              </button>
+              <button
+                className={`globe-feature-btn${compareMode ? ' active' : ''}`}
+                onClick={handleToggleCompare}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                Compare Mode
+              </button>
 
-          {/* Compare hint */}
-          {compareMode && compareCountries.length === 0 && (
-            <div className="compare-hint" style={{ left: 170, top: 412 }}>
-              Click countries on the globe to compare
+              {/* Compare hint */}
+              {compareMode && compareCountries.length === 0 && (
+                <div className="compare-hint">
+                  Click countries on the globe to compare
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Risk Legend */}
           <RiskLegend />
@@ -531,9 +615,21 @@ export default function HomePage() {
             onClose={() => { setTradeInfoOpen(false); setTradeInfoCountry(null); }}
           />
 
+          {/* Stat Popup */}
+          <StatPopup
+            type={statPopupType}
+            isOpen={statPopupOpen}
+            onClose={() => setStatPopupOpen(false)}
+            onCountryClick={(name) => {
+              setSelectedCountry(name);
+              setModalOpen(true);
+            }}
+          />
+
           {/* Stats Bar */}
           <StatsBar onStatClick={(type) => {
-            console.log('Stat clicked:', type);
+            setStatPopupType(type);
+            setStatPopupOpen(prev => prev && statPopupType === type ? false : true);
           }} />
         </div>
 
