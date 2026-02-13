@@ -74,7 +74,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                 {country.risk.toUpperCase()}
               </span>
             </div>
-            <div className="modal-subtitle">{country.title}</div>
+            <div className="modal-subtitle">{country.title || country.region}</div>
           </div>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
@@ -93,6 +93,12 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </div>
           )}
 
+          {/* Risk Trend & Indicators (before Analysis, matching original order) */}
+          <div style={{ marginTop: '16px' }}>
+            <div className="section-title">Risk Trend & Indicators</div>
+            <div dangerouslySetInnerHTML={{ __html: renderTrendChart(countryName, country.risk) }} />
+          </div>
+
           {/* Situation Analysis */}
           {analysisBlocks.length > 0 && (
             <>
@@ -109,10 +115,51 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </>
           )}
 
-          {/* Trend Chart & Indicators */}
-          <div style={{ marginTop: '16px' }}>
-            <div className="section-title">Risk Trend & Indicators</div>
-            <div dangerouslySetInnerHTML={{ __html: renderTrendChart(countryName, country.risk) }} />
+          {/* Recent Coverage (cached news from country data) */}
+          {country.news && country.news.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div className="section-title">Recent Coverage</div>
+              {country.news.map((n, i) => (
+                <div key={i} className="news-item">
+                  <div className="news-meta">
+                    <span className="news-source">{n.source}</span>
+                    <span className="news-time">{n.time}</span>
+                  </div>
+                  <div dangerouslySetInnerHTML={{ __html: renderBiasTag(n.source) }} />
+                  <div className="news-headline">{n.headline}</div>
+                  {n.url && n.url !== '#' && (
+                    <a className="news-link" href={n.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Live News */}
+          <div className="country-news-section">
+            <div className="country-news-title">LIVE NEWS FOR {countryName.toUpperCase()}</div>
+            {newsLoading ? (
+              <div className="country-news-loading">Loading latest news...</div>
+            ) : news.length > 0 ? (
+              news.map((article, i) => (
+                <div key={i} className="news-item">
+                  <div className="news-meta">
+                    {article.category && (
+                      <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
+                    )}
+                    <span className="news-source">{article.source}</span>
+                    <span className="news-time">{article.time}</span>
+                  </div>
+                  <div dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
+                  <div className="news-headline">{article.headline}</div>
+                  {article.url && article.url !== '#' && (
+                    <a className="news-link" href={article.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>No major international news coverage for this country at this time. This typically indicates a period of relative stability.</div>
+            )}
           </div>
 
           {/* Sanctions - always shown */}
@@ -158,33 +205,6 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* News Coverage */}
-          <div className="country-news-section">
-            <div className="country-news-title">NEWS COVERAGE</div>
-            {newsLoading ? (
-              <div className="country-news-loading">Fetching latest news...</div>
-            ) : news.length > 0 ? (
-              news.map((article, i) => (
-                <div key={i} className="news-item">
-                  <div className="news-meta">
-                    <span className="news-source">{article.source}</span>
-                    <span dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
-                    <span className="news-time">{article.time}</span>
-                  </div>
-                  <div className="news-headline">
-                    {article.url && article.url !== '#' ? (
-                      <a href={article.url} target="_blank" rel="noopener noreferrer" className="news-link">{article.headline}</a>
-                    ) : (
-                      article.headline
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="country-news-loading">No recent news coverage available.</div>
-            )}
           </div>
         </div>
       </div>

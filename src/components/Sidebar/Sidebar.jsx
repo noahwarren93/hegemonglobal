@@ -58,38 +58,68 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   // ============================================================
 
   const renderArticlesTab = () => {
-    const articles = DAILY_BRIEFING.slice(0, visibleCount);
-    if (articles.length === 0) {
+    if (DAILY_BRIEFING.length === 0) {
       return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Loading news articles...</div>;
     }
 
+    const _demote = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
+    const topStories = DAILY_BRIEFING.filter(item => {
+      if (_demote.some(kw => (item.headline || '').toLowerCase().includes(kw))) return false;
+      return item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category);
+    }).slice(0, 5);
+    const allNews = DAILY_BRIEFING.slice(0, visibleCount);
+
+    const catBorderColor = (cat) => cat === 'CONFLICT' ? '#ef4444' : cat === 'CRISIS' ? '#f97316' : '#eab308';
+
+    const renderCard = (article, i, isTopStory) => (
+      <div key={i} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(article.category)}` } : undefined}>
+        <div className="card-header">
+          <span className={`card-cat ${article.category}`}>{article.category}</span>
+          <span className="card-time">{article.time}</span>
+        </div>
+        <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
+          {article.url && article.url !== '#' ? (
+            <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#e5e7eb', textDecoration: 'none' }}>{article.headline}</a>
+          ) : (
+            article.headline
+          )}
+        </div>
+        <div className="card-source">
+          {article.url && article.url !== '#' ? (
+            <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>{article.source} ↗</a>
+          ) : (
+            <span style={{ color: '#9ca3af' }}>{article.source}</span>
+          )}
+        </div>
+        <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
+      </div>
+    );
+
     return (
       <>
-        {articles.map((article, i) => (
-          <div key={i} className="card">
-            <div className="card-header">
-              <span className={`card-cat ${article.category}`}>{article.category}</span>
-              <span className="card-time">{article.time}</span>
+        {/* Top Stories */}
+        {topStories.length > 0 && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
             </div>
-            <div className="card-headline">
-              {article.url && article.url !== '#' ? (
-                <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#e5e7eb', textDecoration: 'none' }}>{article.headline}</a>
-              ) : (
-                article.headline
-              )}
-            </div>
-            <div className="card-source">
-              {article.source}
-              <span dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
-            </div>
-          </div>
-        ))}
+            {topStories.map((article, i) => renderCard(article, `top-${i}`, true))}
+          </>
+        )}
+
+        {/* Latest Updates */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(59,130,246,0.1)', borderLeft: '3px solid #3b82f6', margin: '14px 0 10px 0' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>LATEST UPDATES</span>
+          <span style={{ fontSize: '9px', color: '#6b7280' }}>({DAILY_BRIEFING.length} articles)</span>
+        </div>
+        {allNews.map((article, i) => renderCard(article, `all-${i}`, false))}
+
         {visibleCount < DAILY_BRIEFING.length && (
           <button onClick={loadMore} style={{
-            width: '100%', padding: '10px', background: '#0d0d14', border: '1px solid #1f2937',
-            borderRadius: '8px', color: '#06b6d4', cursor: 'pointer', fontSize: '11px', fontWeight: 600
+            width: '100%', padding: '12px', marginTop: '10px', background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', border: '1px solid #374151',
+            borderRadius: '8px', color: '#9ca3af', cursor: 'pointer', fontSize: '11px', fontWeight: 600
           }}>
-            Load More ({DAILY_BRIEFING.length - visibleCount} remaining)
+            LOAD MORE ({DAILY_BRIEFING.length - visibleCount} remaining)
           </button>
         )}
       </>
@@ -105,25 +135,25 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
     <>
       {RECENT_ELECTIONS && RECENT_ELECTIONS.length > 0 && (
         <div>
-          <div className="section-title">RECENT RESULTS</div>
+          <div style={{ fontSize: '9px', color: '#22c55e', fontWeight: 600, letterSpacing: '1px', marginBottom: '12px' }}>RECENT RESULTS</div>
           {RECENT_ELECTIONS.map((e, i) => (
-            <div key={i} className="election-card" onClick={() => handleCountryClick(e.country)}>
+            <div key={i} className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => handleCountryClick(e.country)}>
               <div className="election-header">
                 <span className="election-flag">{e.flag}</span>
                 <span className="election-country">{e.country}</span>
-                <span className="election-date">{e.date}</span>
+                <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
               </div>
               <div className="election-type">{e.type}</div>
-              {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600 }}>Winner: {e.winner}</div>}
+              {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600, margin: '4px 0' }}>{e.winner}</div>}
               {e.summary && <div className="election-stakes">{e.summary}</div>}
             </div>
           ))}
         </div>
       )}
       <div>
-        <div className="section-title">UPCOMING ELECTIONS</div>
+        <div style={{ fontSize: '9px', color: '#f97316', fontWeight: 600, letterSpacing: '1px', margin: '20px 0 12px' }}>UPCOMING ELECTIONS</div>
         {ELECTIONS.map((e, i) => (
-          <div key={i} className="election-card" onClick={() => handleCountryClick(e.country)}>
+          <div key={i} className="election-card" style={{ borderLeft: '3px solid #f97316' }} onClick={() => handleCountryClick(e.country)}>
             <div className="election-header">
               <span className="election-flag">{e.flag}</span>
               <span className="election-country">{e.country}</span>

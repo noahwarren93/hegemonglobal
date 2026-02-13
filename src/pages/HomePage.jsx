@@ -99,7 +99,7 @@ function StatsBar({ onStatClick }) {
         <div className="stat-label">Critical</div>
       </div>
       <div className="stat-card" onClick={() => onStatClick && onStatClick('high')}>
-        <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.high}</div>
+        <div className="stat-value" style={{ color: '#f97316' }}>{stats.high}</div>
         <div className="stat-label">High Risk</div>
       </div>
       <div className="stat-card" onClick={() => onStatClick && onStatClick('stable')}>
@@ -354,6 +354,40 @@ export default function HomePage() {
   }, []);
 
   // ============================================================
+  // Sync compare mode to globe meshes (matching original addCountryToCompare/removeCountryFromCompare)
+  // ============================================================
+
+  const COMPARE_COLORS = useMemo(() => ['#3b82f6', '#ef4444', '#22c55e'], []);
+
+  useEffect(() => {
+    const gv = window._globeView;
+    if (!gv || !gv.countryMeshes) return;
+    const meshes = gv.countryMeshes;
+    if (compareMode) {
+      meshes.forEach(m => {
+        const idx = compareCountries.indexOf(m.userData.name);
+        if (idx >= 0) {
+          m.material.color.set(COMPARE_COLORS[idx]);
+          m.material.opacity = 1.0;
+        } else {
+          m.material.opacity = compareCountries.length > 0 ? 0.3 : 0.95;
+          if (m.userData.data && RISK_COLORS[m.userData.data.risk]) {
+            m.material.color.set(RISK_COLORS[m.userData.data.risk].glow);
+          }
+        }
+      });
+    } else {
+      // Restore original colors/opacity
+      meshes.forEach(m => {
+        m.material.opacity = 0.95;
+        if (m.userData.data && RISK_COLORS[m.userData.data.risk]) {
+          m.material.color.set(RISK_COLORS[m.userData.data.risk].glow);
+        }
+      });
+    }
+  }, [compareMode, compareCountries, COMPARE_COLORS]);
+
+  // ============================================================
   // Handlers
   // ============================================================
 
@@ -361,11 +395,17 @@ export default function HomePage() {
   const handleCountryClick = useCallback((countryName) => {
     if (!countryName || !COUNTRIES[countryName]) return;
 
-    // Compare mode: add to comparison
+    // Compare mode: toggle or add to comparison (matching original addCountryToCompare)
     if (compareMode) {
       setCompareCountries(prev => {
-        if (prev.includes(countryName)) return prev;
-        if (prev.length >= 3) return prev;
+        // Toggle off if already selected
+        if (prev.includes(countryName)) {
+          return prev.filter(c => c !== countryName);
+        }
+        // Shift oldest if already 3
+        if (prev.length >= 3) {
+          return [...prev.slice(1), countryName];
+        }
         return [...prev, countryName];
       });
       return;
@@ -408,6 +448,7 @@ export default function HomePage() {
   const handleToggleTradeRoutes = useCallback(() => {
     const newState = !tradeRoutesActive;
     setTradeRoutesActive(newState);
+    window.tradeRoutesActive = newState;
     if (newState) {
       // Deactivate compare mode
       setCompareMode(false);
@@ -431,6 +472,7 @@ export default function HomePage() {
       // Turning on — deactivate trade routes
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
+        window.tradeRoutesActive = false;
         hideTradeRoutes();
         setTradeInfoCountry(null);
         setTradeInfoOpen(false);

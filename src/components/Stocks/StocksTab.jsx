@@ -56,21 +56,24 @@ export default function StocksTab({ onOpenStocksModal }) {
     isStaticFallback: true
   }));
 
+  const headerColor = error ? '#ef4444' : '#22c55e';
+  const headerBg = error ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)';
+  const updatedStr = lastUpdated ? lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
+
   return (
     <>
-      <div className="section-label">
-        GLOBAL MARKETS
-        {lastUpdated && (
-          <span style={{ float: 'right', fontSize: '8px', color: '#6b7280', fontWeight: '400' }}>
-            {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        )}
-      </div>
-      {error && (
-        <div style={{ fontSize: '9px', color: '#f59e0b', padding: '4px 8px', marginBottom: '8px' }}>
-          Using cached/sample data. Live feed reconnecting...
+      <div style={{ padding: '8px 12px', background: `linear-gradient(90deg, ${headerBg} 0%, transparent 100%)`, borderLeft: `3px solid ${headerColor}`, marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: headerColor, letterSpacing: '1px' }}>
+            GLOBAL MARKETS
+            {loading && <span style={{ fontWeight: 400, fontSize: '9px', color: '#6b7280', marginLeft: '6px' }}>fetching...</span>}
+          </div>
+          <div style={{ fontSize: '8px', color: '#6b7280' }}>Last updated: {updatedStr}</div>
         </div>
-      )}
+        <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+          {error ? 'Market data temporarily unavailable \u2014 will retry' : 'Live data via Yahoo Finance (may be delayed 15 min)'}
+        </div>
+      </div>
       {markets.map((market, i) => {
         const sparkline = market.sparkline || [];
 

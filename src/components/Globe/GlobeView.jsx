@@ -146,6 +146,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   // Tooltip state
   const [tooltipData, setTooltipData] = useState(null);
   const [mousePos, setMousePos] = useState(null);
+  const tradeTooltipRef = useRef(null);
 
   // --------------------------------------------------------
   // Three.js init + cleanup
@@ -171,6 +172,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
+    // Match original Three.js r128 behavior: no color space conversion
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -193,6 +196,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
+    // Match original r128 behavior: treat textures as linear (no sRGB conversion)
+    earthTexture.colorSpace = THREE.LinearSRGBColorSpace;
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
@@ -293,42 +298,15 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Conflict zone overlays
     addConflictZones(globe, latLngToVector3);
 
-    // ---- Resolve a country from raycast hit ----
-    function resolveCountry(clientX, clientY) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouseRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouseRef.current, camera);
-
-      // Get globe surface hit distance to filter back-side markers
-      const globeHits = raycaster.intersectObject(globe);
-      const globeSurfaceDist = globeHits.length > 0 ? globeHits[0].distance : Infinity;
-
-      // Try marker dots - only accept markers in FRONT of the globe surface
-      const markerHits = raycaster.intersectObjects(countryMeshesRef.current);
-      for (const hit of markerHits) {
-        if (hit.distance < globeSurfaceDist) {
-          const ud = hit.object.userData;
-          if (ud && ud.name) return ud.name;
-        }
-      }
-
-      // Try globe surface
-      if (globeHits.length > 0) {
-        const ll = vector3ToLatLng(globeHits[0].point, globe);
-        return findNearestCountry(ll.lat, ll.lng);
-      }
-      return null;
-    }
-
     // ---- Mouse move (hover + tooltip) ----
+    // Matches original globe.js onMouseMove exactly
     function handleMouseMove(event) {
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Check trade route hover (external integration)
+      // Check trade route line hover when trade routes are active
       if (window.tradeRoutesActive && window.tradeRouteMeshes && window.tradeRouteMeshes.length > 0) {
         raycaster.params.Line = raycaster.params.Line || {};
         const origThreshold = raycaster.params.Line.threshold;
@@ -347,15 +325,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Get globe surface hit distance to filter back-side markers
-      const globeHits = raycaster.intersectObject(globe);
-      const globeSurfaceDist = globeHits.length > 0 ? globeHits[0].distance : Infinity;
-
-      // Check marker dots - only front-side
+      // Check marker dots - take intersects[0] (closest), no back-side filtering (matches original)
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
-      for (const hit of intersects) {
-        if (hit.distance >= globeSurfaceDist) break; // all remaining are behind globe
-        const ud = hit.object.userData;
+      if (intersects.length > 0) {
+        const ud = intersects[0].object.userData;
         if (ud && ud.data && ud.name) {
           setTooltipData({ name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title });
           setMousePos({ x: event.clientX, y: event.clientY });
@@ -366,6 +339,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       }
 
       // Check globe surface for nearby country
+      const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
         const ll = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(ll.lat, ll.lng, 10);
@@ -386,15 +360,41 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     }
 
     // ---- Click ----
+    // Matches original globe.js onClick exactly:
+    // 1. Marker hit first (no drag check) - takes intersects[0] directly
+    // 2. Drag check only before globe surface fallback
+    // 3. Globe surface → findNearestCountry
     function handleClick(event) {
-      // Skip if it was a drag
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouseRef.current, camera);
+
+      // Priority: try marker dots first (no drag check needed — matches original)
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      if (intersects.length > 0) {
+        const clickedName = intersects[0].object.userData.name;
+        console.log('[Globe Click] Marker hit:', clickedName);
+        if (clickedName && onCountryClickRef.current) {
+          onCountryClickRef.current(clickedName);
+        }
+        return;
+      }
+
+      // Check if this was a drag (skip globe surface click after drag)
       const dx = Math.abs(event.clientX - clickStartRef.current.x);
       const dy = Math.abs(event.clientY - clickStartRef.current.y);
       if (dx > 5 || dy > 5) return;
 
-      const country = resolveCountry(event.clientX, event.clientY);
-      if (country && onCountryClickRef.current) {
-        onCountryClickRef.current(country);
+      // Try globe surface - find nearest tracked country
+      const globeHits = raycaster.intersectObject(globe);
+      if (globeHits.length > 0) {
+        const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
+        const country = findNearestCountry(lat, lng);
+        console.log('[Globe Click] Surface hit → nearest country:', country, 'at', lat.toFixed(1), lng.toFixed(1));
+        if (country && onCountryClickRef.current) {
+          onCountryClickRef.current(country);
+        }
       }
     }
 
@@ -466,16 +466,30 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       prevMouseRef.current = { x: touch.clientX, y: touch.clientY };
     }
 
-    // Touch tap (mobile click)
+    // Touch tap (mobile click) — same logic as handleClick
     function handleTouchEnd(e) {
       if (e.changedTouches.length === 1) {
         const touch = e.changedTouches[0];
         const dx = Math.abs(touch.clientX - touchStartRef.current.x);
         const dy = Math.abs(touch.clientY - touchStartRef.current.y);
         if (dx < 10 && dy < 10) {
-          const country = resolveCountry(touch.clientX, touch.clientY);
-          if (country && onCountryClickRef.current) {
-            onCountryClickRef.current(country);
+          const rect = renderer.domElement.getBoundingClientRect();
+          mouseRef.current.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+          mouseRef.current.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(mouseRef.current, camera);
+          // Check markers first
+          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current);
+          if (touchIntersects.length > 0) {
+            const tName = touchIntersects[0].object.userData.name;
+            if (tName && onCountryClickRef.current) onCountryClickRef.current(tName);
+            return;
+          }
+          // Fall back to globe surface
+          const touchGlobe = raycaster.intersectObject(globe);
+          if (touchGlobe.length > 0) {
+            const tll = vector3ToLatLng(touchGlobe[0].point, globe);
+            const tCountry = findNearestCountry(tll.lat, tll.lng);
+            if (tCountry && onCountryClickRef.current) onCountryClickRef.current(tCountry);
           }
         }
       }
@@ -571,12 +585,58 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     return () => { delete window._globeView; };
   }, [toggleRotation]);
 
+  // Trade route tooltip functions (matches original trade-routes.js showTradeRouteTooltip/hideTradeRouteTooltip)
+  useEffect(() => {
+    window.showTradeRouteTooltip = (route, x, y) => {
+      const tt = tradeTooltipRef.current;
+      if (!tt) return;
+      const fromFlag = COUNTRIES[route.from] ? COUNTRIES[route.from].flag : '';
+      const toFlag = COUNTRIES[route.to] ? COUNTRIES[route.to].flag : '';
+      const statusColor = route.status === 'healthy' ? '#22c55e' : route.status === 'sanctioned' ? '#ef4444' : '#f59e0b';
+      tt.innerHTML =
+        '<div style="font-size:12px;font-weight:700;margin-bottom:6px;">' + fromFlag + ' ' + route.from + ' ↔ ' + toFlag + ' ' + route.to + '</div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Volume:</span><span style="color:#e5e7eb;font-weight:600;">$' + route.volume + 'B/yr</span></div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Status:</span><span style="color:' + statusColor + ';font-weight:600;">' + route.status.toUpperCase() + '</span></div>' +
+        '<div style="color:#9ca3af;margin-bottom:4px;"><span style="color:#6b7280;">Goods:</span> ' + route.goods + '</div>' +
+        '<div style="color:#9ca3af;font-size:9px;margin-top:6px;border-top:1px solid #1f2937;padding-top:6px;">' + route.desc + '</div>' +
+        (route.sanctions ? '<div style="color:#fca5a5;font-size:9px;margin-top:4px;">\u26a0 ' + route.sanctions + '</div>' : '') +
+        (route.recent ? '<div style="color:#06b6d4;font-size:9px;margin-top:4px;">\ud83d\udccc ' + route.recent + '</div>' : '');
+      tt.style.display = 'block';
+      const offset = 15;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const tw = tt.offsetWidth || 320;
+      const th = tt.offsetHeight || 200;
+      let posLeft = x + offset;
+      let posTop = y + offset;
+      if (posLeft + tw > vw - 10) posLeft = x - tw - offset;
+      if (posLeft < 10) posLeft = 10;
+      if (posTop + th > vh - 10) posTop = y - th - offset;
+      if (posTop < 10) posTop = 10;
+      tt.style.left = posLeft + 'px';
+      tt.style.top = posTop + 'px';
+    };
+    window.hideTradeRouteTooltip = () => {
+      const tt = tradeTooltipRef.current;
+      if (tt) tt.style.display = 'none';
+    };
+    return () => {
+      delete window.showTradeRouteTooltip;
+      delete window.hideTradeRouteTooltip;
+    };
+  }, []);
+
   return (
     <div ref={containerRef} id="globe">
       <div id="globeLoader" className="globe-loader">
         <div className="globe-spinner" />
       </div>
       <Tooltip data={tooltipData} mousePos={mousePos} />
+      <div
+        ref={tradeTooltipRef}
+        id="tradeTooltip"
+        style={{ display: 'none', position: 'fixed', zIndex: 10000, background: '#111827', border: '1px solid #1f2937', borderRadius: '8px', padding: '10px 14px', maxWidth: '320px', fontSize: '10px', color: '#e5e7eb', pointerEvents: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+      />
     </div>
   );
 }

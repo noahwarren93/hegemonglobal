@@ -103,6 +103,7 @@ export function useTradeRoutes() {
     }
     tradeRouteMeshes.current = [];
     tradeDotGroups.current = [];
+    window.tradeRouteMeshes = [];
   }, [stopTradeAnimation]);
 
   const showTradeRoutes = useCallback((highlightCountry) => {
@@ -164,6 +165,8 @@ export function useTradeRoutes() {
     });
 
     globeView.globe.add(tradeRouteGroup.current);
+    // Sync to window globals so GlobeView hover handler can detect trade route lines
+    window.tradeRouteMeshes = tradeRouteMeshes.current;
     startTradeAnimation();
   }, [hideTradeRoutes, startTradeAnimation]);
 
