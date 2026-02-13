@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { COUNTRIES } from '../../data/countries';
 import { RISK_COLORS, CONFLICT_ZONES, addConflictZones, animateConflictZones } from '../../utils/riskColors';
-import Tooltip, { positionTooltip } from './Tooltip';
+import Tooltip from './Tooltip';
 
 // ============================================================
 // Exported helpers (pure functions, no component state needed)
@@ -21,6 +21,8 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
+  // Ensure globe's matrixWorld is current (rotation may have changed since last render)
+  globe.updateMatrixWorld(true);
   const lp = globe.worldToLocal(worldPoint.clone());
   const r = lp.length();
   const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
@@ -172,8 +174,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
-    // Match original Three.js r128 behavior: no color space conversion
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -196,8 +196,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
-    // Match original r128 behavior: treat textures as linear (no sRGB conversion)
-    earthTexture.colorSpace = THREE.LinearSRGBColorSpace;
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
