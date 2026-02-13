@@ -499,7 +499,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (!isDraggingRef.current && autoRotateRef.current && globe) {
         globe.rotation.y += 0.0008;
       }
-      animateConflictZones();
+      animateConflictZones(globe);
       renderer.render(scene, camera);
     }
     animate();

@@ -385,7 +385,7 @@ export function addConflictZones(globe, latLngToVector3) {
 }
 
 // Animate conflict zones (pulsing effect)
-export function animateConflictZones() {
+export function animateConflictZones(globe) {
   if (!globe) return;
   const time = Date.now() * 0.002;
 
