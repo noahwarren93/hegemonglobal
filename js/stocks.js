@@ -554,14 +554,17 @@ function openStocksDetail(country) {
   if (!data) return;
   var detail = STOCKS_DETAIL[country];
 
-  document.getElementById('stocksModalFlag').textContent = data.flag;
-  document.getElementById('stocksModalTitle').textContent = country + ' Markets';
+  var modalFlag = document.getElementById('stocksModalFlag');
+  var modalTitle = document.getElementById('stocksModalTitle');
+  if (modalFlag) modalFlag.textContent = data.flag;
+  if (modalTitle) modalTitle.textContent = country + ' Markets';
 
   var subtitleText = data.sentiment;
   if (data.isStaticFallback) {
     subtitleText = 'Sample data — connecting to live feed...';
   }
-  document.getElementById('stocksModalSubtitle').textContent = subtitleText;
+  var modalSub = document.getElementById('stocksModalSubtitle');
+  if (modalSub) modalSub.textContent = subtitleText;
 
   var html = '<div class="stocks-section"><div class="stocks-section-title">Market Overview</div>';
   data.indices.forEach(function(idx) {
@@ -584,10 +587,13 @@ function openStocksDetail(country) {
   // Timestamp
   html += '<div style="font-size:8px;color:#374151;text-align:right;margin-top:8px;">Last updated: ' + (stocksLastUpdated ? stocksLastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A') + '</div>';
 
-  document.getElementById('stocksModalBody').innerHTML = html;
-  document.getElementById('stocksModalOverlay').classList.add('active');
+  var modalBody = document.getElementById('stocksModalBody');
+  var modalOverlay = document.getElementById('stocksModalOverlay');
+  if (modalBody) modalBody.innerHTML = html;
+  if (modalOverlay) modalOverlay.classList.add('active');
 }
 
 function closeStocksModal() {
-  document.getElementById('stocksModalOverlay').classList.remove('active');
+  var overlay = document.getElementById('stocksModalOverlay');
+  if (overlay) overlay.classList.remove('active');
 }

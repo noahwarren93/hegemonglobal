@@ -172,6 +172,7 @@ function generateRegionNarrative(region, articles) {
 
   // LEAD: Most important story
   const leadStory = high.length > 0 ? high[0] : classified[0];
+  if (!leadStory) return sentences.join(' ');
   usedIdx.add(classified.indexOf(leadStory));
   const leadClean = cleanHeadlineForProse(leadStory.headline);
   if (leadStory.source) {

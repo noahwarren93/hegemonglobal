@@ -232,7 +232,7 @@ function onMouseMove(event) {
 
   if (intersects.length > 0) {
     var ud = intersects[0].object.userData;
-    if (tooltip) {
+    if (ud && ud.data && ud.name && tooltip) {
       tooltip.style.display = 'block';
       positionTooltip(tooltip, event.clientX, event.clientY);
       tooltip.innerHTML = '<div class="tooltip-name">' + ud.data.flag + ' ' + ud.name + ' <span class="tooltip-risk risk-' + ud.data.risk + '">' + ud.data.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + ud.data.region + ' • ' + (ud.data.title || '') + '</div><div class="tooltip-hint">Click for details</div>';
@@ -246,7 +246,7 @@ function onMouseMove(event) {
       var country = findNearestCountry(ll.lat, ll.lng, 10);
       if (country) {
         var cdata = COUNTRIES[country];
-        if (tooltip) {
+        if (cdata && tooltip) {
           tooltip.style.display = 'block';
           positionTooltip(tooltip, event.clientX, event.clientY);
           tooltip.innerHTML = '<div class="tooltip-name">' + cdata.flag + ' ' + country + ' <span class="tooltip-risk risk-' + cdata.risk + '">' + cdata.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + cdata.region + ' • ' + (cdata.title || '') + '</div><div class="tooltip-hint">Click for details</div>';

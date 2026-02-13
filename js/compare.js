@@ -242,7 +242,7 @@ function toggleCompareMode() {
   } else {
     panel.classList.remove('active'); compareCountries = [];
     if (hint) hint.style.display = 'none';
-    countryMeshes.forEach(function(m) { if (m.material) m.material.opacity = 0.95; });
+    if (typeof countryMeshes !== 'undefined') countryMeshes.forEach(function(m) { if (m.material) m.material.opacity = 0.95; });
   }
 }
 
@@ -254,7 +254,7 @@ function addCountryToCompare(name) {
   // Hide hint as soon as first country is clicked
   var hint = document.getElementById('compareHint');
   if (hint) hint.style.display = 'none';
-  countryMeshes.forEach(function(m) {
+  if (typeof countryMeshes !== 'undefined') countryMeshes.forEach(function(m) {
     if (compareCountries.includes(m.userData.name)) {
       var idx = compareCountries.indexOf(m.userData.name);
       m.material.color.set(COMPARE_COLORS[idx]); m.material.opacity = 1.0;
@@ -269,7 +269,7 @@ function removeCountryFromCompare(name) {
     var hint = document.getElementById('compareHint');
     if (hint) hint.style.display = 'block';
   }
-  countryMeshes.forEach(function(m) {
+  if (typeof countryMeshes !== 'undefined') countryMeshes.forEach(function(m) {
     if (compareCountries.includes(m.userData.name)) {
       var idx = compareCountries.indexOf(m.userData.name);
       m.material.color.set(COMPARE_COLORS[idx]); m.material.opacity = 1.0;

@@ -1,6 +1,6 @@
 /* Sidebar Styles - Hegemon Global */
 
-    .watchlist { position: absolute; top: 80px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 14px; border-radius: 10px; border: 1px solid #1f2937; width: 200px; max-height: 320px; overflow-y: auto; }
+    .watchlist { position: absolute; top: 80px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 14px; border-radius: 10px; border: 1px solid #1f2937; width: 200px; max-height: 320px; overflow-y: auto; }
 
     .watchlist::-webkit-scrollbar { width: 4px; }
 
@@ -18,7 +18,7 @@
 
     .wl-risk { font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase; }
 
-    .legend { position: absolute; bottom: 16px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); padding: 12px 14px; border-radius: 10px; border: 1px solid #1f2937; }
+    .legend { position: absolute; bottom: 16px; left: 16px; z-index: 10; background: rgba(10,10,15,0.95); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 12px 14px; border-radius: 10px; border: 1px solid #1f2937; }
 
     .legend-title { font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; }
 

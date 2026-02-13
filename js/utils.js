@@ -294,7 +294,7 @@ async function fetchLiveNews() {
       // Remove duplicates by title similarity
       const seen = new Set();
       const uniqueArticles = relevantArticles.filter(article => {
-        const key = article.title.toLowerCase().slice(0, 50);
+        const key = (article.title || '').toLowerCase().slice(0, 50);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

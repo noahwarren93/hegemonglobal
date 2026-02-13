@@ -222,7 +222,7 @@ function searchCountries(query) {
   if (!results) return;
   if (!query) { results.innerHTML = '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search...</div>'; return; }
   const matches = Object.entries(COUNTRIES).filter(([name, c]) => name.toLowerCase().includes(query.toLowerCase()) || c.region.toLowerCase().includes(query.toLowerCase()) || (c.title && c.title.toLowerCase().includes(query.toLowerCase())));
-  results.innerHTML = matches.length ? matches.map(([name, c]) => `<div class="card" onclick="openModal('${name}')" style="margin-bottom:4px"><div class="event-header" style="margin:0"><div class="event-dot" style="background:${RISK_COLORS[c.risk].hex}"></div><span class="event-country">${c.flag} ${name}</span><span class="event-risk risk-${c.risk}">${c.risk.toUpperCase()}</span></div></div>`).join('') : '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">No countries found</div>';
+  results.innerHTML = matches.length ? matches.map(([name, c]) => `<div class="card" onclick="openModal('${name}')" style="margin-bottom:4px"><div class="event-header" style="margin:0"><div class="event-dot" style="background:${(RISK_COLORS[c.risk] || {hex:'#6b7280'}).hex}"></div><span class="event-country">${c.flag} ${name}</span><span class="event-risk risk-${c.risk}">${(c.risk || 'unknown').toUpperCase()}</span></div></div>`).join('') : '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">No countries found</div>';
 }
 
 document.querySelectorAll('.tab').forEach(tab => {

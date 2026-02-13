@@ -279,9 +279,12 @@ function hideTradeRoutes() {
 
 // Animation loop for flowing dots
 function startTradeAnimation() {
+  // Prevent duplicate animation loops
+  if (tradeAnimFrame) cancelAnimationFrame(tradeAnimFrame);
   function animateDots() {
     tradeAnimFrame = requestAnimationFrame(animateDots);
     tradeDotGroups.forEach(function(dot) {
+      if (!dot.userData) return;
       var d = dot.userData;
       d.offset = (d.offset + d.speed) % 1;
       var idx = Math.floor(d.offset * (d.arcPoints.length - 1));
