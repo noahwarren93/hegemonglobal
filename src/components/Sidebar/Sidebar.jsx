@@ -27,6 +27,22 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   const [pastOpen, setPastOpen] = useState(false);
   const contentRef = useRef(null);
 
+  // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
+  // Inline onclick handlers in dangerouslySetInnerHTML need this on window.
+  useEffect(() => {
+    window.toggleBriefDropdown = function(id) {
+      const el = document.getElementById(id);
+      const arrow = document.getElementById(id + '-arrow');
+      if (el) {
+        const isOpen = el.style.maxHeight && el.style.maxHeight !== '0px';
+        el.style.maxHeight = isOpen ? '0px' : el.scrollHeight + 'px';
+        el.style.opacity = isOpen ? '0' : '1';
+        if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    };
+    return () => { delete window.toggleBriefDropdown; };
+  }, []);
+
   // Update news timestamp
   useEffect(() => {
     const update = () => {
@@ -128,23 +144,9 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
 
   const renderBriefTab = () => {
     const html = renderNewsletter();
-    // Past briefings use data-toggle-brief attributes for expand/collapse.
-    // Since this is dangerouslySetInnerHTML, we need event delegation for clicks.
-    const handleBriefClick = (e) => {
-      const toggle = e.target.closest('[data-toggle-brief]');
-      if (toggle) {
-        const id = toggle.getAttribute('data-toggle-brief');
-        const el = document.getElementById(id);
-        const arrow = document.getElementById(id + '-arrow');
-        if (el) {
-          const isOpen = el.style.maxHeight && el.style.maxHeight !== '0px';
-          el.style.maxHeight = isOpen ? '0px' : el.scrollHeight + 'px';
-          el.style.opacity = isOpen ? '0' : '1';
-          if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
-      }
-    };
-    return <div dangerouslySetInnerHTML={{ __html: html }} onClick={handleBriefClick} />;
+    // Past briefings use inline onclick="toggleBriefDropdown('id')" matching original.
+    // Expose the toggle function globally so innerHTML onclick handlers can call it.
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
   const renderElectionsTab = () => (

@@ -540,9 +540,10 @@ export function renderNewsletter() {
       const dateLabel = formatBriefingDate(briefing.date);
       const articleCount = briefing.articles ? briefing.articles.length : 0;
 
+      // Copied verbatim from original news.js renderNewsletter() past briefings section
       html += `
         <div style="margin-bottom:8px;border:1px solid #1f2937;border-radius:8px;overflow:hidden;background:#0d0d14;">
-          <div data-toggle-brief="${id}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;transition:background 0.2s;background:#0d0d14;">
+          <div onclick="toggleBriefDropdown('${id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;transition:background 0.2s;background:#0d0d14;" onmouseover="this.style.background='#131320'" onmouseout="this.style.background='#0d0d14'">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:11px;font-weight:600;color:#9ca3af;">${dateLabel}'s Brief</span>
               <span style="font-size:8px;color:#6b7280;background:#1f2937;padding:2px 6px;border-radius:4px;">${articleCount} articles</span>

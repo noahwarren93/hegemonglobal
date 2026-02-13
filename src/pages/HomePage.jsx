@@ -217,7 +217,7 @@ function Watchlist({ onCountryClick }) {
       {watchlistCountries.map(([name, c]) => (
         <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
           <span className="wl-country">{c.flag} {name}</span>
-          <span className={`wl-risk risk-${c.risk}`}>{c.risk.toUpperCase()}</span>
+          <span className={`wl-risk risk-${c.risk}`} style={{ color: '#fff' }}>{c.risk.toUpperCase()}</span>
         </div>
       ))}
     </div>

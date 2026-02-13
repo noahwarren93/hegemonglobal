@@ -21,8 +21,9 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
-  // Ensure globe's matrixWorld is current (rotation may have changed since last render)
-  globe.updateMatrixWorld(true);
+  // Copied verbatim from original globe.js vector3ToLatLng
+  // Do NOT call globe.updateMatrixWorld() here — raycaster used the same
+  // (possibly one-frame-stale) matrixWorld, so they must stay in sync.
   const lp = globe.worldToLocal(worldPoint.clone());
   const r = lp.length();
   const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
@@ -170,15 +171,15 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
     cameraRef.current = camera;
 
-    // Disable Three.js 0.182 color management entirely.
-    // Original uses r128 which had NO color management. This makes 0.182 behave identically.
+    // Original globe.js uses Three.js r128 which has no color management.
+    // Disable it in 0.182 so textures/colors pass through raw (matching r128).
     THREE.ColorManagement.enabled = false;
 
-    // Renderer — all values match original globe.js exactly
+    // Renderer — copied verbatim from original globe.js initGlobe()
+    // Original sets NOTHING beyond antialias, alpha, size, pixelRatio.
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -201,7 +202,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
-    // With ColorManagement disabled, no colorSpace override needed.
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
@@ -329,44 +329,41 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Get globe surface hit once (reused for both marker filtering and surface fallback).
-      const globeHits = raycaster.intersectObject(globe);
-      const globeSurfaceDist = globeHits[0]?.distance ?? Infinity;
-
-      // Check marker dots - filter out far-side hits (behind the globe surface).
-      // Three.js 0.182 correctly propagates parent transforms for raycaster, so
-      // markers on the back of the rotated globe register as hits. Original r128 didn't do this.
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current)
-        .filter(hit => hit.distance < globeSurfaceDist);
+      // Copied verbatim from original globe.js onMouseMove:
+      // 1. Check marker dots first (intersects[0], no filtering)
+      // 2. Else: check globe surface for nearby country
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
         const ud = intersects[0].object.userData;
         if (ud && ud.data && ud.name) {
           setTooltipData({ name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title });
           setMousePos({ x: event.clientX, y: event.clientY });
           if (onCountryHoverRef.current) onCountryHoverRef.current(ud.name, event);
-          renderer.domElement.style.cursor = 'pointer';
-          return;
         }
-      }
-
-      // Check globe surface for nearby country
-      if (globeHits.length > 0) {
-        const ll = vector3ToLatLng(globeHits[0].point, globe);
-        const country = findNearestCountry(ll.lat, ll.lng, 10);
-        if (country) {
-          const cdata = COUNTRIES[country];
-          if (cdata) {
-            setTooltipData({ name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title });
-            setMousePos({ x: event.clientX, y: event.clientY });
-            if (onCountryHoverRef.current) onCountryHoverRef.current(country, event);
+        renderer.domElement.style.cursor = 'pointer';
+      } else {
+        // Check globe surface for nearby country
+        const globeHits = raycaster.intersectObject(globe);
+        if (globeHits.length > 0) {
+          const ll = vector3ToLatLng(globeHits[0].point, globe);
+          const country = findNearestCountry(ll.lat, ll.lng, 10);
+          if (country) {
+            const cdata = COUNTRIES[country];
+            if (cdata) {
+              setTooltipData({ name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title });
+              setMousePos({ x: event.clientX, y: event.clientY });
+              if (onCountryHoverRef.current) onCountryHoverRef.current(country, event);
+            }
+            renderer.domElement.style.cursor = 'pointer';
+          } else {
+            setTooltipData(null);
+            renderer.domElement.style.cursor = 'grab';
           }
-          renderer.domElement.style.cursor = 'pointer';
-          return;
+        } else {
+          setTooltipData(null);
+          renderer.domElement.style.cursor = 'grab';
         }
       }
-
-      setTooltipData(null);
-      renderer.domElement.style.cursor = 'grab';
     }
 
     // ---- Click ----
@@ -380,14 +377,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Priority: try marker dots first (no drag check needed — matches original)
-      // Filter out far-side markers (behind globe surface) — see hover handler comment.
-      const clickGlobeDist = raycaster.intersectObject(globe)[0]?.distance ?? Infinity;
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current)
-        .filter(hit => hit.distance < clickGlobeDist);
+      // Copied verbatim from original globe.js onClick:
+      // Priority: try marker dots first
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
         const clickedName = intersects[0].object.userData.name;
-        console.log('[Globe Click] Marker hit:', clickedName);
         if (clickedName && onCountryClickRef.current) {
           onCountryClickRef.current(clickedName);
         }
@@ -404,7 +398,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (globeHits.length > 0) {
         const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(lat, lng);
-        console.log('[Globe Click] Surface hit → nearest country:', country, 'at', lat.toFixed(1), lng.toFixed(1));
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }
@@ -490,16 +483,15 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           mouseRef.current.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
           mouseRef.current.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(mouseRef.current, camera);
-          // Check markers first (filter far-side)
-          const touchGlobeDist = raycaster.intersectObject(globe)[0]?.distance ?? Infinity;
-          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current)
-            .filter(hit => hit.distance < touchGlobeDist);
+          // Copied verbatim from original globe.js touchend handler:
+          // Priority: try marker dots first
+          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current);
           if (touchIntersects.length > 0) {
             const tName = touchIntersects[0].object.userData.name;
             if (tName && onCountryClickRef.current) onCountryClickRef.current(tName);
             return;
           }
-          // Fall back to globe surface
+          // Try globe surface - find nearest tracked country
           const touchGlobe = raycaster.intersectObject(globe);
           if (touchGlobe.length > 0) {
             const tll = vector3ToLatLng(touchGlobe[0].point, globe);
