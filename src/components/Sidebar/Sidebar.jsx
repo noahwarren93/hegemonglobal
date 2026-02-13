@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, lastNewsUpdate } from '../../data/countries';
 import { RISK_COLORS, renderBiasTag, getSourceBias } from '../../utils/riskColors';
-import { MARKET_CONFIG, STATIC_FALLBACK_DATA, STOCKS_DETAIL } from '../../data/stocksData';
 import { renderNewsletter } from '../../services/newsService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
+import StocksTab from '../Stocks/StocksTab';
 
 const TABS = [
   { id: 'daily', label: 'Articles' },
@@ -18,7 +18,7 @@ const TABS = [
 
 const ITEMS_PER_PAGE = 15;
 
-export default function Sidebar({ onCountryClick, onOpenModal }) {
+export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal }) {
   const [activeTab, setActiveTab] = useState('daily');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,52 +179,7 @@ export default function Sidebar({ onCountryClick, onOpenModal }) {
   };
 
   const renderStocksTab = () => {
-    return (
-      <>
-        <div className="section-label">GLOBAL MARKETS</div>
-        {MARKET_CONFIG.map((market, i) => (
-          <div key={i} className="market-section">
-            <div className="market-country">
-              <span className="market-flag">{market.flag}</span>
-              {market.country}
-            </div>
-            {market.symbols.map((sym, j) => {
-              const data = STATIC_FALLBACK_DATA[sym.sym];
-              if (!data) return null;
-              const isPositive = data.changePct >= 0;
-              return (
-                <div key={j} className="stock-row">
-                  <div className="stock-name">{sym.name}</div>
-                  <div className="stock-price">
-                    {sym.pre || ''}{typeof data.price === 'number' ? data.price.toLocaleString() : data.price}
-                  </div>
-                  <div className={`stock-change ${isPositive ? 'positive' : 'negative'}`}>
-                    {isPositive ? '+' : ''}{data.changePct.toFixed(2)}%
-                  </div>
-                  {data.sparkline && (
-                    <div className="sparkline">
-                      {data.sparkline.map((val, k) => {
-                        const max = Math.max(...data.sparkline);
-                        const min = Math.min(...data.sparkline);
-                        const range = max - min || 1;
-                        const height = ((val - min) / range) * 16 + 2;
-                        return (
-                          <div
-                            key={k}
-                            className={`spark-bar ${isPositive ? 'positive' : 'negative'}`}
-                            style={{ height: `${height}px` }}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </>
-    );
+    return <StocksTab onOpenStocksModal={onOpenStocksModal} />;
   };
 
   const renderTabContent = () => {
