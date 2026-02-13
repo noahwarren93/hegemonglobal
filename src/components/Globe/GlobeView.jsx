@@ -170,10 +170,14 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
     cameraRef.current = camera;
 
-    // Renderer
+    // Renderer — all values match original globe.js exactly
+    // Original uses Three.js r128 which defaults to LinearEncoding output.
+    // Three.js 0.182 defaults to SRGBColorSpace which makes the globe washed out.
+    // Setting LinearSRGBColorSpace matches the r128 visual output.
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 

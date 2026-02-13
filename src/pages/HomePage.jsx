@@ -598,9 +598,9 @@ export default function HomePage() {
                 Compare Mode
               </button>
 
-              {/* Compare hint */}
+              {/* Compare hint — position:relative to sit below button, not overlap */}
               {compareMode && compareCountries.length === 0 && (
-                <div className="compare-hint">
+                <div className="compare-hint" style={{ position: 'relative', marginTop: 4 }}>
                   Click countries on the globe to compare
                 </div>
               )}
@@ -710,7 +710,6 @@ export default function HomePage() {
         onClose={handleCloseCompare}
         onAddCountry={handleAddCompareCountry}
         onRemoveCountry={handleRemoveCompareCountry}
-        onCountryClick={handleCountryClick}
       />
     </>
   );
