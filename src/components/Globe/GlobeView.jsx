@@ -170,10 +170,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
     cameraRef.current = camera;
 
+    // Disable Three.js 0.182 color management entirely.
+    // Original uses r128 which had NO color management. This makes 0.182 behave identically.
+    THREE.ColorManagement.enabled = false;
+
     // Renderer — all values match original globe.js exactly
-    // Original uses Three.js r128 which defaults to LinearEncoding output.
-    // Three.js 0.182 defaults to SRGBColorSpace which makes the globe washed out.
-    // Setting LinearSRGBColorSpace matches the r128 visual output.
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -200,10 +201,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
-    // Three.js 0.182 defaults texture.colorSpace to SRGBColorSpace, which decodes
-    // the JPG from sRGB to linear (darkening it). Original r128 had no such decoding.
-    // Set to LinearSRGBColorSpace so the raw texture values pass through unchanged.
-    earthTexture.colorSpace = THREE.LinearSRGBColorSpace;
+    // With ColorManagement disabled, no colorSpace override needed.
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
@@ -331,8 +329,15 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Check marker dots - take intersects[0] (closest), no back-side filtering (matches original)
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      // Get globe surface hit once (reused for both marker filtering and surface fallback).
+      const globeHits = raycaster.intersectObject(globe);
+      const globeSurfaceDist = globeHits[0]?.distance ?? Infinity;
+
+      // Check marker dots - filter out far-side hits (behind the globe surface).
+      // Three.js 0.182 correctly propagates parent transforms for raycaster, so
+      // markers on the back of the rotated globe register as hits. Original r128 didn't do this.
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current)
+        .filter(hit => hit.distance < globeSurfaceDist);
       if (intersects.length > 0) {
         const ud = intersects[0].object.userData;
         if (ud && ud.data && ud.name) {
@@ -345,7 +350,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       }
 
       // Check globe surface for nearby country
-      const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
         const ll = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(ll.lat, ll.lng, 10);
@@ -377,7 +381,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       raycaster.setFromCamera(mouseRef.current, camera);
 
       // Priority: try marker dots first (no drag check needed — matches original)
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      // Filter out far-side markers (behind globe surface) — see hover handler comment.
+      const clickGlobeDist = raycaster.intersectObject(globe)[0]?.distance ?? Infinity;
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current)
+        .filter(hit => hit.distance < clickGlobeDist);
       if (intersects.length > 0) {
         const clickedName = intersects[0].object.userData.name;
         console.log('[Globe Click] Marker hit:', clickedName);
@@ -483,8 +490,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           mouseRef.current.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
           mouseRef.current.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(mouseRef.current, camera);
-          // Check markers first
-          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current);
+          // Check markers first (filter far-side)
+          const touchGlobeDist = raycaster.intersectObject(globe)[0]?.distance ?? Infinity;
+          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current)
+            .filter(hit => hit.distance < touchGlobeDist);
           if (touchIntersects.length > 0) {
             const tName = touchIntersects[0].object.userData.name;
             if (tName && onCountryClickRef.current) onCountryClickRef.current(tName);
