@@ -21,32 +21,32 @@ export default function TOSModal({ isOpen, onClose }) {
   const content = activeTab === 'terms' ? TOS_CONTENT.terms : TOS_CONTENT.privacy;
 
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-content tos-modal">
-        <button className="modal-close" onClick={onClose}>&times;</button>
-
-        <div className="tos-tabs">
-          <button
-            className={`tos-tab ${activeTab === 'terms' ? 'active' : ''}`}
-            onClick={() => setActiveTab('terms')}
-          >
-            Terms of Service
-          </button>
-          <button
-            className={`tos-tab ${activeTab === 'privacy' ? 'active' : ''}`}
-            onClick={() => setActiveTab('privacy')}
-          >
-            Privacy Policy
-          </button>
+    <div className="tos-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="tos-modal">
+        <div className="tos-header">
+          <div className="tos-tabs">
+            <button
+              className={`tos-tab ${activeTab === 'terms' ? 'active' : ''}`}
+              onClick={() => setActiveTab('terms')}
+            >
+              Terms of Service
+            </button>
+            <button
+              className={`tos-tab ${activeTab === 'privacy' ? 'active' : ''}`}
+              onClick={() => setActiveTab('privacy')}
+            >
+              Privacy Policy
+            </button>
+          </div>
+          <button className="tos-close" onClick={onClose}>&times;</button>
         </div>
-
-        <div className="tos-content">
+        <div className="tos-body">
           {content && content.map((section, i) => (
-            <div key={i} className="tos-section">
-              {section.title && <h3 className="tos-section-title">{section.title}</h3>}
-              {section.text && <p className="tos-section-text">{section.text}</p>}
+            <div key={i}>
+              {section.title && <h2>{section.title}</h2>}
+              {section.text && <p>{section.text}</p>}
               {section.items && (
-                <ul className="tos-list">
+                <ul>
                   {section.items.map((item, j) => (
                     <li key={j}>{item}</li>
                   ))}

@@ -51,131 +51,142 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   if (country.gdp) facts.push({ label: 'GDP', value: country.gdp });
   if (country.military) facts.push({ label: 'Military', value: country.military });
 
-  return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-content country-modal">
-        {/* Close button */}
-        <button className="modal-close" onClick={onClose}>&times;</button>
+  // Build analysis blocks
+  const analysisBlocks = [];
+  if (country.analysis) {
+    if (typeof country.analysis === 'string') {
+      analysisBlocks.push({ num: 1, title: "WHAT'S HAPPENING", text: country.analysis });
+    } else {
+      if (country.analysis.what) analysisBlocks.push({ num: 1, title: "WHAT'S HAPPENING", text: country.analysis.what });
+      if (country.analysis.why) analysisBlocks.push({ num: 2, title: 'WHY IT MATTERS', text: country.analysis.why });
+      if (country.analysis.next) analysisBlocks.push({ num: 3, title: 'WHAT TO WATCH', text: country.analysis.next });
+    }
+  }
 
+  return (
+    <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
         {/* Header */}
         <div className="modal-header">
           <span className="modal-flag">{country.flag}</span>
-          <h2 className="modal-title">{countryName}</h2>
-          <span className={`modal-risk risk-${country.risk}`} style={{ color: riskColor }}>
-            {country.risk.toUpperCase()}
-          </span>
+          <div className="modal-titles">
+            <div className="modal-title">
+              <span>{countryName}</span>
+              <span className={`modal-risk risk-${country.risk}`} style={{ color: riskColor }}>
+                {country.risk.toUpperCase()}
+              </span>
+            </div>
+            <div className="modal-subtitle">{country.title}</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
-        {/* Facts Grid */}
-        {facts.length > 0 && (
-          <div className="modal-facts">
-            {facts.map((fact, i) => (
-              <div key={i} className="fact-item">
-                <div className="fact-label">{fact.label}</div>
-                <div className="fact-value">{fact.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Analysis */}
-        {country.analysis && (
-          <div className="modal-section">
-            <div className="section-label">ANALYSIS</div>
-            <div className="modal-analysis">{country.analysis}</div>
-          </div>
-        )}
-
-        {/* Sanctions */}
-        {sanctions && (sanctions.on?.length > 0 || sanctions.by?.length > 0) && (
-          <div className="modal-section">
-            <div
-              className="section-label sanctions-toggle"
-              onClick={() => setSanctionsOpen(!sanctionsOpen)}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              SANCTIONS
-              <span style={{
-                fontSize: '10px',
-                transform: sanctionsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s'
-              }}>&#9660;</span>
-              {sanctions.severity && sanctions.severity !== 'none' && (
-                <span className={`sanctions-severity severity-${sanctions.severity}`}>
-                  {sanctions.severity.toUpperCase()}
-                </span>
-              )}
+        {/* Body */}
+        <div className="modal-body">
+          {/* Facts Grid */}
+          {facts.length > 0 && (
+            <div className="facts-grid" style={{ marginBottom: '16px' }}>
+              {facts.map((fact, i) => (
+                <div key={i} className="fact">
+                  <div className="fact-label">{fact.label}</div>
+                  <div className="fact-value">{fact.value}</div>
+                </div>
+              ))}
             </div>
-            {sanctionsOpen && (
-              <div className="sanctions-content">
-                {sanctions.on && sanctions.on.length > 0 && (
-                  <div className="sanctions-group">
-                    <div className="sanctions-group-label">Sanctions ON {countryName}:</div>
-                    {sanctions.on.map((s, i) => (
-                      <div key={i} className="sanction-item">
-                        <span className="sanction-by">By {s.by}</span>
-                        <span className="sanction-reason">{s.reason}</span>
-                        <span className="sanction-year">({s.year})</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {sanctions.by && sanctions.by.length > 0 && (
-                  <div className="sanctions-group">
-                    <div className="sanctions-group-label">Sanctions BY {countryName}:</div>
-                    {sanctions.by.map((s, i) => (
-                      <div key={i} className="sanction-item">
-                        <span className="sanction-target">On {s.target}</span>
-                        <span className="sanction-reason">{s.reason}</span>
-                        <span className="sanction-year">({s.year})</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          )}
+
+          {/* Analysis Blocks */}
+          {analysisBlocks.map((block) => (
+            <div key={block.num} className="analysis-block">
+              <div className="analysis-header">
+                <div className={`analysis-num n${block.num}`}>{block.num}</div>
+                <div className="analysis-title">{block.title}</div>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Trend Chart */}
-        <div className="modal-section">
-          <div className="section-label">RISK TREND (12 MONTHS)</div>
-          <div dangerouslySetInnerHTML={{ __html: renderTrendChart(countryName, country.risk) }} />
-        </div>
-
-        {/* News Coverage */}
-        <div className="modal-section">
-          <div className="section-label">NEWS COVERAGE</div>
-          {newsLoading ? (
-            <div className="news-loading">
-              <div className="loading-spinner" />
-              <span>Fetching latest news...</span>
+              <div className="analysis-text">{block.text}</div>
             </div>
-          ) : news.length > 0 ? (
-            <div className="modal-news">
-              {news.map((article, i) => (
-                <div key={i} className="modal-news-item">
-                  <div className="news-item-header">
-                    <span className={`card-cat ${article.category}`}>{article.category}</span>
-                    <span className="news-item-time">{article.time}</span>
+          ))}
+
+          {/* Sanctions */}
+          {sanctions && (sanctions.on?.length > 0 || sanctions.by?.length > 0) && (
+            <div className="sanctions-section">
+              <div className="sanctions-toggle" onClick={() => setSanctionsOpen(!sanctionsOpen)}>
+                <div className="sanctions-toggle-left">
+                  <span className="sanctions-toggle-title">SANCTIONS</span>
+                  {sanctions.severity && sanctions.severity !== 'none' && (
+                    <span className={`sanctions-severity ${sanctions.severity}`}>
+                      {sanctions.severity.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <span className={`sanctions-chevron${sanctionsOpen ? ' open' : ''}`}>&#9660;</span>
+              </div>
+              <div className={`sanctions-body${sanctionsOpen ? ' open' : ''}`}>
+                <div className="sanctions-inner">
+                  {sanctions.on && sanctions.on.length > 0 && (
+                    <>
+                      <div className="sanctions-group-title">Sanctions ON {countryName}</div>
+                      {sanctions.on.map((s, i) => (
+                        <div key={i} className="sanction-item">
+                          <div className="sanction-header">
+                            <span className="sanction-by">By {s.by}</span>
+                            <span className="sanction-year">{s.year}</span>
+                          </div>
+                          <div className="sanction-reason">{s.reason}</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {sanctions.by && sanctions.by.length > 0 && (
+                    <>
+                      <div className="sanctions-group-title">Sanctions BY {countryName}</div>
+                      {sanctions.by.map((s, i) => (
+                        <div key={i} className="sanction-item">
+                          <div className="sanction-header">
+                            <span className="sanction-by">On {s.target}</span>
+                            <span className="sanction-year">{s.year}</span>
+                          </div>
+                          <div className="sanction-reason">{s.reason}</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trend Chart */}
+          <div style={{ marginTop: '16px' }}>
+            <div className="section-title">RISK TREND (12 MONTHS)</div>
+            <div dangerouslySetInnerHTML={{ __html: renderTrendChart(countryName, country.risk) }} />
+          </div>
+
+          {/* News Coverage */}
+          <div className="country-news-section">
+            <div className="country-news-title">NEWS COVERAGE</div>
+            {newsLoading ? (
+              <div className="country-news-loading">Fetching latest news...</div>
+            ) : news.length > 0 ? (
+              news.map((article, i) => (
+                <div key={i} className="news-item">
+                  <div className="news-meta">
+                    <span className="news-source">{article.source}</span>
+                    <span dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
+                    <span className="news-time">{article.time}</span>
                   </div>
-                  <div className="news-item-headline">
+                  <div className="news-headline">
                     {article.url && article.url !== '#' ? (
-                      <a href={article.url} target="_blank" rel="noopener noreferrer">{article.headline}</a>
+                      <a href={article.url} target="_blank" rel="noopener noreferrer" className="news-link">{article.headline}</a>
                     ) : (
                       article.headline
                     )}
                   </div>
-                  <div className="news-item-source">
-                    {article.source}
-                    <span dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
-                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="news-empty">No recent news coverage available.</div>
-          )}
+              ))
+            ) : (
+              <div className="country-news-loading">No recent news coverage available.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

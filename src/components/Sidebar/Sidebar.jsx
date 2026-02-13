@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, lastNewsUpdate } from '../../data/countries';
-import { RISK_COLORS, renderBiasTag, getSourceBias } from '../../utils/riskColors';
+import { RISK_COLORS, renderBiasTag } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
@@ -18,11 +18,13 @@ const TABS = [
 
 const ITEMS_PER_PAGE = 15;
 
+const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
+
 export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal }) {
   const [activeTab, setActiveTab] = useState('daily');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const [searchQuery, setSearchQuery] = useState('');
   const [newsTimestamp, setNewsTimestamp] = useState('');
+  const [pastOpen, setPastOpen] = useState(false);
   const contentRef = useRef(null);
 
   // Update news timestamp
@@ -40,7 +42,7 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   // Reset visible count on tab change
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setSearchQuery('');
+    setPastOpen(false);
   }, [activeTab]);
 
   const loadMore = useCallback(() => {
@@ -58,20 +60,20 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   const renderArticlesTab = () => {
     const articles = DAILY_BRIEFING.slice(0, visibleCount);
     if (articles.length === 0) {
-      return <div className="sidebar-empty">Loading news articles...</div>;
+      return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Loading news articles...</div>;
     }
 
     return (
       <>
         {articles.map((article, i) => (
-          <div key={i} className={`news-card ${article.importance === 'high' ? 'high-importance' : ''}`}>
+          <div key={i} className="card">
             <div className="card-header">
               <span className={`card-cat ${article.category}`}>{article.category}</span>
               <span className="card-time">{article.time}</span>
             </div>
             <div className="card-headline">
               {article.url && article.url !== '#' ? (
-                <a href={article.url} target="_blank" rel="noopener noreferrer">{article.headline}</a>
+                <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#e5e7eb', textDecoration: 'none' }}>{article.headline}</a>
               ) : (
                 article.headline
               )}
@@ -83,7 +85,10 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
           </div>
         ))}
         {visibleCount < DAILY_BRIEFING.length && (
-          <button className="load-more-btn" onClick={loadMore}>
+          <button onClick={loadMore} style={{
+            width: '100%', padding: '10px', background: '#0d0d14', border: '1px solid #1f2937',
+            borderRadius: '8px', color: '#06b6d4', cursor: 'pointer', fontSize: '11px', fontWeight: 600
+          }}>
             Load More ({DAILY_BRIEFING.length - visibleCount} remaining)
           </button>
         )}
@@ -96,29 +101,12 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
-  const renderElectionsTab = () => {
-    return (
-      <>
-        {RECENT_ELECTIONS && RECENT_ELECTIONS.length > 0 && (
-          <div className="election-section">
-            <div className="section-label">RECENT RESULTS</div>
-            {RECENT_ELECTIONS.map((e, i) => (
-              <div key={i} className="election-card" onClick={() => handleCountryClick(e.country)}>
-                <div className="election-header">
-                  <span className="election-flag">{e.flag}</span>
-                  <span className="election-country">{e.country}</span>
-                  <span className="election-date">{e.date}</span>
-                </div>
-                <div className="election-type">{e.type}</div>
-                {e.winner && <div className="election-winner">Winner: {e.winner}</div>}
-                {e.notes && <div className="election-notes">{e.notes}</div>}
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="election-section">
-          <div className="section-label">UPCOMING ELECTIONS</div>
-          {ELECTIONS.map((e, i) => (
+  const renderElectionsTab = () => (
+    <>
+      {RECENT_ELECTIONS && RECENT_ELECTIONS.length > 0 && (
+        <div>
+          <div className="section-title">RECENT RESULTS</div>
+          {RECENT_ELECTIONS.map((e, i) => (
             <div key={i} className="election-card" onClick={() => handleCountryClick(e.country)}>
               <div className="election-header">
                 <span className="election-flag">{e.flag}</span>
@@ -126,31 +114,60 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
                 <span className="election-date">{e.date}</span>
               </div>
               <div className="election-type">{e.type}</div>
-              {e.notes && <div className="election-notes">{e.notes}</div>}
+              {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600 }}>Winner: {e.winner}</div>}
+              {e.notes && <div className="election-stakes">{e.notes}</div>}
             </div>
           ))}
         </div>
-      </>
-    );
-  };
+      )}
+      <div>
+        <div className="section-title">UPCOMING ELECTIONS</div>
+        {ELECTIONS.map((e, i) => (
+          <div key={i} className="election-card" onClick={() => handleCountryClick(e.country)}>
+            <div className="election-header">
+              <span className="election-flag">{e.flag}</span>
+              <span className="election-country">{e.country}</span>
+              <span className="election-date">{e.date}</span>
+            </div>
+            <div className="election-type">{e.type}</div>
+            {e.notes && <div className="election-stakes">{e.notes}</div>}
+          </div>
+        ))}
+      </div>
+    </>
+  );
 
   const renderForecastTab = () => {
+    const riskFg = { catastrophic: '#fca5a5', extreme: '#fcd34d', severe: '#fde047', stormy: '#c4b5fd', cloudy: '#93c5fd', clear: '#86efac' };
+    const riskBg = { catastrophic: '#7f1d1d', extreme: '#78350f', severe: '#713f12', stormy: '#5b21b6', cloudy: '#1e3a5f', clear: '#14532d' };
     return (
       <>
-        <div className="section-label">GEOPOLITICAL FORECASTS</div>
+        <div className="section-title">GEOPOLITICAL FORECASTS</div>
         {FORECASTS.map((f, i) => (
           <div key={i} className="forecast-card">
             <div className="forecast-header">
-              <span className={`forecast-prob prob-${f.probability >= 70 ? 'high' : f.probability >= 40 ? 'med' : 'low'}`}>
-                {f.probability}%
+              <span className="forecast-region">{f.region}</span>
+              <span className="forecast-risk" style={{
+                background: riskBg[f.risk] || '#374151',
+                color: riskFg[f.risk] || '#9ca3af'
+              }}>
+                {f.risk.toUpperCase()}
               </span>
-              <span className="forecast-title">{f.title}</span>
             </div>
-            <div className="forecast-desc">{f.description}</div>
-            <div className="forecast-meta">
-              <span className="forecast-timeframe">{f.timeframe}</span>
-              {f.region && <span className="forecast-region">{f.region}</span>}
+            <div className="forecast-current">{f.current}</div>
+            <div className="forecast-prediction">
+              <div className="forecast-prediction-title">FORECAST</div>
+              <div className="forecast-prediction-text">{f.forecast}</div>
             </div>
+            {f.indicators && (
+              <div className="forecast-indicators">
+                {f.indicators.map((ind, j) => (
+                  <span key={j} className={`forecast-indicator ${ind.dir === 'up' ? 'up' : ind.dir === 'down' ? 'down' : 'stable'}`}>
+                    {ind.dir === 'up' ? '\u2191' : ind.dir === 'down' ? '\u2193' : '\u2192'} {ind.text}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </>
@@ -158,22 +175,107 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   };
 
   const renderHorizonTab = () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
+    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
+
+    const renderEvent = (e, isPast) => {
+      const d = new Date(e.date + 'T12:00:00');
+      const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const day = d.getDate();
+      const color = CAT_COLORS[e.category] || '#6b7280';
+
+      const diffMs = new Date(e.date + 'T00:00:00') - new Date(todayStr + 'T00:00:00');
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      let countdown = null;
+      if (diffDays === 0) countdown = <span style={{ color: '#22c55e', fontWeight: 700, fontSize: '8px' }}>TODAY</span>;
+      else if (diffDays === 1) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>TOMORROW</span>;
+      else if (diffDays > 1 && diffDays <= 7) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>{diffDays} Days</span>;
+      else if (diffDays > 7 && diffDays <= 30) { const w = Math.ceil(diffDays / 7); countdown = <span style={{ color: '#6b7280', fontSize: '8px' }}>{w} Week{w === 1 ? '' : 's'}</span>; }
+      else if (diffDays > 30) { const mo = Math.ceil(diffDays / 30); countdown = <span style={{ color: '#4b5563', fontSize: '8px' }}>{mo} Month{mo === 1 ? '' : 's'}</span>; }
+      else if (isPast) { const abs = Math.abs(diffDays); countdown = <span style={{ color: '#374151', fontSize: '8px' }}>{abs} Day{abs === 1 ? '' : 's'} Ago</span>; }
+
+      return (
+        <div key={e.date + e.name} style={{ display: 'flex', gap: '10px', padding: '10px 8px', borderBottom: '1px solid #111827', opacity: isPast ? 0.5 : 1 }}>
+          <div style={{ minWidth: '42px', textAlign: 'center' }}>
+            <div style={{ fontSize: '9px', fontWeight: 700, color, letterSpacing: '0.5px' }}>{month}</div>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#e5e7eb', lineHeight: 1.1 }}>{day}</div>
+            {countdown && <div style={{ marginTop: '2px' }}>{countdown}</div>}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3, marginBottom: '3px' }}>{e.name}</div>
+            <div style={{ fontSize: '9px', color: '#9ca3af', marginBottom: '3px' }}>{e.location}</div>
+            <div style={{ fontSize: '9px', color: '#6b7280', lineHeight: 1.5 }}>{e.description}</div>
+          </div>
+        </div>
+      );
+    };
+
+    // Group upcoming by month
+    const groupedUpcoming = [];
+    let currentMonth = '';
+    upcoming.forEach(e => {
+      const d = new Date(e.date + 'T12:00:00');
+      const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      if (monthYear !== currentMonth) {
+        currentMonth = monthYear;
+        groupedUpcoming.push({ type: 'header', label: monthYear.toUpperCase() });
+      }
+      groupedUpcoming.push({ type: 'event', event: e });
+    });
+
     return (
       <>
-        <div className="section-label">HORIZON SCANNING</div>
-        {HORIZON_EVENTS.map((h, i) => (
-          <div key={i} className="horizon-card">
-            <div className="horizon-header">
-              <span className={`horizon-impact impact-${h.impact}`}>{h.impact.toUpperCase()}</span>
-              <span className="horizon-title">{h.title}</span>
+        {/* Header */}
+        <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%)', borderLeft: '3px solid #06b6d4', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>GEOPOLITICAL HORIZON</div>
+          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{upcoming.length} upcoming events tracked</div>
+        </div>
+
+        {/* Category legend */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '0 8px 10px', borderBottom: '1px solid #1f2937', marginBottom: '4px' }}>
+          {Object.entries(CAT_COLORS).map(([cat, color]) => (
+            <span key={cat} style={{ fontSize: '8px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </span>
+          ))}
+        </div>
+
+        {/* Upcoming events grouped by month */}
+        {groupedUpcoming.map((item, i) => {
+          if (item.type === 'header') {
+            return (
+              <div key={item.label} style={{ fontSize: '9px', fontWeight: 700, color: '#9ca3af', letterSpacing: '1px', padding: '10px 8px 4px', borderTop: i > 0 ? '1px solid #1f2937' : 'none', marginTop: i > 0 ? '4px' : 0 }}>
+                {item.label}
+              </div>
+            );
+          }
+          return renderEvent(item.event, false);
+        })}
+
+        {/* Past events collapsible */}
+        {past.length > 0 && (
+          <div style={{ marginTop: '12px', borderTop: '1px solid #1f2937', paddingTop: '10px' }}>
+            <div
+              onClick={() => setPastOpen(!pastOpen)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', cursor: 'pointer', background: '#0d0d14', borderRadius: '6px' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#131320'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#0d0d14'; }}
+            >
+              <span style={{ fontSize: '9px', fontWeight: 600, color: '#6b7280', letterSpacing: '0.5px' }}>PAST EVENTS ({past.length})</span>
+              <span style={{ color: '#6b7280', fontSize: '10px', transition: 'transform 0.3s', transform: pastOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>&#9660;</span>
             </div>
-            <div className="horizon-desc">{h.description}</div>
-            <div className="horizon-meta">
-              <span className="horizon-timeframe">{h.timeframe}</span>
-              {h.category && <span className="horizon-category">{h.category}</span>}
-            </div>
+            {pastOpen && (
+              <div>
+                {past.map(e => renderEvent(e, true))}
+              </div>
+            )}
           </div>
-        ))}
+        )}
       </>
     );
   };
@@ -195,39 +297,48 @@ export default function Sidebar({ onCountryClick, onOpenModal, onOpenStocksModal
   };
 
   return (
-    <div id="sidebar" className="sidebar">
-      {/* Header */}
-      <div className="sidebar-header">
-        <div className="sidebar-title">
-          <span className="sidebar-logo">HEGEMON</span>
-          <span className="sidebar-subtitle">Global Risk Monitor</span>
-        </div>
-        <div className="sidebar-controls">
-          <button className="font-btn" onClick={() => adjustFontSize(1)} title="Increase font size">A+</button>
-          <button className="font-btn" onClick={() => adjustFontSize(-1)} title="Decrease font size">A-</button>
-          <button className="font-btn" onClick={resetFontSize} title="Reset font size">Aa</button>
-          <button className="tos-btn" onClick={() => onOpenModal && onOpenModal('tos')} title="Terms of Service">TOS</button>
-        </div>
-      </div>
-
-      {/* News timestamp */}
-      {newsTimestamp && (
-        <div className="news-timestamp">
-          <span style={{ color: '#22c55e' }}>&#9679;</span> {newsTimestamp}
-        </div>
-      )}
-
+    <div className="sidebar">
       {/* Tabs */}
-      <div className="sidebar-tabs">
+      <div className="tabs">
         {TABS.map(tab => (
           <button
             key={tab.id}
-            className={`sidebar-tab ${activeTab === tab.id ? 'active' : ''}`}
+            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Status + Font Controls Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
+        <div style={{ fontSize: '10px', color: '#6b7280' }}>
+          {newsTimestamp ? (
+            <><span style={{ color: '#22c55e' }}>&#9679;</span> {newsTimestamp}</>
+          ) : (
+            'Loading live news...'
+          )}
+        </div>
+        <div id="fontControls" style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+          <button
+            onClick={() => adjustFontSize(-1)}
+            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            title="Decrease text size"
+          >A-</button>
+          <button
+            onClick={resetFontSize}
+            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#6b7280', fontSize: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            title="Reset text size"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><polyline points="3 22 3 16 9 16"/></svg>
+          </button>
+          <button
+            onClick={() => adjustFontSize(1)}
+            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            title="Increase text size"
+          >A+</button>
+        </div>
       </div>
 
       {/* Tab Content */}

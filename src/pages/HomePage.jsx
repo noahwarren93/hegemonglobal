@@ -123,16 +123,65 @@ function BreakingBanner({ text, onClose }) {
 
   return (
     <div className="breaking-banner active">
-      <span style={{ background: '#fff', color: '#991b1b', padding: '2px 8px', fontWeight: 800, fontSize: '10px', letterSpacing: '1px', borderRadius: '2px' }}>
-        BREAKING
-      </span>
-      <span style={{ fontSize: '12px', fontWeight: 600, flex: 1 }}>{text}</span>
-      <button
-        onClick={onClose}
-        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: '18px', padding: '4px 8px' }}
-      >
-        &times;
-      </button>
+      <span className="breaking-label">BREAKING</span>
+      <span className="breaking-text">{text}</span>
+      <button className="breaking-close" onClick={onClose}>&times;</button>
+    </div>
+  );
+}
+
+// ============================================================
+// Watchlist Component
+// ============================================================
+
+function Watchlist({ onCountryClick }) {
+  const watchlistCountries = useMemo(() => {
+    return Object.entries(COUNTRIES)
+      .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
+      .sort((a, b) => {
+        const tierDiff = ({ catastrophic: 0, extreme: 1 }[a[1].risk] || 0) - ({ catastrophic: 0, extreme: 1 }[b[1].risk] || 0);
+        return tierDiff !== 0 ? tierDiff : a[0].localeCompare(b[0]);
+      });
+  }, []);
+
+  return (
+    <div className="watchlist">
+      <div className="watchlist-title">CRITICAL WATCHLIST</div>
+      {watchlistCountries.map(([name, c]) => (
+        <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
+          <span className="wl-country">{c.flag} {name}</span>
+          <span className={`wl-risk risk-${c.risk}`}>{c.risk.toUpperCase()}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// Risk Legend Component
+// ============================================================
+
+function RiskLegend() {
+  const levels = [
+    { name: 'Catastrophic', color: '#dc2626' },
+    { name: 'Extreme', color: '#f97316' },
+    { name: 'Severe', color: '#eab308' },
+    { name: 'Stormy', color: '#8b5cf6' },
+    { name: 'Cloudy', color: '#3b82f6' },
+    { name: 'Clear', color: '#22c55e' }
+  ];
+
+  return (
+    <div className="legend">
+      <div className="legend-title">RISK LEVELS</div>
+      <div className="legend-items">
+        {levels.map(level => (
+          <div key={level.name} className="legend-item">
+            <div className="legend-icon" style={{ background: level.color }} />
+            {level.name}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -395,30 +444,45 @@ export default function HomePage() {
             <div className="date">{currentDate}</div>
           </div>
 
+          {/* Watchlist */}
+          <Watchlist onCountryClick={handleCountryClick} />
+
           {/* Feature Buttons */}
-          <div style={{ position: 'absolute', left: 16, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ position: 'absolute', left: 16, top: 380, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <button
               className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`}
               onClick={handleToggleTradeRoutes}
             >
-              <span style={{ fontSize: '12px' }}>{'\u{1F310}'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
               Trade Routes
             </button>
             <button
               className={`globe-feature-btn${compareMode ? ' active' : ''}`}
               onClick={handleToggleCompare}
             >
-              <span style={{ fontSize: '12px' }}>{'\u{1F4CA}'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+              </svg>
               Compare Mode
             </button>
           </div>
 
           {/* Compare hint */}
           {compareMode && compareCountries.length === 0 && (
-            <div className="compare-hint" style={{ left: 170, top: 112 }}>
+            <div className="compare-hint" style={{ left: 170, top: 412 }}>
               Click countries on the globe to compare
             </div>
           )}
+
+          {/* Risk Legend */}
+          <RiskLegend />
 
           {/* Globe Tools (bottom-right) */}
           <div className="globe-tools">
@@ -427,21 +491,29 @@ export default function HomePage() {
               onClick={() => setTosOpen(true)}
               title="Terms of Service"
             >
-              <span style={{ fontSize: '14px' }}>{'\u2696'}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
             </button>
             <button
               className={`globe-tool-btn${searchOpen ? ' active' : ''}`}
               onClick={() => setSearchOpen(prev => !prev)}
               title="Search Countries (Ctrl+K)"
             >
-              <span style={{ fontSize: '14px' }}>{'\u{1F50D}'}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
             </button>
             <button
               className={`globe-tool-btn${autoRotate ? ' active' : ''}`}
               onClick={handleToggleRotate}
               title="Toggle Auto-Rotate"
             >
-              <span style={{ fontSize: '14px' }}>{'\u{1F504}'}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/>
+              </svg>
             </button>
           </div>
 
@@ -461,7 +533,6 @@ export default function HomePage() {
 
           {/* Stats Bar */}
           <StatsBar onStatClick={(type) => {
-            // Could open a stat popup - for now just a placeholder
             console.log('Stat clicked:', type);
           }} />
         </div>

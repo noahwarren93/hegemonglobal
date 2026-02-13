@@ -26,16 +26,19 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
     : data.sentiment;
 
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-content stocks-modal">
-        <button className="modal-close" onClick={onClose}>&times;</button>
-
+    <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
         {/* Header */}
         <div className="modal-header">
           <span className="modal-flag">{data.flag}</span>
-          <h2 className="modal-title">{country} Markets</h2>
+          <div className="modal-titles">
+            <div className="modal-title">{country} Markets</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
+        {/* Body */}
+        <div className="modal-body">
         {/* Subtitle */}
         <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '12px' }}>
           {subtitleText}
@@ -102,6 +105,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
         {/* Timestamp */}
         <div style={{ fontSize: '8px', color: '#374151', textAlign: 'right', marginTop: '8px' }}>
           Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+        </div>
         </div>
       </div>
     </div>

@@ -562,7 +562,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   }, [toggleRotation]);
 
   return (
-    <div className="globe-container" ref={containerRef} id="globe">
+    <div ref={containerRef} id="globe">
       <div id="globeLoader" className="globe-loader">
         <div className="globe-spinner" />
       </div>
