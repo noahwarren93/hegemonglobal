@@ -200,6 +200,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
+    // Three.js 0.182 defaults texture.colorSpace to SRGBColorSpace, which decodes
+    // the JPG from sRGB to linear (darkening it). Original r128 had no such decoding.
+    // Set to LinearSRGBColorSpace so the raw texture values pass through unchanged.
+    earthTexture.colorSpace = THREE.LinearSRGBColorSpace;
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
