@@ -349,7 +349,7 @@ export const CONFLICT_ZONES = [
 ];
 
 // Add conflict zones to globe
-export function addConflictZones(globe) {
+export function addConflictZones(globe, latLngToVector3) {
   CONFLICT_ZONES.forEach(zone => {
     // Create pulsing conflict zone circle
     const geometry = new THREE.RingGeometry(zone.radius * 0.5, zone.radius, 32);

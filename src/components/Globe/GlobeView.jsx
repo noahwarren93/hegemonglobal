@@ -291,7 +291,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     countryMeshesRef.current = countryMeshes;
 
     // Conflict zone overlays
-    addConflictZones(globe);
+    addConflictZones(globe, latLngToVector3);
 
     // ---- Resolve a country from raycast hit ----
     function resolveCountry(clientX, clientY) {
