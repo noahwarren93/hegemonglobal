@@ -150,19 +150,7 @@ var TRADE_ROUTES = [
     sanctions:'US secondary sanctions on entities facilitating Iran oil trade.', recent:'Iran oil reaching China at ~1.5M barrels/day through gray market channels.' }
 ];
 
-// Country trade profiles for click-to-highlight feature
-var COUNTRY_TRADE_PROFILES = {
-  'United States': { exports:'Refined Petroleum, Aircraft, Soybeans, Integrated Circuits, Vehicles', imports:'Crude Oil, Vehicles, Electronics, Pharmaceuticals, Machinery', agreements:'USMCA, US-Korea FTA, US-Japan Trade Agreement, US-Australia FTA', topPartners:['Canada','Mexico','China','Japan','Germany','United Kingdom','South Korea','India','Brazil','France'] },
-  'China': { exports:'Electronics, Machinery, Textiles, Furniture, Plastics', imports:'Crude Oil, Iron Ore, Integrated Circuits, Soybeans, Copper', agreements:'RCEP, ASEAN-China FTA, China-Australia FTA (strained)', topPartners:['United States','Japan','South Korea','Vietnam','Germany','Australia','Russia','Brazil','Thailand','India'] },
-  'Russia': { exports:'Crude Oil, Natural Gas, Metals, Wheat, Arms', imports:'Machinery, Vehicles, Electronics, Pharmaceuticals', agreements:'EAEU, CIS FTA, Russia-India trade agreements', topPartners:['China','India','Turkey','Germany','South Korea','Japan','United States','Brazil'] },
-  'India': { exports:'IT Services, Refined Petroleum, Pharmaceuticals, Gems, Textiles', imports:'Crude Oil, Gold, Electronics, Machinery, Coal', agreements:'CEPA (UAE), India-ASEAN FTA, SAFTA, India-Japan CEPA', topPartners:['United States','China','UAE','Saudi Arabia','Germany','South Korea','Japan','United Kingdom'] },
-  'Japan': { exports:'Vehicles, Machinery, Electronics, Chemicals, Steel', imports:'Crude Oil, LNG, Electronics, Clothing, Pharmaceuticals', agreements:'CPTPP, RCEP, Japan-EU EPA, Japan-US Trade Agreement', topPartners:['China','United States','South Korea','Australia','Thailand','Germany','Vietnam'] },
-  'Germany': { exports:'Vehicles, Machinery, Chemicals, Electronics, Pharmaceuticals', imports:'Machinery, Vehicles, Oil, Electronics, Chemicals', agreements:'EU Single Market, EU-Japan EPA, EU-Canada CETA', topPartners:['United States','China','France','Netherlands','Poland','United Kingdom','Italy'] },
-  'United Kingdom': { exports:'Vehicles, Machinery, Pharmaceuticals, Oil, Financial Services', imports:'Vehicles, Machinery, Electronics, Oil, Pharmaceuticals', agreements:'UK-Australia FTA, UK-Japan CEPA, CPTPP (acceded 2023)', topPartners:['United States','Germany','Netherlands','France','China','Ireland','Japan'] },
-  'Brazil': { exports:'Soybeans, Iron Ore, Crude Oil, Beef, Sugar', imports:'Refined Petroleum, Electronics, Vehicles, Pharmaceuticals', agreements:'Mercosur, Mercosur-EU (pending), BRICS trade initiatives', topPartners:['China','United States','Argentina','Germany','Japan','South Korea','India'] },
-  'South Korea': { exports:'Semiconductors, Vehicles, Ships, Electronics, Steel', imports:'Crude Oil, Semiconductors, Natural Gas, Coal, Machinery', agreements:'RCEP, CPTPP (pending), Korea-US FTA, Korea-EU FTA', topPartners:['China','United States','Japan','Vietnam','Germany','Australia','India'] },
-  'Saudi Arabia': { exports:'Crude Oil, Refined Petroleum, Petrochemicals, Plastics', imports:'Vehicles, Machinery, Electronics, Food, Weapons', agreements:'GCC, OPEC+, Saudi-India agreements', topPartners:['China','India','Japan','South Korea','United States','Germany','UAE'] }
-};
+// Country trade profiles now loaded from trade-data.js (COUNTRY_TRADE_PROFILES)
 
 function getCountryCoords(name) {
   if (COUNTRIES[name]) return { lat: COUNTRIES[name].lat, lng: COUNTRIES[name].lng };
@@ -342,7 +330,7 @@ function showCountryTradePanel(name) {
   if (!panel || !body) return;
 
   var c = COUNTRIES[name];
-  var profile = COUNTRY_TRADE_PROFILES[name];
+  var profile = (typeof COUNTRY_TRADE_PROFILES !== 'undefined') ? COUNTRY_TRADE_PROFILES[name] : null;
   var flag = c ? c.flag : '';
 
   // Find all routes involving this country
@@ -353,24 +341,42 @@ function showCountryTradePanel(name) {
 
   var html = '';
 
-  // Trading partners
+  // Total trade volume (from profile)
+  if (profile && profile.totalTrade) {
+    html += '<div style="font-size:10px;color:#06b6d4;font-weight:600;margin-bottom:10px;padding:6px 8px;background:rgba(6,182,212,0.08);border-radius:6px;text-align:center;">Annual Trade Volume: ' + profile.totalTrade + '</div>';
+  }
+
+  // Trading partners — show from routes first, fall back to profile data
   html += '<div class="trade-section"><div class="trade-section-title">TOP TRADING PARTNERS</div>';
-  countryRoutes.slice(0, 8).forEach(function(r) {
-    var partner = r.from === name ? r.to : r.from;
-    var pFlag = COUNTRIES[partner] ? COUNTRIES[partner].flag : '';
-    var statusColor = r.status === 'healthy' ? '#22c55e' : r.status === 'sanctioned' ? '#ef4444' : '#f59e0b';
-    html += '<div class="trade-partner-row">' +
-      '<span class="trade-partner-name">' + pFlag + ' ' + partner + '</span>' +
-      '<span class="trade-partner-vol">$' + r.volume + 'B</span>' +
-      '<span class="trade-partner-status" style="color:' + statusColor + '">' + r.status.toUpperCase() + '</span>' +
-    '</div>';
-  });
+  if (countryRoutes.length > 0) {
+    countryRoutes.slice(0, 8).forEach(function(r) {
+      var partner = r.from === name ? r.to : r.from;
+      var pFlag = COUNTRIES[partner] ? COUNTRIES[partner].flag : '';
+      var statusColor = r.status === 'healthy' ? '#22c55e' : r.status === 'sanctioned' ? '#ef4444' : '#f59e0b';
+      html += '<div class="trade-partner-row">' +
+        '<span class="trade-partner-name">' + pFlag + ' ' + partner + '</span>' +
+        '<span class="trade-partner-vol">$' + r.volume + 'B</span>' +
+        '<span class="trade-partner-status" style="color:' + statusColor + '">' + r.status.toUpperCase() + '</span>' +
+      '</div>';
+    });
+  } else if (profile && profile.topPartners && profile.topPartners.length > 0) {
+    // No animated route lines for this country, but show partners from profile
+    profile.topPartners.slice(0, 8).forEach(function(partner) {
+      var pFlag = COUNTRIES[partner] ? COUNTRIES[partner].flag : '';
+      html += '<div class="trade-partner-row">' +
+        '<span class="trade-partner-name">' + pFlag + ' ' + partner + '</span>' +
+        '<span class="trade-partner-status" style="color:#22c55e;font-size:8px;">PARTNER</span>' +
+      '</div>';
+    });
+  } else {
+    html += '<div class="trade-section-text" style="color:#6b7280;">Trade data not available for this country.</div>';
+  }
   html += '</div>';
 
   if (profile) {
-    html += '<div class="trade-section"><div class="trade-section-title">EXPORTS</div><div class="trade-section-text">' + profile.exports + '</div></div>';
-    html += '<div class="trade-section"><div class="trade-section-title">IMPORTS</div><div class="trade-section-text">' + profile.imports + '</div></div>';
-    html += '<div class="trade-section"><div class="trade-section-title">TRADE AGREEMENTS</div><div class="trade-section-text">' + profile.agreements + '</div></div>';
+    if (profile.exports) html += '<div class="trade-section"><div class="trade-section-title">TOP EXPORTS</div><div class="trade-section-text">' + profile.exports + '</div></div>';
+    if (profile.imports) html += '<div class="trade-section"><div class="trade-section-title">TOP IMPORTS</div><div class="trade-section-text">' + profile.imports + '</div></div>';
+    if (profile.agreements) html += '<div class="trade-section"><div class="trade-section-title">TRADE AGREEMENTS</div><div class="trade-section-text">' + profile.agreements + '</div></div>';
   }
 
   // Sanctions
