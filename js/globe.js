@@ -234,8 +234,7 @@ function onMouseMove(event) {
     var ud = intersects[0].object.userData;
     if (tooltip) {
       tooltip.style.display = 'block';
-      tooltip.style.left = event.clientX + 15 + 'px';
-      tooltip.style.top = event.clientY + 15 + 'px';
+      positionTooltip(tooltip, event.clientX, event.clientY);
       tooltip.innerHTML = '<div class="tooltip-name">' + ud.data.flag + ' ' + ud.name + ' <span class="tooltip-risk risk-' + ud.data.risk + '">' + ud.data.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + ud.data.region + ' • ' + (ud.data.title || '') + '</div><div class="tooltip-hint">Click for details</div>';
     }
     renderer.domElement.style.cursor = 'pointer';
@@ -249,8 +248,7 @@ function onMouseMove(event) {
         var cdata = COUNTRIES[country];
         if (tooltip) {
           tooltip.style.display = 'block';
-          tooltip.style.left = event.clientX + 15 + 'px';
-          tooltip.style.top = event.clientY + 15 + 'px';
+          positionTooltip(tooltip, event.clientX, event.clientY);
           tooltip.innerHTML = '<div class="tooltip-name">' + cdata.flag + ' ' + country + ' <span class="tooltip-risk risk-' + cdata.risk + '">' + cdata.risk.toUpperCase() + '</span></div><div class="tooltip-region">' + cdata.region + ' • ' + (cdata.title || '') + '</div><div class="tooltip-hint">Click for details</div>';
         }
         renderer.domElement.style.cursor = 'pointer';
@@ -449,6 +447,53 @@ function animate() {
   if (!isDragging && autoRotate && globe) globe.rotation.y += 0.0008;
   animateConflictZones(); // Pulse conflict zones
   renderer.render(scene, camera);
+}
+
+// Viewport-aware tooltip positioning (used by globe tooltip)
+function positionTooltip(el, cx, cy) {
+  var offset = 15;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var tw = el.offsetWidth || 250;
+  var th = el.offsetHeight || 80;
+
+  var left = cx + offset;
+  var top = cy + offset;
+
+  // Clamp right edge
+  if (left + tw > vw - 10) left = cx - tw - offset;
+  // Clamp left edge
+  if (left < 10) left = 10;
+  // Clamp bottom edge
+  if (top + th > vh - 10) top = cy - th - offset;
+  // Clamp top edge
+  if (top < 10) top = 10;
+
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+}
+
+// Hide tooltip when mouse leaves globe container
+if (_globeEl) _globeEl.addEventListener('mouseleave', function() {
+  if (tooltip) tooltip.style.display = 'none';
+  if (typeof hideTradeRouteTooltip === 'function') hideTradeRouteTooltip();
+});
+
+// Global popup dismissal — closes all floating popups/tooltips
+function dismissAllPopups() {
+  // Country tooltip
+  var tt = document.getElementById('tooltip');
+  if (tt) tt.style.display = 'none';
+  // Trade route tooltip
+  if (typeof hideTradeRouteTooltip === 'function') hideTradeRouteTooltip();
+  // Trade info panel
+  if (typeof closeTradeInfoPanel === 'function') closeTradeInfoPanel();
+  // Stat popup
+  if (typeof closeStatPopup === 'function') closeStatPopup();
+  // Search overlay
+  if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
+  // Stocks detail modal
+  if (typeof closeStocksModal === 'function') closeStocksModal();
 }
 
 // Sidebar tabs

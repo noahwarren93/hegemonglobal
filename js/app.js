@@ -62,6 +62,20 @@ function closeStatPopup() {
   if (popup) popup.classList.remove('active');
 }
 
+// Click-outside handler: close stat popup when clicking outside it
+document.addEventListener('click', function(e) {
+  // Close stat popup when clicking outside
+  var statPopup = document.getElementById('statPopup');
+  if (statPopup && statPopup.classList.contains('active')) {
+    // Check if click is outside the stat popup AND outside stat cards
+    var isInsidePopup = statPopup.contains(e.target);
+    var isStatCard = e.target.closest && e.target.closest('.stat-card');
+    if (!isInsidePopup && !isStatCard) {
+      closeStatPopup();
+    }
+  }
+});
+
 // Render watchlist
 var watchlistEl = document.getElementById('watchlist');
 if (watchlistEl) {

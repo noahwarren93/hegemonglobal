@@ -200,7 +200,13 @@ function toggleTradeRoutes() {
   tradeRoutesActive = !tradeRoutesActive;
   var btn = document.getElementById('tradeRoutesBtn');
   if (btn) btn.classList.toggle('active', tradeRoutesActive);
+  // Dismiss all floating popups on mode toggle
+  if (typeof dismissAllPopups === 'function') dismissAllPopups();
   if (tradeRoutesActive) {
+    // Deactivate compare mode if active
+    if (typeof compareModeActive !== 'undefined' && compareModeActive && typeof toggleCompareMode === 'function') {
+      toggleCompareMode();
+    }
     showTradeRoutes();
   } else {
     hideTradeRoutes();
@@ -399,8 +405,24 @@ function showTradeRouteTooltip(route, x, y) {
     (route.recent ? '<div style="color:#06b6d4;font-size:9px;margin-top:4px;">📌 ' + route.recent + '</div>' : '');
 
   tt.style.display = 'block';
-  tt.style.left = Math.min(x + 15, window.innerWidth - 340) + 'px';
-  tt.style.top = Math.min(y + 15, window.innerHeight - 250) + 'px';
+  // Viewport-aware positioning (all 4 edges)
+  var offset = 15;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var tw = tt.offsetWidth || 320;
+  var th = tt.offsetHeight || 200;
+  var posLeft = x + offset;
+  var posTop = y + offset;
+  // Clamp right edge
+  if (posLeft + tw > vw - 10) posLeft = x - tw - offset;
+  // Clamp left edge
+  if (posLeft < 10) posLeft = 10;
+  // Clamp bottom edge
+  if (posTop + th > vh - 10) posTop = y - th - offset;
+  // Clamp top edge
+  if (posTop < 10) posTop = 10;
+  tt.style.left = posLeft + 'px';
+  tt.style.top = posTop + 'px';
 }
 
 function hideTradeRouteTooltip() {

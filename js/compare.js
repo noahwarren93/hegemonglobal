@@ -230,7 +230,13 @@ function toggleCompareMode() {
   document.getElementById('compareModeBtn').classList.toggle('active', compareModeActive);
   var panel = document.getElementById('comparePanel');
   var hint = document.getElementById('compareHint');
+  // Dismiss all floating popups on mode toggle
+  if (typeof dismissAllPopups === 'function') dismissAllPopups();
   if (compareModeActive) {
+    // Deactivate trade routes if active
+    if (typeof tradeRoutesActive !== 'undefined' && tradeRoutesActive && typeof toggleTradeRoutes === 'function') {
+      toggleTradeRoutes();
+    }
     compareCountries = []; renderComparePanel();
     if (hint) { hint.style.display = 'block'; positionCompareHint(); }
   } else {

@@ -1,123 +1,325 @@
-// stocks.js - Stocks tab data and functions
+// stocks.js - Live stock market data via Yahoo Finance API
 
-const STOCKS_DATA = [
-  { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', indices: [
-    { name: 'Dow Jones', value: '43,287.54', change: '+0.87%', changeAbs: '+373.12', positive: true },
-    { name: 'S&P 500', value: '5,918.23', change: '+0.92%', changeAbs: '+54.07', positive: true },
-    { name: 'NASDAQ', value: '18,847.61', change: '+1.14%', changeAbs: '+212.89', positive: true },
-    { name: 'Gold', value: '$2,941.30', change: '+0.23%', changeAbs: '+$6.70', positive: true },
-    { name: 'Silver', value: '$32.85', change: '-0.42%', changeAbs: '-$0.14', positive: false },
-    { name: 'Bitcoin', value: '$96,482.17', change: '+2.34%', changeAbs: '+$2,207.55', positive: true }
-  ], sentiment: 'Tech rally lifts markets; Bitcoin nears $100K', sparkline: [40,55,45,60,65,58,70,75,68,80,78,85] },
-  { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', indices: [
-    { name: 'SSE Composite', value: '3,318.07', change: '-0.34%', changeAbs: '-11.32', positive: false },
-    { name: 'Shenzhen', value: '10,128.45', change: '-0.21%', changeAbs: '-21.55', positive: false },
-    { name: 'Hang Seng', value: '21,543.89', change: '+0.67%', changeAbs: '+143.21', positive: true }
-  ], sentiment: 'Mixed signals as property sector remains under pressure', sparkline: [60,55,50,48,52,45,40,42,38,44,40,43] },
-  { country: 'Japan', flag: '\u{1F1EF}\u{1F1F5}', indices: [
-    { name: 'Nikkei 225', value: '39,149.43', change: '+1.23%', changeAbs: '+475.88', positive: true },
-    { name: 'TOPIX', value: '2,756.12', change: '+0.89%', changeAbs: '+24.32', positive: true }
-  ], sentiment: 'Yen weakness boosts exporters; BOJ rate path eyed', sparkline: [50,55,60,58,65,70,68,75,72,78,80,82] },
-  { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', indices: [
-    { name: 'FTSE 100', value: '8,765.43', change: '+0.45%', changeAbs: '+39.21', positive: true },
-    { name: 'FTSE 250', value: '20,892.15', change: '+0.31%', changeAbs: '+64.55', positive: true }
-  ], sentiment: 'Modest gains; BOE rate cut expectations support sentiment', sparkline: [60,62,58,65,63,68,70,67,72,71,74,73] },
-  { country: 'European Union', flag: '\u{1F1EA}\u{1F1FA}', indices: [
-    { name: 'Euro Stoxx 50', value: '5,287.34', change: '+0.56%', changeAbs: '+29.45', positive: true },
-    { name: 'DAX', value: '22,147.89', change: '+0.73%', changeAbs: '+160.78', positive: true },
-    { name: 'CAC 40', value: '8,012.55', change: '+0.41%', changeAbs: '+32.67', positive: true }
-  ], sentiment: 'European defense stocks surge on NATO spending plans', sparkline: [55,58,60,62,59,65,68,64,70,72,69,74] },
-  { country: 'India', flag: '\u{1F1EE}\u{1F1F3}', indices: [
-    { name: 'BSE Sensex', value: '76,543.21', change: '-0.28%', changeAbs: '-215.43', positive: false },
-    { name: 'Nifty 50', value: '23,187.65', change: '-0.33%', changeAbs: '-76.89', positive: false }
-  ], sentiment: 'Profit-taking after record highs; FII outflows weigh', sparkline: [75,78,80,82,79,76,74,72,70,68,66,65] },
-  { country: 'Canada', flag: '\u{1F1E8}\u{1F1E6}', indices: [
-    { name: 'TSX Composite', value: '25,432.78', change: '+0.52%', changeAbs: '+131.45', positive: true }
-  ], sentiment: 'Energy stocks lead gains on oil price recovery', sparkline: [50,52,48,55,57,54,60,58,62,65,63,67] },
-  { country: 'South Korea', flag: '\u{1F1F0}\u{1F1F7}', indices: [
-    { name: 'KOSPI', value: '2,612.34', change: '+0.95%', changeAbs: '+24.67', positive: true }
-  ], sentiment: 'Samsung earnings beat; chip rally extends', sparkline: [45,48,50,52,55,53,58,60,57,63,65,68] },
-  { country: 'Australia', flag: '\u{1F1E6}\u{1F1FA}', indices: [
-    { name: 'ASX 200', value: '8,534.12', change: '+0.38%', changeAbs: '+32.21', positive: true }
-  ], sentiment: 'Mining stocks steady; RBA holds rates', sparkline: [58,60,57,62,64,61,65,63,67,66,69,68] },
-  { country: 'Brazil', flag: '\u{1F1E7}\u{1F1F7}', indices: [
-    { name: 'Bovespa', value: '127,892.45', change: '-0.67%', changeAbs: '-863.21', positive: false }
-  ], sentiment: 'Real weakens on fiscal concerns', sparkline: [70,68,65,62,60,58,55,57,53,50,52,48] },
-  { country: 'Taiwan', flag: '\u{1F1F9}\u{1F1FC}', indices: [
-    { name: 'TAIEX', value: '22,987.65', change: '+1.45%', changeAbs: '+328.43', positive: true }
-  ], sentiment: 'TSMC surge drives index on AI chip demand', sparkline: [50,55,60,58,65,70,72,75,78,80,83,85] },
-  { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', indices: [
-    { name: 'MOEX', value: '2,845.32', change: '-0.89%', changeAbs: '-25.54', positive: false }
-  ], sentiment: 'Sanctions pressure; ruble volatility persists', sparkline: [55,52,50,48,45,47,43,40,42,38,40,37] },
-  { country: 'Saudi Arabia', flag: '\u{1F1F8}\u{1F1E6}', indices: [
-    { name: 'Tadawul', value: '12,234.56', change: '+0.34%', changeAbs: '+41.23', positive: true }
-  ], sentiment: 'Oil stability supports; Vision 2030 advances', sparkline: [55,57,56,58,60,59,61,60,62,61,63,62] },
-  { country: 'Turkey', flag: '\u{1F1F9}\u{1F1F7}', indices: [
-    { name: 'BIST 100', value: '9,876.54', change: '+1.67%', changeAbs: '+162.34', positive: true }
-  ], sentiment: 'Rate normalization attracts foreign investors', sparkline: [40,45,48,52,55,58,60,63,65,68,72,75] },
-  { country: 'South Africa', flag: '\u{1F1FF}\u{1F1E6}', indices: [
-    { name: 'JSE All Share', value: '76,543.21', change: '-0.12%', changeAbs: '-91.85', positive: false }
-  ], sentiment: 'Rand weakness offsets commodity gains', sparkline: [55,53,52,54,51,50,52,49,51,48,50,49] },
-  { country: 'Nigeria', flag: '\u{1F1F3}\u{1F1EC}', indices: [
-    { name: 'NGX All Share', value: '98,765.43', change: '+0.78%', changeAbs: '+765.32', positive: true }
-  ], sentiment: 'Banking rally on reform optimism', sparkline: [45,48,50,53,55,58,60,62,65,67,70,72] }
+// ============================================================
+// MARKET CONFIGURATION - Yahoo Finance symbols for each market
+// ============================================================
+var MARKET_CONFIG = [
+  { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', symbols: [
+    { name: 'Dow Jones', sym: '^DJI' },
+    { name: 'S&P 500', sym: '^GSPC' },
+    { name: 'NASDAQ', sym: '^IXIC' },
+    { name: 'Gold', sym: 'GC=F', pre: '$' },
+    { name: 'Silver', sym: 'SI=F', pre: '$' },
+    { name: 'Bitcoin', sym: 'BTC-USD', pre: '$' }
+  ]},
+  { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', symbols: [
+    { name: 'SSE Composite', sym: '000001.SS' },
+    { name: 'Shenzhen', sym: '399001.SZ' },
+    { name: 'Hang Seng', sym: '^HSI' }
+  ]},
+  { country: 'Japan', flag: '\u{1F1EF}\u{1F1F5}', symbols: [
+    { name: 'Nikkei 225', sym: '^N225' },
+    { name: 'TOPIX', sym: '^TOPX' }
+  ]},
+  { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', symbols: [
+    { name: 'FTSE 100', sym: '^FTSE' },
+    { name: 'FTSE 250', sym: '^MCX' }
+  ]},
+  { country: 'European Union', flag: '\u{1F1EA}\u{1F1FA}', symbols: [
+    { name: 'Euro Stoxx 50', sym: '^STOXX50E' },
+    { name: 'DAX', sym: '^GDAXI' },
+    { name: 'CAC 40', sym: '^FCHI' }
+  ]},
+  { country: 'India', flag: '\u{1F1EE}\u{1F1F3}', symbols: [
+    { name: 'BSE Sensex', sym: '^BSESN' },
+    { name: 'Nifty 50', sym: '^NSEI' }
+  ]},
+  { country: 'Canada', flag: '\u{1F1E8}\u{1F1E6}', symbols: [
+    { name: 'TSX Composite', sym: '^GSPTSE' }
+  ]},
+  { country: 'South Korea', flag: '\u{1F1F0}\u{1F1F7}', symbols: [
+    { name: 'KOSPI', sym: '^KS11' }
+  ]},
+  { country: 'Australia', flag: '\u{1F1E6}\u{1F1FA}', symbols: [
+    { name: 'ASX 200', sym: '^AXJO' }
+  ]},
+  { country: 'Brazil', flag: '\u{1F1E7}\u{1F1F7}', symbols: [
+    { name: 'Bovespa', sym: '^BVSP' }
+  ]},
+  { country: 'Taiwan', flag: '\u{1F1F9}\u{1F1FC}', symbols: [
+    { name: 'TAIEX', sym: '^TWII' }
+  ]},
+  { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', symbols: [
+    { name: 'MOEX', sym: 'IMOEX.ME' }
+  ]},
+  { country: 'Saudi Arabia', flag: '\u{1F1F8}\u{1F1E6}', symbols: [
+    { name: 'Tadawul', sym: '^TASI' }
+  ]},
+  { country: 'Turkey', flag: '\u{1F1F9}\u{1F1F7}', symbols: [
+    { name: 'BIST 100', sym: 'XU100.IS' }
+  ]},
+  { country: 'South Africa', flag: '\u{1F1FF}\u{1F1E6}', symbols: [
+    { name: 'JSE All Share', sym: '^J203.JO' }
+  ]},
+  { country: 'Nigeria', flag: '\u{1F1F3}\u{1F1EC}', symbols: [
+    { name: 'NGX All Share', sym: '^NGSEINDX' }
+  ]}
 ];
 
-const STOCKS_DETAIL = {
+// ============================================================
+// STATE
+// ============================================================
+var STOCKS_DATA = null;
+var stocksLastUpdated = null;
+var stocksFetchInProgress = false;
+var stocksFetchError = false;
+
+// ============================================================
+// CORS PROXY LIST - try multiple in case one is down
+// ============================================================
+var CORS_PROXIES = [
+  function(url) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url); },
+  function(url) { return 'https://corsproxy.io/?' + encodeURIComponent(url); }
+];
+
+// ============================================================
+// FETCH STOCK QUOTES FROM YAHOO FINANCE
+// ============================================================
+function getAllSymbols() {
+  var syms = [];
+  MARKET_CONFIG.forEach(function(m) {
+    m.symbols.forEach(function(s) { syms.push(s.sym); });
+  });
+  return syms;
+}
+
+function fetchWithProxy(url, proxyIdx) {
+  proxyIdx = proxyIdx || 0;
+  if (proxyIdx >= CORS_PROXIES.length) return Promise.reject(new Error('All proxies failed'));
+  var proxyUrl = CORS_PROXIES[proxyIdx](url);
+  return fetch(proxyUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined })
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .catch(function(err) {
+      console.warn('Proxy ' + proxyIdx + ' failed:', err.message);
+      return fetchWithProxy(url, proxyIdx + 1);
+    });
+}
+
+function fetchStockQuotes() {
+  var allSyms = getAllSymbols();
+  // Yahoo Finance v8 chart endpoint — fetch each individually for reliability
+  // Use v8 chart because v7 quote often requires crumbs/cookies
+  var promises = allSyms.map(function(sym) {
+    var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=1d&interval=15m&includePrePost=false';
+    return fetchWithProxy(url)
+      .then(function(data) {
+        if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) return null;
+        var result = data.chart.result[0];
+        var meta = result.meta;
+        var price = meta.regularMarketPrice;
+        var prevClose = meta.chartPreviousClose || meta.previousClose;
+        if (!price || !prevClose) return null;
+        var change = price - prevClose;
+        var changePct = (change / prevClose) * 100;
+        // Extract intraday closes for sparkline
+        var closes = [];
+        if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
+          var rawCloses = result.indicators.quote[0].close || [];
+          closes = rawCloses.filter(function(v) { return v !== null && v !== undefined; });
+        }
+        return {
+          symbol: meta.symbol || sym,
+          price: price,
+          change: change,
+          changePct: changePct,
+          prevClose: prevClose,
+          sparkline: closes.length > 0 ? closes : [prevClose, price]
+        };
+      })
+      .catch(function(err) {
+        console.warn('Failed to fetch ' + sym + ':', err.message);
+        return null;
+      });
+  });
+  return Promise.all(promises).then(function(results) {
+    var quotes = {};
+    results.forEach(function(r) { if (r) quotes[r.symbol] = r; });
+    return quotes;
+  });
+}
+
+// ============================================================
+// FORMAT & BUILD STOCKS_DATA FROM API RESPONSE
+// ============================================================
+function formatStockPrice(val, decimals) {
+  if (val === undefined || val === null || isNaN(val)) return 'N/A';
+  decimals = decimals !== undefined ? decimals : 2;
+  return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function buildStocksData(quotes) {
+  var data = [];
+  MARKET_CONFIG.forEach(function(market) {
+    var hasAnyData = false;
+    var indices = market.symbols.map(function(s) {
+      var q = quotes[s.sym];
+      if (!q) return { name: s.name, value: '—', change: '—', changeAbs: '—', positive: true, noData: true };
+      hasAnyData = true;
+      var pre = s.pre || '';
+      var positive = q.change >= 0;
+      return {
+        name: s.name,
+        value: pre + formatStockPrice(q.price),
+        change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
+        changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.change)),
+        positive: positive,
+        noData: false
+      };
+    });
+
+    // Build sparkline from first symbol's intraday data
+    var mainQuote = quotes[market.symbols[0].sym];
+    var sparkline = [50,50,50,50,50,50,50,50,50,50,50,50];
+    if (mainQuote && mainQuote.sparkline.length > 1) {
+      var raw = mainQuote.sparkline;
+      // Downsample to 12 points for display
+      sparkline = [];
+      for (var i = 0; i < 12; i++) {
+        var idx = Math.floor(i * (raw.length - 1) / 11);
+        sparkline.push(raw[idx]);
+      }
+    }
+
+    // Generate sentiment from actual data
+    var sentiment = 'Market data unavailable';
+    if (mainQuote) {
+      var dir = mainQuote.changePct >= 0 ? 'up' : 'down';
+      var mag = Math.abs(mainQuote.changePct);
+      if (mag < 0.2) sentiment = 'Markets mostly flat today';
+      else if (mag < 1) sentiment = 'Markets ' + dir + ' ' + mag.toFixed(1) + '% today';
+      else sentiment = 'Markets ' + dir + ' ' + mag.toFixed(1) + '% — ' + (mainQuote.changePct >= 0 ? 'broad gains' : 'selling pressure');
+    }
+
+    data.push({
+      country: market.country,
+      flag: market.flag,
+      indices: indices,
+      sentiment: sentiment,
+      sparkline: sparkline,
+      hasData: hasAnyData
+    });
+  });
+  return data;
+}
+
+// ============================================================
+// MAIN LOAD FUNCTION
+// ============================================================
+function loadStockData() {
+  if (stocksFetchInProgress) return;
+  stocksFetchInProgress = true;
+  stocksFetchError = false;
+
+  // Check sessionStorage cache (5 min)
+  try {
+    var cached = sessionStorage.getItem('hegemon_stocks_cache');
+    if (cached) {
+      var c = JSON.parse(cached);
+      if (Date.now() - c.ts < 300000) {
+        STOCKS_DATA = c.data;
+        stocksLastUpdated = new Date(c.ts);
+        stocksFetchInProgress = false;
+        if (typeof currentTab !== 'undefined' && currentTab === 'stocks' && typeof renderSidebar === 'function') renderSidebar();
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Show loading state immediately
+  if (typeof currentTab !== 'undefined' && currentTab === 'stocks' && typeof renderSidebar === 'function') renderSidebar();
+
+  fetchStockQuotes().then(function(quotes) {
+    var count = Object.keys(quotes).length;
+    if (count > 0) {
+      STOCKS_DATA = buildStocksData(quotes);
+      stocksLastUpdated = new Date();
+      // Cache in sessionStorage
+      try {
+        sessionStorage.setItem('hegemon_stocks_cache', JSON.stringify({ data: STOCKS_DATA, ts: Date.now() }));
+      } catch(e) {}
+    } else {
+      stocksFetchError = true;
+    }
+    stocksFetchInProgress = false;
+    if (typeof currentTab !== 'undefined' && currentTab === 'stocks' && typeof renderSidebar === 'function') renderSidebar();
+  }).catch(function(err) {
+    console.error('Stock data fetch failed:', err);
+    stocksFetchError = true;
+    stocksFetchInProgress = false;
+    if (typeof currentTab !== 'undefined' && currentTab === 'stocks' && typeof renderSidebar === 'function') renderSidebar();
+  });
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+  loadStockData();
+}, 300000);
+
+// Initial load
+setTimeout(loadStockData, 1000);
+
+// ============================================================
+// STOCKS DETAIL POPUP (editorial content + live data)
+// ============================================================
+var STOCKS_DETAIL = {
   'United States': {
     commodities: [
-      { name: 'Crude Oil (WTI)', value: '$78.43', change: '+1.2%' },
-      { name: 'Natural Gas', value: '$3.12', change: '-0.8%' },
-      { name: 'Copper', value: '$4.21', change: '+0.5%' }
+      { name: 'Crude Oil (WTI)', sym: 'CL=F' },
+      { name: 'Natural Gas', sym: 'NG=F' },
+      { name: 'Copper', sym: 'HG=F' }
     ],
-    currency: { pair: 'DXY Index', value: '104.23', change: '-0.15%' },
-    timeline: [
-      { time: '9:30 AM', event: 'Markets open flat; futures pointed higher' },
-      { time: '10:15 AM', event: 'Tech stocks surge after NVIDIA earnings beat' },
-      { time: '11:30 AM', event: 'Fed minutes show patience on rate cuts' },
-      { time: '1:00 PM', event: 'Bond yields tick higher, slight pullback' },
-      { time: '3:00 PM', event: 'Power hour rally lifts S&P to session highs' }
-    ],
-    whyMatters: 'US markets remain the global benchmark. Today\'s tech-led rally signals continued confidence in AI-driven growth.',
-    explanations: 'Strong NVIDIA earnings beat drove semiconductor stocks higher. Fed minutes confirmed a data-dependent approach to rate cuts.',
-    outlook: 'Key events ahead: CPI data next Tuesday, retail earnings season, and the March FOMC meeting.'
+    whyMatters: 'US markets remain the global benchmark. Movements in the S&P 500 and Dow Jones ripple through every major market worldwide.',
+    outlook: 'Key events to watch: Fed rate decisions, CPI data releases, and quarterly earnings reports from mega-cap tech companies.'
   }
 };
 
 function openStocksDetail(country) {
+  if (!STOCKS_DATA) return;
   var data = STOCKS_DATA.find(function(d) { return d.country === country; });
   if (!data) return;
   var detail = STOCKS_DETAIL[country];
+
   document.getElementById('stocksModalFlag').textContent = data.flag;
   document.getElementById('stocksModalTitle').textContent = country + ' Markets';
   document.getElementById('stocksModalSubtitle').textContent = data.sentiment;
+
   var html = '<div class="stocks-section"><div class="stocks-section-title">Market Overview</div>';
   data.indices.forEach(function(idx) {
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1f293744;"><span style="color:#9ca3af;font-size:11px;">' + idx.name + '</span><span style="color:#e5e7eb;font-size:12px;font-weight:600;">' + idx.value + '</span><span style="color:' + (idx.positive ? '#22c55e' : '#ef4444') + ';font-size:11px;font-weight:700;">' + idx.change + '</span></div>';
+    if (idx.noData) {
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1f293744;"><span style="color:#9ca3af;font-size:11px;">' + idx.name + '</span><span style="color:#6b7280;font-size:11px;">Data unavailable</span></div>';
+    } else {
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1f293744;"><span style="color:#9ca3af;font-size:11px;">' + idx.name + '</span><span style="color:#e5e7eb;font-size:12px;font-weight:600;">' + idx.value + '</span><span style="color:' + (idx.positive ? '#22c55e' : '#ef4444') + ';font-size:11px;font-weight:700;">' + idx.change + '</span></div>';
+    }
   });
-  if (detail && detail.commodities) {
-    html += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #1f2937;">';
-    detail.commodities.forEach(function(c) {
-      html += '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:10px;"><span style="color:#6b7280;">' + c.name + '</span><span style="color:#d1d5db;">' + c.value + '</span><span style="color:' + (c.change.startsWith('+') ? '#22c55e' : '#ef4444') + '">' + c.change + '</span></div>';
-    });
-    html += '</div>';
-  }
   html += '</div>';
-  if (detail && detail.timeline) {
-    html += '<div class="stocks-section"><div class="stocks-section-title">Market Changes</div>';
-    detail.timeline.forEach(function(t) { html += '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #1f293733;"><span style="color:#06b6d4;font-size:10px;font-weight:600;min-width:60px;">' + t.time + '</span><span style="color:#9ca3af;font-size:10px;">' + t.event + '</span></div>'; });
-    html += '</div>';
-  }
+
   if (detail) {
     html += '<div class="stocks-section"><div class="stocks-section-title">Why It Matters</div><p style="font-size:11px;color:#9ca3af;line-height:1.6;">' + detail.whyMatters + '</p></div>';
-    html += '<div class="stocks-section"><div class="stocks-section-title">Explanations</div><p style="font-size:11px;color:#9ca3af;line-height:1.6;">' + detail.explanations + '</p></div>';
-    html += '<div class="stocks-section"><div class="stocks-section-title">Outlook</div><p style="font-size:11px;color:#9ca3af;line-height:1.6;">' + detail.outlook + '</p><p style="font-size:9px;color:#6b7280;margin-top:8px;font-style:italic;">Not financial advice.</p></div>';
+    html += '<div class="stocks-section"><div class="stocks-section-title">Outlook</div><p style="font-size:11px;color:#9ca3af;line-height:1.6;">' + detail.outlook + '</p><p style="font-size:9px;color:#6b7280;margin-top:8px;font-style:italic;">Not financial advice. Data may be delayed up to 15 minutes.</p></div>';
+  } else {
+    html += '<div style="font-size:9px;color:#6b7280;padding:8px 0;font-style:italic;">Data may be delayed up to 15 minutes. Not financial advice.</div>';
   }
+
+  // Timestamp
+  html += '<div style="font-size:8px;color:#374151;text-align:right;margin-top:8px;">Last updated: ' + (stocksLastUpdated ? stocksLastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A') + '</div>';
+
   document.getElementById('stocksModalBody').innerHTML = html;
   document.getElementById('stocksModalOverlay').classList.add('active');
 }
-function closeStocksModal() { document.getElementById('stocksModalOverlay').classList.remove('active'); }
 
-// ============================================================
-// TRADE ROUTES
-// ============================================================
+function closeStocksModal() {
+  document.getElementById('stocksModalOverlay').classList.remove('active');
+}

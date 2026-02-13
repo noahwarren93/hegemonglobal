@@ -166,9 +166,13 @@ function renderSidebar() {
   } else if (currentTab === 'search') {
     content.innerHTML = `<div style="margin-bottom:12px"><input type="text" id="searchInput" placeholder="Search countries..." style="width:100%;padding:10px 12px;background:#0d0d12;border:1px solid #1f2937;border-radius:8px;color:#fff;font-size:12px;outline:none" oninput="searchCountries(this.value)"></div><div id="searchResults"><div style="color:#6b7280;font-size:11px;text-align:center;padding:20px">Type to search ${Object.keys(COUNTRIES).length} countries...</div></div>`;
   } else if (currentTab === 'stocks') {
-    var stocksUpdated = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    let stocksHtml = '<div style="padding:8px 12px;background:linear-gradient(90deg,rgba(34,197,94,0.12) 0%,transparent 100%);border-left:3px solid #22c55e;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-size:11px;font-weight:700;color:#22c55e;letter-spacing:1px;">GLOBAL MARKETS</div><div style="font-size:8px;color:#6b7280;">Last updated: ' + stocksUpdated + '</div></div><div style="font-size:9px;color:#6b7280;margin-top:2px;">Ranked by economic importance</div></div>';
-    if (typeof STOCKS_DATA !== 'undefined') {
+    var stocksUpdated = (typeof stocksLastUpdated !== 'undefined' && stocksLastUpdated) ? stocksLastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+    var stocksLoading = (typeof stocksFetchInProgress !== 'undefined' && stocksFetchInProgress);
+    var stocksError = (typeof stocksFetchError !== 'undefined' && stocksFetchError);
+    var headerColor = stocksError ? '#ef4444' : '#22c55e';
+    var headerBg = stocksError ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)';
+    let stocksHtml = '<div style="padding:8px 12px;background:linear-gradient(90deg,' + headerBg + ' 0%,transparent 100%);border-left:3px solid ' + headerColor + ';margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-size:11px;font-weight:700;color:' + headerColor + ';letter-spacing:1px;">GLOBAL MARKETS' + (stocksLoading ? ' <span style="font-weight:400;font-size:9px;color:#6b7280;animation:pulse 1.5s infinite;">fetching...</span>' : '') + '</div><div style="font-size:8px;color:#6b7280;">Last updated: ' + stocksUpdated + '</div></div><div style="font-size:9px;color:#6b7280;margin-top:2px;">' + (stocksError ? 'Market data temporarily unavailable — will retry' : 'Live data via Yahoo Finance (may be delayed 15 min)') + '</div></div>';
+    if (STOCKS_DATA && STOCKS_DATA.length > 0) {
       STOCKS_DATA.forEach(function(stock) {
         stocksHtml += '<div class="stocks-country" onclick="openStocksDetail(\'' + stock.country + '\')">' +
           '<div class="stocks-country-header">' +
@@ -197,8 +201,10 @@ function renderSidebar() {
           '</div>' +
         '</div>';
       });
+    } else if (stocksError) {
+      stocksHtml += '<div style="color:#ef4444;font-size:11px;text-align:center;padding:20px;">Market data temporarily unavailable.<br><span style="color:#6b7280;font-size:10px;">This may be due to API rate limits or network issues. Data will refresh automatically.</span></div>';
     } else {
-      stocksHtml += '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px;">Loading market data...</div>';
+      stocksHtml += '<div style="color:#6b7280;font-size:11px;text-align:center;padding:20px;"><div style="animation:pulse 1.5s infinite;">Fetching live market data...</div><div style="font-size:9px;margin-top:6px;">Connecting to Yahoo Finance via proxy</div></div>';
     }
     content.innerHTML = stocksHtml;
   } else if (currentTab === 'newsletter') {
@@ -228,6 +234,8 @@ document.querySelectorAll('.tab').forEach(tab => {
     // Reset scroll to top when switching tabs
     var sc = document.getElementById('sidebarContent');
     if (sc) sc.scrollTop = 0;
+    // Dismiss globe popups when switching tabs
+    if (typeof dismissAllPopups === 'function') dismissAllPopups();
   });
 });
 
@@ -253,9 +261,8 @@ function openModal(name) {
   const c = COUNTRIES[name];
   if (!c) return;
 
-  // Hide the tooltip when opening modal
-  const tooltipEl = document.getElementById('tooltip');
-  if (tooltipEl) tooltipEl.style.display = 'none';
+  // Dismiss all floating popups when opening a modal
+  if (typeof dismissAllPopups === 'function') dismissAllPopups();
 
   document.getElementById('modalFlag').textContent = c.flag;
   document.getElementById('modalTitle').textContent = name;
