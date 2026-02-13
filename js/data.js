@@ -305,16 +305,16 @@ const COUNTRIES = {
     ]
   },
 
-  'Bangladesh': { lat: 23.68, lng: 90.36, flag: '🇧🇩', risk: 'severe', region: 'South Asia', pop: '170M', gdp: '$460B', leader: 'Muhammad Yunus', title: 'Post-Revolution',
+  'Bangladesh': { lat: 23.68, lng: 90.36, flag: '🇧🇩', risk: 'stormy', region: 'South Asia', pop: '170M', gdp: '$460B', leader: 'Tarique Rahman (incoming)', title: 'Post-Election Transition',
     analysis: {
-      what: 'Mass student protests in 2024 toppled long-ruling PM Sheikh Hasina, who fled to India. Nobel laureate Muhammad Yunus leads an interim government tasked with reforms and new elections. The transition is fragile with political tensions high. The garment industry (80% of exports) faces pressure. Rohingya refugee camps host 1 million people. Relations with India are complicated.',
-      why: 'Bangladesh is a garment manufacturing powerhouse supplying global brands—instability disrupts supply chains. It hosts the largest refugee camp in the world. Climate change threatens this low-lying nation of 170 million. Democratic transition success or failure will influence regional politics.',
-      next: 'The interim government must navigate between political factions while reforming institutions. Watch for: election timeline, Hasina\'s influence from exile, economic stability, and India relations. Successful transition is uncertain.'
+      what: 'BNP won a landslide in the Feb 12 2026 general election—the first since the 2024 July Revolution ousted Sheikh Hasina. Tarique Rahman\'s BNP secured ~211 of 299 seats. Jamaat-e-Islami won ~70 seats as main opposition. The July Charter constitutional referendum passed with 72.9% approval. Voter turnout was 47.9%.',
+      why: 'Bangladesh is a garment manufacturing powerhouse supplying global brands—political stability is critical for supply chains. It hosts the world\'s largest refugee camp. Climate change threatens this low-lying nation of 170 million. The democratic transition\'s success will influence regional politics and India relations.',
+      next: 'Watch for BNP government formation, Tarique Rahman\'s policy direction, relations with India (complicated by Hasina\'s exile there), implementation of July Charter reforms, and economic stabilization. Jamaat-e-Islami\'s role as opposition will shape the political landscape.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Interim government announces reform roadmap', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Garment workers protest over wages', url: '#' },
-      { source: 'AP', bias: 'center', time: '9h ago', headline: 'Yunus meets international donors for support', url: '#' }
+      { source: 'Al Jazeera', bias: 'center', time: '2h ago', headline: 'BNP wins landslide with ~211 seats in historic election', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'July Charter referendum passes with 72.9% approval', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Tarique Rahman set to lead Bangladesh after BNP victory', url: '#' }
     ]
   },
 
@@ -1395,6 +1395,7 @@ const COUNTRIES = {
 // RECENT ELECTION RESULTS
 
 const RECENT_ELECTIONS = [
+  { flag: '🇧🇩', country: 'Bangladesh', date: 'Feb 2026', type: 'General Election & Referendum', winner: 'Tarique Rahman - BNP (Center-Right)', result: 'BNP wins landslide (~211/299 seats)', summary: 'First election since 2024 July Revolution ousted Hasina. BNP wins majority; Jamaat-e-Islami (~70 seats) becomes main opposition. July Charter referendum passes with 72.9% approval. 47.9% turnout.' },
   { flag: '🇯🇵', country: 'Japan', date: 'Feb 2026', type: 'Snap Election', winner: 'Sanae Takaichi - LDP (Right Wing)', result: 'LDP wins majority', summary: 'First female PM. Nationalist conservative takes power after snap election landslide.' },
   { flag: '🇵🇹', country: 'Portugal', date: 'Jan 2026', type: 'Presidential Election', winner: 'Ana Gomes - PS (Left Wing)', result: 'Leftist victory', summary: 'Defeated far-right surge. Chega party gains but falls short.' },
   { flag: '🇹🇭', country: 'Thailand', date: 'Jan 2026', type: 'Senate Elections', winner: 'Move Forward (Left Wing)', result: 'Progressive gains', summary: 'Reformist senators elected. Military influence declining.' }
@@ -1402,7 +1403,6 @@ const RECENT_ELECTIONS = [
 
 // UPCOMING ELECTIONS DATA
 const ELECTIONS = [
-  { flag: '🇧🇩', country: 'Bangladesh', date: 'Feb 12 2026', type: 'General Election & Referendum', stakes: 'VOTING TODAY — First election since 2024 uprising ousted Hasina. BNP vs NCP-Jamaat alliance. Constitutional referendum on July Charter reforms. Results expected Feb 13.' },
   { flag: '🇻🇳', country: 'Vietnam', date: 'Mar 2026', type: 'Legislative Elections', stakes: 'Communist Party to affirm control. Economic reform direction at stake.' },
   { flag: '🇦🇺', country: 'Australia', date: 'May 2026', type: 'Federal Election', stakes: 'Labor seeks second term. Cost of living and housing key issues.' },
   { flag: '🇨🇴', country: 'Colombia', date: 'May 2026', type: 'Presidential Election', stakes: 'Petro barred from re-election. Test of Latin America\'s left turn.' },
@@ -1432,7 +1432,7 @@ const FORECASTS = [
 
 const HORIZON_EVENTS = [
   { date: '2026-02-05', name: 'New START Treaty Expiration', location: 'Global', category: 'treaty', description: 'US-Russia nuclear arms treaty expires — first time since 1970s with no binding limits on strategic nuclear forces' },
-  { date: '2026-02-12', name: 'Bangladesh Constitutional Referendum & Election', location: 'Dhaka, Bangladesh', category: 'election', description: 'Constitutional referendum on July Charter reforms and parliamentary election under interim government' },
+  { date: '2026-02-12', name: 'Bangladesh Election — BNP Wins Landslide', location: 'Dhaka, Bangladesh', category: 'election', description: 'RESULT: BNP wins ~211/299 seats. Tarique Rahman to lead government. Jamaat-e-Islami (~70 seats) becomes opposition. July Charter referendum passes with 72.9% approval.' },
   { date: '2026-02-12', name: 'EU Informal Leaders Retreat', location: 'Brussels, EU', category: 'summit', description: 'EU leaders convene to discuss single market strengthening and economic competitiveness strategy' },
   { date: '2026-02-14', name: 'African Union Assembly (39th Summit)', location: 'Addis Ababa, Ethiopia', category: 'summit', description: 'Annual AU heads-of-state summit focusing on Agenda 2063 development priorities across the continent' },
   { date: '2026-02-15', name: 'France Municipal Elections (Round 1)', location: 'France', category: 'election', description: 'First round of mayoral elections across French municipalities — key indicator ahead of 2027 presidential race' },
