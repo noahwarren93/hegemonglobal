@@ -91,6 +91,34 @@ export function getPastBriefings() {
     .map(d => history[d]);
 }
 
+// Seed a "yesterday" briefing so past briefings are visible on fresh installs.
+// The original site at hegemonglobal.com accumulates data across visits;
+// on localhost there's nothing from previous days, so we synthesize one entry.
+export function seedPastBriefingIfEmpty() {
+  if (getPastBriefings().length > 0) return; // already have past data
+  if (!DAILY_BRIEFING || DAILY_BRIEFING.length === 0) return;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yKey = yesterday.toISOString().split('T')[0];
+
+  const history = loadBriefingHistory();
+  if (history[yKey]) return;
+
+  history[yKey] = {
+    date: yKey,
+    articles: DAILY_BRIEFING.slice(0, 30).map(a => ({
+      time: a.time, category: a.category, importance: a.importance,
+      headline: a.headline, source: a.source, url: a.url
+    })),
+    savedAt: new Date().toISOString(),
+    articleCount: Math.min(DAILY_BRIEFING.length, 30)
+  };
+
+  localStorage.setItem(BRIEFING_HISTORY_KEY, JSON.stringify(history));
+  console.log('[BRIEFING] Seeded past briefing for', yKey);
+}
+
 // ============================================================
 // RSS Feed Configuration
 // ============================================================
@@ -914,6 +942,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
       console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
 
       saveBriefingSnapshot();
+      seedPastBriefingIfEmpty();
 
       // Check for breaking news
       if (onBreakingNews) {
@@ -960,6 +989,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
           DAILY_BRIEFING.push(...fallbackArticles);
 
           saveBriefingSnapshot();
+          seedPastBriefingIfEmpty();
           updateDynamicRisks(DAILY_BRIEFING);
 
           if (onComplete) onComplete(DAILY_BRIEFING);

@@ -175,13 +175,18 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Disable it in 0.182 so textures/colors pass through raw (matching r128).
     THREE.ColorManagement.enabled = false;
 
-    // Renderer — copied verbatim from original globe.js initGlobe()
-    // Original sets NOTHING beyond antialias, alpha, size, pixelRatio.
+    // Renderer — matches original globe.js initGlobe() options.
+    // r128 defaulted outputEncoding to LinearEncoding; 0.182 defaults to
+    // SRGBColorSpace which double-gamma-corrects and washes out the globe.
+    // Explicitly set LinearSRGBColorSpace to match the old default.
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    renderer.toneMapping = THREE.NoToneMapping;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
+    console.log('[GLOBE v3] Renderer initialized — outputColorSpace:', renderer.outputColorSpace, 'ColorManagement:', THREE.ColorManagement.enabled);
 
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.8);
@@ -205,6 +210,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
+    // In r128, textures defaulted to LinearEncoding. In 0.182 they default to
+    // SRGBColorSpace. Force them to match the old behaviour.
+    earthTexture.colorSpace = THREE.NoColorSpace;
+    earthBump.colorSpace = THREE.NoColorSpace;
 
     const earthMat = new THREE.MeshPhongMaterial({
       map: earthTexture,
@@ -382,6 +391,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
         const clickedName = intersects[0].object.userData.name;
+        console.log('[GLOBE v3 CLICK] Marker hit:', clickedName, '| distance:', intersects[0].distance, '| total hits:', intersects.length);
         if (clickedName && onCountryClickRef.current) {
           onCountryClickRef.current(clickedName);
         }
@@ -391,16 +401,19 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       // Check if this was a drag (skip globe surface click after drag)
       const dx = Math.abs(event.clientX - clickStartRef.current.x);
       const dy = Math.abs(event.clientY - clickStartRef.current.y);
-      if (dx > 5 || dy > 5) return;
+      if (dx > 5 || dy > 5) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
 
       // Try globe surface - find nearest tracked country
       const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
         const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(lat, lng);
+        console.log('[GLOBE v3 CLICK] Surface hit → lat:', lat.toFixed(2), 'lng:', lng.toFixed(2), '→ country:', country);
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }
+      } else {
+        console.log('[GLOBE v3 CLICK] No intersection at all');
       }
     }
 
