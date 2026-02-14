@@ -34,7 +34,7 @@ export function vector3ToLatLng(worldPoint, globe) {
 }
 
 export function findNearestCountry(lat, lng, maxDist) {
-  maxDist = maxDist || 15;
+  maxDist = maxDist || 8;
   let nearest = null, minDist = Infinity;
   Object.entries(COUNTRIES).forEach(([name, data]) => {
     const dLat = data.lat - lat;
@@ -351,27 +351,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
         renderer.domElement.style.cursor = 'pointer';
       } else {
-        // Check globe surface for nearby country
-        const globeHits = raycaster.intersectObject(globe);
-        if (globeHits.length > 0) {
-          const ll = vector3ToLatLng(globeHits[0].point, globe);
-          const country = findNearestCountry(ll.lat, ll.lng, 10);
-          if (country) {
-            const cdata = COUNTRIES[country];
-            if (cdata) {
-              setTooltipData({ name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title });
-              setMousePos({ x: event.clientX, y: event.clientY });
-              if (onCountryHoverRef.current) onCountryHoverRef.current(country, event);
-            }
-            renderer.domElement.style.cursor = 'pointer';
-          } else {
-            setTooltipData(null);
-            renderer.domElement.style.cursor = 'grab';
-          }
-        } else {
-          setTooltipData(null);
-          renderer.domElement.style.cursor = 'grab';
-        }
+        setTooltipData(null);
+        renderer.domElement.style.cursor = 'grab';
       }
     }
 
