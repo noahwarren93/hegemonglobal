@@ -21,6 +21,7 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
+  globe.updateMatrixWorld(true);
   const lp = globe.worldToLocal(worldPoint.clone());
   const r = lp.length();
   const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
@@ -217,7 +218,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       bumpMap: earthBump,
       bumpScale: 0.03,
       specular: new THREE.Color(0x333333),
-      shininess: 5
+      shininess: 5,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnit: 1
     });
 
     const globe = new THREE.Mesh(earthGeom, earthMat);
@@ -539,7 +543,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         globe.rotation.y += 0.0008;
       }
       animateConflictZones(globe);
-      globe.updateMatrixWorld(true);
       renderer.render(scene, camera);
     }
     animate();
