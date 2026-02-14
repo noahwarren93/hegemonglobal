@@ -169,22 +169,12 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
     cameraRef.current = camera;
 
-    // Original globe.js uses Three.js r128 which has no color management.
-    // Disable it in 0.182 so textures/colors pass through raw (matching r128).
-    THREE.ColorManagement.enabled = false;
-
-    // Renderer — matches original globe.js initGlobe() options.
-    // r128 defaulted outputEncoding to LinearEncoding; 0.182 defaults to
-    // SRGBColorSpace which double-gamma-corrects and washes out the globe.
-    // Explicitly set LinearSRGBColorSpace to match the old default.
+    // Renderer — matches original globe.js initGlobe() exactly (r128 defaults)
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-    renderer.toneMapping = THREE.NoToneMapping;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
-    console.log('[GLOBE v3] Renderer initialized — outputColorSpace:', renderer.outputColorSpace, 'ColorManagement:', THREE.ColorManagement.enabled);
 
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.8);
@@ -208,11 +198,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
-    // In r128, textures defaulted to LinearEncoding. In 0.182 they default to
-    // SRGBColorSpace. Force them to match the old behaviour.
-    earthTexture.colorSpace = THREE.NoColorSpace;
-    earthBump.colorSpace = THREE.NoColorSpace;
-
     const earthMat = new THREE.MeshPhongMaterial({
       map: earthTexture,
       bumpMap: earthBump,
