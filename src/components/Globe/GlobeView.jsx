@@ -317,7 +317,9 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
       raycaster.setFromCamera(mouseRef.current, camera);
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
 
       // Check trade route line hover when trade routes are active
       if (window.tradeRoutesActive && window.tradeRouteMeshes && window.tradeRouteMeshes.length > 0) {
@@ -338,10 +340,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Copied verbatim from original globe.js onMouseMove:
-      // 1. Check marker dots first (intersects[0], no filtering)
-      // 2. Else: check globe surface for nearby country
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
         const ud = intersects[0].object.userData;
         if (ud && ud.data && ud.name) {
@@ -351,8 +349,27 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
         renderer.domElement.style.cursor = 'pointer';
       } else {
-        setTooltipData(null);
-        renderer.domElement.style.cursor = 'grab';
+        // Check globe surface for nearby country
+        const globeHits = raycaster.intersectObject(globe);
+        if (globeHits.length > 0) {
+          const ll = vector3ToLatLng(globeHits[0].point, globe);
+          const country = findNearestCountry(ll.lat, ll.lng, 10);
+          if (country) {
+            const cdata = COUNTRIES[country];
+            if (cdata) {
+              setTooltipData({ name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title });
+              setMousePos({ x: event.clientX, y: event.clientY });
+              if (onCountryHoverRef.current) onCountryHoverRef.current(country, event);
+            }
+            renderer.domElement.style.cursor = 'pointer';
+          } else {
+            setTooltipData(null);
+            renderer.domElement.style.cursor = 'grab';
+          }
+        } else {
+          setTooltipData(null);
+          renderer.domElement.style.cursor = 'grab';
+        }
       }
     }
 
@@ -380,9 +397,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       }
 
       // Check if this was a drag (skip globe surface click after drag)
-      const dx = Math.abs(event.clientX - clickStartRef.current.x);
-      const dy = Math.abs(event.clientY - clickStartRef.current.y);
-      if (dx > 10 || dy > 10) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
+      if (clickStartRef.current) {
+        const dx = Math.abs(event.clientX - clickStartRef.current.x);
+        const dy = Math.abs(event.clientY - clickStartRef.current.y);
+        if (dx > 5 || dy > 5) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
+      }
 
       // Try globe surface - find nearest tracked country
       const globeHits = raycaster.intersectObject(globe);
