@@ -401,7 +401,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       // Check if this was a drag (skip globe surface click after drag)
       const dx = Math.abs(event.clientX - clickStartRef.current.x);
       const dy = Math.abs(event.clientY - clickStartRef.current.y);
-      if (dx > 5 || dy > 5) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
+      if (dx > 10 || dy > 10) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
 
       // Try globe surface - find nearest tracked country
       const globeHits = raycaster.intersectObject(globe);
