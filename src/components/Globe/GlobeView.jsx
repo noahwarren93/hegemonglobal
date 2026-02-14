@@ -21,7 +21,6 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
-  globe.updateMatrixWorld(true);
   const lp = globe.worldToLocal(worldPoint.clone());
   const r = lp.length();
   const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
@@ -540,6 +539,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         globe.rotation.y += 0.0008;
       }
       animateConflictZones(globe);
+      globe.updateMatrixWorld(true);
       renderer.render(scene, camera);
     }
     animate();
