@@ -21,9 +21,7 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
-  // Copied verbatim from original globe.js vector3ToLatLng
-  // Do NOT call globe.updateMatrixWorld() here — raycaster used the same
-  // (possibly one-frame-stale) matrixWorld, so they must stay in sync.
+  globe.updateMatrixWorld(true);
   const lp = globe.worldToLocal(worldPoint.clone());
   const r = lp.length();
   const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
@@ -292,7 +290,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       marker.userData = { name, data };
       globe.add(marker);
       countryMeshes.push(marker);
-
       // Pulsing ring for critical countries
       if (data.risk === 'catastrophic' || data.risk === 'extreme') {
         const ringGeom = new THREE.RingGeometry(size + 0.01, size + 0.025, 32);
@@ -408,7 +405,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (globeHits.length > 0) {
         const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
         const country = findNearestCountry(lat, lng);
-        console.log('[GLOBE v3 CLICK] Surface hit → lat:', lat.toFixed(2), 'lng:', lng.toFixed(2), '→ country:', country);
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }
