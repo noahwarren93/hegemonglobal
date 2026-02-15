@@ -152,7 +152,12 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
       color = '#06b6d4';
       filtered = Object.entries(COUNTRIES);
     }
-    filtered.sort((a, b) => a[0].localeCompare(b[0]));
+    const riskOrder = { catastrophic: 0, extreme: 1, severe: 2, stormy: 3, cloudy: 4, clear: 5 };
+    filtered.sort((a, b) => {
+      const tierDiff = (riskOrder[a[1].risk] ?? 6) - (riskOrder[b[1].risk] ?? 6);
+      if (tierDiff !== 0) return tierDiff;
+      return a[0].localeCompare(b[0]);
+    });
     return { title, color, countries: filtered };
   }, [type]);
 
