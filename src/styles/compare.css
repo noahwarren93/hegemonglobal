@@ -1,0 +1,59 @@
+/* Compare Styles - Hegemon Global */
+
+    .compare-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 95vw; background: #0a0a0d; border-left: 1px solid #1f2937; z-index: 50; transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; padding: 16px; }
+
+    .compare-panel.active { transform: translateX(0); }
+
+    .compare-panel::-webkit-scrollbar { width: 5px; }
+
+    .compare-panel::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    .compare-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #1f2937; }
+
+    .compare-title { font-size: 12px; font-weight: 700; color: #06b6d4; letter-spacing: 1px; text-transform: uppercase; }
+
+    .compare-close { background: none; border: none; color: #6b7280; font-size: 22px; cursor: pointer; padding: 4px 8px; }
+
+    .compare-close:hover { color: #fff; }
+
+    /* Compare search bar */
+    .compare-search-wrap { position: relative; margin-bottom: 10px; }
+
+    .compare-search { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 6px; padding: 8px 10px; color: #fff; font-size: 11px; outline: none; }
+
+    .compare-search:focus { border-color: #06b6d4; }
+
+    .compare-search-results { position: absolute; top: 100%; left: 0; right: 0; background: #0a0a0d; border: 1px solid #374151; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; }
+
+    .compare-search-item { padding: 8px 10px; font-size: 11px; color: #e5e7eb; cursor: pointer; border-bottom: 1px solid #1f293755; }
+
+    .compare-search-item:hover { background: #1f293766; }
+
+    .compare-countries { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+
+    .compare-country-chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; }
+
+    .compare-country-chip button { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 14px; margin-left: 4px; }
+
+    /* Data area hidden until 2+ countries */
+    .compare-data-area { display: none; }
+
+    .compare-section { margin-bottom: 16px; }
+
+    .compare-section-title { font-size: 9px; color: #06b6d4; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+
+    .compare-table { width: 100%; border-collapse: collapse; }
+
+    .compare-table th { font-size: 9px; color: #6b7280; font-weight: 600; text-align: left; padding: 4px 6px; border-bottom: 1px solid #1f2937; }
+
+    .compare-table td { font-size: 10px; color: #d1d5db; padding: 5px 6px; border-bottom: 1px solid #1f293744; }
+
+    .compare-radar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 16px; }
+
+    /* Compare instruction - permanently hidden */
+    .compare-instruction { display: none !important; }
+
+    /* Compare hint popup - positioned dynamically by JS next to the Compare Mode button */
+    .compare-hint { position: absolute; z-index: 12; background: rgba(6,182,212,0.15); border: 1px solid #06b6d4; color: #06b6d4; font-size: 9px; font-weight: 600; letter-spacing: 0.5px; padding: 6px 12px; border-radius: 6px; pointer-events: none; animation: hintPulse 2s ease-in-out infinite; white-space: nowrap; }
+
+    @keyframes hintPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }

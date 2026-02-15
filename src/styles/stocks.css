@@ -1,0 +1,41 @@
+/* Stocks Styles - Hegemon Global */
+
+    .stocks-country { background: #0d0d14; border: 1px solid #1f293755; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+
+    .stocks-country:hover { border-color: #374151; }
+
+    .stocks-country-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+
+    .stocks-country-flag { font-size: 20px; }
+
+    .stocks-country-name { font-size: 12px; font-weight: 700; color: #e5e7eb; }
+
+    .stocks-sentiment { font-size: 9px; color: #9ca3af; margin-left: auto; font-style: italic; max-width: 140px; text-align: right; line-height: 1.3; }
+
+    .stocks-indices { display: flex; flex-direction: column; gap: 4px; }
+
+    .stock-index-row { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; font-size: 10px; }
+
+    .stock-index-name { color: #9ca3af; font-weight: 500; min-width: 80px; }
+
+    .stock-index-value { color: #e5e7eb; font-weight: 600; }
+
+    .stock-index-change { font-weight: 700; font-size: 10px; min-width: 70px; text-align: right; }
+
+    .stock-index-change.positive { color: #22c55e; }
+
+    .stock-index-change.negative { color: #ef4444; }
+
+    .stocks-sparkline { display: flex; align-items: flex-end; gap: 1px; height: 20px; margin-top: 6px; }
+
+    .stocks-sparkline-bar { width: 3px; border-radius: 1px; min-height: 2px; }
+
+    .stocks-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+
+    .stocks-modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .stocks-modal { background: #0a0a0f; border: 1px solid #1f2937; border-radius: 16px; width: 90%; max-width: 650px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+
+    .stocks-section { background: #0d0d14; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #1f293755; }
+
+    .stocks-section-title { font-size: 10px; color: #06b6d4; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }

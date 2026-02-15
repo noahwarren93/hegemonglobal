@@ -1,0 +1,74 @@
+/* Trade-Routes & Globe Tools Styles - Hegemon Global */
+
+    .globe-feature-btn { background: rgba(10,10,15,0.95); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 8px 12px; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; white-space: nowrap; }
+
+    .globe-feature-btn:hover { border-color: #374151; color: #e5e7eb; }
+
+    .globe-feature-btn.active { border-color: #06b6d4; color: #06b6d4; }
+
+    .trade-tooltip { position: fixed; z-index: 1000; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 12px 16px; border-radius: 8px; border: 1px solid #374151; pointer-events: none; display: none; max-width: 320px; font-size: 10px; transition: left 0.05s ease, top 0.05s ease; }
+
+    /* Globe tool buttons (TOS, Search, Rotate) */
+    .globe-tools { position: absolute; bottom: 16px; right: 340px; z-index: 10; display: flex; gap: 6px; }
+
+    .globe-tool-btn { background: rgba(10,10,15,0.95); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 8px; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.2s; width: 32px; height: 32px; }
+
+    .globe-tool-btn:hover { border-color: #374151; color: #e5e7eb; }
+
+    .globe-tool-btn.active { border-color: #06b6d4; color: #06b6d4; }
+
+    /* Search Overlay */
+    .search-overlay { position: absolute; top: 80px; right: 340px; z-index: 30; width: 280px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; display: none; max-height: 400px; overflow: hidden; }
+
+    .search-overlay.active { display: block; }
+
+    .search-overlay-header { display: flex; align-items: center; gap: 6px; padding: 8px; border-bottom: 1px solid #1f2937; }
+
+    .search-overlay-header input { flex: 1; background: #111827; border: 1px solid #374151; border-radius: 6px; padding: 8px 10px; color: #fff; font-size: 12px; outline: none; }
+
+    .search-overlay-header input:focus { border-color: #06b6d4; }
+
+    .search-overlay-header button { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 20px; padding: 4px 8px; }
+
+    .search-overlay-results { max-height: 320px; overflow-y: auto; }
+
+    .search-overlay-results::-webkit-scrollbar { width: 4px; }
+
+    .search-overlay-results::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+    .search-overlay-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; font-size: 11px; color: #e5e7eb; transition: background 0.15s; border-bottom: 1px solid #1f293755; }
+
+    .search-overlay-item:hover { background: #1f293766; }
+
+    /* Trade Info Panel */
+    .trade-info-panel { position: absolute; top: 80px; left: 16px; z-index: 25; width: 300px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 500px; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
+
+    .trade-info-panel.active { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }
+
+    .trade-info-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #1f2937; }
+
+    .trade-info-title { font-size: 12px; font-weight: 700; color: #06b6d4; }
+
+    .trade-info-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 20px; padding: 4px; }
+
+    .trade-info-body { padding: 10px 14px; overflow-y: auto; max-height: 430px; }
+
+    .trade-info-body::-webkit-scrollbar { width: 4px; }
+
+    .trade-info-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+    .trade-section { margin-bottom: 12px; }
+
+    .trade-section-title { font-size: 8px; font-weight: 700; color: #6b7280; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+
+    .trade-section-text { font-size: 10px; color: #9ca3af; line-height: 1.5; }
+
+    .trade-partner-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #1f293744; font-size: 10px; }
+
+    .trade-partner-name { flex: 1; color: #e5e7eb; }
+
+    .trade-partner-vol { color: #9ca3af; font-weight: 600; min-width: 50px; text-align: right; }
+
+    .trade-partner-status { font-size: 7px; font-weight: 700; letter-spacing: 0.5px; min-width: 55px; text-align: right; }
+
+    /* Compare instruction styles moved to compare.css */

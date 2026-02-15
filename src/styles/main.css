@@ -1,0 +1,61 @@
+/* Main Styles - Hegemon Global */
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #050508; color: #fff; overflow: hidden; height: 100vh; }
+
+    .app { display: flex; height: 100vh; }
+
+    .header { position: absolute; top: 0; left: 0; right: 320px; z-index: 10; padding: 16px 20px; background: transparent; }
+
+    .header-content { display: flex; justify-content: space-between; align-items: center; }
+
+    .logo { font-size: 26px; font-weight: 800; color: #06b6d4; letter-spacing: 2px; }
+
+    .logo-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; letter-spacing: 3px; font-weight: 600; }
+
+    .header-right { position: absolute; top: 16px; right: 340px; display: flex; align-items: center; gap: 16px; z-index: 15; }
+
+    .live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #22c55e; font-weight: 700; }
+
+    .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 8px #22c55e; }
+
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+    .date { font-size: 12px; color: #f3f4f6; font-weight: 600; }
+
+    .stats { position: absolute; bottom: 16px; left: 230px; z-index: 10; display: flex; gap: 8px; }
+
+    .tab { flex: 1 1 0; min-width: 0; padding: 10px 2px; font-size: 7.5px; font-weight: 600; background: none; border: none; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.2px; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Category color coding */
+
+    /* Dynamic risk system styles */
+
+    /* Sanctions section styles */
+
+    /* Breaking News Banner */
+
+    body.banner-active .app { padding-top: 36px; }
+
+    body.banner-active .header { top: 36px; }
+
+    @keyframes bannerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.9; } }
+
+    /* Risk Trend Chart */
+
+    /* Country News Section in Modal */
+
+    /* Newsletter Styles */
+
+    /* countdown styles removed — countdown is now inline in the header */
+
+    /* Terms of Service / Privacy Policy */
+
+    /* Mobile Responsive */
+
+    /* ===== STOCKS TAB STYLES ===== */
+
+    /* ===== TRADE ROUTES & FEATURE BUTTON STYLES ===== */
+
+    /* ===== COMPARE MODE STYLES ===== */
