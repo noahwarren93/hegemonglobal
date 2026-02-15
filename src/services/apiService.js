@@ -125,14 +125,14 @@ export function seedPastBriefingIfEmpty() {
 
 const RSS_FEEDS = {
   daily: [
-    { url: 'https://feeds.reuters.com/Reuters/worldNews', source: 'Reuters' },
+    { url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en', source: 'Google News World' },
+    { url: 'https://news.google.com/rss/search?q=world+news+today&hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
     { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
     { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' },
     { url: 'https://thehill.com/feed/', source: 'The Hill' },
     { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },
-    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
     { url: 'https://nypost.com/tag/world-news/feed/', source: 'New York Post' },
     { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
     { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' }
