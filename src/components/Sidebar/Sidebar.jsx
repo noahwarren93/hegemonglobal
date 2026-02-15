@@ -87,29 +87,40 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal }) {
 
     const catBorderColor = (cat) => cat === 'CONFLICT' ? '#ef4444' : cat === 'CRISIS' ? '#f97316' : '#eab308';
 
-    const renderCard = (article, i, isTopStory) => (
-      <div key={i} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(article.category)}` } : undefined}>
-        <div className="card-header">
-          <span className={`card-cat ${article.category}`}>{article.category}</span>
-          <span className="card-time">{article.time}</span>
+    const renderCard = (article, i, isTopStory) => {
+      let displayHeadline = article.headline;
+      let displaySource = article.source;
+      if (displaySource && displaySource.includes('Google News') && displayHeadline) {
+        const dashIdx = displayHeadline.lastIndexOf(' - ');
+        if (dashIdx > 0) {
+          displaySource = displayHeadline.substring(dashIdx + 3).trim();
+          displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+        }
+      }
+      return (
+        <div key={i} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(article.category)}` } : undefined}>
+          <div className="card-header">
+            <span className={`card-cat ${article.category}`}>{article.category}</span>
+            <span className="card-time">{article.time}</span>
+          </div>
+          <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
+            {article.url && article.url !== '#' ? (
+              <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#4da6ff', textDecoration: 'none' }}>{displayHeadline}</a>
+            ) : (
+              displayHeadline
+            )}
+          </div>
+          <div className="card-source">
+            {article.url && article.url !== '#' ? (
+              <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>{displaySource} ↗</a>
+            ) : (
+              <span style={{ color: '#9ca3af' }}>{displaySource}</span>
+            )}
+          </div>
+          <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
         </div>
-        <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
-          {article.url && article.url !== '#' ? (
-            <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#e5e7eb', textDecoration: 'none' }}>{article.headline}</a>
-          ) : (
-            article.headline
-          )}
-        </div>
-        <div className="card-source">
-          {article.url && article.url !== '#' ? (
-            <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>{article.source} ↗</a>
-          ) : (
-            <span style={{ color: '#9ca3af' }}>{article.source}</span>
-          )}
-        </div>
-        <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
-      </div>
-    );
+      );
+    };
 
     return (
       <>

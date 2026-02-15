@@ -687,7 +687,7 @@ export async function fetchRSS(feedUrl, sourceName) {
       let title = item.title;
 
       // Google News embeds real source in title: "Headline - Al Jazeera"
-      if (source === 'Google News' && title) {
+      if (source.includes('Google News') && title) {
         const dashIdx = title.lastIndexOf(' - ');
         if (dashIdx > 0) {
           source = title.substring(dashIdx + 3).trim();
