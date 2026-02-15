@@ -21,25 +21,13 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
-  // Get globe's current Y rotation
-  const rotY = globe.rotation.y;
-
-  // Undo the globe's rotation to get the point in the globe's local frame
-  const cosR = Math.cos(-rotY);
-  const sinR = Math.sin(-rotY);
-  const x = worldPoint.x * cosR - worldPoint.z * sinR;
-  const y = worldPoint.y;
-  const z = worldPoint.x * sinR + worldPoint.z * cosR;
-
-  // Convert to lat/lng
-  const r = Math.sqrt(x * x + y * y + z * z);
-  const lat = Math.asin(y / r) * (180 / Math.PI);
-  const lng = Math.atan2(z, -x) * (180 / Math.PI) - 180;
-
-  // Normalize lng to -180..180
-  const normalizedLng = ((lng + 540) % 360) - 180;
-
-  return { lat, lng: normalizedLng };
+  const lp = globe.worldToLocal(worldPoint.clone());
+  const r = lp.length();
+  const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
+  const theta = Math.atan2(lp.z, -lp.x);
+  const lat = 90 - phi * (180 / Math.PI);
+  const lng = ((theta * (180 / Math.PI) - 180 + 540) % 360) - 180;
+  return { lat, lng };
 }
 
 export function findNearestCountry(lat, lng, maxDist) {
@@ -167,6 +155,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const container = containerRef.current;
     if (!container) return;
 
+    // Prevent double initialization
+    if (container.dataset.globeInit) return;
+    container.dataset.globeInit = 'true';
+
     const width = container.clientWidth;
     const height = container.clientHeight;
 
@@ -216,8 +208,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       specular: new THREE.Color(0x333333),
       shininess: 5,
       polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnit: 1
+      polygonOffsetFactor: 1
     });
 
     const globe = new THREE.Mesh(earthGeom, earthMat);
@@ -309,7 +300,14 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // ---- Mouse move (hover + tooltip) ----
     // Matches original globe.js onMouseMove exactly
+    let lastHoverTime = 0;
+    let clickSuppressUntil = 0;
     function handleMouseMove(event) {
+      const now = Date.now();
+      if (now - lastHoverTime < 100) return;
+      if (now < clickSuppressUntil) return;
+      lastHoverTime = now;
+
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -375,17 +373,17 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // 2. Drag check only before globe surface fallback
     // 3. Globe surface → findNearestCountry
     function handleClick(event) {
+      clickSuppressUntil = Date.now() + 200;
+
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Copied verbatim from original globe.js onClick:
       // Priority: try marker dots first
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
         const clickedName = intersects[0].object.userData.name;
-        console.log('[GLOBE v3 CLICK] Marker hit:', clickedName, '| distance:', intersects[0].distance, '| total hits:', intersects.length);
         if (clickedName && onCountryClickRef.current) {
           onCountryClickRef.current(clickedName);
         }
@@ -396,7 +394,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (clickStartRef.current) {
         const dx = Math.abs(event.clientX - clickStartRef.current.x);
         const dy = Math.abs(event.clientY - clickStartRef.current.y);
-        if (dx > 5 || dy > 5) { console.log('[GLOBE v3 CLICK] Drag detected, skipping'); return; }
+        if (dx > 5 || dy > 5) return;
       }
 
       // Try globe surface - find nearest tracked country
@@ -407,8 +405,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }
-      } else {
-        console.log('[GLOBE v3 CLICK] No intersection at all');
       }
     }
 
