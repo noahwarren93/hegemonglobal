@@ -20,7 +20,7 @@ const SECTIONS = [
 
 function parseToTrillions(str) {
   if (!str) return 0;
-  var num = parseFloat(str.replace(/[^0-9.]/g, ''));
+  const num = parseFloat(str.replace(/[^0-9.]/g, ''));
   if (isNaN(num)) return 0;
   if (str.indexOf('T') !== -1) return num;
   if (str.indexOf('B') !== -1) return num / 1000;
@@ -29,11 +29,11 @@ function parseToTrillions(str) {
 }
 
 function getVals(name) {
-  var d = COMPARE_DATA[name];
+  const d = COMPARE_DATA[name];
   if (!d) return [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
-  var gdpT = parseToTrillions(d.gdp);
-  var milT = parseToTrillions(d.milSpend);
-  var fdiT = parseToTrillions(d.fdi);
+  const gdpT = parseToTrillions(d.gdp);
+  const milT = parseToTrillions(d.milSpend);
+  const fdiT = parseToTrillions(d.fdi);
   return [
     Math.min(1, gdpT / 25),
     Math.min(1, milT / 0.9),
@@ -46,19 +46,19 @@ function getVals(name) {
 
 function drawRadarChart(canvas, countries) {
   if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 40;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 40;
   ctx.clearRect(0, 0, w, h);
-  var cats = ['Economy', 'Military', 'Democracy', 'Development', 'Stability', 'Trade'];
-  var nc = cats.length;
+  const cats = ['Economy', 'Military', 'Democracy', 'Development', 'Stability', 'Trade'];
+  const nc = cats.length;
   // Grid rings
-  for (var lev = 1; lev <= 5; lev++) {
+  for (let lev = 1; lev <= 5; lev++) {
     ctx.beginPath();
-    var lr = r * (lev / 5);
-    for (var i = 0; i <= nc; i++) {
-      var a = (Math.PI * 2 * i) / nc - Math.PI / 2;
-      var x = cx + lr * Math.cos(a);
-      var y = cy + lr * Math.sin(a);
+    const lr = r * (lev / 5);
+    for (let i = 0; i <= nc; i++) {
+      const a = (Math.PI * 2 * i) / nc - Math.PI / 2;
+      const x = cx + lr * Math.cos(a);
+      const y = cy + lr * Math.sin(a);
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.strokeStyle = '#1f2937';
@@ -66,8 +66,8 @@ function drawRadarChart(canvas, countries) {
     ctx.stroke();
   }
   // Axis lines + labels
-  for (var i = 0; i < nc; i++) {
-    var a = (Math.PI * 2 * i) / nc - Math.PI / 2;
+  for (let i = 0; i < nc; i++) {
+    const a = (Math.PI * 2 * i) / nc - Math.PI / 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
@@ -81,12 +81,12 @@ function drawRadarChart(canvas, countries) {
   }
   // Country polygons
   countries.forEach(function (name, ci) {
-    var vals = getVals(name);
+    const vals = getVals(name);
     ctx.beginPath();
     vals.forEach(function (val, i) {
-      var a = (Math.PI * 2 * i) / nc - Math.PI / 2;
-      var x = cx + r * val * Math.cos(a);
-      var y = cy + r * val * Math.sin(a);
+      const a = (Math.PI * 2 * i) / nc - Math.PI / 2;
+      const x = cx + r * val * Math.cos(a);
+      const y = cy + r * val * Math.sin(a);
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.closePath();

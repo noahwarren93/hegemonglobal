@@ -213,7 +213,7 @@ function cacheGet(key) {
       return null;
     }
     return c.data;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

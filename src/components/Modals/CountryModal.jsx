@@ -40,7 +40,6 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   if (!isOpen || !country || !countryName) return null;
 
   const sanctions = SANCTIONS_DATA[countryName];
-  const riskColor = RISK_COLORS[country.risk]?.hex || '#888';
 
   // Build facts grid (original order: Region, Population, GDP, Leader)
   const facts = [];
@@ -70,7 +69,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           <div className="modal-titles">
             <div className="modal-title">
               <span>{countryName}</span>
-              <span className={`modal-risk risk-${country.risk}`} style={{ color: riskColor }}>
+              <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff' }}>
                 {country.risk.toUpperCase()}
               </span>
             </div>

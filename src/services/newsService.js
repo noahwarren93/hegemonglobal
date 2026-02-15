@@ -1,14 +1,11 @@
 // newsService.js - Newsletter generation, entity extraction, narrative engine
 
 import { COUNTRIES, NEWSLETTER_REGIONS, DAILY_BRIEFING } from '../data/countries';
-import { getSourceBias } from '../utils/riskColors';
 import { getPastBriefings, formatBriefingDate } from './apiService';
 
 // ============================================================
 // State
 // ============================================================
-let lastNewsletterData = null;
-let lastNewsletterTime = null;
 
 // ============================================================
 // Newsletter Timing
@@ -230,13 +227,13 @@ export function addMissingArticles(text) {
 export function cleanHeadlineForProse(headline) {
   if (!headline) return 'ongoing developments';
   let clean = headline;
-  clean = clean.replace(/^[A-Z][A-Za-z\s]+[\-:]\s*/, '');
-  clean = clean.replace(/\s*[\-\u2013|]+\s*(as it happened|live updates?|live blog|breaking|developing story|watch live|latest|updates?)\s*$/i, '');
-  clean = clean.replace(/\s*[\(\[](photos?|videos?|watch|gallery|breaking|exclusive|updated?|opinion|analysis)[\)\]]\s*/gi, '');
-  clean = clean.replace(/^(BREAKING|EXCLUSIVE|WATCH|UPDATE|JUST IN|ALERT|DEVELOPING|OPINION|ANALYSIS)\s*[:\-\u2013]\s*/i, '');
+  clean = clean.replace(/^[A-Z][A-Za-z\s]+[-:]\s*/, '');
+  clean = clean.replace(/\s*[-\u2013|]+\s*(as it happened|live updates?|live blog|breaking|developing story|watch live|latest|updates?)\s*$/i, '');
+  clean = clean.replace(/\s*[([](photos?|videos?|watch|gallery|breaking|exclusive|updated?|opinion|analysis)[)\]]\s*/gi, '');
+  clean = clean.replace(/^(BREAKING|EXCLUSIVE|WATCH|UPDATE|JUST IN|ALERT|DEVELOPING|OPINION|ANALYSIS)\s*[:-\u2013]\s*/i, '');
   clean = toSentenceCase(clean);
   clean = addMissingArticles(clean);
-  clean = clean.replace(/[\.\-\u2013|]\s*$/, '').trim();
+  clean = clean.replace(/[.\-\u2013|]\s*$/, '').trim();
   return clean || 'ongoing developments';
 }
 
@@ -351,7 +348,7 @@ export function generateRegionNarrative(region, articles) {
 }
 
 export function generateGlobalRamifications(regionData, globalArticles) {
-  const allArticles = regionData.flatMap(([_, arts]) => arts);
+  const allArticles = regionData.flatMap(([, arts]) => arts);
   const uncategorized = globalArticles || [];
   const combined = [...allArticles, ...uncategorized];
   if (combined.length === 0) return '';
@@ -379,10 +376,10 @@ export function generateGlobalRamifications(regionData, globalArticles) {
   const high = classified.filter(a => a.importance === 'high');
   const types = {};
   classified.forEach(a => { types[a.type] = (types[a.type] || 0) + 1; });
-  const activeRegions = regionData.filter(([_, arts]) => arts.length > 0).map(([r]) => r);
+  const activeRegions = regionData.filter(([, arts]) => arts.length > 0).map(([r]) => r);
   const allEntities = [...new Set(classified.flatMap(a => a.entities))];
   const majorPowers = allEntities.filter(e => ['United States', 'China', 'Russia', 'EU', 'NATO', 'UN', 'United Kingdom', 'France', 'Germany', 'India', 'Iran', 'Israel', 'Saudi Arabia', 'Turkey', 'Japan'].includes(e));
-  const conflictRegions = regionData.filter(([_, arts]) => arts.some(a => a.importance === 'high')).map(([r]) => r);
+  const conflictRegions = regionData.filter(([, arts]) => arts.some(a => a.importance === 'high')).map(([r]) => r);
 
   const sentences = [];
 

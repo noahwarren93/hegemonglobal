@@ -610,13 +610,6 @@ export default function TVDashboard() {
 
   const screenName = ALL_SCREENS[currentScreen];
 
-  // Sort trade routes for display
-  const sortedRoutes = useMemo(() =>
-    [...TV_TRADE_ROUTES].sort((a, b) =>
-      parseFloat(b.volume.replace(/[^0-9.]/g, '')) - parseFloat(a.volume.replace(/[^0-9.]/g, ''))
-    ),
-  []);
-
   return (
     <>
       <style>{TV_STYLES}</style>

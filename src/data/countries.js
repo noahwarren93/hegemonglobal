@@ -1517,8 +1517,8 @@ export const DAILY_BRIEFING_FALLBACK = [
 ];
 
 // Live news storage
-export let DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
-export let lastNewsUpdate = null;
+export const DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
+export const lastNewsUpdate = null;
 
 // ============================================================
 // BRIEFING HISTORY - Keep past 3 days of briefings

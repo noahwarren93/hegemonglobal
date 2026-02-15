@@ -177,7 +177,7 @@ const NEWS_APIS = {
 };
 
 export const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
-let apiFailures = {};
+const apiFailures = {};
 
 // ============================================================
 // News Caching
@@ -865,7 +865,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
     const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
     const feedResults = await Promise.all(feedPromises);
 
-    let allArticles = feedResults.flat();
+    const allArticles = feedResults.flat();
     console.log(`RSS feeds returned ${allArticles.length} total articles`);
 
     if (allArticles.length > 0) {

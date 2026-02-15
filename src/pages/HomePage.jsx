@@ -289,7 +289,7 @@ export default function HomePage() {
   const [statPopupOpen, setStatPopupOpen] = useState(false);
 
   // --- Loading ---
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   // --- Auto-rotate ---
   const [autoRotate, setAutoRotate] = useState(true);
@@ -298,7 +298,7 @@ export default function HomePage() {
   const [currentDate, setCurrentDate] = useState('');
 
   // --- Trade routes hook ---
-  const { showTradeRoutes, hideTradeRoutes, toggleTradeRoutes, handleTradeClick } = useTradeRoutes();
+  const { showTradeRoutes, hideTradeRoutes, handleTradeClick } = useTradeRoutes();
 
   // ============================================================
   // Initialize on mount
@@ -432,12 +432,6 @@ export default function HomePage() {
   }, [compareMode, tradeRoutesActive, handleTradeClick]);
 
   // Open modal by type
-  const handleOpenModal = useCallback((type) => {
-    if (type === 'tos') {
-      setTosOpen(true);
-    }
-  }, []);
-
   // Open stocks detail modal
   const handleOpenStocksModal = useCallback((country) => {
     setStocksModalCountry(country);
@@ -678,7 +672,6 @@ export default function HomePage() {
         {/* ===== Sidebar (right) ===== */}
         <Sidebar
           onCountryClick={handleCountryClick}
-          onOpenModal={handleOpenModal}
           onOpenStocksModal={handleOpenStocksModal}
         />
       </div>

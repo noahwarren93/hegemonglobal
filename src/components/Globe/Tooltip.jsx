@@ -3,14 +3,14 @@
 import { useRef } from 'react';
 
 export function positionTooltip(el, cx, cy) {
-  var offset = 15;
-  var vw = window.innerWidth;
-  var vh = window.innerHeight;
-  var tw = el.offsetWidth || 250;
-  var th = el.offsetHeight || 80;
+  const offset = 15;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const tw = el.offsetWidth || 250;
+  const th = el.offsetHeight || 80;
 
-  var left = cx + offset;
-  var top = cy + offset;
+  let left = cx + offset;
+  let top = cy + offset;
 
   if (left + tw > vw - 10) left = cx - tw - offset;
   if (left < 10) left = 10;

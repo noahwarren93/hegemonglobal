@@ -114,7 +114,7 @@ const BORDER_DATA = {
 
 export default function GlobeView({ onCountryClick, onCountryHover, compareMode }) {
   const containerRef = useRef(null);
-  const tooltipRef = useRef(null);
+
 
   // Three.js object refs (persist across renders, never trigger re-render)
   const sceneRef = useRef(null);
@@ -573,7 +573,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---- Toggle auto-rotation (exposed via ref or called externally) ----
   const toggleRotation = useCallback(() => {

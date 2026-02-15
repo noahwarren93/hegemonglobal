@@ -1,8 +1,7 @@
 // StocksModal.jsx - Detailed stock view modal
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { STOCKS_DETAIL } from '../../data/stocksData';
-import { formatStockPrice } from '../../services/stocksService';
 
 export default function StocksModal({ country, stocksData, lastUpdated, isOpen, onClose }) {
   // Close on Escape
