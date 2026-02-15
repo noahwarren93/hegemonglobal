@@ -21,14 +21,25 @@ export function latLngToVector3(lat, lng, radius) {
 }
 
 export function vector3ToLatLng(worldPoint, globe) {
-  globe.updateMatrixWorld(true);
-  const lp = globe.worldToLocal(worldPoint.clone());
-  const r = lp.length();
-  const phi = Math.acos(Math.max(-1, Math.min(1, lp.y / r)));
-  const theta = Math.atan2(lp.z, -lp.x);
-  const lat = 90 - phi * (180 / Math.PI);
-  const lng = ((theta * (180 / Math.PI) - 180 + 540) % 360) - 180;
-  return { lat, lng };
+  // Get globe's current Y rotation
+  const rotY = globe.rotation.y;
+
+  // Undo the globe's rotation to get the point in the globe's local frame
+  const cosR = Math.cos(-rotY);
+  const sinR = Math.sin(-rotY);
+  const x = worldPoint.x * cosR - worldPoint.z * sinR;
+  const y = worldPoint.y;
+  const z = worldPoint.x * sinR + worldPoint.z * cosR;
+
+  // Convert to lat/lng
+  const r = Math.sqrt(x * x + y * y + z * z);
+  const lat = Math.asin(y / r) * (180 / Math.PI);
+  const lng = Math.atan2(z, -x) * (180 / Math.PI) - 180;
+
+  // Normalize lng to -180..180
+  const normalizedLng = ((lng + 540) % 360) - 180;
+
+  return { lat, lng: normalizedLng };
 }
 
 export function findNearestCountry(lat, lng, maxDist) {
