@@ -118,19 +118,30 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           {country.news && country.news.length > 0 && (
             <div style={{ marginTop: '16px' }}>
               <div className="section-title">Recent Coverage</div>
-              {country.news.map((n, i) => (
-                <div key={i} className="news-item">
-                  <div className="news-meta">
-                    <span className="news-source">{n.source}</span>
-                    <span className="news-time">{n.time}</span>
+              {country.news.map((n, i) => {
+                let displayHeadline = n.headline;
+                let displaySource = n.source;
+                if (displaySource && displaySource.includes('Google News') && displayHeadline) {
+                  const dashIdx = displayHeadline.lastIndexOf(' - ');
+                  if (dashIdx > 0) {
+                    displaySource = displayHeadline.substring(dashIdx + 3).trim();
+                    displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+                  }
+                }
+                return (
+                  <div key={i} className="news-item">
+                    <div className="news-meta">
+                      <span className="news-source">{displaySource}</span>
+                      <span className="news-time">{n.time}</span>
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
+                    <div className="news-headline">{displayHeadline}</div>
+                    {n.url && n.url !== '#' && (
+                      <a className="news-link" href={n.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
+                    )}
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: renderBiasTag(n.source) }} />
-                  <div className="news-headline">{n.headline}</div>
-                  {n.url && n.url !== '#' && (
-                    <a className="news-link" href={n.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -140,22 +151,33 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             {newsLoading ? (
               <div className="country-news-loading">Loading latest news...</div>
             ) : news.length > 0 ? (
-              news.map((article, i) => (
-                <div key={i} className="news-item">
-                  <div className="news-meta">
-                    {article.category && (
-                      <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
+              news.map((article, i) => {
+                let displayHeadline = article.headline;
+                let displaySource = article.source;
+                if (displaySource && displaySource.includes('Google News') && displayHeadline) {
+                  const dashIdx = displayHeadline.lastIndexOf(' - ');
+                  if (dashIdx > 0) {
+                    displaySource = displayHeadline.substring(dashIdx + 3).trim();
+                    displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+                  }
+                }
+                return (
+                  <div key={i} className="news-item">
+                    <div className="news-meta">
+                      {article.category && (
+                        <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
+                      )}
+                      <span className="news-source">{displaySource}</span>
+                      <span className="news-time">{article.time}</span>
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
+                    <div className="news-headline">{displayHeadline}</div>
+                    {article.url && article.url !== '#' && (
+                      <a className="news-link" href={article.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
                     )}
-                    <span className="news-source">{article.source}</span>
-                    <span className="news-time">{article.time}</span>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: renderBiasTag(article.source) }} />
-                  <div className="news-headline">{article.headline}</div>
-                  {article.url && article.url !== '#' && (
-                    <a className="news-link" href={article.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
-                  )}
-                </div>
-              ))
+                );
+              })
             ) : (
               <div style={{ color: '#6b7280', fontSize: '11px' }}>No major international news coverage for this country at this time. This typically indicates a period of relative stability.</div>
             )}
