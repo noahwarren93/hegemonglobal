@@ -182,6 +182,38 @@ export function balanceSourceOrigins(articles) {
   return result;
 }
 
+// Ensure at least 1 non-western source in top stories
+// Picks the most geopolitically significant non-western article and places it at position 3
+export function ensureNonWesternInTopStories(topStories, allArticles) {
+  if (topStories.length === 0) return topStories;
+
+  // Check if any top story is already non-western
+  const hasNonWestern = topStories.some(a => isNonWesternSource(getEffectiveSource(a)));
+  if (hasNonWestern) return topStories;
+
+  // Rank categories by geopolitical significance
+  const categoryRank = { CONFLICT: 6, CRISIS: 5, SECURITY: 4, DIPLOMACY: 3, POLITICS: 2, ECONOMY: 1 };
+
+  // Find non-western candidates not already in top stories
+  const topHeadlines = new Set(topStories.map(a => (a.headline || '').toLowerCase().slice(0, 50)));
+  const candidates = allArticles.filter(a => {
+    if (topHeadlines.has((a.headline || '').toLowerCase().slice(0, 50))) return false;
+    return isNonWesternSource(getEffectiveSource(a));
+  });
+
+  if (candidates.length === 0) return topStories;
+
+  // Pick the most geopolitically significant candidate
+  candidates.sort((a, b) => (categoryRank[b.category] || 0) - (categoryRank[a.category] || 0));
+
+  const result = [...topStories];
+  const insertPos = Math.min(3, result.length);
+  result.splice(insertPos, 0, candidates[0]);
+  if (result.length > 5) result.length = 5;
+
+  return result;
+}
+
 // Enforce source diversity: no single source more than maxPerSource times
 export function enforceSourceDiversity(articles, maxPerSource = 2) {
   const counts = {};
