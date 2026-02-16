@@ -97,6 +97,49 @@ export function disperseBiasArticles(articles) {
   return articles;
 }
 
+// State-controlled media labels
+export const STATE_MEDIA = {
+  'CGTN': 'China · State Media',
+  'TASS': 'Russia · State Media',
+  'Al Arabiya': 'Saudi Arabia · State Affiliated',
+  'Press TV': 'Iran · State Media',
+  'RT': 'Russia · State Media',
+  'Xinhua': 'China · State Media'
+};
+
+export function getStateMediaLabel(source) {
+  if (!source) return null;
+  if (STATE_MEDIA[source]) return STATE_MEDIA[source];
+  for (const key of Object.keys(STATE_MEDIA)) {
+    if (key.length >= 4 && source.toLowerCase().includes(key.toLowerCase())) {
+      return STATE_MEDIA[key];
+    }
+  }
+  return null;
+}
+
+// Extract the effective display source from an article (handles Google News embedding)
+function getEffectiveSource(article) {
+  let source = article.source || '';
+  const headline = article.headline || article.title || '';
+  if (source.includes('Google News') && headline) {
+    const dashIdx = headline.lastIndexOf(' - ');
+    if (dashIdx > 0) source = headline.substring(dashIdx + 3).trim();
+  }
+  return source;
+}
+
+// Enforce source diversity: no single source more than maxPerSource times
+export function enforceSourceDiversity(articles, maxPerSource = 2) {
+  const counts = {};
+  return articles.filter(article => {
+    const source = getEffectiveSource(article);
+    const key = source.toLowerCase();
+    counts[key] = (counts[key] || 0) + 1;
+    return counts[key] <= maxPerSource;
+  });
+}
+
 export function formatSourceName(sourceId) {
   if (!sourceId) return 'News';
   const id = sourceId.toLowerCase();

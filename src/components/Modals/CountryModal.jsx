@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA } from '../../data/countries';
-import { RISK_COLORS, renderBiasTag, renderTrendChart } from '../../utils/riskColors';
+import { RISK_COLORS, renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
 import { fetchCountryNews } from '../../services/apiService';
 
 export default function CountryModal({ countryName, isOpen, onClose }) {
@@ -118,7 +118,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           {country.news && country.news.length > 0 && (
             <div style={{ marginTop: '16px' }}>
               <div className="section-title">Recent Coverage</div>
-              {country.news.map((n, i) => {
+              {enforceSourceDiversity(country.news).map((n, i) => {
                 let displayHeadline = n.headline;
                 let displaySource = n.source;
                 if (displaySource && displaySource.includes('Google News') && displayHeadline) {
@@ -128,10 +128,18 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                     displayHeadline = displayHeadline.substring(0, dashIdx).trim();
                   }
                 }
+                const stateLabel = getStateMediaLabel(displaySource);
                 return (
                   <div key={i} className="news-item">
                     <div className="news-meta">
-                      <span className="news-source">{displaySource}</span>
+                      <span className="news-source">
+                        {displaySource}
+                        {stateLabel && (
+                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
+                            {stateLabel}
+                          </span>
+                        )}
+                      </span>
                       <span className="news-time">{n.time}</span>
                     </div>
                     <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
@@ -151,7 +159,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             {newsLoading ? (
               <div className="country-news-loading">Loading latest news...</div>
             ) : news.length > 0 ? (
-              news.map((article, i) => {
+              enforceSourceDiversity(news).map((article, i) => {
                 let displayHeadline = article.headline;
                 let displaySource = article.source;
                 if (displaySource && displaySource.includes('Google News') && displayHeadline) {
@@ -161,13 +169,21 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                     displayHeadline = displayHeadline.substring(0, dashIdx).trim();
                   }
                 }
+                const stateLabel = getStateMediaLabel(displaySource);
                 return (
                   <div key={i} className="news-item">
                     <div className="news-meta">
                       {article.category && (
                         <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
                       )}
-                      <span className="news-source">{displaySource}</span>
+                      <span className="news-source">
+                        {displaySource}
+                        {stateLabel && (
+                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
+                            {stateLabel}
+                          </span>
+                        )}
+                      </span>
                       <span className="news-time">{article.time}</span>
                     </div>
                     <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
