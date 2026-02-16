@@ -5,7 +5,7 @@ import {
   IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, ESCALATION_KEYWORDS,
   DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS, BREAKING_KEYWORDS
 } from '../data/countries';
-import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles } from '../utils/riskColors';
+import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
 
 // ============================================================
 // Briefing History (localStorage persistence)
@@ -922,21 +922,24 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
       // Disperse bias clusters
       const dispersed = disperseBiasArticles(newArticles);
 
+      // Balance western/non-western source ratio (~67% western, interleaved)
+      const balanced = balanceSourceOrigins(dispersed);
+
       // Demote low-priority stories out of top 10
       const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
-      for (let i = 0; i < Math.min(10, dispersed.length); i++) {
-        const h = (dispersed[i].headline || '').toLowerCase();
+      for (let i = 0; i < Math.min(10, balanced.length); i++) {
+        const h = (balanced[i].headline || '').toLowerCase();
         if (DEMOTE_KEYWORDS.some(kw => h.includes(kw))) {
-          const [item] = dispersed.splice(i, 1);
-          const dest = Math.min(14, dispersed.length);
-          dispersed.splice(dest, 0, item);
+          const [item] = balanced.splice(i, 1);
+          const dest = Math.min(14, balanced.length);
+          balanced.splice(dest, 0, item);
           i--;
         }
       }
 
       // Mutate shared DAILY_BRIEFING array
       DAILY_BRIEFING.length = 0;
-      DAILY_BRIEFING.push(...dispersed);
+      DAILY_BRIEFING.push(...balanced);
 
       console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
 

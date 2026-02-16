@@ -129,6 +129,59 @@ function getEffectiveSource(article) {
   return source;
 }
 
+// Non-western source classification for feed balancing
+const NON_WESTERN_SOURCES = new Set([
+  'cgtn', 'xinhua', 'china daily', 'global times', 'south china morning post', 'scmp',
+  'tass', 'rt', 'ria novosti', 'pravda',
+  'times of india', 'ndtv', 'hindustan times', 'indian express', 'the hindu', 'the print',
+  'the wire', 'scroll', 'firstpost', 'india today', 'live mint', 'economic times', 'wion',
+  'al jazeera', 'al arabiya', 'arab news', 'gulf news', 'daily sabah', 'trt world',
+  'anadolu agency', 'tehran times', 'press tv', 'middle east monitor', 'middle east eye',
+  'dawn', 'geo news', 'ary news', 'express tribune',
+  'nikkei asia', 'japan times', 'korea herald', 'korea times', 'asahi shimbun', 'yonhap',
+  'straits times', 'cna', 'bangkok post', 'bernama', 'vnexpress',
+  'o globo', 'folha', 'clarín', 'la nación'
+]);
+
+function isNonWesternSource(source) {
+  if (!source) return false;
+  return NON_WESTERN_SOURCES.has(source.toLowerCase());
+}
+
+// Balance western/non-western sources: ~67% western, ~33% non-western, interleaved
+export function balanceSourceOrigins(articles) {
+  if (articles.length < 4) return articles;
+
+  const western = [];
+  const nonWestern = [];
+
+  for (const article of articles) {
+    const source = getEffectiveSource(article);
+    if (isNonWesternSource(source)) {
+      nonWestern.push(article);
+    } else {
+      western.push(article);
+    }
+  }
+
+  // If either pool is empty or tiny, no balancing needed
+  if (nonWestern.length === 0 || western.length === 0) return articles;
+
+  // Interleave: 2 western, 1 non-western, repeat
+  const result = [];
+  let wi = 0, nwi = 0;
+
+  while (wi < western.length || nwi < nonWestern.length) {
+    // 2 western
+    if (wi < western.length) result.push(western[wi++]);
+    if (wi < western.length) result.push(western[wi++]);
+    // 1 non-western
+    if (nwi < nonWestern.length) result.push(nonWestern[nwi++]);
+  }
+
+  return result;
+}
+
 // Enforce source diversity: no single source more than maxPerSource times
 export function enforceSourceDiversity(articles, maxPerSource = 2) {
   const counts = {};
