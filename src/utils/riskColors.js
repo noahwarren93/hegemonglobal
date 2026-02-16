@@ -25,7 +25,7 @@ export const SOURCE_BIAS = {
   // Right-Center (AllSides: Lean Right)
   'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC', 'Washington Examiner': 'RC',
   // Right (AllSides: Right)
-  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R'
+  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'CGTN': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R'
 };
 
 export function getSourceBias(source) {
@@ -145,7 +145,7 @@ export function formatSourceName(sourceId) {
     'scmp': 'South China Morning Post', 'straitstimes': 'Straits Times', 'channelnewsasia': 'CNA',
     'nikkei': 'Nikkei Asia', 'japantimes': 'Japan Times', 'koreaherald': 'Korea Herald',
     'koreatimes': 'Korea Times', 'asahi': 'Asahi Shimbun', 'bangkokpost': 'Bangkok Post',
-    'xinhua': 'Xinhua', 'globaltimes': 'Global Times', 'chinadaily': 'China Daily',
+    'xinhua': 'Xinhua', 'globaltimes': 'Global Times', 'chinadaily': 'China Daily', 'cgtn': 'CGTN',
     'philstar': 'PhilStar', 'inquirer': 'Inquirer', 'manilatimes': 'Manila Times',
     'thestar': 'The Star Malaysia', 'bernama': 'Bernama', 'vnexpress': 'VnExpress',
     // Russia/Eastern Europe
