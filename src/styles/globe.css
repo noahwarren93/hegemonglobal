@@ -26,7 +26,11 @@
 
     .stat-popup-close:hover { color: #fff; }
 
-    .stat-popup-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f293755; cursor: pointer; font-size: 10px; transition: all 0.15s; }
+    .stat-popup-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f293755; cursor: pointer; font-size: 10px; transition: all 0.15s; gap: 8px; }
+
+    .stat-popup-item > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .stat-popup-item .wl-risk { flex-shrink: 0; }
 
     .stat-popup-item:hover { padding-left: 6px; background: #1f293733; }
 

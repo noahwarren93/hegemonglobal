@@ -19,6 +19,7 @@
       .stat-value { font-size: 14px; }
       .stat-label { font-size: 5px; }
       .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
+      .stat-popup.active { transform: translate(-50%, -50%); }
 
       /* Globe tool buttons (TOS, Search, Rotate) - bottom right */
       .globe-tools { right: 8px; bottom: 8px; top: auto; }
