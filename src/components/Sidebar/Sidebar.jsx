@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, lastNewsUpdate } from '../../data/countries';
-import { RISK_COLORS, renderBiasTag, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
+import { RISK_COLORS, renderBiasTag, getStateMediaLabel, enforceSourceDiversity, ensureNonWesternInTopStories } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
@@ -79,10 +79,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal }) {
     }
 
     const _demote = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
-    const topStories = enforceSourceDiversity(DAILY_BRIEFING.filter(item => {
-      if (_demote.some(kw => (item.headline || '').toLowerCase().includes(kw))) return false;
-      return item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category);
-    })).slice(0, 5);
+    const topStories = ensureNonWesternInTopStories(
+      enforceSourceDiversity(DAILY_BRIEFING.filter(item => {
+        if (_demote.some(kw => (item.headline || '').toLowerCase().includes(kw))) return false;
+        return item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category);
+      })).slice(0, 5),
+      DAILY_BRIEFING
+    );
     const allNews = enforceSourceDiversity(DAILY_BRIEFING).slice(0, visibleCount);
 
     const catBorderColor = (cat) => cat === 'CONFLICT' ? '#ef4444' : cat === 'CRISIS' ? '#f97316' : '#eab308';
