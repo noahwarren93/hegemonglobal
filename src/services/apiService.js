@@ -135,7 +135,11 @@ const RSS_FEEDS = {
     { url: 'https://feeds.foxnews.com/foxnews/world', source: 'Fox News' },
     { url: 'https://nypost.com/tag/world-news/feed/', source: 'New York Post' },
     { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
-    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' }
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
+    { url: 'https://www.cgtn.com/subscribe/rss/section/world.xml', source: 'CGTN' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
+    { url: 'https://tass.com/rss/v2.xml', source: 'TASS' },
+    { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' }
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
