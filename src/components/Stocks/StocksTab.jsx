@@ -1,29 +1,10 @@
 // StocksTab.jsx - Renders stock market data in sidebar Stocks tab
 
-import { useState, useEffect, useCallback } from 'react';
 import { MARKET_CONFIG, STATIC_FALLBACK_DATA } from '../../data/stocksData';
-import { loadStockData, formatStockPrice } from '../../services/stocksService';
+import { formatStockPrice } from '../../services/stocksService';
 
-export default function StocksTab({ onOpenStocksModal }) {
-  const [stocksData, setStocksData] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const handleUpdate = useCallback(({ data, lastUpdated: updated, error: err }) => {
-    setStocksData(data);
-    setLastUpdated(updated);
-    setError(err);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadStockData(handleUpdate);
-    const interval = setInterval(() => loadStockData(handleUpdate), 180000); // 3 min
-    return () => clearInterval(interval);
-  }, [handleUpdate]);
-
-  if (loading && !stocksData) {
+export default function StocksTab({ onOpenStocksModal, stocksData, stocksLastUpdated }) {
+  if (!stocksData) {
     return (
       <div className="sidebar-empty">
         <div className="loading-spinner" />
@@ -56,9 +37,10 @@ export default function StocksTab({ onOpenStocksModal }) {
     isStaticFallback: true
   }));
 
-  const headerColor = error ? '#ef4444' : '#22c55e';
-  const headerBg = error ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)';
-  const updatedStr = lastUpdated ? lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
+  const hasError = markets.some(m => m.isStaticFallback);
+  const headerColor = hasError ? '#ef4444' : '#22c55e';
+  const headerBg = hasError ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)';
+  const updatedStr = stocksLastUpdated ? stocksLastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
 
   return (
     <>
@@ -66,12 +48,11 @@ export default function StocksTab({ onOpenStocksModal }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: headerColor, letterSpacing: '1px' }}>
             GLOBAL MARKETS
-            {loading && <span style={{ fontWeight: 400, fontSize: '9px', color: '#6b7280', marginLeft: '6px' }}>fetching...</span>}
           </div>
           <div style={{ fontSize: '8px', color: '#6b7280' }}>Last updated: {updatedStr}</div>
         </div>
         <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
-          {error ? 'Market data temporarily unavailable \u2014 will retry' : 'Live data via Yahoo Finance (may be delayed 15 min)'}
+          {hasError ? 'Market data temporarily unavailable \u2014 will retry' : 'Live data via Yahoo Finance (may be delayed 15 min)'}
         </div>
       </div>
       {markets.map((market, i) => {

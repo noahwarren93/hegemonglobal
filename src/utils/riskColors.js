@@ -476,8 +476,13 @@ export const CONFLICT_ZONES = [
   { lat: 17.0, lng: -3.0, radius: 0.10, name: 'Sahel', intensity: 0.8 }
 ];
 
+// Cached conflict zone meshes for animation (avoids iterating all globe children every frame)
+const _conflictZoneMeshes = [];
+
 // Add conflict zones to globe
 export function addConflictZones(globe, latLngToVector3) {
+  _conflictZoneMeshes.length = 0;
+
   CONFLICT_ZONES.forEach(zone => {
     // Create pulsing conflict zone circle
     const geometry = new THREE.RingGeometry(zone.radius * 0.5, zone.radius, 32);
@@ -495,6 +500,7 @@ export function addConflictZones(globe, latLngToVector3) {
     ring.userData = { isConflictZone: true, intensity: zone.intensity, baseOpacity: 0.3 * zone.intensity };
 
     globe.add(ring);
+    _conflictZoneMeshes.push(ring);
 
     // Add outer glow ring
     const glowGeom = new THREE.RingGeometry(zone.radius, zone.radius * 1.3, 32);
@@ -512,15 +518,14 @@ export function addConflictZones(globe, latLngToVector3) {
   });
 }
 
-// Animate conflict zones (pulsing effect)
-export function animateConflictZones(globe) {
-  if (!globe) return;
+// Animate conflict zones (pulsing effect) - uses cached mesh references
+export function animateConflictZones() {
+  if (_conflictZoneMeshes.length === 0) return;
   const time = Date.now() * 0.002;
 
-  globe.children.forEach(child => {
-    if (child.userData && child.userData.isConflictZone && !child.userData.isGlow) {
-      const pulse = 0.5 + 0.5 * Math.sin(time * child.userData.intensity);
-      child.material.opacity = child.userData.baseOpacity * (0.5 + 0.5 * pulse);
-    }
-  });
+  for (let i = 0; i < _conflictZoneMeshes.length; i++) {
+    const mesh = _conflictZoneMeshes[i];
+    const pulse = 0.5 + 0.5 * Math.sin(time * mesh.userData.intensity);
+    mesh.material.opacity = mesh.userData.baseOpacity * (0.5 + 0.5 * pulse);
+  }
 }

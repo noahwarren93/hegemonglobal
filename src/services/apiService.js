@@ -74,7 +74,6 @@ export function saveBriefingSnapshot() {
     allDates.slice(0, BRIEFING_MAX_HISTORY + 1).forEach(d => { trimmed[d] = history[d]; });
 
     localStorage.setItem(BRIEFING_HISTORY_KEY, JSON.stringify(trimmed));
-    console.log(`Briefing snapshot saved for ${todayKey} (${DAILY_BRIEFING.length} articles)`);
   } catch (e) {
     console.warn('Failed to save briefing snapshot:', e.message);
   }
@@ -116,7 +115,6 @@ export function seedPastBriefingIfEmpty() {
   };
 
   localStorage.setItem(BRIEFING_HISTORY_KEY, JSON.stringify(history));
-  console.log('[BRIEFING] Seeded past briefing for', yKey);
 }
 
 // ============================================================
@@ -188,7 +186,6 @@ const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes per country
 function getCachedNews(countryName) {
   const cached = NEWS_CACHE[countryName];
   if (cached && (Date.now() - cached.timestamp) < NEWS_CACHE_TTL) {
-    console.log(`Using cached news for ${countryName} (${Math.round((Date.now() - cached.timestamp) / 1000)}s old)`);
     return cached.data;
   }
   return null;
@@ -291,7 +288,6 @@ export function initializeRiskState() {
       overrideReason: ''
     };
   }
-  console.log(`[RISK] Initialized dynamic risk state for ${Object.keys(COUNTRIES).length} countries`);
 }
 
 // ============================================================
@@ -384,7 +380,6 @@ export function calculateDynamicRisk(countryName) {
 
     if (state.changeLog.length > 50) state.changeLog = state.changeLog.slice(-50);
 
-    console.log(`[RISK] ${countryName}: ${oldRisk} → ${newLevel} (score: ${state.accumulatedScore.toFixed(1)})`);
   }
 
   return state.currentRisk;
@@ -421,12 +416,6 @@ export async function updateDynamicRisks(articles) {
     }
   }
 
-  if (changedCountries.length > 0) {
-    console.log(`[RISK] ${changedCountries.length} countries changed risk level`);
-  }
-
-  const articleCount = Object.values(articlesByCountry).reduce((sum, arr) => sum + arr.length, 0);
-  console.log(`[RISK] Analyzed ${articleCount} articles across ${Object.keys(articlesByCountry).length} countries`);
 
   return changedCountries;
 }
@@ -738,7 +727,6 @@ async function tryNewsAPI(apiName, url, parseResults, timeoutMs = 8000) {
     const data = await response.json();
     const results = parseResults(data);
     if (results && results.length > 0) {
-      console.log(`${apiName} returned ${results.length} results`);
       return results;
     }
   } catch (error) {
@@ -752,7 +740,6 @@ async function tryNewsAPI(apiName, url, parseResults, timeoutMs = 8000) {
 // ============================================================
 
 export async function fetchCountryNews(countryName) {
-  console.log(`Fetching news for ${countryName}...`);
 
   // 1. Check cache
   const cached = getCachedNews(countryName);
@@ -764,7 +751,6 @@ export async function fetchCountryNews(countryName) {
       isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
     );
     if (briefingRelevant.length >= 2) {
-      console.log(`Found ${briefingRelevant.length} relevant articles in DAILY_BRIEFING for ${countryName}`);
       const result = briefingRelevant.slice(0, 10).map(article => ({
         headline: article.title || article.headline,
         source: formatSourceName(article.source_id || article.source || 'News'),
@@ -782,7 +768,6 @@ export async function fetchCountryNews(countryName) {
     const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
     if (articles && articles.length > 0) {
-      console.log(`Google News RSS returned ${articles.length} results for ${countryName}`);
       const result = formatArticlesForDisplay(articles, countryName);
       if (result.length > 0) { setCachedNews(countryName, result); return result; }
     }
@@ -844,7 +829,6 @@ export async function fetchCountryNews(countryName) {
   }
 
   // 7. No news found
-  console.log(`No news found for ${countryName} from any source`);
   const emptyResult = [];
   setCachedNews(countryName, emptyResult);
   return emptyResult;
@@ -855,7 +839,6 @@ export async function fetchCountryNews(countryName) {
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews } = {}) {
-  console.log('Fetching live news from RSS feeds...');
 
   if (onStatusUpdate) onStatusUpdate('fetching');
 
@@ -865,7 +848,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
     const feedResults = await Promise.all(feedPromises);
 
     const allArticles = feedResults.flat();
-    console.log(`RSS feeds returned ${allArticles.length} total articles`);
 
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -915,7 +897,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
             const pos = Math.min((i + 1) * interval + i, newArticles.length);
             newArticles.splice(pos, 0, rightFallbacks[i]);
           }
-          console.log(`Injected ${needed} right-leaning articles for bias balance`);
         }
       }
 
@@ -941,7 +922,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...balanced);
 
-      console.log('Live news updated:', DAILY_BRIEFING.length, 'articles from RSS feeds');
 
       saveBriefingSnapshot();
       seedPastBriefingIfEmpty();
@@ -967,13 +947,11 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
     try {
       const api = NEWS_APIS[apiName];
       if (!api || !api.key || !api.buildDailyUrl) continue;
-      console.log(`Trying ${apiName} for daily briefing...`);
       const response = await fetch(api.buildDailyUrl(api.key));
       if (response.ok) {
         const data = await response.json();
         const results = api.parseResults(data);
         if (results && results.length > 0) {
-          console.log(`Fallback to ${apiName}:`, results.length, 'articles');
           const fallbackArticles = results.filter(article => {
             const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
             if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;

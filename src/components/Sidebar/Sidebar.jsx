@@ -20,7 +20,7 @@ const ITEMS_PER_PAGE = 15;
 
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
-export default function Sidebar({ onCountryClick, onOpenStocksModal }) {
+export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated }) {
   const [activeTab, setActiveTab] = useState('daily');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
@@ -348,7 +348,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal }) {
   };
 
   const renderStocksTab = () => {
-    return <StocksTab onOpenStocksModal={onOpenStocksModal} />;
+    return <StocksTab onOpenStocksModal={onOpenStocksModal} stocksData={stocksData} stocksLastUpdated={stocksLastUpdated} />;
   };
 
   const renderTabContent = () => {

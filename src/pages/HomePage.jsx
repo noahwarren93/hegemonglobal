@@ -1,6 +1,6 @@
 // HomePage.jsx - Main dashboard page combining all components
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { COUNTRIES } from '../data/countries';
 import { RISK_COLORS } from '../utils/riskColors';
 import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL } from '../services/apiService';
@@ -8,12 +8,13 @@ import { loadStockData } from '../services/stocksService';
 
 import GlobeView from '../components/Globe/GlobeView';
 import Sidebar from '../components/Sidebar/Sidebar';
-import CountryModal from '../components/Modals/CountryModal';
-import TOSModal from '../components/Modals/TOSModal';
-import StocksModal from '../components/Stocks/StocksModal';
-import ComparePanel from '../components/Compare/ComparePanel';
 import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
+
+const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
+const TOSModal = lazy(() => import('../components/Modals/TOSModal'));
+const StocksModal = lazy(() => import('../components/Stocks/StocksModal'));
+const ComparePanel = lazy(() => import('../components/Compare/ComparePanel'));
 
 // ============================================================
 // Search Overlay Component
@@ -678,37 +679,49 @@ export default function HomePage() {
         <Sidebar
           onCountryClick={handleCountryClick}
           onOpenStocksModal={handleOpenStocksModal}
+          stocksData={stocksData}
+          stocksLastUpdated={stocksLastUpdated}
         />
       </div>
 
-      {/* ===== Modals ===== */}
-      <CountryModal
-        countryName={selectedCountry}
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setSelectedCountry(null); }}
-      />
+      {/* ===== Modals (lazy loaded) ===== */}
+      <Suspense fallback={null}>
+        {modalOpen && (
+          <CountryModal
+            countryName={selectedCountry}
+            isOpen={modalOpen}
+            onClose={() => { setModalOpen(false); setSelectedCountry(null); }}
+          />
+        )}
 
-      <TOSModal
-        isOpen={tosOpen}
-        onClose={() => setTosOpen(false)}
-      />
+        {tosOpen && (
+          <TOSModal
+            isOpen={tosOpen}
+            onClose={() => setTosOpen(false)}
+          />
+        )}
 
-      <StocksModal
-        country={stocksModalCountry}
-        stocksData={stocksData}
-        lastUpdated={stocksLastUpdated}
-        isOpen={stocksModalOpen}
-        onClose={() => { setStocksModalOpen(false); setStocksModalCountry(null); }}
-      />
+        {stocksModalOpen && (
+          <StocksModal
+            country={stocksModalCountry}
+            stocksData={stocksData}
+            lastUpdated={stocksLastUpdated}
+            isOpen={stocksModalOpen}
+            onClose={() => { setStocksModalOpen(false); setStocksModalCountry(null); }}
+          />
+        )}
 
-      {/* Compare Panel */}
-      <ComparePanel
-        isActive={compareMode && compareCountries.length > 0}
-        countries={compareCountries}
-        onClose={handleCloseCompare}
-        onAddCountry={handleAddCompareCountry}
-        onRemoveCountry={handleRemoveCompareCountry}
-      />
+        {/* Compare Panel */}
+        {compareMode && compareCountries.length > 0 && (
+          <ComparePanel
+            isActive={true}
+            countries={compareCountries}
+            onClose={handleCloseCompare}
+            onAddCountry={handleAddCompareCountry}
+            onRemoveCountry={handleRemoveCompareCountry}
+          />
+        )}
+      </Suspense>
     </>
   );
 }
