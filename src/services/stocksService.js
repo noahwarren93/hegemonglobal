@@ -109,7 +109,6 @@ function fetchYahooFinanceBatch(proxyIdx = 0) {
       return quotes;
     })
     .catch(err => {
-      console.warn('Batch fetch with proxy ' + proxyIdx + ' failed:', err.message);
       if (proxyIdx < CORS_PROXIES.length - 1) {
         return fetchYahooFinanceBatch(proxyIdx + 1);
       }
@@ -158,7 +157,6 @@ function fetchYahooFinanceIndividual(sym, proxyIdx = 0) {
       };
     })
     .catch(err => {
-      console.warn('Individual fetch ' + sym + ' with proxy ' + proxyIdx + ' failed:', err.message);
       if (proxyIdx < CORS_PROXIES.length - 1) {
         return fetchYahooFinanceIndividual(sym, proxyIdx + 1);
       }
@@ -172,10 +170,7 @@ function fetchYahooFinanceIndividual(sym, proxyIdx = 0) {
 
 export function fetchStockQuotes() {
   return fetchYahooFinanceBatch()
-    .then(quotes => {
-      console.log('Batch fetch successful, got ' + Object.keys(quotes).length + ' quotes');
-      return quotes;
-    })
+    .then(quotes => quotes)
     .catch(batchErr => {
       console.warn('Batch fetch failed, falling back to individual requests:', batchErr.message);
       const allSyms = getAllSymbols();
@@ -315,7 +310,6 @@ export async function loadStockData(onUpdate) {
   // Check localStorage cache first
   const cached = cacheGet('hegemon_stocks_cache');
   if (cached) {
-    console.log('Using cached stock data');
     fetchInProgress = false;
     if (onUpdate) onUpdate({ data: cached, lastUpdated: new Date(), error: false });
     return;
