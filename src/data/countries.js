@@ -2555,19 +2555,24 @@ export const GEOPOLITICAL_SIGNALS = [
   'airstrike', 'drone strike', 'ballistic', 'warhead', 'enrichment', 'proliferation',
   'chemical weapons', 'biological weapons', 'arms deal', 'defense spending',
   'proxy war', 'airspace', 'naval', 'strait', 'blockade', 'embargo',
-  // Conflict actors
+  'uranium', 'centrifuge', 'intercontinental', 'tactical nuclear',
+  'iron dome', 'cold war',
+  // Conflict actors & groups
   'insurgent', 'militia', 'separatist', 'regime', 'coup', 'junta',
+  'idf', 'houthi', 'hezbollah', 'wagner',
   // Diplomacy & international
   'sanctions', 'nato', 'united nations', 'treaty', 'diplomatic', 'summit',
   'bilateral', 'multilateral', 'alliance', 'geopolit', 'sovereignty',
-  'territorial', 'annexation', 'border conflict', 'occupation',
+  'territorial', 'annexation', 'border', 'occupation', 'liberation',
   'peacekeeping', 'deterrence', 'escalation', 'provocation',
-  'election interference', 'espionage', 'cyber attack',
+  'intelligence', 'espionage', 'cyber attack', 'election interference',
+  // Key capitals / power centers
+  'pentagon', 'kremlin', 'beijing', 'tehran', 'pyongyang',
   // International bodies
   'european union', 'african union', 'g7', 'g20', 'iaea', 'opec',
   'world bank', 'imf',
   // Humanitarian / crisis
-  'humanitarian crisis', 'refugee crisis', 'famine', 'genocide',
+  'humanitarian crisis', 'refugee', 'famine', 'genocide',
   'ethnic cleansing', 'war crime', 'displacement', 'siege',
   // Economy (only macro/international)
   'trade war', 'tariff', 'debt crisis', 'oil price', 'energy crisis',

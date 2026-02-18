@@ -1,0 +1,1 @@
+import{j as o}from"./index-UT9ppW-Q.js";function r(){return o.jsx("div",{children:"How To Use"})}export{r as default};

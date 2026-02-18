@@ -695,7 +695,10 @@ export function isRelevantToCountry(title, description, countryName) {
 export async function fetchRSS(feedUrl, sourceName) {
   try {
     const proxyUrl = RSS_PROXY_BASE + '/rss?url=' + encodeURIComponent(feedUrl);
-    const response = await fetch(proxyUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(proxyUrl, { signal: controller.signal });
+    clearTimeout(timeout);
     if (!response.ok) return fetchRSSFallback(feedUrl, sourceName);
 
     const data = await response.json();
