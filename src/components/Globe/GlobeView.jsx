@@ -44,6 +44,23 @@ export function findNearestCountry(lat, lng, maxDist) {
   return minDist <= maxDist ? nearest : null;
 }
 
+// Find all countries within a distance threshold, sorted by proximity
+function findNearbyCountries(lat, lng, maxDist) {
+  const results = [];
+  Object.entries(COUNTRIES).forEach(([name, data]) => {
+    const dLat = data.lat - lat;
+    let dLng = data.lng - lng;
+    if (dLng > 180) dLng -= 360;
+    if (dLng < -180) dLng += 360;
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    if (dist <= maxDist) {
+      results.push({ name, data, dist });
+    }
+  });
+  results.sort((a, b) => a.dist - b.dist);
+  return results;
+}
+
 // ============================================================
 // Font size adjustment (sidebar / modal zoom)
 // ============================================================
@@ -109,6 +126,72 @@ const BORDER_DATA = {
 };
 
 // ============================================================
+// Default camera/globe state for reset
+// ============================================================
+
+const DEFAULT_CAMERA_Z = 2.8;
+const DEFAULT_GLOBE_ROTATION = { x: 0, y: 0 };
+
+// ============================================================
+// DisambiguationPopup Component
+// ============================================================
+
+function DisambiguationPopup({ countries, position, onSelect, onClose }) {
+  if (!countries || countries.length === 0 || !position) return null;
+
+  return (
+    <div
+      className="country-tooltip"
+      style={{
+        display: 'block',
+        position: 'fixed',
+        left: Math.min(position.x + 15, window.innerWidth - 220),
+        top: Math.min(position.y + 15, window.innerHeight - (countries.length * 36 + 40)),
+        zIndex: 1001,
+        pointerEvents: 'auto',
+        padding: '8px 0',
+        minWidth: '180px',
+        maxWidth: '250px',
+      }}
+      onMouseLeave={onClose}
+    >
+      <div style={{ fontSize: '9px', color: '#6b7280', padding: '0 12px 6px', borderBottom: '1px solid #1f2937', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Select country
+      </div>
+      {countries.map(({ name, data }) => (
+        <div
+          key={name}
+          onClick={() => onSelect(name)}
+          style={{
+            padding: '6px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+            transition: 'background 0.15s',
+            borderRadius: '4px',
+            margin: '0 4px',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(55,65,81,0.5)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        >
+          <span style={{ fontSize: '12px', fontWeight: 500, color: '#e5e7eb' }}>
+            {data.flag} {name}
+          </span>
+          <span
+            className={`tooltip-risk risk-${data.risk}`}
+            style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600, textTransform: 'uppercase' }}
+          >
+            {data.risk}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
 // GlobeView Component
 // ============================================================
 
@@ -135,6 +218,9 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const isPinchingRef = useRef(false);
   const lastPinchDistRef = useRef(0);
 
+  // Reset view animation ref
+  const resetAnimRef = useRef(null);
+
   // Callback refs (so event handlers always see latest props)
   const onCountryClickRef = useRef(onCountryClick);
   const onCountryHoverRef = useRef(onCountryHover);
@@ -147,6 +233,59 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const [tooltipData, setTooltipData] = useState(null);
   const [mousePos, setMousePos] = useState(null);
   const tradeTooltipRef = useRef(null);
+
+  // Disambiguation popup state
+  const [disambigData, setDisambigData] = useState(null);
+
+  // --------------------------------------------------------
+  // Smooth reset view animation
+  // --------------------------------------------------------
+  const resetView = useCallback(() => {
+    const globe = globeRef.current;
+    const camera = cameraRef.current;
+    if (!globe || !camera) return;
+
+    // Cancel any in-progress reset animation
+    if (resetAnimRef.current) cancelAnimationFrame(resetAnimRef.current);
+
+    const startRotX = globe.rotation.x;
+    const startRotY = globe.rotation.y;
+    const startZ = camera.position.z;
+    const startX = camera.position.x;
+    const targetX = window.innerWidth <= 768 ? 0 : -0.15;
+    const startTime = Date.now();
+    const duration = 600; // ms
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animateReset() {
+      const elapsed = Date.now() - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const e = easeOutCubic(t);
+
+      globe.rotation.x = startRotX + (DEFAULT_GLOBE_ROTATION.x - startRotX) * e;
+      // Normalize Y rotation to avoid spinning many full turns
+      let targetY = DEFAULT_GLOBE_ROTATION.y;
+      let diffY = targetY - startRotY;
+      // Bring within [-PI, PI] range
+      while (diffY > Math.PI) diffY -= 2 * Math.PI;
+      while (diffY < -Math.PI) diffY += 2 * Math.PI;
+      globe.rotation.y = startRotY + diffY * e;
+
+      camera.position.z = startZ + (DEFAULT_CAMERA_Z - startZ) * e;
+      camera.position.x = startX + (targetX - startX) * e;
+
+      if (t < 1) {
+        resetAnimRef.current = requestAnimationFrame(animateReset);
+      } else {
+        resetAnimRef.current = null;
+      }
+    }
+
+    animateReset();
+  }, []);
 
   // --------------------------------------------------------
   // Three.js init + cleanup
@@ -168,7 +307,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.z = 2.8;
+    camera.position.z = DEFAULT_CAMERA_Z;
     camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
     cameraRef.current = camera;
 
@@ -298,6 +437,84 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Conflict zone overlays
     addConflictZones(globe, latLngToVector3);
 
+    // ---- Disambiguation helper ----
+    // Determines the click-range threshold based on zoom level.
+    // At default zoom (2.8), countries within ~5 degrees are ambiguous.
+    // When zoomed in closer, reduce the threshold so the user can be more precise.
+    function getDisambigThreshold() {
+      const z = camera.position.z;
+      // Scale linearly: at z=2.8 → 5°, at z=1.5 → 2°
+      return Math.max(2, Math.min(5, (z - 1.5) * (5 - 2) / (2.8 - 1.5) + 2));
+    }
+
+    // Core click logic — shared by mouse click and touch tap
+    // Returns the selected country name or shows disambiguation popup
+    function handleCountrySelection(clientX, clientY) {
+      setDisambigData(null);
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouseRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouseRef.current, camera);
+
+      // Priority: try marker dots first
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      if (intersects.length > 0) {
+        const clickedName = intersects[0].object.userData.name;
+
+        // Check if multiple markers are very close together on screen
+        // Collect all intersected markers within a tight 3D distance
+        const hitPoint = intersects[0].point;
+        const nearbyMarkers = intersects.filter(hit => {
+          return hit.point.distanceTo(hitPoint) < 0.12;
+        });
+
+        if (nearbyMarkers.length > 1) {
+          // Multiple markers overlapping — show disambiguation
+          const countries = nearbyMarkers
+            .map(hit => ({ name: hit.object.userData.name, data: hit.object.userData.data, dist: hit.distance }))
+            .filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i); // dedupe
+          if (countries.length > 1) {
+            setDisambigData({ countries, position: { x: clientX, y: clientY } });
+            return null;
+          }
+        }
+
+        if (clickedName && onCountryClickRef.current) {
+          onCountryClickRef.current(clickedName);
+        }
+        return clickedName;
+      }
+
+      // Try globe surface - find nearest tracked country
+      const globeHits = raycaster.intersectObject(globe);
+      if (globeHits.length > 0) {
+        const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
+        const threshold = getDisambigThreshold();
+        const nearby = findNearbyCountries(lat, lng, threshold);
+
+        if (nearby.length > 1) {
+          // Multiple countries within click range — show disambiguation
+          setDisambigData({ countries: nearby, position: { x: clientX, y: clientY } });
+          return null;
+        }
+
+        if (nearby.length === 1) {
+          if (onCountryClickRef.current) onCountryClickRef.current(nearby[0].name);
+          return nearby[0].name;
+        }
+
+        // Fall back to wider search with single result
+        const country = findNearestCountry(lat, lng);
+        if (country && onCountryClickRef.current) {
+          onCountryClickRef.current(country);
+        }
+        return country;
+      }
+
+      return null;
+    }
+
     // ---- Mouse move (hover + tooltip) ----
     // Matches original globe.js onMouseMove exactly
     let lastHoverTime = 0;
@@ -368,43 +585,41 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     }
 
     // ---- Click ----
-    // Matches original globe.js onClick exactly:
-    // 1. Marker hit first (no drag check) - takes intersects[0] directly
-    // 2. Drag check only before globe surface fallback
-    // 3. Globe surface → findNearestCountry
     function handleClick(event) {
       clickSuppressUntil = Date.now() + 200;
 
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(mouseRef.current, camera);
-
-      // Priority: try marker dots first
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
-      if (intersects.length > 0) {
-        const clickedName = intersects[0].object.userData.name;
-        if (clickedName && onCountryClickRef.current) {
-          onCountryClickRef.current(clickedName);
-        }
-        return;
-      }
-
-      // Check if this was a drag (skip globe surface click after drag)
+      // Check if this was a drag (skip click after drag)
       if (clickStartRef.current) {
         const dx = Math.abs(event.clientX - clickStartRef.current.x);
         const dy = Math.abs(event.clientY - clickStartRef.current.y);
         if (dx > 5 || dy > 5) return;
       }
 
-      // Try globe surface - find nearest tracked country
+      handleCountrySelection(event.clientX, event.clientY);
+    }
+
+    // ---- Double-click on empty space → reset view ----
+    function handleDblClick(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouseRef.current, camera);
+
+      // Only reset if double-click is on empty globe space (no marker hit)
+      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      if (intersects.length > 0) return;
+
+      // Check if on globe surface but no nearby country
       const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
-        const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
-        const country = findNearestCountry(lat, lng);
-        if (country && onCountryClickRef.current) {
-          onCountryClickRef.current(country);
-        }
+        const ll = vector3ToLatLng(globeHits[0].point, globe);
+        const nearby = findNearestCountry(ll.lat, ll.lng, 5);
+        if (nearby) return; // close to a country, don't reset
+      }
+
+      // Reset the view
+      if (typeof window._globeResetView === 'function') {
+        window._globeResetView();
       }
     }
 
@@ -427,6 +642,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       isDraggingRef.current = true;
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
       clickStartRef.current = { x: e.clientX, y: e.clientY };
+      // Close disambiguation popup on any click outside it
+      setDisambigData(null);
     }
     function handleDocMouseUp() {
       isDraggingRef.current = false;
@@ -476,32 +693,14 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       prevMouseRef.current = { x: touch.clientX, y: touch.clientY };
     }
 
-    // Touch tap (mobile click) — same logic as handleClick
+    // Touch tap (mobile click) — uses shared disambiguation logic
     function handleTouchEnd(e) {
       if (e.changedTouches.length === 1) {
         const touch = e.changedTouches[0];
         const dx = Math.abs(touch.clientX - touchStartRef.current.x);
         const dy = Math.abs(touch.clientY - touchStartRef.current.y);
         if (dx < 10 && dy < 10) {
-          const rect = renderer.domElement.getBoundingClientRect();
-          mouseRef.current.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-          mouseRef.current.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
-          raycaster.setFromCamera(mouseRef.current, camera);
-          // Copied verbatim from original globe.js touchend handler:
-          // Priority: try marker dots first
-          const touchIntersects = raycaster.intersectObjects(countryMeshesRef.current);
-          if (touchIntersects.length > 0) {
-            const tName = touchIntersects[0].object.userData.name;
-            if (tName && onCountryClickRef.current) onCountryClickRef.current(tName);
-            return;
-          }
-          // Try globe surface - find nearest tracked country
-          const touchGlobe = raycaster.intersectObject(globe);
-          if (touchGlobe.length > 0) {
-            const tll = vector3ToLatLng(touchGlobe[0].point, globe);
-            const tCountry = findNearestCountry(tll.lat, tll.lng);
-            if (tCountry && onCountryClickRef.current) onCountryClickRef.current(tCountry);
-          }
+          handleCountrySelection(touch.clientX, touch.clientY);
         }
       }
     }
@@ -517,6 +716,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // ---- Attach event listeners ----
     container.addEventListener('mousemove', handleMouseMove);
     container.addEventListener('click', handleClick);
+    container.addEventListener('dblclick', handleDblClick);
     container.addEventListener('mouseleave', handleMouseLeave);
     container.addEventListener('mousedown', handleMouseDown);
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -542,9 +742,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // ---- Cleanup ----
     return () => {
       cancelAnimationFrame(animFrameRef.current);
+      if (resetAnimRef.current) cancelAnimationFrame(resetAnimRef.current);
 
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('click', handleClick);
+      container.removeEventListener('dblclick', handleDblClick);
       container.removeEventListener('mouseleave', handleMouseLeave);
       container.removeEventListener('mousedown', handleMouseDown);
       container.removeEventListener('touchstart', handleTouchStart);
@@ -593,8 +795,20 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       toggleRotation,
       autoRotateRef,
     };
-    return () => { delete window._globeView; };
-  }, [toggleRotation]);
+    window._globeResetView = resetView;
+    return () => {
+      delete window._globeView;
+      delete window._globeResetView;
+    };
+  }, [toggleRotation, resetView]);
+
+  // Handle disambiguation popup selection
+  const handleDisambigSelect = useCallback((countryName) => {
+    setDisambigData(null);
+    if (countryName && onCountryClickRef.current) {
+      onCountryClickRef.current(countryName);
+    }
+  }, []);
 
   // Trade route tooltip functions (matches original trade-routes.js showTradeRouteTooltip/hideTradeRouteTooltip)
   useEffect(() => {
@@ -643,6 +857,47 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         <div className="globe-spinner" />
       </div>
       <Tooltip data={tooltipData} mousePos={mousePos} />
+      <DisambiguationPopup
+        countries={disambigData?.countries}
+        position={disambigData?.position}
+        onSelect={handleDisambigSelect}
+        onClose={() => setDisambigData(null)}
+      />
+      {/* Reset View Button */}
+      <button
+        onClick={resetView}
+        title="Reset View"
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
+          zIndex: 10,
+          background: 'rgba(10,10,15,0.95)',
+          WebkitBackdropFilter: 'blur(12px)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid #1f2937',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px',
+          color: '#9ca3af',
+          fontSize: '10px',
+          fontWeight: 500,
+          fontFamily: 'inherit',
+          transition: 'all 0.2s',
+          letterSpacing: '0.3px',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#374151'; e.currentTarget.style.color = '#e5e7eb'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1f2937'; e.currentTarget.style.color = '#9ca3af'; }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 1 3 6.9"/>
+          <polyline points="3 22 3 12 13 12"/>
+        </svg>
+        Reset View
+      </button>
       <div
         ref={tradeTooltipRef}
         id="tradeTooltip"

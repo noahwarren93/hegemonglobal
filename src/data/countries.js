@@ -29,29 +29,17 @@ export const COUNTRIES = {
     ]
   },
 
-  'Gaza': { lat: 31.35, lng: 34.31, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '2.1M', gdp: '$1.7B', leader: 'Hamas', title: 'Humanitarian Crisis',
+  'Palestine': { lat: 31.5, lng: 34.9, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Occupation & Humanitarian Crisis',
     analysis: {
-      what: 'Following Hamas\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza. The operation has resulted in catastrophic destruction, with over 35,000 Palestinians killed according to Gaza health authorities. Nearly 2 million people have been displaced, with most facing severe food insecurity. The UN has warned of famine conditions. Critical infrastructure including hospitals, schools, and water systems has been devastated. Hostage negotiations have produced limited exchanges but many captives remain in Gaza.',
-      why: 'This conflict has the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting 12% of global trade. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. The long-term governance of Gaza remains unresolved.',
-      next: 'Multiple trajectories are possible: expanded regional war if Israel strikes Iran or Hezbollah launches major attacks; a fragile ceasefire; prolonged low-intensity conflict; or international intervention for post-war governance. Key variables include hostage negotiations, Hezbollah\'s calculations, Iranian decision-making, and US policy.'
+      what: 'Palestine encompasses the West Bank and Gaza Strip, both under varying degrees of Israeli control. Following Hamas\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza, killing over 35,000 Palestinians and displacing nearly 2 million. Famine conditions have spread. In the West Bank, the Palestinian Authority governs limited areas under Israeli military occupation while over 700,000 settlers expand into Palestinian territory. Settler violence and IDF raids have intensified since October 2023. The PA faces a legitimacy crisis with no elections since 2006, while Hamas retains control in Gaza despite the devastation.',
+      why: 'The Palestinian situation is the central fault line of Middle East geopolitics with the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting 12% of global trade. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. Palestinian statehood recognition has gained momentum internationally, while settlements make a two-state solution increasingly difficult.',
+      next: 'Multiple trajectories are possible: expanded regional war, a fragile ceasefire, prolonged low-intensity conflict, or international intervention. Post-Abbas succession planning is critical for the PA. Post-war Gaza governance remains unresolved. Watch for: hostage negotiations, Hezbollah escalation, Iranian decision-making, settler violence trends, and international recognition moves. The fundamental question of Palestinian statehood remains the core unresolved issue.'
     },
     news: [
       { source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns famine conditions spreading in northern Gaza', url: '#' },
       { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Ceasefire talks resume in Cairo with US mediation', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Humanitarian aid deliveries remain severely restricted', url: '#' }
-    ]
-  },
-
-  'Palestine': { lat: 31.95, lng: 35.23, flag: '🇵🇸', risk: 'extreme', region: 'Middle East', pop: '3.2M', gdp: '$18B', leader: 'Mahmoud Abbas', title: 'Occupied Territories',
-    analysis: {
-      what: 'The Palestinian Authority governs parts of the West Bank under Israeli military occupation. Settlement expansion continues with over 700,000 Israeli settlers in the West Bank and East Jerusalem. The PA faces a legitimacy crisis with no elections held since 2006. West Bank raids and settler violence have intensified since October 2023.',
-      why: 'The Israeli-Palestinian conflict remains central to Middle East stability. West Bank tensions risk a third intifada. Palestinian statehood recognition has gained momentum internationally. The humanitarian situation and restrictions on movement affect daily life for millions.',
-      next: 'Post-Abbas succession planning is critical. International pressure for two-state solution continues but settlements make it increasingly difficult. Watch for PA governance reforms, settler violence trends, and international recognition moves.'
-    },
-    news: [
-      { source: 'Al Jazeera', bias: 'left', time: '2h ago', headline: 'West Bank raids intensify amid rising tensions', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '4h ago', headline: 'Settlement expansion plans draw international criticism', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Palestinian Authority faces governance challenges', url: '#' }
+      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'West Bank raids intensify amid rising tensions', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Settlement expansion plans draw international criticism', url: '#' }
     ]
   },
 
@@ -1481,7 +1469,7 @@ export const HORIZON_EVENTS = [
 export const NEWSLETTER_REGIONS = {
   'Europe': ['Ukraine', 'Russia', 'Belarus', 'Moldova', 'Poland', 'Romania', 'Hungary', 'Balkans', 'UK', 'Britain', 'France', 'Germany', 'Italy', 'Spain', 'NATO', 'EU', 'European', 'Serbia', 'Kosovo', 'Greece', 'Turkey', 'Ankara', 'Istanbul', 'Sweden', 'Finland', 'Norway', 'Denmark', 'Greenland', 'Arctic', 'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Czech', 'Slovakia', 'Croatia', 'Bulgaria', 'Portugal', 'Ireland'],
   'Asia': ['China', 'Taiwan', 'Japan', 'Korea', 'North Korea', 'South Korea', 'Hong Kong', 'Myanmar', 'Thailand', 'Vietnam', 'Philippines', 'Indonesia', 'Malaysia', 'Singapore', 'Cambodia', 'Laos', 'India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Afghanistan', 'Kabul', 'Delhi', 'Mumbai', 'Beijing', 'Tokyo', 'Seoul', 'Pyongyang', 'Manila', 'Jakarta', 'Bangkok'],
-  'Middle East': ['Israel', 'Gaza', 'Palestine', 'Iran', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'UAE', 'Qatar', 'Jordan', 'Egypt', 'Houthi', 'Hezbollah', 'Tehran', 'Baghdad', 'Damascus', 'Beirut', 'Riyadh', 'Dubai', 'Oman', 'Bahrain', 'Kuwait'],
+  'Middle East': ['Israel', 'Palestine', 'Gaza', 'Iran', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'UAE', 'Qatar', 'Jordan', 'Egypt', 'Houthi', 'Hezbollah', 'Tehran', 'Baghdad', 'Damascus', 'Beirut', 'Riyadh', 'Dubai', 'Oman', 'Bahrain', 'Kuwait'],
   'Africa': ['Sudan', 'Somalia', 'Ethiopia', 'DRC', 'Congo', 'Nigeria', 'Kenya', 'South Africa', 'Mali', 'Niger', 'Burkina', 'Sahel', 'Libya', 'Algeria', 'Morocco', 'Tunisia', 'Mozambique', 'Rwanda', 'Uganda', 'Tanzania', 'Ghana', 'Senegal', 'Cameroon', 'Zimbabwe', 'Eritrea'],
   'Americas': ['United States', 'US', 'Brazil', 'Mexico', 'Venezuela', 'Colombia', 'Argentina', 'Haiti', 'Cuba', 'Canada', 'Chile', 'Peru', 'Ecuador', 'Bolivia', 'Panama', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Dominican', 'Puerto Rico', 'Washington', 'Congress', 'White House']
 };
@@ -1666,10 +1654,10 @@ export const SANCTIONS_DATA = {
     ],
     by: []
   },
-  'Gaza': {
+  'Palestine': {
     severity: 'heavy',
     on: [
-      { by: 'Israel', reason: 'Land/sea/air blockade on Hamas-governed territory', year: 2007 },
+      { by: 'Israel', reason: 'Land/sea/air blockade on Gaza; military occupation of West Bank', year: 2007 },
       { by: 'US', reason: 'Sanctions on Hamas as designated terrorist organization', year: 1997 },
       { by: 'EU', reason: 'Hamas listed as terrorist organization; funding restrictions', year: 2003 }
     ],
@@ -1794,7 +1782,7 @@ export const SANCTIONS_DATA = {
       { by: 'Turkey', reason: 'Total export/import ban imposed 2024 over Gaza conflict', year: 2024 }
     ],
     by: [
-      { target: 'Gaza', reason: 'Blockade on goods and movement (with Egypt)', year: 2007 },
+      { target: 'Palestine (Gaza)', reason: 'Blockade on goods and movement (with Egypt)', year: 2007 },
       { target: 'Iran/Hezbollah', reason: 'Enforcement of international sanctions; trade restrictions', year: 2010 }
     ]
   },

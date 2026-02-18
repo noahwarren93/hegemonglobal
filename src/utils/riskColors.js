@@ -356,8 +356,7 @@ export const COUNTRY_TRENDS = {
   // Active conflicts - consistently high
   'Ukraine': [90, 92, 88, 90, 95, 92, 90, 88, 90, 92, 90, 92], // Ongoing war, fluctuates with offensives
   'Russia': [85, 88, 85, 88, 90, 88, 85, 88, 90, 88, 90, 92], // Tied to Ukraine war
-  'Palestine': [70, 72, 75, 78, 80, 82, 80, 78, 80, 82, 80, 78], // West Bank tensions elevated
-  'Gaza': [95, 98, 95, 92, 90, 88, 85, 88, 92, 95, 92, 90], // Post-Oct 2023, gradually stabilizing
+  'Palestine': [95, 98, 95, 92, 90, 88, 85, 88, 92, 95, 92, 90], // Gaza war + West Bank tensions
   'Israel': [80, 85, 82, 78, 75, 72, 70, 72, 75, 78, 75, 78], // Regional tensions persist
   'Sudan': [75, 80, 85, 90, 92, 95, 95, 95, 92, 92, 95, 95], // Civil war escalated Apr 2023
   'Myanmar': [70, 72, 75, 78, 80, 82, 85, 85, 88, 88, 85, 85], // Resistance gaining ground
@@ -393,8 +392,7 @@ export const COUNTRY_TRENDS = {
 export const COUNTRY_INDICATORS = {
   'Ukraine': [{ text: 'Conflict', dir: 'up' }, { text: 'Aid Flow', dir: 'stable' }, { text: 'Diplomacy', dir: 'down' }],
   'Russia': [{ text: 'Sanctions', dir: 'up' }, { text: 'Economy', dir: 'down' }, { text: 'Military', dir: 'stable' }],
-  'Palestine': [{ text: 'Occupation', dir: 'up' }, { text: 'Settlements', dir: 'up' }, { text: 'Statehood', dir: 'stable' }],
-  'Gaza': [{ text: 'Humanitarian', dir: 'up' }, { text: 'Ceasefire', dir: 'stable' }, { text: 'Rebuilding', dir: 'down' }],
+  'Palestine': [{ text: 'Humanitarian', dir: 'up' }, { text: 'Occupation', dir: 'up' }, { text: 'Ceasefire', dir: 'stable' }],
   'Israel': [{ text: 'Security', dir: 'up' }, { text: 'Politics', dir: 'down' }, { text: 'Regional', dir: 'up' }],
   'Sudan': [{ text: 'Violence', dir: 'up' }, { text: 'Famine', dir: 'up' }, { text: 'Displacement', dir: 'up' }],
   'Myanmar': [{ text: 'Resistance', dir: 'up' }, { text: 'Junta Control', dir: 'down' }, { text: 'Refugees', dir: 'up' }],
@@ -465,7 +463,7 @@ export function renderTrendChart(countryName, risk) {
 
 export const CONFLICT_ZONES = [
   { lat: 48.5, lng: 35.0, radius: 0.15, name: 'Ukraine-Russia', intensity: 1.0 },
-  { lat: 31.5, lng: 34.5, radius: 0.08, name: 'Gaza', intensity: 1.0 },
+  { lat: 31.5, lng: 34.9, radius: 0.10, name: 'Palestine', intensity: 1.0 },
   { lat: 15.5, lng: 32.5, radius: 0.12, name: 'Sudan', intensity: 0.9 },
   { lat: 21.0, lng: 96.0, radius: 0.10, name: 'Myanmar', intensity: 0.8 },
   { lat: 15.5, lng: 47.5, radius: 0.10, name: 'Yemen', intensity: 0.8 },
