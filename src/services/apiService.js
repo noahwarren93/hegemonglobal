@@ -693,77 +693,60 @@ export function isRelevantToCountry(title, description, countryName) {
 // ============================================================
 
 export async function fetchRSS(feedUrl, sourceName) {
+  // Primary: rss2json (stable, fast)
+  try {
+    const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
+    const response = await fetch(proxyUrl);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'ok' && data.items) {
+        return parseRSSItems(data, sourceName);
+      }
+    }
+  } catch (error) {
+    console.warn(`rss2json failed for ${sourceName}:`, error.message);
+  }
+
+  // Backup: Cloudflare Worker proxy
   try {
     const proxyUrl = RSS_PROXY_BASE + '/rss?url=' + encodeURIComponent(feedUrl);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(proxyUrl, { signal: controller.signal });
     clearTimeout(timeout);
-    if (!response.ok) return fetchRSSFallback(feedUrl, sourceName);
-
-    const data = await response.json();
-    if (data.status !== 'ok' || !data.items) return [];
-
-    return data.items.map(item => {
-      let source = sourceName || data.feed?.title || 'News';
-      let title = decodeHTMLEntities(item.title);
-
-      // Google News embeds real source in title: "Headline - Al Jazeera"
-      if (source.includes('Google News') && title) {
-        const dashIdx = title.lastIndexOf(' - ');
-        if (dashIdx > 0) {
-          source = title.substring(dashIdx + 3).trim();
-          title = title.substring(0, dashIdx).trim();
-        }
-      }
-
-      return {
-        title: title,
-        description: decodeHTMLEntities(item.description || item.content || ''),
-        link: item.link,
-        source_id: source,
-        pubDate: item.pubDate
-      };
-    });
-  } catch (error) {
-    console.warn(`RSS fetch failed for ${sourceName}:`, error.message);
-    return fetchRSSFallback(feedUrl, sourceName);
-  }
-}
-
-async function fetchRSSFallback(feedUrl, sourceName) {
-  try {
-    const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
-    const response = await fetch(proxyUrl);
     if (!response.ok) return [];
 
     const data = await response.json();
     if (data.status !== 'ok' || !data.items) return [];
-
-    return data.items.map(item => {
-      let source = sourceName || data.feed?.title || 'News';
-      let title = decodeHTMLEntities(item.title);
-
-      if (source.includes('Google News') && title) {
-        const dashIdx = title.lastIndexOf(' - ');
-        if (dashIdx > 0) {
-          source = title.substring(dashIdx + 3).trim();
-          title = title.substring(0, dashIdx).trim();
-        }
-      }
-
-      return {
-        title: title,
-        description: decodeHTMLEntities(item.description || item.content || ''),
-        link: item.link,
-        source_id: source,
-        pubDate: item.pubDate
-      };
-    });
+    return parseRSSItems(data, sourceName);
   } catch (error) {
-    console.warn(`RSS fallback also failed for ${sourceName}:`, error.message);
+    console.warn(`Worker proxy also failed for ${sourceName}:`, error.message);
     return [];
   }
+}
+
+function parseRSSItems(data, sourceName) {
+  return data.items.map(item => {
+    let source = sourceName || data.feed?.title || 'News';
+    let title = decodeHTMLEntities(item.title);
+
+    // Google News embeds real source in title: "Headline - Al Jazeera"
+    if (source.includes('Google News') && title) {
+      const dashIdx = title.lastIndexOf(' - ');
+      if (dashIdx > 0) {
+        source = title.substring(dashIdx + 3).trim();
+        title = title.substring(0, dashIdx).trim();
+      }
+    }
+
+    return {
+      title: title,
+      description: decodeHTMLEntities(item.description || item.content || ''),
+      link: item.link,
+      source_id: source,
+      pubDate: item.pubDate
+    };
+  });
 }
 
 // ============================================================
