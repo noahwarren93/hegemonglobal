@@ -693,34 +693,17 @@ export function isRelevantToCountry(title, description, countryName) {
 // ============================================================
 
 export async function fetchRSS(feedUrl, sourceName) {
-  // Primary: rss2json (stable, fast)
+  // rss2json only — Worker proxy disabled until stable
   try {
     const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
     const response = await fetch(proxyUrl);
-    if (response.ok) {
-      const data = await response.json();
-      if (data.status === 'ok' && data.items) {
-        return parseRSSItems(data, sourceName);
-      }
-    }
-  } catch (error) {
-    console.warn(`rss2json failed for ${sourceName}:`, error.message);
-  }
-
-  // Backup: Cloudflare Worker proxy
-  try {
-    const proxyUrl = RSS_PROXY_BASE + '/rss?url=' + encodeURIComponent(feedUrl);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(proxyUrl, { signal: controller.signal });
-    clearTimeout(timeout);
     if (!response.ok) return [];
 
     const data = await response.json();
     if (data.status !== 'ok' || !data.items) return [];
     return parseRSSItems(data, sourceName);
   } catch (error) {
-    console.warn(`Worker proxy also failed for ${sourceName}:`, error.message);
+    console.warn(`RSS fetch failed for ${sourceName}:`, error.message);
     return [];
   }
 }
