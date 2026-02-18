@@ -188,22 +188,6 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 }
 
 // ============================================================
-// Breaking News Banner
-// ============================================================
-
-function BreakingBanner({ text, onClose }) {
-  if (!text) return null;
-
-  return (
-    <div className="breaking-banner active">
-      <span className="breaking-label">BREAKING</span>
-      <span className="breaking-text">{text}</span>
-      <button className="breaking-close" onClick={onClose}>&times;</button>
-    </div>
-  );
-}
-
-// ============================================================
 // Watchlist Component
 // ============================================================
 
@@ -287,9 +271,6 @@ export default function HomePage() {
   const [stocksData, setStocksData] = useState(null);
   const [stocksLastUpdated, setStocksLastUpdated] = useState(null);
 
-  // --- Breaking news ---
-  const [breakingNews, setBreakingNews] = useState(null);
-
   // --- Stat popup ---
   const [statPopupType, setStatPopupType] = useState(null);
   const [statPopupOpen, setStatPopupOpen] = useState(false);
@@ -325,19 +306,12 @@ export default function HomePage() {
       },
       onComplete: () => {
         setIsLoading(false);
-      },
-      onBreakingNews: (headline) => {
-        setBreakingNews(headline);
       }
     });
 
     // Auto-refresh news
     const newsInterval = setInterval(() => {
-      fetchLiveNews({
-        onBreakingNews: (headline) => {
-          setBreakingNews(headline);
-        }
-      });
+      fetchLiveNews();
     }, NEWS_REFRESH_INTERVAL);
 
     // Load stock data for stocks modal
@@ -537,10 +511,7 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Breaking News Banner */}
-      <BreakingBanner text={breakingNews} onClose={() => setBreakingNews(null)} />
-
-      <div className={`app${breakingNews ? ' banner-active' : ''}`}>
+      <div className="app">
         {/* ===== Globe Area (left) ===== */}
         <div className="globe-container">
           {/* Globe */}

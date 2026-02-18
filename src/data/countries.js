@@ -2539,40 +2539,42 @@ export const IRRELEVANT_KEYWORDS = [
   // Philanthropy & lifestyle fluff
   'philanthropic', 'philanthropy', 'donate his fortune', 'charitable foundation',
   'cookbook', 'fashion week', 'baby bump', 'engagement ring',
-  'album review', 'movie review', 'netflix series'
+  'album review', 'movie review', 'netflix series',
+  // Domestic slop / local news
+  'red lobster', 'restaurant closing', 'shuttering', 'sewage spill',
+  'megyn kelly', 'randy fine', 'streamer', 'coach denies', 'college offer',
+  'mistrial', 'antifa protest', 't-shirt', 'frontbench team',
+  'warns over dissent', 'full bigot'
 ];
 
-// Geopolitical relevance signals - articles must contain at least one to pass
+// Geopolitical relevance signals - STRICT: articles must contain at least one to pass
+// Only strong geopolitical/international terms. No generic words like 'government', 'security', 'policy'.
 export const GEOPOLITICAL_SIGNALS = [
-  // Government & politics
-  'government', 'president', 'prime minister', 'chancellor', 'parliament', 'congress', 'senate',
-  'election', 'vote', 'minister', 'diplomat', 'embassy', 'policy', 'legislation', 'sanction',
-  'treaty', 'alliance', 'coalition', 'opposition', 'regime', 'coup', 'protest', 'reform',
-  // Military & security
-  'military', 'army', 'navy', 'air force', 'war', 'conflict', 'attack', 'bomb', 'missile',
-  'nuclear', 'weapon', 'defense', 'troops', 'soldier', 'terror', 'intelligence', 'nato',
-  'security', 'ceasefire', 'offensive', 'drone', 'airstrike', 'insurgent', 'militia',
-  // International bodies & diplomacy
-  'united nations', 'european union', 'african union', 'summit', 'bilateral', 'diplomatic',
-  'foreign affairs', 'international', 'global', 'geopolit', 'multilateral', 'g7', 'g20',
-  'world bank', 'imf', 'iaea', 'who ', 'wto',
-  // Macro economy & trade
-  'economy', 'inflation', 'gdp', 'trade war', 'tariff', 'central bank', 'federal reserve',
-  'interest rate', 'recession', 'debt crisis', 'currency', 'oil price', 'opec', 'supply chain',
-  'energy crisis', 'gas pipeline', 'economic growth', 'fiscal', 'monetary',
-  // Crisis & humanitarian
-  'crisis', 'emergency', 'disaster', 'refugee', 'humanitarian', 'famine', 'drought',
-  'earthquake', 'tsunami', 'pandemic', 'outbreak', 'evacuation', 'displacement', 'siege',
-  // Key geopolitical terms
-  'sovereignty', 'territorial', 'border', 'annexation', 'occupation', 'independence',
-  'separatist', 'civil war', 'ethnic', 'genocide', 'human rights', 'war crime',
-  'espionage', 'cyber attack', 'disinformation', 'propaganda',
-  // Technology & power
-  'ai regulation', 'chip export', 'tech ban', 'surveillance', 'space program',
-  'hypersonic', 'submarine', 'aircraft carrier', 'arms deal', 'defense spending',
-  // Resources & climate policy
-  'climate change', 'emissions', 'carbon', 'renewable', 'fossil fuel', 'mining',
-  'rare earth', 'food security', 'water crisis', 'deforestation', 'sea level'
+  // War & military
+  'war', 'military', 'troops', 'missile', 'nuclear', 'invasion', 'ceasefire',
+  'airstrike', 'drone strike', 'ballistic', 'warhead', 'enrichment', 'proliferation',
+  'chemical weapons', 'biological weapons', 'arms deal', 'defense spending',
+  'proxy war', 'airspace', 'naval', 'strait', 'blockade', 'embargo',
+  // Conflict actors
+  'insurgent', 'militia', 'separatist', 'regime', 'coup', 'junta',
+  // Diplomacy & international
+  'sanctions', 'nato', 'united nations', 'treaty', 'diplomatic', 'summit',
+  'bilateral', 'multilateral', 'alliance', 'geopolit', 'sovereignty',
+  'territorial', 'annexation', 'border conflict', 'occupation',
+  'peacekeeping', 'deterrence', 'escalation', 'provocation',
+  'election interference', 'espionage', 'cyber attack',
+  // International bodies
+  'european union', 'african union', 'g7', 'g20', 'iaea', 'opec',
+  'world bank', 'imf',
+  // Humanitarian / crisis
+  'humanitarian crisis', 'refugee crisis', 'famine', 'genocide',
+  'ethnic cleansing', 'war crime', 'displacement', 'siege',
+  // Economy (only macro/international)
+  'trade war', 'tariff', 'debt crisis', 'oil price', 'energy crisis',
+  'gas pipeline', 'supply chain', 'rare earth', 'food security',
+  // Specific geopolitical terms
+  'civil war', 'independence', 'disinformation', 'propaganda',
+  'hypersonic', 'submarine', 'aircraft carrier', 'chip export', 'tech ban'
 ];
 
 export const ESCALATION_KEYWORDS = {

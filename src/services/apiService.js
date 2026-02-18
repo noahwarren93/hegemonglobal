@@ -3,11 +3,35 @@
 import {
   COUNTRIES, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK,
   IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, ESCALATION_KEYWORDS,
-  DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS, BREAKING_KEYWORDS
+  DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS
 } from '../data/countries';
 import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
+
+// ============================================================
+// HTML Entity Decoder
+// ============================================================
+
+function decodeHTMLEntities(text) {
+  if (!text) return text;
+  return text
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#8217;/g, "\u2019")
+    .replace(/&#8216;/g, "\u2018")
+    .replace(/&#8220;/g, "\u201C")
+    .replace(/&#8221;/g, "\u201D")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x2F;/g, '/')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
 
 // ============================================================
 // Briefing History (localStorage persistence)
@@ -679,7 +703,7 @@ export async function fetchRSS(feedUrl, sourceName) {
 
     return data.items.map(item => {
       let source = sourceName || data.feed?.title || 'News';
-      let title = item.title;
+      let title = decodeHTMLEntities(item.title);
 
       // Google News embeds real source in title: "Headline - Al Jazeera"
       if (source.includes('Google News') && title) {
@@ -692,7 +716,7 @@ export async function fetchRSS(feedUrl, sourceName) {
 
       return {
         title: title,
-        description: item.description || item.content || '',
+        description: decodeHTMLEntities(item.description || item.content || ''),
         link: item.link,
         source_id: source,
         pubDate: item.pubDate
@@ -715,7 +739,7 @@ async function fetchRSSFallback(feedUrl, sourceName) {
 
     return data.items.map(item => {
       let source = sourceName || data.feed?.title || 'News';
-      let title = item.title;
+      let title = decodeHTMLEntities(item.title);
 
       if (source.includes('Google News') && title) {
         const dashIdx = title.lastIndexOf(' - ');
@@ -727,7 +751,7 @@ async function fetchRSSFallback(feedUrl, sourceName) {
 
       return {
         title: title,
-        description: item.description || item.content || '',
+        description: decodeHTMLEntities(item.description || item.content || ''),
         link: item.link,
         source_id: source,
         pubDate: item.pubDate
@@ -880,7 +904,7 @@ export async function fetchCountryNews(countryName) {
 // Fetch Live News (callback-based for React)
 // ============================================================
 
-export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews } = {}) {
+export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
   if (onStatusUpdate) onStatusUpdate('fetching');
 
@@ -962,6 +986,18 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
         }
       }
 
+      // Deprioritize tabloid sources — never in top 5
+      const DEPRIORITIZE_SOURCES = ['new york post', 'ny post', 'daily mail'];
+      for (let i = 0; i < Math.min(5, balanced.length); i++) {
+        const src = (balanced[i].source || '').toLowerCase();
+        if (DEPRIORITIZE_SOURCES.some(ds => src.includes(ds))) {
+          const [item] = balanced.splice(i, 1);
+          const dest = Math.min(balanced.length, 5);
+          balanced.splice(dest, 0, item);
+          i--;
+        }
+      }
+
       // Mutate shared DAILY_BRIEFING array
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...balanced);
@@ -969,11 +1005,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
 
       saveBriefingSnapshot();
       seedPastBriefingIfEmpty();
-
-      // Check for breaking news
-      if (onBreakingNews) {
-        checkBreakingNews(DAILY_BRIEFING, onBreakingNews);
-      }
 
       // Dynamic risk analysis
       updateDynamicRisks(DAILY_BRIEFING);
@@ -1033,25 +1064,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
   }
 
   if (onStatusUpdate) onStatusUpdate('failed');
-}
-
-// ============================================================
-// Breaking News Detection (callback-based)
-// ============================================================
-
-export function checkBreakingNews(articles, onBreakingNews) {
-  for (const article of articles) {
-    const text = (article.headline || article.title || '').toLowerCase();
-    const timeText = (article.time || '').toLowerCase();
-
-    const isRecent = timeText.includes('m ago') ||
-                     (timeText.includes('h ago') && parseInt(timeText) <= 6);
-
-    if (isRecent && BREAKING_KEYWORDS.some(kw => text.includes(kw))) {
-      if (onBreakingNews) onBreakingNews(article.headline || article.title);
-      return;
-    }
-  }
 }
 
 // ============================================================
