@@ -144,9 +144,9 @@ function GlobeScreen({ globeRef }) {
           <div className="globe-stat-title">Risk Breakdown</div>
           {RISK_ORDER.map(risk => riskCounts[risk] > 0 && (
             <div key={risk} className="globe-risk-row">
-              <div className="globe-risk-dot" style={{ background: RISK_COLORS[risk] }} />
+              <div className="globe-risk-dot" style={{ background: RISK_COLORS[risk]?.hex }} />
               <div className="globe-risk-name">{risk.charAt(0).toUpperCase() + risk.slice(1)}</div>
-              <div className="globe-risk-count" style={{ color: RISK_COLORS[risk] }}>{riskCounts[risk]}</div>
+              <div className="globe-risk-count" style={{ color: RISK_COLORS[risk]?.hex }}>{riskCounts[risk]}</div>
             </div>
           ))}
         </div>
@@ -157,7 +157,7 @@ function GlobeScreen({ globeRef }) {
               <div key={name} className="globe-risk-row">
                 <span style={{ fontSize: 14 }}>{c.flag}</span>
                 <div className="globe-risk-name">{name}</div>
-                <div style={{ fontSize: 9, color: RISK_COLORS[c.risk], fontWeight: 700, textTransform: 'uppercase' }}>{c.risk}</div>
+                <div style={{ fontSize: 9, color: RISK_COLORS[c.risk]?.hex, fontWeight: 700, textTransform: 'uppercase' }}>{c.risk}</div>
               </div>
             ))}
           </div>
@@ -240,10 +240,10 @@ function HotspotsScreen() {
       </div>
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 12, overflow: 'hidden', alignContent: 'start' }}>
         {regions.slice(0, 8).map(({ region, countries, worstRisk, criticalCount }) => (
-          <div key={region} className="risk-tier" style={{ borderLeft: `3px solid ${RISK_COLORS[worstRisk] || '#3b82f6'}` }}>
+          <div key={region} className="risk-tier" style={{ borderLeft: `3px solid ${RISK_COLORS[worstRisk]?.hex || '#3b82f6'}` }}>
             <div className="risk-tier-header">
-              <div className="risk-tier-dot" style={{ background: RISK_COLORS[worstRisk] }} />
-              <div className="risk-tier-name" style={{ color: RISK_COLORS[worstRisk] }}>{region}</div>
+              <div className="risk-tier-dot" style={{ background: RISK_COLORS[worstRisk]?.hex }} />
+              <div className="risk-tier-name" style={{ color: RISK_COLORS[worstRisk]?.hex }}>{region}</div>
               <div className="risk-tier-count">
                 {criticalCount > 0 && <span style={{ color: '#ef4444', marginRight: 8 }}>{criticalCount} critical</span>}
                 {countries.length} countries
@@ -251,10 +251,10 @@ function HotspotsScreen() {
             </div>
             <div className="risk-tier-countries">
               {countries.slice(0, 10).map(c => (
-                <div key={c.name} className="risk-country-chip" style={{ borderColor: (RISK_COLORS[c.risk] || '#3b82f6') + '66' }}>
+                <div key={c.name} className="risk-country-chip" style={{ borderColor: (RISK_COLORS[c.risk]?.hex || '#3b82f6') + '66' }}>
                   <span className="flag">{c.flag}</span>
                   {c.name}
-                  <span style={{ fontSize: 8, color: RISK_COLORS[c.risk], fontWeight: 700 }}>{c.risk.toUpperCase()}</span>
+                  <span style={{ fontSize: 8, color: RISK_COLORS[c.risk]?.hex, fontWeight: 700 }}>{c.risk.toUpperCase()}</span>
                 </div>
               ))}
               {countries.length > 10 && (
@@ -286,8 +286,8 @@ function RiskScreen() {
         {RISK_ORDER.map(risk => tiers[risk].length > 0 && (
           <div key={risk} className="risk-tier">
             <div className="risk-tier-header">
-              <div className="risk-tier-dot" style={{ background: RISK_COLORS[risk] }} />
-              <div className="risk-tier-name" style={{ color: RISK_COLORS[risk] }}>{risk}</div>
+              <div className="risk-tier-dot" style={{ background: RISK_COLORS[risk]?.hex }} />
+              <div className="risk-tier-name" style={{ color: RISK_COLORS[risk]?.hex }}>{risk}</div>
               <div className="risk-tier-count">{tiers[risk].length} countries</div>
             </div>
             <div className="risk-tier-countries">
@@ -348,11 +348,11 @@ function ForecastScreen() {
       <div style={{ fontSize: 18, fontWeight: 700, color: '#06b6d4', letterSpacing: 1, marginBottom: 4 }}>STRATEGIC FORECAST</div>
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: 14, overflow: 'auto', alignContent: 'start' }}>
         {FORECASTS.map((f, i) => (
-          <div key={i} className="market-card" style={{ borderLeft: `3px solid ${RISK_COLORS[f.risk] || '#3b82f6'}` }}>
+          <div key={i} className="market-card" style={{ borderLeft: `3px solid ${RISK_COLORS[f.risk]?.hex || '#3b82f6'}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <div className="risk-tier-dot" style={{ background: RISK_COLORS[f.risk] }} />
+              <div className="risk-tier-dot" style={{ background: RISK_COLORS[f.risk]?.hex }} />
               <div style={{ fontSize: 15, fontWeight: 700, color: '#e5e7eb' }}>{f.region}</div>
-              <div style={{ fontSize: 9, color: RISK_COLORS[f.risk], fontWeight: 700, textTransform: 'uppercase', marginLeft: 'auto' }}>{f.risk}</div>
+              <div style={{ fontSize: 9, color: RISK_COLORS[f.risk]?.hex, fontWeight: 700, textTransform: 'uppercase', marginLeft: 'auto' }}>{f.risk}</div>
             </div>
             <div style={{ fontSize: 11, color: '#9ca3af', lineHeight: 1.5, marginBottom: 8 }}>{f.current}</div>
             <div style={{ fontSize: 11, color: '#d1d5db', lineHeight: 1.5, marginBottom: 10, fontStyle: 'italic' }}>{f.forecast}</div>
@@ -534,7 +534,7 @@ export default function TVDashboard() {
       const z = (1.02) * Math.sin(phi) * Math.sin(theta);
 
       const markerGeom = new THREE.SphereGeometry(0.015, 8, 8);
-      const col = RISK_COLORS[c.risk] || '#3b82f6';
+      const col = RISK_COLORS[c.risk]?.hex || '#3b82f6';
       const markerMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(col) });
       const marker = new THREE.Mesh(markerGeom, markerMat);
       marker.position.set(x, y, z);

@@ -457,55 +457,51 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Priority: try marker dots first
+      // Resolve click location to lat/lng for disambiguation checks
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+      const globeHits = raycaster.intersectObject(globe);
+
+      // Determine click lat/lng from the best available hit
+      let clickLat = null, clickLng = null;
       if (intersects.length > 0) {
-        const clickedName = intersects[0].object.userData.name;
+        // Use the hit marker's known country coords for precision
+        const hitData = intersects[0].object.userData.data;
+        if (hitData) { clickLat = hitData.lat; clickLng = hitData.lng; }
+      } else if (globeHits.length > 0) {
+        const ll = vector3ToLatLng(globeHits[0].point, globe);
+        clickLat = ll.lat;
+        clickLng = ll.lng;
+      }
 
-        // Check if multiple markers are very close together on screen
-        // Collect all intersected markers within a tight 3D distance
-        const hitPoint = intersects[0].point;
-        const nearbyMarkers = intersects.filter(hit => {
-          return hit.point.distanceTo(hitPoint) < 0.12;
-        });
+      if (clickLat !== null) {
+        const threshold = getDisambigThreshold();
+        const nearby = findNearbyCountries(clickLat, clickLng, threshold);
 
-        if (nearbyMarkers.length > 1) {
-          // Multiple markers overlapping — show disambiguation
-          const countries = nearbyMarkers
-            .map(hit => ({ name: hit.object.userData.name, data: hit.object.userData.data, dist: hit.distance }))
-            .filter((c, i, arr) => arr.findIndex(x => x.name === c.name) === i); // dedupe
-          if (countries.length > 1) {
-            setDisambigData({ countries, position: { x: clientX, y: clientY } });
-            return null;
-          }
+        if (nearby.length > 1) {
+          // Multiple countries within click range — show disambiguation popup
+          setDisambigData({ countries: nearby, position: { x: clientX, y: clientY } });
+          return null;
         }
 
+        // Single country — select it directly
+        if (nearby.length === 1) {
+          if (onCountryClickRef.current) onCountryClickRef.current(nearby[0].name);
+          return nearby[0].name;
+        }
+      }
+
+      // Marker was hit but no nearby cluster found (isolated marker)
+      if (intersects.length > 0) {
+        const clickedName = intersects[0].object.userData.name;
         if (clickedName && onCountryClickRef.current) {
           onCountryClickRef.current(clickedName);
         }
         return clickedName;
       }
 
-      // Try globe surface - find nearest tracked country
-      const globeHits = raycaster.intersectObject(globe);
+      // Globe surface hit — wider fallback
       if (globeHits.length > 0) {
-        const { lat, lng } = vector3ToLatLng(globeHits[0].point, globe);
-        const threshold = getDisambigThreshold();
-        const nearby = findNearbyCountries(lat, lng, threshold);
-
-        if (nearby.length > 1) {
-          // Multiple countries within click range — show disambiguation
-          setDisambigData({ countries: nearby, position: { x: clientX, y: clientY } });
-          return null;
-        }
-
-        if (nearby.length === 1) {
-          if (onCountryClickRef.current) onCountryClickRef.current(nearby[0].name);
-          return nearby[0].name;
-        }
-
-        // Fall back to wider search with single result
-        const country = findNearestCountry(lat, lng);
+        const country = findNearestCountry(clickLat, clickLng);
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }

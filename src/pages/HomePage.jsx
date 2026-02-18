@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { COUNTRIES } from '../data/countries';
 import { RISK_COLORS } from '../utils/riskColors';
-import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL } from '../services/apiService';
+import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL, COUNTRY_DEMONYMS } from '../services/apiService';
 import { loadStockData } from '../services/stocksService';
 
 import GlobeView from '../components/Globe/GlobeView';
@@ -33,11 +33,16 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
 
   const results = useMemo(() => {
     if (!query || query.length < 1) return [];
+    const q = query.toLowerCase();
     return Object.entries(COUNTRIES)
-      .filter(([name, c]) =>
-        name.toLowerCase().includes(query.toLowerCase()) ||
-        c.region.toLowerCase().includes(query.toLowerCase())
-      )
+      .filter(([name, c]) => {
+        if (name.toLowerCase().includes(q)) return true;
+        if (c.region.toLowerCase().includes(q)) return true;
+        // Check demonyms/aliases (e.g. "gaza" → Palestine, "hamas" → Palestine)
+        const aliases = COUNTRY_DEMONYMS[name];
+        if (aliases && aliases.some(alias => alias.includes(q) || q.includes(alias))) return true;
+        return false;
+      })
       .slice(0, 12);
   }, [query]);
 

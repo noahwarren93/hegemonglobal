@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { COUNTRIES } from '../../data/countries';
 import { COMPARE_DATA } from '../../data/compareData';
+import { COUNTRY_DEMONYMS } from '../../services/apiService';
 
 const COMPARE_COLORS = ['#3b82f6', '#ef4444', '#22c55e'];
 
@@ -126,11 +127,15 @@ export default function ComparePanel({ isActive, countries, onClose, onAddCountr
       setShowSearch(false);
       return;
     }
+    const q = query.toLowerCase();
     const matches = Object.entries(COUNTRIES)
-      .filter(([name, c]) =>
-        name.toLowerCase().includes(query.toLowerCase()) ||
-        c.region.toLowerCase().includes(query.toLowerCase())
-      )
+      .filter(([name, c]) => {
+        if (name.toLowerCase().includes(q)) return true;
+        if (c.region.toLowerCase().includes(q)) return true;
+        const aliases = COUNTRY_DEMONYMS[name];
+        if (aliases && aliases.some(alias => alias.includes(q) || q.includes(alias))) return true;
+        return false;
+      })
       .filter(([name]) => !countries.includes(name))
       .slice(0, 6);
     setSearchResults(matches);

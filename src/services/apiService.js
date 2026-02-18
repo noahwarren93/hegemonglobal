@@ -509,17 +509,7 @@ export function computeStats() {
 // Country Relevance Detection (195-country demonyms)
 // ============================================================
 
-export function isRelevantToCountry(title, description, countryName) {
-  const text = ((title || '') + ' ' + (description || '')).toLowerCase();
-  const titleLower = (title || '').toLowerCase();
-  const descLower = (description || '').toLowerCase();
-  const countryLower = countryName.toLowerCase();
-
-  for (const kw of IRRELEVANT_KEYWORDS) {
-    if (text.includes(kw)) return false;
-  }
-
-  const demonyms = {
+export const COUNTRY_DEMONYMS = {
     'Afghanistan': ['afghan', 'kabul', 'taliban'],
     'Albania': ['albanian', 'tirana'],
     'Algeria': ['algerian', 'algiers'],
@@ -716,9 +706,19 @@ export function isRelevantToCountry(title, description, countryName) {
     'Yemen': ['yemeni', 'sanaa', 'houthi'],
     'Zambia': ['zambian', 'lusaka'],
     'Zimbabwe': ['zimbabwean', 'harare']
-  };
+};
 
-  const countryTerms = demonyms[countryName] || [countryLower];
+export function isRelevantToCountry(title, description, countryName) {
+  const text = ((title || '') + ' ' + (description || '')).toLowerCase();
+  const titleLower = (title || '').toLowerCase();
+  const descLower = (description || '').toLowerCase();
+  const countryLower = countryName.toLowerCase();
+
+  for (const kw of IRRELEVANT_KEYWORDS) {
+    if (text.includes(kw)) return false;
+  }
+
+  const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
   const allTerms = [countryLower, ...countryTerms];
 
   const inTitle = allTerms.some(term => titleLower.includes(term));
