@@ -936,7 +936,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         return age < STALENESS_MS;
       });
 
-      // Filter: irrelevant keywords, sports, domestic noise, require geo score >= 2
+      // Filter: irrelevant keywords, sports, domestic noise, require geo score >= 1
       const relevantArticles = freshArticles.filter(article => {
         const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
@@ -944,28 +944,31 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (category === 'SPORTS') return false;
         const fullText = (article.title || '') + ' ' + (article.description || '');
         if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
-        return scoreGeopoliticalRelevance(fullText) >= 2;
+        return scoreGeopoliticalRelevance(fullText) >= 1;
       });
 
-      // Fuzzy deduplicate — normalize titles, compare core content
-      const seen = new Set();
+      // Smart deduplicate — catch near-exact dupes but keep distinct stories on same topic
+      const seenNormalized = [];
       const uniqueArticles = relevantArticles.filter(article => {
         const normalized = (article.title || '').toLowerCase()
           .replace(/[^a-z0-9 ]/g, '')
           .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
           .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 60);
-        if (seen.has(normalized)) return false;
-        // Also check for high overlap with existing entries
-        for (const existing of seen) {
-          if (normalized.length > 15 && existing.length > 15) {
-            const shorter = normalized.length < existing.length ? normalized : existing;
-            const longer = normalized.length >= existing.length ? normalized : existing;
-            if (longer.includes(shorter.slice(0, 30))) return false;
+          .trim();
+        // Exact normalized match
+        if (seenNormalized.some(s => s === normalized)) return false;
+        // Character overlap ratio — only flag as dupe if >= 80% similar
+        for (const existing of seenNormalized) {
+          if (normalized.length > 20 && existing.length > 20) {
+            const wordsA = new Set(normalized.split(' '));
+            const wordsB = new Set(existing.split(' '));
+            let overlap = 0;
+            for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
+            const maxLen = Math.max(wordsA.size, wordsB.size);
+            if (maxLen > 0 && overlap / maxLen >= 0.8) return false;
           }
         }
-        seen.add(normalized);
+        seenNormalized.push(normalized);
         return true;
       });
 
