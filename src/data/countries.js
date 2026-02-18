@@ -29,7 +29,7 @@ export const COUNTRIES = {
     ]
   },
 
-  'Palestine': { lat: 31.3, lng: 34.3, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Occupation & Humanitarian Crisis',
+  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Occupation & Humanitarian Crisis',
     analysis: {
       what: 'Palestine encompasses the West Bank and Gaza Strip, both under varying degrees of Israeli control. Following Hamas\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza, killing over 35,000 Palestinians and displacing nearly 2 million. Famine conditions have spread. In the West Bank, the Palestinian Authority governs limited areas under Israeli military occupation while over 700,000 settlers expand into Palestinian territory. Settler violence and IDF raids have intensified since October 2023. The PA faces a legitimacy crisis with no elections since 2006, while Hamas retains control in Gaza despite the devastation.',
       why: 'The Palestinian situation is the central fault line of Middle East geopolitics with the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting 12% of global trade. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. Palestinian statehood recognition has gained momentum internationally, while settlements make a two-state solution increasingly difficult.',
@@ -135,7 +135,7 @@ export const COUNTRIES = {
   },
 
   // ==================== EXTREME ====================
-  'Israel': { lat: 31.05, lng: 34.85, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict',
+  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict',
     analysis: {
       what: 'Israel is conducting its largest military operation since 1973 following Hamas\'s October 7, 2023 attack. Ground operations in Gaza have been extensive but costly. Hezbollah engages in daily cross-border fire in the north, displacing 80,000 Israelis. Netanyahu\'s coalition includes far-right ministers pushing controversial policies. Domestic protests over judicial reform paused during war but tensions remain. The economy has been strained by mobilizing 300,000 reservists.',
       why: 'Israel is the US\'s closest Middle East ally, receiving $3.8 billion annually in military aid. The conflict tests US diplomatic influence and its ability to balance Israeli security with humanitarian concerns. Regional escalation could draw in Iran and trigger oil price spikes. Israeli technology is globally integrated. The Palestinian question shapes Muslim world politics.',

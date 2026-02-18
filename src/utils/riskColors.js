@@ -463,7 +463,7 @@ export function renderTrendChart(countryName, risk) {
 
 export const CONFLICT_ZONES = [
   { lat: 48.5, lng: 35.0, radius: 0.15, name: 'Ukraine-Russia', intensity: 1.0 },
-  { lat: 31.3, lng: 34.3, radius: 0.10, name: 'Palestine', intensity: 1.0 },
+  { lat: 30.5, lng: 35.2, radius: 0.10, name: 'Palestine', intensity: 1.0 },
   { lat: 15.5, lng: 32.5, radius: 0.12, name: 'Sudan', intensity: 0.9 },
   { lat: 21.0, lng: 96.0, radius: 0.10, name: 'Myanmar', intensity: 0.8 },
   { lat: 15.5, lng: 47.5, radius: 0.10, name: 'Yemen', intensity: 0.8 },

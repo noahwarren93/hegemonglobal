@@ -44,23 +44,6 @@ export function findNearestCountry(lat, lng, maxDist) {
   return minDist <= maxDist ? nearest : null;
 }
 
-// Find all countries within a distance threshold, sorted by proximity
-function findNearbyCountries(lat, lng, maxDist) {
-  const results = [];
-  Object.entries(COUNTRIES).forEach(([name, data]) => {
-    const dLat = data.lat - lat;
-    let dLng = data.lng - lng;
-    if (dLng > 180) dLng -= 360;
-    if (dLng < -180) dLng += 360;
-    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-    if (dist <= maxDist) {
-      results.push({ name, data, dist });
-    }
-  });
-  results.sort((a, b) => a.dist - b.dist);
-  return results;
-}
-
 // ============================================================
 // Font size adjustment (sidebar / modal zoom)
 // ============================================================
@@ -133,65 +116,6 @@ const DEFAULT_CAMERA_Z = 2.8;
 const DEFAULT_GLOBE_ROTATION = { x: 0, y: 0 };
 
 // ============================================================
-// DisambiguationPopup Component
-// ============================================================
-
-function DisambiguationPopup({ countries, position, onSelect, onClose }) {
-  if (!countries || countries.length === 0 || !position) return null;
-
-  return (
-    <div
-      className="country-tooltip"
-      style={{
-        display: 'block',
-        position: 'fixed',
-        left: Math.min(position.x + 15, window.innerWidth - 220),
-        top: Math.min(position.y + 15, window.innerHeight - (countries.length * 36 + 40)),
-        zIndex: 1001,
-        pointerEvents: 'auto',
-        padding: '8px 0',
-        minWidth: '180px',
-        maxWidth: '250px',
-      }}
-      onMouseLeave={onClose}
-    >
-      <div style={{ fontSize: '9px', color: '#6b7280', padding: '0 12px 6px', borderBottom: '1px solid #1f2937', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        Select country
-      </div>
-      {countries.map(({ name, data }) => (
-        <div
-          key={name}
-          onClick={() => onSelect(name)}
-          style={{
-            padding: '6px 12px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
-            transition: 'background 0.15s',
-            borderRadius: '4px',
-            margin: '0 4px',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(55,65,81,0.5)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          <span style={{ fontSize: '12px', fontWeight: 500, color: '#e5e7eb' }}>
-            {data.flag} {name}
-          </span>
-          <span
-            className={`tooltip-risk risk-${data.risk}`}
-            style={{ fontSize: '8px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600, textTransform: 'uppercase' }}
-          >
-            {data.risk}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ============================================================
 // GlobeView Component
 // ============================================================
 
@@ -233,9 +157,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const [tooltipData, setTooltipData] = useState(null);
   const [mousePos, setMousePos] = useState(null);
   const tradeTooltipRef = useRef(null);
-
-  // Disambiguation popup state
-  const [disambigData, setDisambigData] = useState(null);
 
   // --------------------------------------------------------
   // Smooth reset view animation
@@ -437,60 +358,16 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Conflict zone overlays
     addConflictZones(globe, latLngToVector3);
 
-    // ---- Disambiguation helper ----
-    // Determines the click-range threshold based on zoom level.
-    // At default zoom (2.8), countries within ~5 degrees are ambiguous.
-    // When zoomed in closer, reduce the threshold so the user can be more precise.
-    function getDisambigThreshold() {
-      const z = camera.position.z;
-      // Scale linearly: at z=2.8 → 5°, at z=1.5 → 2°
-      return Math.max(2, Math.min(5, (z - 1.5) * (5 - 2) / (2.8 - 1.5) + 2));
-    }
-
     // Core click logic — shared by mouse click and touch tap
-    // Returns the selected country name or shows disambiguation popup
+    // Click a dot directly or click the general area around it to open that country
     function handleCountrySelection(clientX, clientY) {
-      setDisambigData(null);
-
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // Resolve click location to lat/lng for disambiguation checks
+      // 1) Direct marker hit — always wins
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
-      const globeHits = raycaster.intersectObject(globe);
-
-      // Determine click lat/lng from the best available hit
-      let clickLat = null, clickLng = null;
-      if (intersects.length > 0) {
-        // Use the hit marker's known country coords for precision
-        const hitData = intersects[0].object.userData.data;
-        if (hitData) { clickLat = hitData.lat; clickLng = hitData.lng; }
-      } else if (globeHits.length > 0) {
-        const ll = vector3ToLatLng(globeHits[0].point, globe);
-        clickLat = ll.lat;
-        clickLng = ll.lng;
-      }
-
-      if (clickLat !== null) {
-        const threshold = getDisambigThreshold();
-        const nearby = findNearbyCountries(clickLat, clickLng, threshold);
-
-        if (nearby.length > 1) {
-          // Multiple countries within click range — show disambiguation popup
-          setDisambigData({ countries: nearby, position: { x: clientX, y: clientY } });
-          return null;
-        }
-
-        // Single country — select it directly
-        if (nearby.length === 1) {
-          if (onCountryClickRef.current) onCountryClickRef.current(nearby[0].name);
-          return nearby[0].name;
-        }
-      }
-
-      // Marker was hit but no nearby cluster found (isolated marker)
       if (intersects.length > 0) {
         const clickedName = intersects[0].object.userData.name;
         if (clickedName && onCountryClickRef.current) {
@@ -499,9 +376,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         return clickedName;
       }
 
-      // Globe surface hit — wider fallback
+      // 2) Globe surface hit — find nearest country with generous radius
+      const globeHits = raycaster.intersectObject(globe);
       if (globeHits.length > 0) {
-        const country = findNearestCountry(clickLat, clickLng);
+        const ll = vector3ToLatLng(globeHits[0].point, globe);
+        const country = findNearestCountry(ll.lat, ll.lng, 8);
         if (country && onCountryClickRef.current) {
           onCountryClickRef.current(country);
         }
@@ -638,8 +517,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       isDraggingRef.current = true;
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
       clickStartRef.current = { x: e.clientX, y: e.clientY };
-      // Close disambiguation popup on any click outside it
-      setDisambigData(null);
     }
     function handleDocMouseUp() {
       isDraggingRef.current = false;
@@ -689,7 +566,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       prevMouseRef.current = { x: touch.clientX, y: touch.clientY };
     }
 
-    // Touch tap (mobile click) — uses shared disambiguation logic
+    // Touch tap (mobile click) — uses shared click logic
     function handleTouchEnd(e) {
       if (e.changedTouches.length === 1) {
         const touch = e.changedTouches[0];
@@ -798,14 +675,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     };
   }, [toggleRotation, resetView]);
 
-  // Handle disambiguation popup selection
-  const handleDisambigSelect = useCallback((countryName) => {
-    setDisambigData(null);
-    if (countryName && onCountryClickRef.current) {
-      onCountryClickRef.current(countryName);
-    }
-  }, []);
-
   // Trade route tooltip functions (matches original trade-routes.js showTradeRouteTooltip/hideTradeRouteTooltip)
   useEffect(() => {
     window.showTradeRouteTooltip = (route, x, y) => {
@@ -853,12 +722,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         <div className="globe-spinner" />
       </div>
       <Tooltip data={tooltipData} mousePos={mousePos} />
-      <DisambiguationPopup
-        countries={disambigData?.countries}
-        position={disambigData?.position}
-        onSelect={handleDisambigSelect}
-        onClose={() => setDisambigData(null)}
-      />
       {/* Reset View Button */}
       <button
         onClick={resetView}
