@@ -1,0 +1,18 @@
+name = "hegemon-rss-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Free plan: 100,000 requests/day, 10ms CPU per request
+# More than enough for RSS proxying
+
+# Routes (optional - if you want to use a custom domain later)
+# [route]
+# pattern = "api.hegemonglobal.com/*"
+# zone_name = "hegemonglobal.com"
+
+# Environment variables (non-secret)
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (set via CLI, not in this file):
+#   npx wrangler secret put ANTHROPIC_API_KEY

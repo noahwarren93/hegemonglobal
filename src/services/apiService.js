@@ -7,6 +7,8 @@ import {
 } from '../data/countries';
 import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
 
+const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
+
 // ============================================================
 // Briefing History (localStorage persistence)
 // ============================================================
@@ -132,12 +134,16 @@ const RSS_FEEDS = {
     { url: 'https://www.cgtn.com/subscribe/rss/section/world.xml', source: 'CGTN' },
     { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
     { url: 'https://tass.com/rss/v2.xml', source: 'TASS' },
-    { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' }
+    { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' },
+    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
+    { url: 'https://nypost.com/feed/', source: 'New York Post' },
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
 
-const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 // Multiple backup News APIs
 const NEWS_APIS = {
@@ -663,9 +669,9 @@ export function isRelevantToCountry(title, description, countryName) {
 
 export async function fetchRSS(feedUrl, sourceName) {
   try {
-    const proxyUrl = RSS2JSON_API + encodeURIComponent(feedUrl);
+    const proxyUrl = RSS_PROXY_BASE + '/rss?url=' + encodeURIComponent(feedUrl);
     const response = await fetch(proxyUrl);
-    if (!response.ok) return [];
+    if (!response.ok) return fetchRSSFallback(feedUrl, sourceName);
 
     const data = await response.json();
     if (data.status !== 'ok' || !data.items) return [];
@@ -693,6 +699,41 @@ export async function fetchRSS(feedUrl, sourceName) {
     });
   } catch (error) {
     console.warn(`RSS fetch failed for ${sourceName}:`, error.message);
+    return fetchRSSFallback(feedUrl, sourceName);
+  }
+}
+
+async function fetchRSSFallback(feedUrl, sourceName) {
+  try {
+    const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
+    const response = await fetch(proxyUrl);
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    if (data.status !== 'ok' || !data.items) return [];
+
+    return data.items.map(item => {
+      let source = sourceName || data.feed?.title || 'News';
+      let title = item.title;
+
+      if (source.includes('Google News') && title) {
+        const dashIdx = title.lastIndexOf(' - ');
+        if (dashIdx > 0) {
+          source = title.substring(dashIdx + 3).trim();
+          title = title.substring(0, dashIdx).trim();
+        }
+      }
+
+      return {
+        title: title,
+        description: item.description || item.content || '',
+        link: item.link,
+        source_id: source,
+        pubDate: item.pubDate
+      };
+    });
+  } catch (error) {
+    console.warn(`RSS fallback also failed for ${sourceName}:`, error.message);
     return [];
   }
 }
@@ -1007,5 +1048,31 @@ export function checkBreakingNews(articles, onBreakingNews) {
       if (onBreakingNews) onBreakingNews(article.headline || article.title);
       return;
     }
+  }
+}
+
+// ============================================================
+// Article Summarization (via Cloudflare Worker → Claude API)
+// ============================================================
+
+export async function summarizeArticles(articles) {
+  try {
+    const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        articles: articles.map(a => ({
+          title: a.title || a.headline || '',
+          description: a.description || '',
+          source: a.source || a.source_id || '',
+          url: a.url || a.link || ''
+        }))
+      })
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.summaries || null;
+  } catch {
+    return null;
   }
 }
