@@ -2544,14 +2544,33 @@ export const IRRELEVANT_KEYWORDS = [
   'red lobster', 'restaurant closing', 'shuttering', 'sewage spill',
   'megyn kelly', 'randy fine', 'streamer', 'coach denies', 'college offer',
   'mistrial', 'antifa protest', 't-shirt', 'frontbench team',
-  'warns over dissent', 'full bigot'
+  'warns over dissent', 'full bigot',
+  // TV hosts & pundits
+  'colbert', 'kimmel', 'fallon', 'hannity', 'maddow', 'carlson', 'tucker',
+  'megyn kelly', 'joe rogan', 'bill maher', 'john oliver', 'late night',
+  'talk show', 'late show', 'tonight show', 'spiked interview',
+  // Domestic US policy (not geopolitics)
+  'body camera', 'body cam', 'fcc', 'school board', 'zoning',
+  'parking ticket', 'HOA', 'city council', 'school district',
+  // Domestic crime / trials
+  'murder trial', 'manslaughter', 'on trial for', 'climber',
+  'hit and run', 'drunk driving', 'dui', 'shoplifting',
+  // Culture war noise
+  'woke', 'anti-woke', 'dei', 'faith and flag', 'prayer in school',
+  'drag queen', 'book ban', 'critical race',
+  // Congressional noise (not geopolitics)
+  'funding fight', 'filibuster', 'committee hearing', 'oversight hearing',
+  'subpoena', 'contempt of congress', 'floor vote'
 ];
 
-// Geopolitical relevance signals - STRICT: articles must contain at least one to pass
-// Only strong geopolitical/international terms. No generic words like 'government', 'security', 'policy'.
+// Geopolitical relevance signals - STRICT: articles must contain at least one to pass.
+// No generic words. 'military' only as compound. No 'intelligence' alone. No 'border' alone.
+// Strong signals (counted double in scoring) are marked in STRONG_GEO_SIGNALS.
 export const GEOPOLITICAL_SIGNALS = [
-  // War & military
-  'war', 'military', 'troops', 'missile', 'nuclear', 'invasion', 'ceasefire',
+  // War & military (compounds only — no bare 'military')
+  'war', 'military operation', 'military strike', 'military force',
+  'military base', 'military deployment', 'military aid', 'military buildup',
+  'troops', 'missile', 'nuclear', 'invasion', 'ceasefire',
   'airstrike', 'drone strike', 'ballistic', 'warhead', 'enrichment', 'proliferation',
   'chemical weapons', 'biological weapons', 'arms deal', 'defense spending',
   'proxy war', 'airspace', 'naval', 'strait', 'blockade', 'embargo',
@@ -2559,20 +2578,23 @@ export const GEOPOLITICAL_SIGNALS = [
   'iron dome', 'cold war',
   // Conflict actors & groups
   'insurgent', 'militia', 'separatist', 'regime', 'coup', 'junta',
-  'idf', 'houthi', 'hezbollah', 'wagner',
+  'idf', 'houthi', 'hezbollah', 'wagner', 'hamas', 'taliban', 'isis',
   // Diplomacy & international
   'sanctions', 'nato', 'united nations', 'treaty', 'diplomatic', 'summit',
   'bilateral', 'multilateral', 'alliance', 'geopolit', 'sovereignty',
-  'territorial', 'annexation', 'border', 'occupation', 'liberation',
+  'territorial', 'annexation', 'occupation', 'liberation',
   'peacekeeping', 'deterrence', 'escalation', 'provocation',
-  'intelligence', 'espionage', 'cyber attack', 'election interference',
+  'espionage', 'cyber attack', 'election interference',
   // Key capitals / power centers
   'pentagon', 'kremlin', 'beijing', 'tehran', 'pyongyang',
-  // International bodies
+  // International bodies & blocs
   'european union', 'african union', 'g7', 'g20', 'iaea', 'opec',
-  'world bank', 'imf',
+  'world bank', 'imf', 'brics', 'asean',
+  // Flashpoint regions
+  'south china sea', 'taiwan strait', 'strait of hormuz',
+  'gaza', 'donbas', 'crimea',
   // Humanitarian / crisis
-  'humanitarian crisis', 'refugee', 'famine', 'genocide',
+  'humanitarian crisis', 'refugee crisis', 'famine', 'genocide',
   'ethnic cleansing', 'war crime', 'displacement', 'siege',
   // Economy (only macro/international)
   'trade war', 'tariff', 'debt crisis', 'oil price', 'energy crisis',
@@ -2580,6 +2602,28 @@ export const GEOPOLITICAL_SIGNALS = [
   // Specific geopolitical terms
   'civil war', 'independence', 'disinformation', 'propaganda',
   'hypersonic', 'submarine', 'aircraft carrier', 'chip export', 'tech ban'
+];
+
+// Strong signals count double in relevance scoring
+export const STRONG_GEO_SIGNALS = [
+  'nuclear', 'missile', 'genocide', 'ceasefire', 'sanctions', 'nato',
+  'invasion', 'airstrike', 'drone strike', 'chemical weapons', 'biological weapons',
+  'war crime', 'ethnic cleansing', 'ballistic', 'warhead', 'famine',
+  'coup', 'siege', 'proxy war', 'tactical nuclear', 'uranium', 'enrichment',
+  'hamas', 'hezbollah', 'houthi', 'wagner', 'taliban', 'isis', 'idf',
+  'south china sea', 'taiwan strait', 'strait of hormuz', 'gaza', 'donbas', 'crimea'
+];
+
+// Domestic noise patterns — regex combos that catch non-geopolitical articles
+export const DOMESTIC_NOISE_PATTERNS = [
+  /\b(colbert|kimmel|fallon|hannity|maddow|carlson|tucker)\b.*\b(republican|democrat|gop|dnc|congress)\b/i,
+  /\b(republican|democrat|gop|dnc)\b.*\b(colbert|kimmel|fallon|hannity|maddow|carlson|tucker)\b/i,
+  /\b(cbs|nbc|abc|fox news|msnbc|cnn)\b.*\b(spiked|ratings|anchor|host|segment)\b/i,
+  /\b(spiked|ratings|anchor|host|segment)\b.*\b(cbs|nbc|abc|fox news|msnbc|cnn)\b/i,
+  /\b(body cam|bodycam|body camera)\b.*\b(congress|dhs|police|officer)\b/i,
+  /\b(congress|dhs)\b.*\b(body cam|bodycam|body camera)\b/i,
+  /\b(olympic)\b.*\b(culture|woke|spectacle|controversy|boycott)\b/i,
+  /\b(school board|zoning|parking|HOA)\b.*\b(vote|meeting|decision|ruling)\b/i,
 ];
 
 export const ESCALATION_KEYWORDS = {

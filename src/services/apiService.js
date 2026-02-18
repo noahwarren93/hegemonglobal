@@ -2,7 +2,8 @@
 
 import {
   COUNTRIES, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK,
-  IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, ESCALATION_KEYWORDS,
+  IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, STRONG_GEO_SIGNALS,
+  DOMESTIC_NOISE_PATTERNS, ESCALATION_KEYWORDS,
   DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS
 } from '../data/countries';
 import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
@@ -232,15 +233,54 @@ function setCachedNews(countryName, data) {
 export function detectCategory(title, description) {
   const text = (title + ' ' + (description || '')).toLowerCase();
   if (text.match(/\b(nfl|nba|mlb|nhl|mls|quarterback|touchdown|rushing|draft pick|playoff|playof|super bowl|world series|slam dunk|hat trick|grand slam|home run|batting|wide receiver|tight end|linebacker|cornerback|running back|premier league|champions league|soccer|basketball|baseball|hockey|tennis|cricket|rugby|boxing|ufc|mma|formula 1|nascar|grand prix)\b/)) return 'SPORTS';
-  if (text.match(/war|military|attack|strike|bomb|troops|fighting|conflict|invasion/)) return 'CONFLICT';
-  if (text.match(/economy|market|stock|trade|gdp|inflation|bank|fed|rate|fiscal/)) return 'ECONOMY';
-  if (text.match(/security|terror|missile|nuclear|defense|army|navy|weapon/)) return 'SECURITY';
-  if (text.match(/diplomat|treaty|summit|negotiat|sanction|ambassador|un |nato/)) return 'DIPLOMACY';
-  if (text.match(/elect|president|prime minister|parliament|vote|politic|government|congress/)) return 'POLITICS';
-  if (text.match(/crisis|humanitarian|famine|refugee|disaster|emergency/)) return 'CRISIS';
-  if (text.match(/tech|ai|chip|cyber|digital|software|data/)) return 'TECH';
-  if (text.match(/climate|environment|emission|carbon|green|energy/)) return 'CLIMATE';
+  if (text.match(/\b(war|military|attack|strike|bomb|troops|fighting|conflict|invasion)\b/)) return 'CONFLICT';
+  if (text.match(/\b(economy|market|stock|trade|gdp|inflation|bank|fiscal)\b/)) return 'ECONOMY';
+  if (text.match(/\b(terror|missile|nuclear|defense|army|navy|weapon)\b/)) return 'SECURITY';
+  if (text.match(/\b(diplomat|treaty|summit|negotiat|sanction|ambassador|nato)\b/)) return 'DIPLOMACY';
+  if (text.match(/\b(elect|president|prime minister|parliament|vote|politic|government|congress)\b/)) return 'POLITICS';
+  if (text.match(/\b(crisis|humanitarian|famine|refugee|disaster|emergency)\b/)) return 'CRISIS';
+  if (text.match(/\b(cyber|chip export|tech ban|surveillance)\b/)) return 'TECH';
+  if (text.match(/\b(climate|emission|carbon|renewable)\b/)) return 'CLIMATE';
   return 'WORLD';
+}
+
+// ============================================================
+// Geopolitical Relevance Scoring
+// ============================================================
+
+const DOMESTIC_FLAGS = [
+  'congress', 'senate hearing', 'house vote', 'gop', 'democrat',
+  'republican', 'dnc', 'rnc', 'fbi', 'doj', 'irs', 'atf',
+  'school board', 'governor', 'mayor', 'sheriff', 'district attorney',
+  'state legislature', 'supreme court ruling', 'amendment',
+  'fox news', 'msnbc', 'cnn host', 'anchor'
+];
+
+export function scoreGeopoliticalRelevance(text) {
+  const lower = text.toLowerCase();
+  let score = 0;
+
+  // Count standard geo signals (+1 each)
+  for (const sig of GEOPOLITICAL_SIGNALS) {
+    if (lower.includes(sig)) score += 1;
+  }
+
+  // Strong signals count double (+1 extra on top of the +1 above)
+  for (const sig of STRONG_GEO_SIGNALS) {
+    if (lower.includes(sig)) score += 1;
+  }
+
+  // Domestic flags penalize (-1 each)
+  for (const flag of DOMESTIC_FLAGS) {
+    if (lower.includes(flag)) score -= 1;
+  }
+
+  // Domestic noise patterns penalize heavily (-2 each)
+  for (const pattern of DOMESTIC_NOISE_PATTERNS) {
+    if (pattern.test(text)) score -= 2;
+  }
+
+  return score;
 }
 
 // ============================================================
@@ -887,21 +927,45 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-      // Filter irrelevant, sports, and require strong geopolitical relevance
-      const relevantArticles = allArticles.filter(article => {
+      // Staleness filter — reject articles older than 48 hours
+      const now = Date.now();
+      const STALENESS_MS = 48 * 60 * 60 * 1000;
+      const freshArticles = allArticles.filter(article => {
+        if (!article.pubDate) return true; // keep if no date
+        const age = now - new Date(article.pubDate).getTime();
+        return age < STALENESS_MS;
+      });
+
+      // Filter: irrelevant keywords, sports, domestic noise, require geo score >= 2
+      const relevantArticles = freshArticles.filter(article => {
         const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
         const category = detectCategory(article.title, article.description);
         if (category === 'SPORTS') return false;
-        return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
+        const fullText = (article.title || '') + ' ' + (article.description || '');
+        if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
+        return scoreGeopoliticalRelevance(fullText) >= 2;
       });
 
-      // Deduplicate by title
+      // Fuzzy deduplicate — normalize titles, compare core content
       const seen = new Set();
       const uniqueArticles = relevantArticles.filter(article => {
-        const key = (article.title || '').toLowerCase().slice(0, 50);
-        if (seen.has(key)) return false;
-        seen.add(key);
+        const normalized = (article.title || '').toLowerCase()
+          .replace(/[^a-z0-9 ]/g, '')
+          .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 60);
+        if (seen.has(normalized)) return false;
+        // Also check for high overlap with existing entries
+        for (const existing of seen) {
+          if (normalized.length > 15 && existing.length > 15) {
+            const shorter = normalized.length < existing.length ? normalized : existing;
+            const longer = normalized.length >= existing.length ? normalized : existing;
+            if (longer.includes(shorter.slice(0, 30))) return false;
+          }
+        }
+        seen.add(normalized);
         return true;
       });
 
