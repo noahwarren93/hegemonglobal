@@ -2529,7 +2529,17 @@ export const IRRELEVANT_KEYWORDS = [
   'baby name', 'gender reveal', 'wedding disaster', 'bridezilla',
   'food hack', 'life hack', 'cleaning hack', 'ikea hack',
   'ranked worst', 'ranked best', 'top 10', 'listicle',
-  'royal family', 'meghan markle', 'prince harry', 'kate middleton'
+  'royal family', 'meghan markle', 'prince harry', 'kate middleton',
+  // Sports - positions & terms
+  'quarterback', 'rushing yards', 'fantasy football', 'draft pick', 'free agent',
+  'batting average', 'wide receiver', 'tight end', 'linebacker', 'cornerback',
+  'running back', 'transfer window', 'injury report',
+  // Specific non-geopolitical names/topics
+  'jaxson dart', 'callahan traits',
+  // Philanthropy & lifestyle fluff
+  'philanthropic', 'philanthropy', 'donate his fortune', 'charitable foundation',
+  'cookbook', 'fashion week', 'baby bump', 'engagement ring',
+  'album review', 'movie review', 'netflix series'
 ];
 
 // Geopolitical relevance signals - articles must contain at least one to pass

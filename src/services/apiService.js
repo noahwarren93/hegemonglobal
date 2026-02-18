@@ -207,6 +207,7 @@ function setCachedNews(countryName, data) {
 
 export function detectCategory(title, description) {
   const text = (title + ' ' + (description || '')).toLowerCase();
+  if (text.match(/\b(nfl|nba|mlb|nhl|mls|quarterback|touchdown|rushing|draft pick|playoff|playof|super bowl|world series|slam dunk|hat trick|grand slam|home run|batting|wide receiver|tight end|linebacker|cornerback|running back|premier league|champions league|soccer|basketball|baseball|hockey|tennis|cricket|rugby|boxing|ufc|mma|formula 1|nascar|grand prix)\b/)) return 'SPORTS';
   if (text.match(/war|military|attack|strike|bomb|troops|fighting|conflict|invasion/)) return 'CONFLICT';
   if (text.match(/economy|market|stock|trade|gdp|inflation|bank|fed|rate|fiscal/)) return 'ECONOMY';
   if (text.match(/security|terror|missile|nuclear|defense|army|navy|weapon/)) return 'SECURITY';
@@ -893,10 +894,12 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete, onBreakingNews
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-      // Filter irrelevant + require geopolitical relevance
+      // Filter irrelevant, sports, and require strong geopolitical relevance
       const relevantArticles = allArticles.filter(article => {
         const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+        const category = detectCategory(article.title, article.description);
+        if (category === 'SPORTS') return false;
         return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
       });
 
