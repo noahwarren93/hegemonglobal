@@ -2548,7 +2548,10 @@ export const IRRELEVANT_KEYWORDS = [
   'drag queen', 'book ban', 'critical race',
   // Congressional noise (not geopolitics)
   'funding fight', 'filibuster', 'committee hearing', 'oversight hearing',
-  'subpoena', 'contempt of congress', 'floor vote'
+  'subpoena', 'contempt of congress', 'floor vote',
+  // Olympics & sports event fluff
+  'winter olympics', 'summer olympics', 'olympics', 'olympic games',
+  'runaway dog', 'cross country race', 'hu-ski', 'interrupting', 'interrupts'
 ];
 
 // Geopolitical relevance signals - STRICT: articles must contain at least one to pass.

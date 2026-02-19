@@ -238,7 +238,7 @@ export function detectCategory(title, description) {
   if (text.match(/\b(terror|missile|nuclear|defense|army|navy|weapon)\b/)) return 'SECURITY';
   if (text.match(/\b(diplomat|treaty|summit|negotiat|sanction|ambassador|nato)\b/)) return 'DIPLOMACY';
   if (text.match(/\b(elect|president|prime minister|parliament|vote|politic|government|congress)\b/)) return 'POLITICS';
-  if (text.match(/\b(crisis|humanitarian|famine|refugee|disaster|emergency)\b/)) return 'CRISIS';
+  if (text.match(/\b(crisis|humanitarian|famine|refugee|emergency|natural disaster|humanitarian disaster|disaster relief|disaster zone|disaster response|disaster aid)\b/)) return 'CRISIS';
   if (text.match(/\b(cyber|chip export|tech ban|surveillance)\b/)) return 'TECH';
   if (text.match(/\b(climate|emission|carbon|renewable)\b/)) return 'CLIMATE';
   return 'WORLD';
