@@ -1,7 +1,7 @@
 // eventsService.js - Article clustering into event groups
 // APPROACH: Primary-country grouping. Same country = same cluster.
 // For stoplist countries (US/UK/China/Russia), require shared topic keyword.
-// If country group >8 articles, sub-cluster by topic.
+// Cap at 40 articles per cluster. Second pass merges same-country duplicates.
 
 import { COUNTRY_DEMONYMS } from './apiService';
 
@@ -266,7 +266,7 @@ function getEventTier(event) {
 function scoreEvent(event) {
   const tier = getEventTier(event);
   const tierScore = (4 - tier) * 5;
-  const sourceScore = Math.min(event.sourceCount, 8) * 3;
+  const sourceScore = Math.min(event.sourceCount, 40) * 3;
   const importanceScore = event.importance === 'high' ? 5 : 0;
   return tierScore + sourceScore + importanceScore;
 }
@@ -275,7 +275,7 @@ function scoreEvent(event) {
 // Main Clustering Function
 // ============================================================
 
-const HARD_CAP = 8;
+const HARD_CAP = 40;
 
 export function clusterArticles(articles) {
   if (!articles || articles.length === 0) return [];
@@ -341,7 +341,11 @@ export function clusterArticles(articles) {
   }
 
   // Step 4: Build event objects
-  const events = allClusters.map(indices => buildEvent(annotated, indices));
+  const rawEvents = allClusters.map(indices => buildEvent(annotated, indices));
+
+  // Step 5: SECOND PASS — merge events that share the same non-stoplist primary country.
+  // This guarantees ONE Iran event, ONE Gaza event, ONE Ukraine event, etc.
+  const events = mergeByCountry(rawEvents);
 
   // Sort by relevance score (NOT by category)
   events.sort((a, b) => b._score - a._score);
@@ -456,6 +460,16 @@ function buildEvent(annotated, indices) {
     }
   }
 
+  // Determine the dominant primary country for this cluster
+  const countryCounts = {};
+  for (const a of clusterArts) {
+    const pc = a._primaryCountry;
+    if (pc && !pc.startsWith('_stop_')) {
+      countryCounts[pc] = (countryCounts[pc] || 0) + 1;
+    }
+  }
+  const dominantCountry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
   const catCounts = {};
   for (const a of clusterArts) {
     const cat = a.category || 'WORLD';
@@ -483,6 +497,7 @@ function buildEvent(annotated, indices) {
     time: primary.time || clusterArts[0].time,
     articles: cleanArticles,
     entities: [...allEntities],
+    _primaryCountry: dominantCountry,
     summary: null,
     summaryLoading: false,
     summaryError: false
@@ -490,4 +505,54 @@ function buildEvent(annotated, indices) {
 
   event._score = scoreEvent(event);
   return event;
+}
+
+// ============================================================
+// Second pass: merge events sharing the same non-stoplist primary country
+// Guarantees ONE event per country (Iran, Palestine, Ukraine, Sudan, etc.)
+// ============================================================
+
+function mergeByCountry(events) {
+  const countryMap = new Map(); // country -> [event indices]
+  const merged = [];
+  const consumed = new Set();
+
+  // Group non-stoplist events by primary country
+  for (let i = 0; i < events.length; i++) {
+    const pc = events[i]._primaryCountry;
+    if (pc && !STOPLIST_COUNTRIES.has(pc)) {
+      if (!countryMap.has(pc)) countryMap.set(pc, []);
+      countryMap.get(pc).push(i);
+    }
+  }
+
+  // Merge groups with 2+ events
+  for (const [country, indices] of countryMap.entries()) {
+    if (indices.length <= 1) continue;
+
+    // Pick the event with the highest score as the base
+    indices.sort((a, b) => events[b]._score - events[a]._score);
+    const base = events[indices[0]];
+
+    // Absorb all articles from other events into the base
+    for (let k = 1; k < indices.length; k++) {
+      const donor = events[indices[k]];
+      base.articles.push(...donor.articles);
+      for (const ent of donor.entities) {
+        if (!base.entities.includes(ent)) base.entities.push(ent);
+      }
+      consumed.add(indices[k]);
+    }
+
+    base.sourceCount = base.articles.length;
+    base._score = scoreEvent(base);
+    console.log(`[Hegemon] Merged ${indices.length} ${country} events → ${base.sourceCount} sources`);
+  }
+
+  // Build final list: all events not consumed
+  for (let i = 0; i < events.length; i++) {
+    if (!consumed.has(i)) merged.push(events[i]);
+  }
+
+  return merged;
 }

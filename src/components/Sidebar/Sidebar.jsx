@@ -174,46 +174,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Top Stories: tiered geopolitical priority, 3-hour persistence
   const getStableTopStories = useCallback((events) => {
-    const TOP_KEY = 'hegemon_top_stories';
-    const TOP_TTL = 3 * 60 * 60 * 1000; // 3 hours
-
-    // NEVER in Top Stories — block entertainment, corporate, domestic fluff
-    const TOP_BLOCKED = [
-      'actor', 'actress', 'celebrity', 'star dies', 'star dead', 'dies at',
-      "grey's anatomy", 'mcsteamy', 'euphoria', 'hollywood', 'als battle',
-      'entertainment', 'movie', 'tv show', 'netflix', 'streaming', 'sitcom',
-      'recipe', 'cooking', 'fashion', 'beauty', 'kardashian', 'influencer',
-      'royal family', 'meghan markle', 'prince harry', 'sport', 'football',
-      'basketball', 'baseball', 'soccer', 'nfl', 'nba', 'concert', 'album',
-      'grammy', 'oscar', 'emmy', 'red carpet', 'beloved',
-      // Corporate / financial noise
-      'equity compensation', 'stock compensation', 'stock awards', 'employee pay',
-      'corporate hr', 'corporate earnings', 'quarterly results', 'revenue growth',
-      'trade deficit', 'un payments', 'un dues', 'meta stock', 'meta shares',
-      // Non-geopolitical
-      'ufo', 'ufos', 'alien', 'aliens', 'nvidia', 'openai deal',
-      // Domestic US policy
-      'school board', 'zoning', 'parking', 'hoa', 'city council', 'fcc',
-      'party congress'
-    ];
-
-    // TIER 1: Active military conflict, nuclear threats, war, genocide (always Top Stories)
-    const TIER1 = [
-      'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
-      'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
-      'military buildup', 'weapons', 'arsenal', 'enrichment', 'warhead',
-      'siege', 'blockade', 'offensive'
-    ];
-    // TIER 2: Peace talks, ceasefire, sanctions, territorial disputes, coups
-    const TIER2 = [
-      'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
-      'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
-      'reconstruction', 'occupation', 'annexed'
-    ];
-    // TIER 3: Elections, summits, trade wars
-    const TIER3 = [
-      'election', 'summit', 'trade war', 'diplomatic', 'nato',
-      'conflict', 'strikes'
+    // EXACTLY 4 top stories. Always: Iran, Gaza/Palestine, Ukraine, Sudan.
+    const REQUIRED = [
+      { keywords: ['iran', 'iranian', 'tehran', 'hormuz'], label: 'Iran' },
+      { keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'], label: 'Gaza' },
+      { keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky'], label: 'Ukraine' },
+      { keywords: ['sudan', 'sudanese', 'darfur', 'khartoum'], label: 'Sudan' },
     ];
 
     const getEventText = (evt) => {
@@ -221,178 +187,38 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
     };
 
-    const isBlocked = (evt) => {
+    const mentionsAny = (evt, keywords) => {
       const text = getEventText(evt);
-      return TOP_BLOCKED.some(kw => text.includes(kw));
+      return keywords.some(kw => text.includes(kw));
     };
 
-    const getTier = (evt) => {
-      const text = getEventText(evt);
-      if (TIER1.some(kw => text.includes(kw))) return 1;
-      if (TIER2.some(kw => text.includes(kw))) return 2;
-      if (TIER3.some(kw => text.includes(kw))) return 3;
-      return 4;
-    };
+    // Sort all events by source count descending (most-sourced = most important)
+    const sorted = [...events].sort((a, b) => b.sourceCount - a.sourceCount);
 
-    // Fingerprint: hash of sorted article headlines (stable across ID changes)
-    const fingerprint = (evt) => {
-      if (!evt.articles || evt.articles.length === 0) return evt.id;
-      const titles = evt.articles
-        .map(a => (a.headline || a.title || '').toLowerCase().trim().substring(0, 50))
-        .sort().join('|');
-      let h = 0;
-      for (let i = 0; i < titles.length; i++) h = ((h << 5) - h + titles.charCodeAt(i)) | 0;
-      return 'ts_' + Math.abs(h).toString(36);
-    };
-
-    // Ensure key conflicts always have a candidate (Russia-Ukraine, Iran, Gaza, Sudan)
-    const ALWAYS_INCLUDE = ['ukraine', 'iran', 'gaza', 'sudan'];
-    const mentionsKeyword = (evt, kw) => {
-      return getEventText(evt).includes(kw);
-    };
-
-    // Filter and sort candidates: tier first, then source count, then category
-    const candidates = events
-      .filter(e => e.sourceCount >= 2 && !isBlocked(e))
-      .sort((a, b) => {
-        const tierA = getTier(a);
-        const tierB = getTier(b);
-        if (tierA !== tierB) return tierA - tierB;
-        if (a.sourceCount !== b.sourceCount) return b.sourceCount - a.sourceCount;
-        const catPri = { CONFLICT: 5, SECURITY: 4, CRISIS: 3, DIPLOMACY: 2 };
-        return (catPri[b.category] || 0) - (catPri[a.category] || 0);
-      });
-
-    // Also find single-source events for key conflicts if no 2+ source version exists
-    const singleSourceKeyConflicts = events
-      .filter(e => e.sourceCount === 1 && !isBlocked(e) && getTier(e) <= 2)
-      .filter(e => ALWAYS_INCLUDE.some(kw => mentionsKeyword(e, kw)));
-
-    try {
-      const raw = localStorage.getItem(TOP_KEY);
-      if (raw) {
-        const persisted = JSON.parse(raw);
-        if (Date.now() - persisted.ts < TOP_TTL && persisted.fps && persisted.fps.length > 0) {
-          const fpMap = new Map();
-          for (const e of events) fpMap.set(fingerprint(e), e);
-
-          const kept = [];
-          const usedFps = new Set();
-          for (const fp of persisted.fps) {
-            const match = fpMap.get(fp);
-            if (match && !isBlocked(match)) {
-              kept.push(match);
-              usedFps.add(fp);
-            }
-          }
-
-          // Fill with candidates (up to 6 max)
-          for (const c of candidates) {
-            if (kept.length >= 6) break;
-            const cfp = fingerprint(c);
-            if (!usedFps.has(cfp)) { kept.push(c); usedFps.add(cfp); }
-          }
-
-          // Ensure key conflicts are represented
-          for (const kw of ALWAYS_INCLUDE) {
-            if (kept.some(e => mentionsKeyword(e, kw))) continue;
-            // Try from candidates first
-            const match = candidates.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
-            if (match) {
-              if (kept.length < 6) {
-                kept.push(match); usedFps.add(fingerprint(match));
-              } else {
-                // Replace lowest-tier, lowest-source story
-                let worstIdx = -1, worstScore = Infinity;
-                for (let i = 0; i < kept.length; i++) {
-                  const score = (4 - getTier(kept[i])) * 10 + kept[i].sourceCount;
-                  if (score < worstScore && !ALWAYS_INCLUDE.some(k => mentionsKeyword(kept[i], k))) {
-                    worstIdx = i; worstScore = score;
-                  }
-                }
-                if (worstIdx >= 0) {
-                  usedFps.delete(fingerprint(kept[worstIdx]));
-                  kept[worstIdx] = match; usedFps.add(fingerprint(match));
-                }
-              }
-            } else {
-              // Try single-source key conflicts
-              const singleMatch = singleSourceKeyConflicts.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
-              if (singleMatch && kept.length < 6) {
-                kept.push(singleMatch); usedFps.add(fingerprint(singleMatch));
-              }
-            }
-          }
-
-          // Only replace kept stories if new candidate is T1/T2 with more sources
-          for (const c of candidates) {
-            const cTier = getTier(c);
-            if (cTier > 2) continue;
-            const cfp = fingerprint(c);
-            if (usedFps.has(cfp)) continue;
-            let worstIdx = -1, worstTier = 0, worstSrc = Infinity;
-            for (let i = 0; i < kept.length; i++) {
-              const kTier = getTier(kept[i]);
-              if (kTier > cTier || (kTier === cTier && kept[i].sourceCount < c.sourceCount)) {
-                if (kTier > worstTier || (kTier === worstTier && kept[i].sourceCount < worstSrc)) {
-                  worstIdx = i; worstTier = kTier; worstSrc = kept[i].sourceCount;
-                }
-              }
-            }
-            if (worstIdx >= 0 && kept.length > 3) {
-              usedFps.delete(fingerprint(kept[worstIdx]));
-              kept[worstIdx] = c; usedFps.add(cfp);
-            }
-          }
-
-          // Flexible: only keep T1/T2/T3 stories, min 3, max 6
-          const filtered = kept.filter(e => getTier(e) <= 3);
-          const top = filtered.length >= 3 ? filtered.slice(0, 6) : kept.slice(0, 6);
-          localStorage.setItem(TOP_KEY, JSON.stringify({
-            ts: persisted.ts,
-            fps: top.map(e => fingerprint(e))
-          }));
-          return top;
-        }
-      }
-    } catch (e) { console.warn('Top stories cache error:', e.message); }
-
-    // No persisted data or expired — build from scratch
     const top = [];
-    const usedFps = new Set();
+    const usedIds = new Set();
 
-    // Add candidates
-    for (const c of candidates) {
-      if (top.length >= 6) break;
-      const cfp = fingerprint(c);
-      if (!usedFps.has(cfp)) { top.push(c); usedFps.add(cfp); }
+    // Pick the best event for each required conflict
+    for (const req of REQUIRED) {
+      const match = sorted.find(e => !usedIds.has(e.id) && mentionsAny(e, req.keywords));
+      if (match) {
+        top.push(match);
+        usedIds.add(match.id);
+      }
     }
 
-    // Ensure key conflicts represented
-    for (const kw of ALWAYS_INCLUDE) {
-      if (top.some(e => mentionsKeyword(e, kw))) continue;
-      const match = candidates.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
-      if (match && top.length < 6) {
-        top.push(match); usedFps.add(fingerprint(match));
-      } else if (!match) {
-        const singleMatch = singleSourceKeyConflicts.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
-        if (singleMatch && top.length < 6) {
-          top.push(singleMatch); usedFps.add(fingerprint(singleMatch));
+    // If any required slot couldn't be filled, fill with highest-sourced remaining events
+    if (top.length < 4) {
+      for (const e of sorted) {
+        if (top.length >= 4) break;
+        if (!usedIds.has(e.id) && e.sourceCount >= 2) {
+          top.push(e);
+          usedIds.add(e.id);
         }
       }
     }
 
-    // Flexible: only keep T1/T2/T3 stories, min 3
-    const filtered = top.filter(e => getTier(e) <= 3);
-    const finalTop = filtered.length >= 3 ? filtered.slice(0, 6) : top.slice(0, 6);
-
-    try {
-      localStorage.setItem(TOP_KEY, JSON.stringify({
-        ts: Date.now(),
-        fps: finalTop.map(e => fingerprint(e))
-      }));
-    } catch {}
-    return finalTop;
+    return top.slice(0, 4);
   }, []);
 
   const renderEventsTab = () => {
