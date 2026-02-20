@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { COUNTRIES } from '../data/countries';
 import { RISK_COLORS } from '../utils/riskColors';
-import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL, COUNTRY_DEMONYMS } from '../services/apiService';
+import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL, COUNTRY_DEMONYMS, loadNewsFromLocalStorage } from '../services/apiService';
 import { loadStockData } from '../services/stocksService';
 
 import GlobeView from '../components/Globe/GlobeView';
@@ -304,10 +304,13 @@ export default function HomePage() {
     const now = new Date();
     setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
 
-    // Fetch live news
+    // Show cached news immediately, then fetch fresh in background
+    const hasCached = loadNewsFromLocalStorage();
+    if (hasCached) setIsLoading(false);
+
     fetchLiveNews({
       onStatusUpdate: (status) => {
-        if (status === 'fetching') setIsLoading(true);
+        if (status === 'fetching' && !hasCached) setIsLoading(true);
       },
       onComplete: () => {
         setIsLoading(false);

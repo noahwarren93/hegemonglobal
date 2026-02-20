@@ -24,7 +24,7 @@
       /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column */
       .globe-tools { right: 8px; bottom: 42px; top: auto; flex-direction: column; }
       .globe-tool-btn { width: 28px; height: 28px; padding: 6px; }
-      .globe-tool-btn-labeled { width: 28px; height: 28px; padding: 6px; font-size: 0; gap: 0; }
+      .globe-tool-btn-labeled { padding: 4px 8px; font-size: 8px; gap: 4px; }
 
       /* Reset button - bottom right, below globe-tools */
       .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 7px; font-size: 8px; }
@@ -75,7 +75,7 @@
 
       .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
       .globe-tool-btn { width: 26px; height: 26px; }
-      .globe-tool-btn-labeled { width: 26px; height: 26px; }
+      .globe-tool-btn-labeled { padding: 3px 6px; font-size: 7px; gap: 3px; }
 
       /* Reset button even smaller on small screens */
       .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 6px; font-size: 7px; }

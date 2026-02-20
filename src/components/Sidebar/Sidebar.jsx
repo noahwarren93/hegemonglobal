@@ -197,9 +197,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     // DAILY_EVENTS is already sorted by score from eventsService (CONFLICT/SECURITY first, more sources, recency)
     // Top Stories: first 5, but deprioritize single-source non-CONFLICT/SECURITY events
-    const topCandidates = DAILY_EVENTS.filter(e =>
-      e.sourceCount > 1 || e.importance === 'high' || ['CONFLICT', 'SECURITY', 'CRISIS'].includes(e.category)
-    );
+    const topCandidates = DAILY_EVENTS.filter(e => e.sourceCount >= 2);
     const topEvents = topCandidates.slice(0, 5);
     const topIds = new Set(topEvents.map(e => e.id));
     // Latest Updates: everything NOT in Top Stories, paginated

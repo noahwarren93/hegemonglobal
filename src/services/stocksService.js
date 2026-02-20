@@ -165,6 +165,61 @@ function fetchYahooFinanceIndividual(sym, proxyIdx = 0) {
 }
 
 // ============================================================
+// Individual Ticker Search (for stock search feature)
+// ============================================================
+
+export async function searchTicker(ticker) {
+  const sym = ticker.toUpperCase();
+
+  for (let proxyIdx = 0; proxyIdx < CORS_PROXIES.length; proxyIdx++) {
+    try {
+      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=1d&interval=15m&includePrePost=false';
+      const proxyUrl = CORS_PROXIES[proxyIdx](url);
+      const resp = await fetchWithTimeout(proxyUrl, 10000);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) continue;
+
+      const result = data.chart.result[0];
+      const meta = result.meta;
+      const price = meta.regularMarketPrice;
+      const prevClose = meta.chartPreviousClose || meta.previousClose;
+      if (!price || !prevClose) continue;
+
+      const changePct = ((price - prevClose) / prevClose) * 100;
+      const positive = changePct >= 0;
+
+      let closes = [];
+      if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
+        closes = (result.indicators.quote[0].close || []).filter(v => v !== null && v !== undefined);
+      }
+
+      // Downsample sparkline to ~12 points
+      let sparkline = [prevClose, price];
+      if (closes.length > 2) {
+        sparkline = [];
+        for (let i = 0; i < 12; i++) {
+          const idx = Math.floor(i * (closes.length - 1) / 11);
+          sparkline.push(closes[idx]);
+        }
+      }
+
+      return {
+        symbol: meta.symbol || sym,
+        name: meta.shortName || meta.longName || '',
+        price: formatStockPrice(price),
+        change: (positive ? '+' : '') + changePct.toFixed(2) + '%',
+        positive,
+        sparkline
+      };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+// ============================================================
 // Main Fetch: batch first, then individual fallback
 // ============================================================
 

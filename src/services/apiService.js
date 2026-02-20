@@ -169,6 +169,11 @@ const RSS_FEEDS = {
     { url: 'https://nypost.com/feed/', source: 'New York Post' },
     { url: 'https://thehill.com/feed/', source: 'The Hill' },
     { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
+    { url: 'https://www.telegraph.co.uk/news/rss.xml', source: 'The Telegraph' },
+    { url: 'https://www.ft.com/rss/home', source: 'Financial Times' },
+    { url: 'https://www.cbc.ca/webfeed/rss/rss-world', source: 'CBC News' },
+    { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
+    { url: 'https://www.irishtimes.com/cmlink/news-1.1319192', source: 'Irish Times' },
     // --- Non-Western sources (~40%) ---
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
     { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK World' },
@@ -184,6 +189,16 @@ const RSS_FEEDS = {
     { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
     { url: 'https://tass.com/rss/v2.xml', source: 'TASS' },
     { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' },
+    { url: 'https://www.thehindu.com/news/international/feeder/default.rss', source: 'The Hindu' },
+    { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
+    { url: 'https://www.africanews.com/feed/', source: 'Africa News' },
+    { url: 'https://asia.nikkei.com/rss', source: 'Nikkei Asia' },
+    { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311', source: 'CNA' },
+    { url: 'https://www.straitstimes.com/news/world/rss.xml', source: 'Straits Times' },
+    { url: 'https://www.haaretz.com/cmlink/1.628765', source: 'Haaretz' },
+    { url: 'https://www.thejakartapost.com/feed', source: 'Jakarta Post' },
+    { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
+    { url: 'https://nation.africa/kenya/rss', source: 'Nation Kenya' },
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
@@ -225,6 +240,59 @@ const NEWS_APIS = {
 
 export const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const apiFailures = {};
+
+// ============================================================
+// localStorage News Cache (show cached immediately, fetch in background)
+// ============================================================
+
+const NEWS_LS_KEY = 'hegemon_news_cache';
+const EVENTS_LS_KEY = 'hegemon_events_cache';
+const NEWS_LS_TTL = 30 * 60 * 1000; // 30 minutes
+
+function saveNewsToLocalStorage() {
+  try {
+    if (DAILY_BRIEFING.length === 0) return;
+    localStorage.setItem(NEWS_LS_KEY, JSON.stringify({
+      ts: Date.now(),
+      articles: DAILY_BRIEFING.slice(0, 50)
+    }));
+    if (DAILY_EVENTS.length > 0) {
+      localStorage.setItem(EVENTS_LS_KEY, JSON.stringify({
+        ts: Date.now(),
+        events: DAILY_EVENTS.map(e => ({ ...e, summaryLoading: false }))
+      }));
+    }
+  } catch (e) {
+    console.warn('Failed to cache news to localStorage:', e.message);
+  }
+}
+
+export function loadNewsFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(NEWS_LS_KEY);
+    if (!raw) return false;
+    const cached = JSON.parse(raw);
+    if (Date.now() - cached.ts > NEWS_LS_TTL) return false;
+    if (!cached.articles || cached.articles.length === 0) return false;
+
+    DAILY_BRIEFING.length = 0;
+    DAILY_BRIEFING.push(...cached.articles);
+
+    // Also restore cached events if available
+    const evRaw = localStorage.getItem(EVENTS_LS_KEY);
+    if (evRaw) {
+      const evCached = JSON.parse(evRaw);
+      if (Date.now() - evCached.ts < NEWS_LS_TTL && evCached.events && evCached.events.length > 0) {
+        DAILY_EVENTS.length = 0;
+        DAILY_EVENTS.push(...evCached.events);
+      }
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // ============================================================
 // News Caching
@@ -1077,6 +1145,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       saveBriefingSnapshot();
       seedPastBriefingIfEmpty();
+      saveNewsToLocalStorage();
 
       // Dynamic risk analysis
       updateDynamicRisks(DAILY_BRIEFING);
@@ -1125,6 +1194,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
           saveBriefingSnapshot();
           seedPastBriefingIfEmpty();
+          saveNewsToLocalStorage();
           updateDynamicRisks(DAILY_BRIEFING);
 
           fetchEventSummaries();

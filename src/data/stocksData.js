@@ -114,12 +114,67 @@ export const STATIC_FALLBACK_DATA = {
 
 export const STOCKS_DETAIL = {
   'United States': {
-    commodities: [
-      { name: 'Crude Oil (WTI)', sym: 'CL=F' },
-      { name: 'Natural Gas', sym: 'NG=F' },
-      { name: 'Copper', sym: 'HG=F' }
-    ],
-    whyMatters: 'US markets remain the global benchmark. Movements in the S&P 500 and Dow Jones ripple through every major market worldwide.',
-    outlook: 'Key events to watch: Fed rate decisions, CPI data releases, and quarterly earnings reports from mega-cap tech companies.'
+    whyMatters: 'US markets remain the global benchmark. Movements in the S&P 500 and Dow Jones ripple through every major market worldwide. The Federal Reserve\'s monetary policy decisions directly affect global capital flows and currency valuations.',
+    outlook: 'Key events to watch: Fed rate decisions and forward guidance, CPI and jobs data releases, quarterly earnings from mega-cap tech companies, and escalating trade policy tensions that could trigger supply chain disruptions.'
+  },
+  'China': {
+    whyMatters: 'China is the world\'s second-largest economy. Its markets reflect domestic growth, property sector health, and US-China trade dynamics that impact global supply chains.',
+    outlook: 'Watch for stimulus measures from Beijing, property sector developments, tech regulation signals, and any escalation in trade or Taiwan-related tensions.'
+  },
+  'Japan': {
+    whyMatters: 'Japan\'s Nikkei drives Asian market sentiment. The yen\'s movements impact global carry trades, and Japan remains a key node in semiconductor supply chains.',
+    outlook: 'Monitor Bank of Japan rate policy, yen intervention signals, and semiconductor export controls affecting the broader tech ecosystem.'
+  },
+  'United Kingdom': {
+    whyMatters: 'The FTSE is a barometer for European and global commodity markets. London remains a key financial hub, and UK policy decisions influence broader European sentiment.',
+    outlook: 'Watch Bank of England rate decisions, inflation trends, post-Brexit trade dynamics, and energy sector developments affecting the commodities-heavy FTSE.'
+  },
+  'European Union': {
+    whyMatters: 'EU markets represent the world\'s third-largest economic bloc. The ECB\'s policy divergence from the Fed drives euro strength and global bond markets.',
+    outlook: 'Key factors: ECB rate path, energy security developments, defense spending commitments, and political stability across member states.'
+  },
+  'India': {
+    whyMatters: 'India is the world\'s fastest-growing major economy. Its markets attract significant foreign investment flows and reflect emerging market confidence broadly.',
+    outlook: 'Watch RBI monetary policy, monsoon impact on inflation, government reform agenda, and foreign institutional investment flows.'
+  },
+  'Canada': {
+    whyMatters: 'The TSX is heavily weighted toward energy, mining, and financials. Canada\'s economy is closely tied to US demand and commodity prices.',
+    outlook: 'Monitor Bank of Canada rate decisions, oil price movements, housing market stability, and US-Canada trade relations.'
+  },
+  'South Korea': {
+    whyMatters: 'South Korea is a global leader in semiconductors and electronics. KOSPI movements reflect tech sector health and Asian geopolitical risk.',
+    outlook: 'Watch semiconductor demand cycles, North Korea tensions, domestic political stability, and Korean won movements.'
+  },
+  'Australia': {
+    whyMatters: 'The ASX is a proxy for global commodity demand, especially iron ore and coal exports to China. Australia\'s economy bridges Asian and Western markets.',
+    outlook: 'Monitor China\'s demand for commodities, RBA rate decisions, housing market trends, and Pacific security developments.'
+  },
+  'Brazil': {
+    whyMatters: 'Brazil is Latin America\'s largest economy and a major commodity exporter. The Bovespa reflects emerging market risk appetite and commodity cycles.',
+    outlook: 'Watch fiscal policy developments, inflation trajectory, commodity export demand, and political reform progress.'
+  },
+  'Taiwan': {
+    whyMatters: 'Taiwan\'s TAIEX is dominated by TSMC and the semiconductor industry. It\'s the single most important node in the global chip supply chain.',
+    outlook: 'Key risks: cross-strait tensions with China, global chip demand cycles, and US semiconductor policy affecting TSMC\'s strategic position.'
+  },
+  'Russia': {
+    whyMatters: 'The MOEX reflects the impact of international sanctions and energy market dynamics. Russia\'s isolation from Western capital markets creates unique pricing distortions.',
+    outlook: 'Watch sanctions developments, oil price movements, ruble stability, and any ceasefire or escalation signals from the Ukraine conflict.'
+  },
+  'Saudi Arabia': {
+    whyMatters: 'The Tadawul tracks OPEC+ production decisions and oil prices. Saudi Arabia\'s Vision 2030 diversification is reshaping the kingdom\'s economic profile.',
+    outlook: 'Monitor OPEC+ output agreements, oil demand forecasts, Aramco performance, and progress on Vision 2030 economic diversification projects.'
+  },
+  'Turkey': {
+    whyMatters: 'Turkey sits at the crossroads of Europe, Asia, and the Middle East. The BIST 100 reflects emerging market risk and lira stability concerns.',
+    outlook: 'Watch central bank policy credibility, inflation trajectory, lira stability, and Turkey\'s evolving geopolitical positioning in regional conflicts.'
+  },
+  'South Africa': {
+    whyMatters: 'The JSE is Africa\'s largest and most liquid exchange. It\'s a bellwether for the broader African continent and reflects commodity and mining trends.',
+    outlook: 'Monitor power grid stability (load shedding), mining sector output, rand movements, and government reform implementation.'
+  },
+  'Nigeria': {
+    whyMatters: 'Nigeria is Africa\'s largest economy by GDP. The NGX reflects oil revenue dynamics, currency reform progress, and frontier market investor sentiment.',
+    outlook: 'Watch naira exchange rate policy, oil production levels, banking sector reforms, and foreign exchange liquidity conditions.'
   }
 };
