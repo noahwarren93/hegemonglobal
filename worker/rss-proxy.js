@@ -2,6 +2,32 @@
 // Deploy: wrangler deploy
 // Environment variable required: ANTHROPIC_API_KEY
 
+// ============================================================
+// In-memory summary cache — all users see the same headlines
+// Keyed by hash of article titles, expires after 1 hour
+// ============================================================
+const SUMMARY_CACHE = new Map();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+function hashEventTitles(event) {
+  const titles = (event.articles || [])
+    .map(a => (a.headline || a.title || '').toLowerCase().trim().substring(0, 50))
+    .sort()
+    .join('|');
+  let h = 0;
+  for (let i = 0; i < titles.length; i++) {
+    h = ((h << 5) - h + titles.charCodeAt(i)) | 0;
+  }
+  return 'sc_' + Math.abs(h).toString(36);
+}
+
+function cleanExpiredCache() {
+  const now = Date.now();
+  for (const [key, entry] of SUMMARY_CACHE) {
+    if (now - entry.ts > CACHE_TTL) SUMMARY_CACHE.delete(key);
+  }
+}
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': 'https://hegemonglobal.com',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -52,8 +78,39 @@ export default {
           );
         }
 
-        // Build prompt for Claude — batch all events in one call for efficiency
-        const eventDescriptions = events.map((event, i) => {
+        // Clean expired cache entries
+        cleanExpiredCache();
+
+        // Check cache for each event — only call Claude for uncached ones
+        const results = new Array(events.length).fill(null);
+        const uncachedIndices = [];
+
+        for (let i = 0; i < events.length; i++) {
+          const key = hashEventTitles(events[i]);
+          const cached = SUMMARY_CACHE.get(key);
+          if (cached && (Date.now() - cached.ts < CACHE_TTL)) {
+            results[i] = cached.data;
+          } else {
+            uncachedIndices.push(i);
+          }
+        }
+
+        const cacheHits = events.length - uncachedIndices.length;
+        if (cacheHits > 0) {
+          console.log(`[Cache] ${cacheHits}/${events.length} events served from cache`);
+        }
+
+        // If everything is cached, return immediately (no Claude API call)
+        if (uncachedIndices.length === 0) {
+          return new Response(
+            JSON.stringify({ summaries: results }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Build prompt only for uncached events
+        const uncachedEvents = uncachedIndices.map(i => events[i]);
+        const eventDescriptions = uncachedEvents.map((event, i) => {
           const articles = event.articles || [];
           const articleList = articles.slice(0, 10).map(a => {
             let line = `  - "${a.headline || a.title}" (${a.source || 'Unknown source'})`;
@@ -140,7 +197,6 @@ Return ONLY the JSON array, no other text.`;
         // Parse the JSON array from the response
         let summaries;
         try {
-          // Extract JSON array — handle potential markdown code fences
           const jsonMatch = aiText.match(/\[[\s\S]*\]/);
           summaries = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
         } catch (parseErr) {
@@ -148,8 +204,21 @@ Return ONLY the JSON array, no other text.`;
           summaries = [];
         }
 
+        // Merge uncached results back into the full results array and cache them
+        for (let i = 0; i < uncachedIndices.length; i++) {
+          const origIdx = uncachedIndices[i];
+          const summary = summaries[i] || null;
+          results[origIdx] = summary;
+
+          // Cache the result
+          if (summary) {
+            const key = hashEventTitles(events[origIdx]);
+            SUMMARY_CACHE.set(key, { data: summary, ts: Date.now() });
+          }
+        }
+
         return new Response(
-          JSON.stringify({ summaries }),
+          JSON.stringify({ summaries: results }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 

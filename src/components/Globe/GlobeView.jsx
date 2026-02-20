@@ -221,6 +221,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     const width = container.clientWidth;
     const height = container.clientHeight;
+    const isMobile = window.innerWidth < 768;
 
     // Scene
     const scene = new THREE.Scene();
@@ -229,13 +230,13 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.z = DEFAULT_CAMERA_Z;
-    camera.position.x = window.innerWidth <= 768 ? 0 : -0.15;
+    camera.position.x = isMobile ? 0 : -0.15;
     cameraRef.current = camera;
 
-    // Renderer — matches original globe.js initGlobe() exactly (r128 defaults)
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Renderer — reduce pixel ratio on mobile for performance
+    const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio);
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -246,8 +247,9 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     directional.position.set(5, 3, 5);
     scene.add(directional);
 
-    // Earth sphere
-    const earthGeom = new THREE.SphereGeometry(1, 64, 64);
+    // Earth sphere — mobile: 32 segments, desktop: 64 segments
+    const segments = isMobile ? 32 : 64;
+    const earthGeom = new THREE.SphereGeometry(1, segments, segments);
     const textureLoader = new THREE.TextureLoader();
 
     const hideLoader = () => {
@@ -258,9 +260,18 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
       hideLoader
     );
+    // Fix texture seam: ClampToEdge prevents visible lines at UV boundaries
+    earthTexture.wrapS = THREE.ClampToEdgeWrapping;
+    earthTexture.wrapT = THREE.ClampToEdgeWrapping;
+    earthTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
     const earthBump = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-topology.png'
     );
+    earthBump.wrapS = THREE.ClampToEdgeWrapping;
+    earthBump.wrapT = THREE.ClampToEdgeWrapping;
+    earthBump.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
     const earthMat = new THREE.MeshPhongMaterial({
       map: earthTexture,
       bumpMap: earthBump,
@@ -275,10 +286,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     scene.add(globe);
     globeRef.current = globe;
 
-    // Atmosphere glow
-    const glowGeom = new THREE.SphereGeometry(1.02, 64, 64);
+    // Atmosphere glow — reduced on mobile for performance
+    const glowSegments = isMobile ? 24 : 64;
+    const glowGeom = new THREE.SphereGeometry(1.02, glowSegments, glowSegments);
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0x06b6d4, transparent: true, opacity: 0.08, side: THREE.BackSide
+      color: 0x06b6d4, transparent: true, opacity: isMobile ? 0.04 : 0.08, side: THREE.BackSide
     });
     scene.add(new THREE.Mesh(glowGeom, glowMat));
 
@@ -601,16 +613,24 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     document.addEventListener('touchmove', handleDocTouchMove, { passive: true });
     window.addEventListener('resize', handleResize);
 
-    // ---- Animation loop ----
-    function animate() {
+    // ---- Animation loop — throttled to 30fps on mobile ----
+    let lastFrameTime = 0;
+    const frameInterval = isMobile ? 1000 / 30 : 0; // 30fps on mobile, uncapped on desktop
+
+    function animate(now) {
       animFrameRef.current = requestAnimationFrame(animate);
+
+      // Throttle on mobile
+      if (isMobile && now - lastFrameTime < frameInterval) return;
+      lastFrameTime = now;
+
       if (!isDraggingRef.current && autoRotateRef.current && globe) {
-        globe.rotation.y += 0.0008;
+        globe.rotation.y += isMobile ? 0.0005 : 0.0008;
       }
       animateConflictZones();
       renderer.render(scene, camera);
     }
-    animate();
+    animate(0);
 
     // ---- Cleanup ----
     return () => {
