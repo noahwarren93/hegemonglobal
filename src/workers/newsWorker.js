@@ -392,92 +392,122 @@ function parseRSSItems(data, sourceName) {
 }
 
 // ============================================================
+// Incremental article processing helpers
+// ============================================================
+
+const STALENESS_MS = 48 * 60 * 60 * 1000;
+
+function isArticleFresh(article) {
+  if (!article.pubDate) return true;
+  return (Date.now() - new Date(article.pubDate).getTime()) < STALENESS_MS;
+}
+
+function isArticleRelevant(article) {
+  const title = article.title || '';
+  const text = (title + ' ' + (article.description || '')).toLowerCase();
+  if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+  if (detectCategory(title, article.description) === 'SPORTS') return false;
+  const fullText = title + ' ' + (article.description || '');
+  if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
+  const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+  if (title.length > 10 && nonAscii / title.length > 0.15) return false;
+  if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
+      !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
+    const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
+    if (nonEnCount >= 2) return false;
+  }
+  if (scoreGeopoliticalRelevance(fullText) < 1) return false;
+  return true;
+}
+
+function normalizeForDedup(title) {
+  return (title || '').toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isDuplicate(normalized, source, seenEntries) {
+  if (seenEntries.some(s => s.normalized === normalized)) return true;
+  for (const existing of seenEntries) {
+    if (normalized.length > 20 && existing.normalized.length > 20) {
+      const wordsA = new Set(normalized.split(' '));
+      const wordsB = new Set(existing.normalized.split(' '));
+      let overlap = 0;
+      for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
+      const maxLen = Math.max(wordsA.size, wordsB.size);
+      const threshold = existing.source === source ? 0.7 : 0.95;
+      if (maxLen > 0 && overlap / maxLen >= threshold) return true;
+    }
+  }
+  return false;
+}
+
+// ============================================================
 // Main processing pipeline (runs entirely in this worker)
 // ============================================================
 
 async function processNews() {
-  // 1. Fetch from all RSS feeds in parallel
-  const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
-  const feedResults = await Promise.all(feedPromises);
-  const allArticles = feedResults.flat();
+  const FETCH_BATCH = 10;
+  const BATCH_DELAY = 200; // ms between fetch batches
+  const feeds = RSS_FEEDS.daily;
 
-  // Log stats
-  const sourceCounts = {};
-  for (let i = 0; i < RSS_FEEDS.daily.length; i++) {
-    sourceCounts[RSS_FEEDS.daily[i].source] = feedResults[i] ? feedResults[i].length : 0;
-  }
-  const working = Object.entries(sourceCounts).filter(([, c]) => c > 0);
-  const failed = Object.entries(sourceCounts).filter(([, c]) => c === 0);
-  console.log(`[Worker] RSS feeds: ${working.length} working, ${failed.length} failed, ${allArticles.length} total articles`);
-
-  if (allArticles.length === 0) {
-    return { briefing: DAILY_BRIEFING_FALLBACK, events: [] };
-  }
-
-  allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-  // 2. Staleness filter — 48 hours
-  const now = Date.now();
-  const STALENESS_MS = 48 * 60 * 60 * 1000;
-  const freshArticles = allArticles.filter(article => {
-    if (!article.pubDate) return true;
-    const age = now - new Date(article.pubDate).getTime();
-    return age < STALENESS_MS;
-  });
-
-  // 3. Relevance filtering
-  const relevantArticles = [];
-  for (const article of freshArticles) {
-    const title = article.title || '';
-    const text = (title + ' ' + (article.description || '')).toLowerCase();
-    if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
-    const category = detectCategory(title, article.description);
-    if (category === 'SPORTS') continue;
-    const fullText = title + ' ' + (article.description || '');
-    if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
-    const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
-    if (title.length > 10 && nonAscii / title.length > 0.15) continue;
-    if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
-        !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
-      const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
-      if (nonEnCount >= 2) continue;
-    }
-    if (scoreGeopoliticalRelevance(fullText) < 1) continue;
-    relevantArticles.push(article);
-  }
-
-  // 4. Source-aware dedup
+  // Shared state for incremental processing
   const seenEntries = [];
   const uniqueArticles = [];
-  for (const article of relevantArticles) {
-    const source = formatSourceName(article.source_id);
-    const normalized = (article.title || '').toLowerCase()
-      .replace(/[^a-z0-9 ]/g, '')
-      .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    let isDupe = false;
-    if (seenEntries.some(s => s.normalized === normalized)) { isDupe = true; }
-    if (!isDupe) {
-      for (const existing of seenEntries) {
-        if (normalized.length > 20 && existing.normalized.length > 20) {
-          const wordsA = new Set(normalized.split(' '));
-          const wordsB = new Set(existing.normalized.split(' '));
-          let overlap = 0;
-          for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
-          const maxLen = Math.max(wordsA.size, wordsB.size);
-          const threshold = existing.source === source ? 0.7 : 0.95;
-          if (maxLen > 0 && overlap / maxLen >= threshold) { isDupe = true; break; }
-        }
-      }
-    }
-    if (!isDupe) {
+  let totalRaw = 0, totalFresh = 0, totalRelevant = 0;
+  let workingCount = 0, failedCount = 0;
+
+  // Process one batch of raw articles: filter → dedup incrementally
+  function processBatchArticles(rawArticles) {
+    for (const article of rawArticles) {
+      totalRaw++;
+      if (!isArticleFresh(article)) continue;
+      totalFresh++;
+      if (!isArticleRelevant(article)) continue;
+      totalRelevant++;
+
+      const source = formatSourceName(article.source_id);
+      const normalized = normalizeForDedup(article.title);
+      if (isDuplicate(normalized, source, seenEntries)) continue;
+
       seenEntries.push({ normalized, source });
       uniqueArticles.push(article);
     }
   }
 
-  console.log(`[Worker] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
+  // Fetch feeds in staggered batches, process each batch as it arrives
+  for (let i = 0; i < feeds.length; i += FETCH_BATCH) {
+    const batch = feeds.slice(i, i + FETCH_BATCH);
+    const batchResults = await Promise.all(
+      batch.map(feed => fetchRSS(feed.url, feed.source))
+    );
+
+    // Process each feed's articles immediately
+    for (let j = 0; j < batchResults.length; j++) {
+      const articles = batchResults[j] || [];
+      if (articles.length > 0) workingCount++;
+      else failedCount++;
+      processBatchArticles(articles);
+    }
+
+    // Delay before next batch (skip after last)
+    if (i + FETCH_BATCH < feeds.length) {
+      await new Promise(r => setTimeout(r, BATCH_DELAY));
+    }
+  }
+
+  console.log(`[Worker] RSS feeds: ${workingCount} working, ${failedCount} failed, ${totalRaw} total articles`);
+
+  if (uniqueArticles.length === 0) {
+    return { briefing: DAILY_BRIEFING_FALLBACK, events: [] };
+  }
+
+  // Sort unique articles by date (already filtered & deduped)
+  uniqueArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+  console.log(`[Worker] Pipeline: ${totalRaw} raw → ${totalFresh} fresh → ${totalRelevant} relevant → ${uniqueArticles.length} unique`);
 
   // 5. Build briefing articles (200 cap)
   const newArticles = uniqueArticles.slice(0, 200).map(article => {
