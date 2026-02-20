@@ -199,6 +199,23 @@ const RSS_FEEDS = {
     { url: 'https://www.thejakartapost.com/feed', source: 'Jakarta Post' },
     { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
     { url: 'https://nation.africa/kenya/rss', source: 'Nation Kenya' },
+    // --- New sources (expanded coverage) ---
+    { url: 'https://www.independent.co.uk/news/world/rss', source: 'The Independent' },
+    { url: 'https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/world/', source: 'Globe and Mail' },
+    { url: 'https://www.smh.com.au/rss/world.xml', source: 'Sydney Morning Herald' },
+    { url: 'https://www.dawn.com/feeds/home', source: 'Dawn' },
+    { url: 'https://www.thedailystar.net/top-news/rss.xml', source: 'Daily Star Bangladesh' },
+    { url: 'https://rss.tempo.co/en', source: 'Tempo' },
+    { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times' },
+    { url: 'https://mg.co.za/feed/', source: 'Mail & Guardian' },
+    { url: 'https://www.middleeasteye.net/rss', source: 'Middle East Eye' },
+    { url: 'https://news.google.com/rss/search?q=site:thenationalnews.com&hl=en', source: 'Google News' },
+    { url: 'https://feeds.folha.uol.com.br/mundo/rss091.xml', source: 'Folha' },
+    { url: 'https://buenosairesherald.com/feed/', source: 'Buenos Aires Herald' },
+    { url: 'https://www.taipeitimes.com/xml/index.rss', source: 'Taipei Times' },
+    { url: 'https://news.google.com/rss/search?q=site:koreaherald.com+when:7d&hl=en', source: 'Google News' },
+    { url: 'https://e.vnexpress.net/rss/news.rss', source: 'VnExpress' },
+    { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
@@ -1280,11 +1297,14 @@ export async function fetchEventSummaries() {
     const data = await response.json();
     const summaries = data.summaries || [];
 
-    // Apply summaries to events
+    // Apply summaries and AI-generated headlines to events
     for (let i = 0; i < eventsToSummarize.length; i++) {
       eventsToSummarize[i].summaryLoading = false;
       if (summaries[i] && summaries[i].summary) {
         eventsToSummarize[i].summary = summaries[i].summary;
+        if (summaries[i].headline) {
+          eventsToSummarize[i].headline = summaries[i].headline;
+        }
       } else {
         eventsToSummarize[i].summaryError = true;
       }

@@ -65,6 +65,8 @@ function formatXLabel(timestamp, rangeKey) {
 // ============================================================
 
 function StockChart({ chartData, rangeKey }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+
   if (!chartData || !chartData.closes || chartData.closes.length < 2) {
     return (
       <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', fontSize: '10px' }}>
@@ -120,8 +122,45 @@ function StockChart({ chartData, rangeKey }) {
     }
   }
 
+  // Mouse hover for tooltip
+  const handleMouseMove = (e) => {
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const svgX = (e.clientX - rect.left) / rect.width * W;
+    const chartX = svgX - PAD.left;
+    if (chartX < 0 || chartX > cW) { setHoverIdx(null); return; }
+    const idx = Math.round((chartX / cW) * (closes.length - 1));
+    setHoverIdx(Math.max(0, Math.min(closes.length - 1, idx)));
+  };
+
+  // Tooltip data
+  let ttip = null;
+  if (hoverIdx !== null && points[hoverIdx]) {
+    const px = points[hoverIdx].x;
+    const py = points[hoverIdx].y;
+    const above = py - 34 > 2;
+    const ty = above ? py - 34 : py + 8;
+    const anchor = px < PAD.left + 50 ? 'start' : px > W - PAD.right - 50 ? 'end' : 'middle';
+    const rx = anchor === 'start' ? px - 4 : anchor === 'end' ? px - 74 : px - 39;
+    const tx = anchor === 'start' ? px + 2 : anchor === 'end' ? px - 37 : px;
+    let priceStr = formatStockPrice(closes[hoverIdx]);
+    let dateStr = '';
+    if (timestamps && timestamps[hoverIdx]) {
+      const d = new Date(timestamps[hoverIdx] * 1000);
+      dateStr = rangeKey === '1D'
+        ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    ttip = { px, py, ty, rx, tx, anchor, priceStr, dateStr };
+  }
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet"
+      style={{ display: 'block', cursor: 'crosshair' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverIdx(null)}
+    >
       <defs>
         <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.2" />
@@ -145,6 +184,16 @@ function StockChart({ chartData, rangeKey }) {
         x2={PAD.left + cW} y2={points[points.length - 1].y}
         stroke={color} strokeWidth="0.5" strokeDasharray="3,3" opacity="0.4"
       />
+      {/* Tooltip */}
+      {ttip && (
+        <g>
+          <line x1={ttip.px} y1={PAD.top} x2={ttip.px} y2={bottom} stroke="#6b7280" strokeWidth="0.5" strokeDasharray="2,2" />
+          <circle cx={ttip.px} cy={ttip.py} r="3" fill={color} stroke="#111827" strokeWidth="1.5" />
+          <rect x={ttip.rx} y={ttip.ty} width="78" height="22" rx="3" fill="#1f2937ee" stroke="#374151" strokeWidth="0.5" />
+          <text x={ttip.tx} y={ttip.ty + 10} textAnchor={ttip.anchor} fontSize="8" fontWeight="700" fill="#e5e7eb" fontFamily="system-ui, sans-serif">{ttip.priceStr}</text>
+          <text x={ttip.tx} y={ttip.ty + 18} textAnchor={ttip.anchor} fontSize="6.5" fill="#6b7280" fontFamily="system-ui, sans-serif">{ttip.dateStr}</text>
+        </g>
+      )}
       {/* X labels */}
       {xLabels.map((l, i) => (
         <text key={i} x={l.x} y={bottom + 14} textAnchor="middle" fontSize="7" fill="#4b5563" fontFamily="system-ui, sans-serif">{l.label}</text>
@@ -247,6 +296,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
       setSearchResult({
         symbol: result.symbol,
         name: result.shortName || '',
+        exchangeName: result.exchangeName || '',
         price: formatStockPrice(result.price),
         change: (positive ? '+' : '') + result.changePct.toFixed(2) + '%',
         positive
@@ -438,6 +488,11 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <div>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#e5e7eb' }}>{searchResult.symbol}</span>
+                    {searchResult.exchangeName && (
+                      <span style={{ fontSize: '8px', color: '#06b6d4', marginLeft: '6px', fontWeight: 600, background: 'rgba(6,182,212,0.1)', padding: '1px 5px', borderRadius: '3px' }}>
+                        {searchResult.exchangeName}
+                      </span>
+                    )}
                     {searchResult.name && <span style={{ fontSize: '9px', color: '#6b7280', marginLeft: '6px' }}>{searchResult.name}</span>}
                   </div>
                   <div>

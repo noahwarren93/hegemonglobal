@@ -192,6 +192,7 @@ export async function fetchChartData(symbol, range = '5d', interval = '1d') {
       prevClose: q.prevClose,
       changePct: q.changePct,
       shortName: q.shortName || '',
+      exchangeName: q.exchangeName || '',
       closes: q.sparkline || [],
       timestamps: q.timestamps || []
     };

@@ -65,19 +65,18 @@ Sources (${articles.length}):
 ${articleList}`;
         }).join('\n\n');
 
-        const prompt = `You are an intelligence analyst writing briefings for a geopolitical monitoring platform called Hegemon. Summarize each event below in 3-5 sentences.
+        const prompt = `You are an intelligence analyst writing briefings for a geopolitical monitoring platform called Hegemon.
 
-For each event:
-- Synthesize what happened across all sources
-- If sources disagree or report different angles, note the discrepancy
-- Focus on geopolitical significance — why does this matter for global stability?
-- Use a professional, concise intelligence briefing tone
-- Do NOT use markdown formatting, bullet points, or headers — write plain prose paragraphs
+For each event below, provide TWO things:
+
+1. HEADLINE: A broad, attention-grabbing headline (max 12 words). Think newspaper front page — focus on the big picture, not granular details. Examples of good headlines: "Middle East Tensions Escalate as Regional Powers Clash", "Global Markets Rattled by Trade War Fears", "European Security Architecture Faces New Challenges". Avoid specific names or numbers — keep it sweeping and dramatic.
+
+2. SUMMARY: 3-5 sentences synthesizing what happened across all sources. If sources disagree or report different angles, note the discrepancy. Focus on geopolitical significance — why does this matter for global stability? Use a professional, concise intelligence briefing tone. Plain prose paragraphs, no markdown.
 
 ${eventDescriptions}
 
-Respond with a JSON array of summaries, one per event, in the same order. Format:
-[{"summary": "..."}, {"summary": "..."}, ...]
+Respond with a JSON array, one per event, in the same order. Format:
+[{"headline": "Broad Grabby Headline Here", "summary": "3-5 sentence analysis..."}, ...]
 
 Return ONLY the JSON array, no other text.`;
 
@@ -247,6 +246,7 @@ Return ONLY the JSON array, no other text.`;
               changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
               shortName: meta.shortName || '',
               longName: meta.longName || '',
+              exchangeName: meta.fullExchangeName || meta.exchangeName || '',
               sparkline: closes.length > 0 ? closes : [prevClose || price, price],
               timestamps: timestamps.length > 0 ? timestamps : []
             };

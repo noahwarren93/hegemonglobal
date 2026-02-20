@@ -246,6 +246,22 @@ const SOURCE_RANK = {
   'jakarta post': 5, 'the jakarta post': 5,
   'africa news': 5, 'africanews': 5,
   'nation kenya': 4, 'daily nation': 4,
+  'the independent': 5, 'independent': 5,
+  'globe and mail': 5,
+  'sydney morning herald': 5, 'smh': 5,
+  'dawn': 5,
+  'middle east eye': 5,
+  'folha': 5,
+  'taipei times': 4,
+  'korea herald': 5,
+  'the national': 4,
+  'vietnam news': 3,
+  'rappler': 4,
+  'buenos aires herald': 3,
+  'premium times': 4,
+  'mail & guardian': 4,
+  'tempo': 3,
+  'daily star': 3,
   'daily mail': 3,
   'new york post': 3, 'ny post': 3
 };
@@ -384,7 +400,13 @@ export function clusterArticles(articles) {
 
     // Sort articles: highest-ranked source first
     const sorted = [...clusterArts].sort((a, b) => getSourceRank(b.source) - getSourceRank(a.source));
-    const primary = sorted[0];
+    // Pick broadest headline: shortest among top 3 ranked sources (shorter = more general)
+    const topCandidates = sorted.slice(0, Math.min(3, sorted.length));
+    const primary = topCandidates.reduce((best, curr) => {
+      const currHL = (curr.headline || curr.title || '').trim();
+      const bestHL = (best.headline || best.title || '').trim();
+      return currHL.length > 0 && currHL.length < bestHL.length ? curr : best;
+    }, topCandidates[0]);
 
     // Collect all unique specific entities across cluster
     const allEntities = new Set();

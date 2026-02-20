@@ -24,6 +24,8 @@ export const SOURCE_BIAS = {
   'Reuters': 'C', 'France 24': 'C', 'France24': 'C', 'DW News': 'C', 'DW': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'PBS': 'C', 'Nikkei': 'C', 'Nikkei Asia': 'C', 'FT': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'LC', 'Korea Times': 'C', 'Korea Herald': 'C', 'SCMP': 'C', 'South China Morning Post': 'C', 'Euronews': 'C', 'UPI': 'C', 'PTI': 'C', 'ANI': 'C', 'IANS': 'C', 'DPA': 'C', 'EFE': 'C', 'ANSA': 'C', 'Dawn': 'C', 'Express Tribune': 'C', 'Geo News': 'C', 'Pakistan Today': 'C', 'The News': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Japan Times': 'C', 'Bangkok Post': 'C', 'Bernama': 'C', 'VnExpress': 'C', 'NZ Herald': 'C', 'RNZ': 'C', 'RTÉ': 'C', 'Africa News': 'C', 'Africanews': 'C', 'Jakarta Post': 'C', 'The Jakarta Post': 'C', 'Nation Kenya': 'C', 'Semafor': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Defense One': 'C', 'Defense News': 'C', 'Breaking Defense': 'C', 'Clarín': 'C', 'Premium Times': 'C', 'News24': 'C', 'Times Live': 'C', 'Mail & Guardian': 'C', 'East African': 'C', 'Standard Media': 'C', 'Daily Nation': 'C', 'PhilStar': 'C', 'Inquirer': 'C', 'Manila Times': 'C', 'The Star Malaysia': 'C', 'Stuff NZ': 'C', 'Nine News': 'C', 'Dutch News': 'C', 'The Local': 'C', 'WION': 'C', 'Economic Times': 'C', 'Money Control': 'C', 'MarketWatch': 'C', 'Fortune': 'C', 'Barrons': 'C', 'Seeking Alpha': 'C', 'Yonhap': 'C', 'NHK World': 'C', 'NHK': 'C', 'Kyodo News': 'C', 'Kyodo': 'C', 'Google News': 'LC', 'AFP': 'C', 'Newsweek': 'C', 'The Economist': 'C', 'Forbes': 'C',
   // Right-Center (AllSides: Lean Right)
   'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC', 'Washington Examiner': 'RC',
+  // New sources
+  'Globe and Mail': 'LC', 'Daily Star Bangladesh': 'C', 'Daily Star': 'C', 'Tempo': 'C', 'The National': 'RC', 'The National UAE': 'RC', 'Buenos Aires Herald': 'C', 'Taipei Times': 'C', 'Rappler': 'LC', 'Vietnam News': 'R',
   // Right (AllSides: Right)
   'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'CGTN': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R', 'Mehr News': 'R'
 };
@@ -106,7 +108,9 @@ export const STATE_MEDIA = {
   'Press TV': 'Iran · State Media',
   'RT': 'Russia · State Media',
   'Xinhua': 'China · State Media',
-  'Mehr News': 'Iran · State Media'
+  'Mehr News': 'Iran · State Media',
+  'Vietnam News': 'Vietnam · State Media',
+  'The National': 'UAE · State Affiliated'
 };
 
 export function getStateMediaLabel(source) {
@@ -147,7 +151,11 @@ const NON_WESTERN_SOURCES = new Set([
   'france 24', 'france24', 'deutsche welle', 'dw', 'dw news',
   'o globo', 'folha', 'clarín', 'la nación',
   'the hindu', 'times of israel', 'africa news', 'africanews',
-  'haaretz', 'jakarta post', 'the jakarta post', 'nation kenya', 'daily nation'
+  'haaretz', 'jakarta post', 'the jakarta post', 'nation kenya', 'daily nation',
+  'daily star bangladesh', 'daily star', 'the daily star',
+  'tempo', 'the national', 'the national uae',
+  'buenos aires herald', 'taipei times', 'vietnam news',
+  'rappler', 'premium times', 'mail & guardian', 'mail and guardian'
 ]);
 
 function isNonWesternSource(source) {
@@ -286,6 +294,11 @@ export function formatSourceName(sourceId) {
     'africanews': 'Africa News', 'nationkenya': 'Nation Kenya',
     'philstar': 'PhilStar', 'inquirer': 'Inquirer', 'manilatimes': 'Manila Times',
     'thestar': 'The Star Malaysia', 'bernama': 'Bernama', 'vnexpress': 'VnExpress',
+    'rappler': 'Rappler', 'taipeitimes': 'Taipei Times', 'vietnamnews': 'Vietnam News',
+    'thenational': 'The National', 'thenationalnews': 'The National',
+    'tempo': 'Tempo', 'dailystar': 'Daily Star Bangladesh', 'thedailystar': 'Daily Star Bangladesh',
+    'globeandmail': 'Globe and Mail', 'theglobeandmail': 'Globe and Mail',
+    'buenosairesherald': 'Buenos Aires Herald',
     // Russia/Eastern Europe
     'rt': 'RT', 'tass': 'TASS', 'ria': 'RIA Novosti', 'pravda': 'Pravda',
     'kyivindependent': 'Kyiv Independent', 'kyivpost': 'Kyiv Post', 'unian': 'UNIAN',
