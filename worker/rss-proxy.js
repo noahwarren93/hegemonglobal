@@ -5,6 +5,7 @@
 // ============================================================
 // In-memory summary cache — all users see the same headlines
 // Keyed by hash of article titles, expires after 1 hour
+// Also backed by Cloudflare Cache API for persistence across cold starts
 // ============================================================
 const SUMMARY_CACHE = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
@@ -26,6 +27,30 @@ function cleanExpiredCache() {
   for (const [key, entry] of SUMMARY_CACHE) {
     if (now - entry.ts > CACHE_TTL) SUMMARY_CACHE.delete(key);
   }
+}
+
+// Cloudflare Cache API helpers — persistent across cold starts
+const CACHE_URL_PREFIX = 'https://hegemon-cache.internal/summary/';
+
+async function getCacheApi(key) {
+  try {
+    const cache = caches.default;
+    const resp = await cache.match(new Request(CACHE_URL_PREFIX + key));
+    if (!resp) return null;
+    const data = await resp.json();
+    if (Date.now() - data.ts > CACHE_TTL) return null;
+    return data;
+  } catch { return null; }
+}
+
+async function setCacheApi(key, data) {
+  try {
+    const cache = caches.default;
+    const resp = new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=3600' }
+    });
+    await cache.put(new Request(CACHE_URL_PREFIX + key), resp);
+  } catch { /* best effort */ }
 }
 
 const CORS_HEADERS = {
@@ -81,18 +106,27 @@ export default {
         // Clean expired cache entries
         cleanExpiredCache();
 
-        // Check cache for each event — only call Claude for uncached ones
+        // Check cache for each event — memory first, then Cache API, only call Claude for uncached
         const results = new Array(events.length).fill(null);
         const uncachedIndices = [];
 
         for (let i = 0; i < events.length; i++) {
           const key = hashEventTitles(events[i]);
-          const cached = SUMMARY_CACHE.get(key);
-          if (cached && (Date.now() - cached.ts < CACHE_TTL)) {
-            results[i] = cached.data;
-          } else {
-            uncachedIndices.push(i);
+          // Check in-memory cache first
+          const memCached = SUMMARY_CACHE.get(key);
+          if (memCached && (Date.now() - memCached.ts < CACHE_TTL)) {
+            results[i] = memCached.data;
+            continue;
           }
+          // Check persistent Cache API
+          const apiCached = await getCacheApi(key);
+          if (apiCached) {
+            results[i] = apiCached.data;
+            // Re-hydrate in-memory cache
+            SUMMARY_CACHE.set(key, apiCached);
+            continue;
+          }
+          uncachedIndices.push(i);
         }
 
         const cacheHits = events.length - uncachedIndices.length;
@@ -210,10 +244,12 @@ Return ONLY the JSON array, no other text.`;
           const summary = summaries[i] || null;
           results[origIdx] = summary;
 
-          // Cache the result
+          // Cache the result (in-memory + persistent Cache API)
           if (summary) {
             const key = hashEventTitles(events[origIdx]);
-            SUMMARY_CACHE.set(key, { data: summary, ts: Date.now() });
+            const cacheEntry = { data: summary, ts: Date.now() };
+            SUMMARY_CACHE.set(key, cacheEntry);
+            setCacheApi(key, cacheEntry);
           }
         }
 

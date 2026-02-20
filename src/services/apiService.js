@@ -4,20 +4,11 @@ import {
   COUNTRIES, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK, DAILY_EVENTS,
   IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, STRONG_GEO_SIGNALS,
   DOMESTIC_NOISE_PATTERNS, ESCALATION_KEYWORDS,
-  DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS
+  DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS, COUNTRY_DEMONYMS
 } from '../data/countries';
-import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
-import { clusterArticles } from './eventsService';
+import { formatSourceName, timeAgo } from '../utils/riskColors';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
-
-// ============================================================
-// Yield to main thread — prevents blocking during heavy processing
-// ============================================================
-
-function yieldToMain() {
-  return new Promise(resolve => requestAnimationFrame(resolve));
-}
 
 // ============================================================
 // HTML Entity Decoder
@@ -617,208 +608,9 @@ export function computeStats() {
   return { critical, high, stable };
 }
 
-// ============================================================
-// Country Relevance Detection (195-country demonyms)
-// ============================================================
-
-export const COUNTRY_DEMONYMS = {
-    'Afghanistan': ['afghan', 'kabul', 'taliban'],
-    'Albania': ['albanian', 'tirana'],
-    'Algeria': ['algerian', 'algiers'],
-    'Andorra': ['andorran'],
-    'Angola': ['angolan', 'luanda'],
-    'Antigua and Barbuda': ['antiguan', 'barbudan'],
-    'Argentina': ['argentine', 'argentinian', 'buenos aires'],
-    'Armenia': ['armenian', 'yerevan'],
-    'Australia': ['australian', 'canberra', 'sydney', 'melbourne'],
-    'Austria': ['austrian', 'vienna'],
-    'Azerbaijan': ['azerbaijani', 'baku'],
-    'Bahamas': ['bahamian', 'nassau'],
-    'Bahrain': ['bahraini', 'manama'],
-    'Bangladesh': ['bangladeshi', 'dhaka'],
-    'Barbados': ['barbadian', 'bridgetown'],
-    'Belarus': ['belarusian', 'minsk', 'lukashenko'],
-    'Belgium': ['belgian', 'brussels'],
-    'Benin': ['beninese', 'porto-novo', 'cotonou'],
-    'Bhutan': ['bhutanese', 'thimphu'],
-    'Bolivia': ['bolivian', 'la paz'],
-    'Bosnia and Herzegovina': ['bosnian', 'sarajevo'],
-    'Botswana': ['motswana', 'botswanan', 'gaborone'],
-    'Brazil': ['brazilian', 'brasilia', 'rio', 'sao paulo', 'lula'],
-    'Brunei': ['bruneian', 'bandar seri begawan'],
-    'Bulgaria': ['bulgarian', 'sofia'],
-    'Burkina Faso': ['burkinabe', 'ouagadougou'],
-    'Burundi': ['burundian', 'bujumbura', 'gitega'],
-    'Cambodia': ['cambodian', 'phnom penh'],
-    'Cameroon': ['cameroonian', 'yaounde'],
-    'Canada': ['canadian', 'ottawa', 'toronto', 'trudeau'],
-    'Cape Verde': ['cape verdean', 'praia'],
-    'Central African Republic': ['central african', 'bangui'],
-    'Chad': ['chadian', "n'djamena"],
-    'Chile': ['chilean', 'santiago'],
-    'China': ['chinese', 'beijing', 'xi jinping', 'ccp', 'prc'],
-    'Colombia': ['colombian', 'bogota'],
-    'Comoros': ['comorian', 'moroni'],
-    'Democratic Republic of Congo': ['congolese', 'kinshasa', 'drc'],
-    'Republic of Congo': ['congo-brazzaville', 'brazzaville'],
-    'Costa Rica': ['costa rican', 'san jose'],
-    'Croatia': ['croatian', 'zagreb'],
-    'Cuba': ['cuban', 'havana'],
-    'Cyprus': ['cypriot', 'nicosia'],
-    'Czech Republic': ['czech', 'prague'],
-    'Denmark': ['danish', 'copenhagen'],
-    'Greenland': ['greenlandic', 'nuuk', 'inuit'],
-    'Djibouti': ['djiboutian'],
-    'Dominica': ['dominican'],
-    'Dominican Republic': ['dominican republic', 'santo domingo'],
-    'Ecuador': ['ecuadorian', 'quito'],
-    'Egypt': ['egyptian', 'cairo', 'sisi'],
-    'El Salvador': ['salvadoran', 'san salvador', 'bukele'],
-    'Equatorial Guinea': ['equatoguinean', 'malabo'],
-    'Eritrea': ['eritrean', 'asmara'],
-    'Estonia': ['estonian', 'tallinn'],
-    'Eswatini': ['swazi', 'mbabane'],
-    'Ethiopia': ['ethiopian', 'addis ababa'],
-    'Fiji': ['fijian', 'suva'],
-    'Finland': ['finnish', 'helsinki'],
-    'France': ['french', 'paris', 'macron', 'élysée'],
-    'Gabon': ['gabonese', 'libreville'],
-    'Gambia': ['gambian', 'banjul'],
-    'Georgia': ['georgian', 'tbilisi'],
-    'Germany': ['german', 'berlin', 'scholz', 'bundestag'],
-    'Ghana': ['ghanaian', 'accra'],
-    'Greece': ['greek', 'athens'],
-    'Grenada': ['grenadian'],
-    'Guatemala': ['guatemalan'],
-    'Guinea': ['guinean', 'conakry'],
-    'Guinea-Bissau': ['bissau-guinean', 'bissau'],
-    'Guyana': ['guyanese', 'georgetown'],
-    'Haiti': ['haitian', 'port-au-prince'],
-    'Honduras': ['honduran', 'tegucigalpa'],
-    'Hungary': ['hungarian', 'budapest', 'orban'],
-    'Iceland': ['icelandic', 'reykjavik'],
-    'India': ['indian', 'delhi', 'mumbai', 'modi', 'bjp'],
-    'Indonesia': ['indonesian', 'jakarta', 'jokowi'],
-    'Iran': ['iranian', 'tehran', 'ayatollah', 'khamenei'],
-    'Iraq': ['iraqi', 'baghdad', 'kurdish'],
-    'Ireland': ['irish', 'dublin'],
-    'Israel': ['israeli', 'tel aviv', 'jerusalem', 'netanyahu', 'idf'],
-    'Italy': ['italian', 'rome', 'meloni'],
-    'Ivory Coast': ['ivorian', 'abidjan', 'yamoussoukro'],
-    'Jamaica': ['jamaican', 'kingston'],
-    'Japan': ['japanese', 'tokyo', 'kishida'],
-    'Jordan': ['jordanian', 'amman'],
-    'Kazakhstan': ['kazakh', 'astana', 'almaty'],
-    'Kenya': ['kenyan', 'nairobi'],
-    'Kiribati': ['i-kiribati', 'tarawa'],
-    'Kosovo': ['kosovar', 'pristina'],
-    'Kuwait': ['kuwaiti', 'kuwait city'],
-    'Kyrgyzstan': ['kyrgyz', 'bishkek'],
-    'Laos': ['laotian', 'vientiane'],
-    'Latvia': ['latvian', 'riga'],
-    'Lebanon': ['lebanese', 'beirut', 'hezbollah'],
-    'Lesotho': ['basotho', 'maseru'],
-    'Liberia': ['liberian', 'monrovia'],
-    'Libya': ['libyan', 'tripoli'],
-    'Liechtenstein': ['liechtensteiner', 'vaduz'],
-    'Lithuania': ['lithuanian', 'vilnius'],
-    'Luxembourg': ['luxembourgish', 'luxembourger'],
-    'Madagascar': ['malagasy', 'antananarivo'],
-    'Malawi': ['malawian', 'lilongwe'],
-    'Malaysia': ['malaysian', 'kuala lumpur'],
-    'Maldives': ['maldivian', 'male'],
-    'Mali': ['malian', 'bamako'],
-    'Malta': ['maltese', 'valletta'],
-    'Marshall Islands': ['marshallese', 'majuro'],
-    'Mauritania': ['mauritanian', 'nouakchott'],
-    'Mauritius': ['mauritian', 'port louis'],
-    'Mexico': ['mexican', 'mexico city'],
-    'Micronesia': ['micronesian', 'palikir'],
-    'Moldova': ['moldovan', 'chisinau'],
-    'Monaco': ['monegasque', 'monte carlo'],
-    'Mongolia': ['mongolian', 'ulaanbaatar'],
-    'Montenegro': ['montenegrin', 'podgorica'],
-    'Morocco': ['moroccan', 'rabat', 'casablanca'],
-    'Mozambique': ['mozambican', 'maputo'],
-    'Myanmar': ['burmese', 'myanmar', 'yangon', 'junta'],
-    'Namibia': ['namibian', 'windhoek'],
-    'Nauru': ['nauruan'],
-    'Nepal': ['nepali', 'nepalese', 'kathmandu'],
-    'Netherlands': ['dutch', 'amsterdam', 'the hague'],
-    'New Zealand': ['new zealand', 'kiwi', 'wellington'],
-    'Nicaragua': ['nicaraguan', 'managua', 'ortega'],
-    'Niger': ['nigerien', 'niamey'],
-    'Nigeria': ['nigerian', 'lagos', 'abuja'],
-    'North Korea': ['north korean', 'pyongyang', 'kim jong', 'dprk'],
-    'North Macedonia': ['macedonian', 'skopje'],
-    'Norway': ['norwegian', 'oslo'],
-    'Oman': ['omani', 'muscat'],
-    'Pakistan': ['pakistani', 'islamabad', 'karachi'],
-    'Palau': ['palauan', 'ngerulmud'],
-    'Palestine': ['gaza', 'palestinian', 'west bank', 'ramallah', 'hamas', 'fatah', 'pa ', 'palestinian authority'],
-    'Panama': ['panamanian', 'panama city'],
-    'Papua New Guinea': ['papua new guinean', 'port moresby'],
-    'Paraguay': ['paraguayan', 'asuncion'],
-    'Peru': ['peruvian', 'lima'],
-    'Philippines': ['filipino', 'philippine', 'manila', 'marcos'],
-    'Poland': ['polish', 'warsaw'],
-    'Portugal': ['portuguese', 'lisbon'],
-    'Qatar': ['qatari', 'doha'],
-    'Romania': ['romanian', 'bucharest'],
-    'Russia': ['russian', 'moscow', 'kremlin', 'putin'],
-    'Rwanda': ['rwandan', 'kigali'],
-    'Saint Kitts and Nevis': ['kittitian', 'nevisian', 'basseterre'],
-    'Saint Lucia': ['saint lucian', 'castries'],
-    'Saint Vincent and the Grenadines': ['vincentian'],
-    'Samoa': ['samoan', 'apia'],
-    'San Marino': ['sammarinese'],
-    'Sao Tome and Principe': ['santomean'],
-    'Saudi Arabia': ['saudi', 'riyadh', 'mbs'],
-    'Senegal': ['senegalese', 'dakar'],
-    'Serbia': ['serbian', 'belgrade'],
-    'Seychelles': ['seychellois', 'victoria'],
-    'Sierra Leone': ['sierra leonean', 'freetown'],
-    'Singapore': ['singaporean'],
-    'Slovakia': ['slovak', 'bratislava'],
-    'Slovenia': ['slovenian', 'ljubljana'],
-    'Solomon Islands': ['solomon islander', 'honiara'],
-    'Somalia': ['somali', 'mogadishu'],
-    'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town'],
-    'South Korea': ['south korean', 'seoul', 'korean'],
-    'South Sudan': ['south sudanese', 'juba'],
-    'Spain': ['spanish', 'madrid', 'barcelona'],
-    'Sri Lanka': ['sri lankan', 'colombo'],
-    'Sudan': ['sudanese', 'khartoum'],
-    'Suriname': ['surinamese', 'paramaribo'],
-    'Sweden': ['swedish', 'stockholm'],
-    'Switzerland': ['swiss', 'bern', 'zurich', 'geneva'],
-    'Syria': ['syrian', 'damascus', 'assad'],
-    'Taiwan': ['taiwanese', 'taipei'],
-    'Tajikistan': ['tajik', 'dushanbe'],
-    'Tanzania': ['tanzanian', 'dodoma', 'dar es salaam'],
-    'Thailand': ['thai', 'bangkok'],
-    'Timor-Leste': ['timorese', 'east timor', 'dili'],
-    'Togo': ['togolese', 'lome'],
-    'Tonga': ['tongan', "nuku'alofa"],
-    'Trinidad and Tobago': ['trinidadian', 'tobagonian', 'port of spain'],
-    'Tunisia': ['tunisian', 'tunis'],
-    'Turkey': ['turkish', 'ankara', 'istanbul', 'erdogan'],
-    'Turkmenistan': ['turkmen', 'ashgabat'],
-    'Tuvalu': ['tuvaluan', 'funafuti'],
-    'Uganda': ['ugandan', 'kampala'],
-    'Ukraine': ['ukrainian', 'kyiv', 'zelensky'],
-    'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi'],
-    'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster'],
-    'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
-    'Uruguay': ['uruguayan', 'montevideo'],
-    'Uzbekistan': ['uzbek', 'tashkent'],
-    'Vanuatu': ['ni-vanuatu', 'port vila'],
-    'Venezuela': ['venezuelan', 'caracas', 'rodriguez', 'maduro'],
-    'Vietnam': ['vietnamese', 'hanoi', 'ho chi minh'],
-    'Yemen': ['yemeni', 'sanaa', 'houthi'],
-    'Zambia': ['zambian', 'lusaka'],
-    'Zimbabwe': ['zimbabwean', 'harare']
-};
+// COUNTRY_DEMONYMS is now imported from countries.js and re-exported
+// for backward compatibility with modules that import from apiService
+export { COUNTRY_DEMONYMS };
 
 export function isRelevantToCountry(title, description, countryName) {
   const text = ((title || '') + ' ' + (description || '')).toLowerCase();
@@ -1035,193 +827,58 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Fetch Live News (callback-based for React)
+// Web Worker for off-main-thread news processing
+// ============================================================
+
+let _newsWorker = null;
+
+function getNewsWorker() {
+  if (_newsWorker) return _newsWorker;
+  _newsWorker = new Worker(
+    new URL('../workers/newsWorker.js', import.meta.url),
+    { type: 'module' }
+  );
+  return _newsWorker;
+}
+
+// ============================================================
+// Fetch Live News — delegates ALL processing to Web Worker
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
-
   if (onStatusUpdate) onStatusUpdate('fetching');
 
   try {
-    // Fetch from multiple RSS feeds in parallel
-    const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
-    const feedResults = await Promise.all(feedPromises);
+    const worker = getNewsWorker();
 
-    const allArticles = feedResults.flat();
+    const result = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Worker timeout after 60s'));
+      }, 60000);
 
-    // Log per-source article counts for debugging
-    const sourceCounts = {};
-    for (let i = 0; i < RSS_FEEDS.daily.length; i++) {
-      const name = RSS_FEEDS.daily[i].source;
-      const count = feedResults[i] ? feedResults[i].length : 0;
-      sourceCounts[name] = count;
-    }
-    const working = Object.entries(sourceCounts).filter(([, c]) => c > 0);
-    const failed = Object.entries(sourceCounts).filter(([, c]) => c === 0);
-    console.log(`[Hegemon] RSS feeds: ${working.length} working, ${failed.length} failed, ${allArticles.length} total articles`);
-    if (failed.length > 0) console.log('[Hegemon] Failed feeds:', failed.map(([n]) => n).join(', '));
-
-    if (allArticles.length > 0) {
-      allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-      // --- Yield to main thread before heavy filtering ---
-      await yieldToMain();
-
-      // Staleness filter — reject articles older than 48 hours
-      const now = Date.now();
-      const STALENESS_MS = 48 * 60 * 60 * 1000;
-      const freshArticles = allArticles.filter(article => {
-        if (!article.pubDate) return true;
-        const age = now - new Date(article.pubDate).getTime();
-        return age < STALENESS_MS;
-      });
-
-      // --- Yield before relevance filtering (heavy: keyword scans) ---
-      await yieldToMain();
-
-      // Filter: irrelevant keywords, sports, domestic noise, non-English, require geo score >= 1
-      // Process in batches to avoid blocking
-      const relevantArticles = [];
-      for (let i = 0; i < freshArticles.length; i++) {
-        const article = freshArticles[i];
-        const title = article.title || '';
-        const text = (title + ' ' + (article.description || '')).toLowerCase();
-        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
-        const category = detectCategory(title, article.description);
-        if (category === 'SPORTS') continue;
-        const fullText = title + ' ' + (article.description || '');
-        if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
-        const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
-        if (title.length > 10 && nonAscii / title.length > 0.15) continue;
-        if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
-            !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
-          const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
-          if (nonEnCount >= 2) continue;
+      worker.onmessage = (e) => {
+        clearTimeout(timeout);
+        if (e.data.type === 'result') {
+          resolve(e.data);
+        } else if (e.data.type === 'error') {
+          reject(new Error(e.data.message));
         }
-        if (scoreGeopoliticalRelevance(fullText) < 1) continue;
-        relevantArticles.push(article);
+      };
+      worker.onerror = (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      };
+      worker.postMessage({ type: 'fetchNews' });
+    });
 
-        // Yield every 20 articles to keep UI responsive
-        if (i > 0 && i % 20 === 0) await yieldToMain();
-      }
-
-      // --- Yield before dedup (O(n²), heaviest step) ---
-      await yieldToMain();
-
-      // Source-aware dedup: process in batches with yields
-      const seenEntries = [];
-      const uniqueArticles = [];
-      for (let i = 0; i < relevantArticles.length; i++) {
-        const article = relevantArticles[i];
-        const source = formatSourceName(article.source_id);
-        const normalized = (article.title || '').toLowerCase()
-          .replace(/[^a-z0-9 ]/g, '')
-          .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-        let isDupe = false;
-        if (seenEntries.some(s => s.normalized === normalized)) { isDupe = true; }
-        if (!isDupe) {
-          for (const existing of seenEntries) {
-            if (normalized.length > 20 && existing.normalized.length > 20) {
-              const wordsA = new Set(normalized.split(' '));
-              const wordsB = new Set(existing.normalized.split(' '));
-              let overlap = 0;
-              for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
-              const maxLen = Math.max(wordsA.size, wordsB.size);
-              const threshold = existing.source === source ? 0.7 : 0.95;
-              if (maxLen > 0 && overlap / maxLen >= threshold) { isDupe = true; break; }
-            }
-          }
-        }
-        if (!isDupe) {
-          seenEntries.push({ normalized, source });
-          uniqueArticles.push(article);
-        }
-
-        // Yield every 20 articles during dedup (O(n²) is heavy)
-        if (i > 0 && i % 20 === 0) await yieldToMain();
-      }
-
-      console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
-
-      // --- Yield before article mapping ---
-      await yieldToMain();
-
-      // Build new briefing - mutate shared array (200 cap for robust clustering)
-      const newArticles = uniqueArticles.slice(0, 200).map(article => {
-        const category = detectCategory(article.title, article.description);
-        const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
-        const sourceName = formatSourceName(article.source_id);
-        return {
-          time: timeAgo(article.pubDate),
-          category,
-          importance,
-          headline: article.title,
-          description: article.description || '',
-          source: sourceName,
-          url: article.link || ''
-        };
-      });
-
-      // Ensure political diversity
-      const rcCount = newArticles.filter(a => { const b = getSourceBias(a.source); return b === 'RC' || b === 'R'; }).length;
-      if (rcCount < 3) {
-        const rightFallbacks = DAILY_BRIEFING_FALLBACK.filter(a => {
-          const b = getSourceBias(a.source);
-          return b === 'RC' || b === 'R';
-        });
-        const needed = Math.min(4 - rcCount, rightFallbacks.length);
-        if (needed > 0) {
-          const interval = Math.max(1, Math.floor(newArticles.length / (needed + 1)));
-          for (let i = 0; i < needed; i++) {
-            const pos = Math.min((i + 1) * interval + i, newArticles.length);
-            newArticles.splice(pos, 0, rightFallbacks[i]);
-          }
-        }
-      }
-
-      // Disperse bias clusters
-      const dispersed = disperseBiasArticles(newArticles);
-
-      // Balance western/non-western source ratio (~67% western, interleaved)
-      const balanced = balanceSourceOrigins(dispersed);
-
-      // Demote low-priority stories out of top 10
-      const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
-      for (let i = 0; i < Math.min(10, balanced.length); i++) {
-        const h = (balanced[i].headline || '').toLowerCase();
-        if (DEMOTE_KEYWORDS.some(kw => h.includes(kw))) {
-          const [item] = balanced.splice(i, 1);
-          const dest = Math.min(14, balanced.length);
-          balanced.splice(dest, 0, item);
-          i--;
-        }
-      }
-
-      // Deprioritize tabloid sources — never in top 5
-      const DEPRIORITIZE_SOURCES = ['new york post', 'ny post', 'daily mail'];
-      for (let i = 0; i < Math.min(5, balanced.length); i++) {
-        const src = (balanced[i].source || '').toLowerCase();
-        if (DEPRIORITIZE_SOURCES.some(ds => src.includes(ds))) {
-          const [item] = balanced.splice(i, 1);
-          const dest = Math.min(balanced.length, 5);
-          balanced.splice(dest, 0, item);
-          i--;
-        }
-      }
-
+    if (result.briefing && result.briefing.length > 0) {
       // Mutate shared DAILY_BRIEFING array
       DAILY_BRIEFING.length = 0;
-      DAILY_BRIEFING.push(...balanced);
+      DAILY_BRIEFING.push(...result.briefing);
 
-      // --- Yield before clustering (CPU-heavy) ---
-      await yieldToMain();
-
-      // Cluster articles into events (async with yields)
-      const events = await clusterArticles(DAILY_BRIEFING);
+      // Set events
       DAILY_EVENTS.length = 0;
-      DAILY_EVENTS.push(...events);
+      DAILY_EVENTS.push(...result.events);
 
       saveBriefingSnapshot();
       seedPastBriefingIfEmpty();
@@ -1230,66 +887,17 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       // Dynamic risk analysis (non-blocking)
       setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
 
-      // Fire off async AI summary requests (non-blocking)
+      // AI summaries AFTER events are rendered
       setTimeout(() => fetchEventSummaries(), 100);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
     }
   } catch (error) {
-    console.warn('RSS feeds failed:', error.message);
+    console.warn('[Hegemon] Worker failed, using fallback:', error.message);
   }
 
-  // Fallback: try each backup API
-  const dailyApiOrder = ['gnews', 'newsdata', 'mediastack'];
-  for (const apiName of dailyApiOrder) {
-    try {
-      const api = NEWS_APIS[apiName];
-      if (!api || !api.key || !api.buildDailyUrl) continue;
-      const response = await fetch(api.buildDailyUrl(api.key));
-      if (response.ok) {
-        const data = await response.json();
-        const results = api.parseResults(data);
-        if (results && results.length > 0) {
-          const fallbackArticles = results.filter(article => {
-            const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-            if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
-            return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
-          }).map(article => ({
-            time: timeAgo(article.pubDate),
-            category: detectCategory(article.title, article.description),
-            importance: 'medium',
-            headline: article.title,
-            source: formatSourceName(article.source_id),
-            url: article.link || ''
-          }));
-
-          DAILY_BRIEFING.length = 0;
-          DAILY_BRIEFING.push(...fallbackArticles);
-
-          // Cluster articles into events (async with yields)
-          const fbEvents = await clusterArticles(DAILY_BRIEFING);
-          DAILY_EVENTS.length = 0;
-          DAILY_EVENTS.push(...fbEvents);
-
-          saveBriefingSnapshot();
-          seedPastBriefingIfEmpty();
-          saveNewsToLocalStorage();
-          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
-
-          setTimeout(() => fetchEventSummaries(), 100);
-
-          if (onComplete) onComplete(DAILY_BRIEFING);
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn(`${apiName} fallback failed:`, e.message);
-    }
-  }
-
-  // All sources failed
-  console.error('All news sources failed');
+  // All sources failed — use fallback
   if (DAILY_BRIEFING.length === 0) {
     DAILY_BRIEFING.length = 0;
     DAILY_BRIEFING.push(...DAILY_BRIEFING_FALLBACK);

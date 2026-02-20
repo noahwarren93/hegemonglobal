@@ -3,7 +3,7 @@
 // For stoplist countries (US/UK/China/Russia), require shared topic keyword.
 // Cap at 40 articles per cluster. Second pass merges same-country duplicates.
 
-import { COUNTRY_DEMONYMS } from './apiService';
+import { COUNTRY_DEMONYMS } from '../data/countries';
 
 // ============================================================
 // Headline Cleanup
@@ -278,6 +278,9 @@ function scoreEvent(event) {
 const HARD_CAP = 40;
 
 function _yieldToMain() {
+  if (typeof requestAnimationFrame !== 'function') {
+    return Promise.resolve();
+  }
   return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
