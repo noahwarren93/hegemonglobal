@@ -260,17 +260,28 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return 'ts_' + Math.abs(h).toString(36);
     };
 
+    // Ensure key conflicts always have a candidate (Russia-Ukraine, Iran, Gaza, Sudan)
+    const ALWAYS_INCLUDE = ['ukraine', 'iran', 'gaza', 'sudan'];
+    const mentionsKeyword = (evt, kw) => {
+      return getEventText(evt).includes(kw);
+    };
+
     // Filter and sort candidates: tier first, then source count, then category
     const candidates = events
       .filter(e => e.sourceCount >= 2 && !isBlocked(e))
       .sort((a, b) => {
         const tierA = getTier(a);
         const tierB = getTier(b);
-        if (tierA !== tierB) return tierA - tierB; // lower tier number = higher priority
+        if (tierA !== tierB) return tierA - tierB;
         if (a.sourceCount !== b.sourceCount) return b.sourceCount - a.sourceCount;
         const catPri = { CONFLICT: 5, SECURITY: 4, CRISIS: 3, DIPLOMACY: 2 };
         return (catPri[b.category] || 0) - (catPri[a.category] || 0);
       });
+
+    // Also find single-source events for key conflicts if no 2+ source version exists
+    const singleSourceKeyConflicts = events
+      .filter(e => e.sourceCount === 1 && !isBlocked(e) && getTier(e) <= 2)
+      .filter(e => ALWAYS_INCLUDE.some(kw => mentionsKeyword(e, kw)));
 
     try {
       const raw = localStorage.getItem(TOP_KEY);
@@ -280,31 +291,60 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           const fpMap = new Map();
           for (const e of events) fpMap.set(fingerprint(e), e);
 
-          // Keep persisted stories that still exist and aren't blocked
           const kept = [];
           const usedFps = new Set();
           for (const fp of persisted.fps) {
             const match = fpMap.get(fp);
-            if (match && match.sourceCount >= 2 && !isBlocked(match)) {
+            if (match && !isBlocked(match)) {
               kept.push(match);
               usedFps.add(fp);
             }
           }
 
-          // Fill remaining slots
+          // Fill with candidates (up to 6 max)
           for (const c of candidates) {
-            if (kept.length >= 5) break;
+            if (kept.length >= 6) break;
             const cfp = fingerprint(c);
             if (!usedFps.has(cfp)) { kept.push(c); usedFps.add(cfp); }
           }
 
-          // Only replace a kept story if new candidate is TIER 1/2 AND has more sources
+          // Ensure key conflicts are represented
+          for (const kw of ALWAYS_INCLUDE) {
+            if (kept.some(e => mentionsKeyword(e, kw))) continue;
+            // Try from candidates first
+            const match = candidates.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
+            if (match) {
+              if (kept.length < 6) {
+                kept.push(match); usedFps.add(fingerprint(match));
+              } else {
+                // Replace lowest-tier, lowest-source story
+                let worstIdx = -1, worstScore = Infinity;
+                for (let i = 0; i < kept.length; i++) {
+                  const score = (4 - getTier(kept[i])) * 10 + kept[i].sourceCount;
+                  if (score < worstScore && !ALWAYS_INCLUDE.some(k => mentionsKeyword(kept[i], k))) {
+                    worstIdx = i; worstScore = score;
+                  }
+                }
+                if (worstIdx >= 0) {
+                  usedFps.delete(fingerprint(kept[worstIdx]));
+                  kept[worstIdx] = match; usedFps.add(fingerprint(match));
+                }
+              }
+            } else {
+              // Try single-source key conflicts
+              const singleMatch = singleSourceKeyConflicts.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
+              if (singleMatch && kept.length < 6) {
+                kept.push(singleMatch); usedFps.add(fingerprint(singleMatch));
+              }
+            }
+          }
+
+          // Only replace kept stories if new candidate is T1/T2 with more sources
           for (const c of candidates) {
             const cTier = getTier(c);
-            if (cTier > 2) continue; // only T1/T2 can replace
+            if (cTier > 2) continue;
             const cfp = fingerprint(c);
             if (usedFps.has(cfp)) continue;
-            // Find lowest-priority kept story to replace
             let worstIdx = -1, worstTier = 0, worstSrc = Infinity;
             for (let i = 0; i < kept.length; i++) {
               const kTier = getTier(kept[i]);
@@ -314,14 +354,15 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
                 }
               }
             }
-            if (worstIdx >= 0) {
+            if (worstIdx >= 0 && kept.length > 3) {
               usedFps.delete(fingerprint(kept[worstIdx]));
-              kept[worstIdx] = c;
-              usedFps.add(cfp);
+              kept[worstIdx] = c; usedFps.add(cfp);
             }
           }
 
-          const top = kept.slice(0, 5);
+          // Flexible: only keep T1/T2/T3 stories, min 3, max 6
+          const filtered = kept.filter(e => getTier(e) <= 3);
+          const top = filtered.length >= 3 ? filtered.slice(0, 6) : kept.slice(0, 6);
           localStorage.setItem(TOP_KEY, JSON.stringify({
             ts: persisted.ts,
             fps: top.map(e => fingerprint(e))
@@ -331,15 +372,42 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       }
     } catch (e) { console.warn('Top stories cache error:', e.message); }
 
-    // No persisted data or expired — use current top candidates
-    const top = candidates.slice(0, 5);
+    // No persisted data or expired — build from scratch
+    const top = [];
+    const usedFps = new Set();
+
+    // Add candidates
+    for (const c of candidates) {
+      if (top.length >= 6) break;
+      const cfp = fingerprint(c);
+      if (!usedFps.has(cfp)) { top.push(c); usedFps.add(cfp); }
+    }
+
+    // Ensure key conflicts represented
+    for (const kw of ALWAYS_INCLUDE) {
+      if (top.some(e => mentionsKeyword(e, kw))) continue;
+      const match = candidates.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
+      if (match && top.length < 6) {
+        top.push(match); usedFps.add(fingerprint(match));
+      } else if (!match) {
+        const singleMatch = singleSourceKeyConflicts.find(c => mentionsKeyword(c, kw) && !usedFps.has(fingerprint(c)));
+        if (singleMatch && top.length < 6) {
+          top.push(singleMatch); usedFps.add(fingerprint(singleMatch));
+        }
+      }
+    }
+
+    // Flexible: only keep T1/T2/T3 stories, min 3
+    const filtered = top.filter(e => getTier(e) <= 3);
+    const finalTop = filtered.length >= 3 ? filtered.slice(0, 6) : top.slice(0, 6);
+
     try {
       localStorage.setItem(TOP_KEY, JSON.stringify({
         ts: Date.now(),
-        fps: top.map(e => fingerprint(e))
+        fps: finalTop.map(e => fingerprint(e))
       }));
     } catch {}
-    return top;
+    return finalTop;
   }, []);
 
   const renderEventsTab = () => {

@@ -2564,7 +2564,18 @@ export const IRRELEVANT_KEYWORDS = [
   // UFO / alien / non-geopolitical tech
   'ufo', 'ufos', 'alien', 'aliens', 'extraterrestrial', 'ufo files', 'ufo hearing',
   'nvidia', 'openai deal', 'stranded women', 'stranded woman',
-  'unidentified aerial', 'flying saucer', 'roswell'
+  'unidentified aerial', 'flying saucer', 'roswell',
+  // Specific non-geopolitical items
+  'chicago bears', 'stadium relocation', 'extorting crypto', 'cryptocurrency extortion',
+  'lifeline medic', 'county governor', 'epstein files', 'superstar singer',
+  'death threats and fans', 'prince andrew', 'king charles brother',
+  'police extorting', 'crypto scam', 'crypto fraud',
+  // Local politics / domestic admin
+  'county board', 'suspends board', 'city manager', 'township',
+  'local election', 'school superintendent', 'fire chief',
+  // Tabloid celebrity
+  'caught between', 'caught on tape', 'leaked video', 'leaked photo',
+  'plastic surgery', 'weight gain', 'weight loss journey'
 ];
 
 // Geopolitical relevance signals - STRICT: articles must contain at least one to pass.

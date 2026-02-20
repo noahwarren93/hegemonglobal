@@ -224,11 +224,34 @@ const CATEGORY_PRIORITY = {
   ECONOMY: 1, TECH: 0, CLIMATE: 0, WORLD: 0
 };
 
+// Tier keywords for scoring (same as Sidebar but used for sorting)
+const TIER1_KEYWORDS = [
+  'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
+  'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
+  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive'
+];
+const TIER2_KEYWORDS = [
+  'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
+  'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
+  'reconstruction', 'occupation'
+];
+
+function getEventTier(event) {
+  const text = ((event.headline || '') + ' ' +
+    (event.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+  if (TIER1_KEYWORDS.some(kw => text.includes(kw))) return 1;
+  if (TIER2_KEYWORDS.some(kw => text.includes(kw))) return 2;
+  return 3;
+}
+
 function scoreEvent(event) {
-  const catScore = (CATEGORY_PRIORITY[event.category] || 0) * 10;
-  const sourceScore = Math.min(event.sourceCount, 8) * 5;
-  const importanceScore = event.importance === 'high' ? 20 : 0;
-  return catScore + sourceScore + importanceScore;
+  // Score by: source count * 3 + tier priority * 5 + category bonus
+  const tier = getEventTier(event);
+  const tierScore = (4 - tier) * 5; // T1=15, T2=10, T3=5
+  const sourceScore = Math.min(event.sourceCount, 8) * 3;
+  const catBonus = (CATEGORY_PRIORITY[event.category] || 0) * 2;
+  const importanceScore = event.importance === 'high' ? 5 : 0;
+  return tierScore + sourceScore + catBonus + importanceScore;
 }
 
 // ============================================================
@@ -282,7 +305,8 @@ export function clusterArticles(articles) {
   const allClusters = [];
 
   for (const [country, indices] of countryGroups.entries()) {
-    const subClusters = subClusterBySimilarity(annotated, indices, 0.35);
+    // Lower threshold within same country — these articles already share a country
+    const subClusters = subClusterBySimilarity(annotated, indices, 0.25);
     for (const cluster of subClusters) {
       allClusters.push(cluster);
     }

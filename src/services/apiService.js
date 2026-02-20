@@ -1065,14 +1065,25 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         return age < STALENESS_MS;
       });
 
-      // Filter: irrelevant keywords, sports, domestic noise, require geo score >= 1
+      // Filter: irrelevant keywords, sports, domestic noise, non-English, require geo score >= 1
       const relevantArticles = freshArticles.filter(article => {
-        const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+        const title = article.title || '';
+        const text = (title + ' ' + (article.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
-        const category = detectCategory(article.title, article.description);
+        const category = detectCategory(title, article.description);
         if (category === 'SPORTS') return false;
-        const fullText = (article.title || '') + ' ' + (article.description || '');
+        const fullText = title + ' ' + (article.description || '');
         if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
+        // Filter non-English articles: reject titles with high non-ASCII ratio
+        const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+        if (title.length > 10 && nonAscii / title.length > 0.15) return false;
+        // Block common non-English patterns
+        if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
+            !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
+          // Count how many non-English words appear
+          const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
+          if (nonEnCount >= 2) return false;
+        }
         return scoreGeopoliticalRelevance(fullText) >= 1;
       });
 
@@ -1346,66 +1357,74 @@ export async function fetchEventSummaries() {
   // If everything is cached, we're done
   if (uncached.length === 0) return;
 
-  try {
-    const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        events: uncached.map(e => ({
-          headline: e.headline,
-          category: e.category,
-          articles: e.articles.map(a => ({
-            headline: a.headline || a.title || '',
-            source: a.source || '',
-            description: a.description || ''
-          }))
-        }))
-      })
-    });
+  // Batch events — send max 15 at a time to avoid overwhelming the worker/Claude
+  const BATCH_SIZE = 15;
+  for (let batchStart = 0; batchStart < uncached.length; batchStart += BATCH_SIZE) {
+    const batch = uncached.slice(batchStart, batchStart + BATCH_SIZE);
 
-    if (!response.ok) {
-      for (const event of uncached) {
+    try {
+      console.log(`[Hegemon] Fetching summaries for batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (${batch.length} events)`);
+      const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          events: batch.map(e => ({
+            headline: e.headline,
+            category: e.category,
+            articles: e.articles.map(a => ({
+              headline: a.headline || a.title || '',
+              source: a.source || '',
+              description: a.description || ''
+            }))
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => 'no body');
+        console.error(`[Hegemon] Summary API error (${response.status}):`, errText);
+        for (const event of batch) {
+          event.summaryLoading = false;
+          event.summaryError = true;
+        }
+        notifyEventsUpdated();
+        continue;
+      }
+
+      const data = await response.json();
+      const summaries = data.summaries || [];
+
+      // Apply summaries and AI-generated headlines, save to cache
+      for (let i = 0; i < batch.length; i++) {
+        batch[i].summaryLoading = false;
+        if (summaries[i] && summaries[i].summary) {
+          batch[i].summary = summaries[i].summary;
+          if (summaries[i].headline) {
+            batch[i].headline = summaries[i].headline;
+          }
+          const key = eventSummaryKey(batch[i]);
+          if (key) {
+            cache[key] = {
+              headline: batch[i].headline,
+              summary: summaries[i].summary,
+              savedAt: Date.now()
+            };
+          }
+        } else {
+          batch[i].summaryError = true;
+        }
+      }
+
+      saveSummaryCache(cache);
+      notifyEventsUpdated();
+
+    } catch (err) {
+      console.error('[Hegemon] Summary fetch error:', err.message || err);
+      for (const event of batch) {
         event.summaryLoading = false;
         event.summaryError = true;
       }
       notifyEventsUpdated();
-      return;
     }
-
-    const data = await response.json();
-    const summaries = data.summaries || [];
-
-    // Apply summaries and AI-generated headlines, save to cache
-    for (let i = 0; i < uncached.length; i++) {
-      uncached[i].summaryLoading = false;
-      if (summaries[i] && summaries[i].summary) {
-        uncached[i].summary = summaries[i].summary;
-        if (summaries[i].headline) {
-          uncached[i].headline = summaries[i].headline;
-        }
-        // Cache this summary
-        const key = eventSummaryKey(uncached[i]);
-        if (key) {
-          cache[key] = {
-            headline: uncached[i].headline,
-            summary: summaries[i].summary,
-            savedAt: Date.now()
-          };
-        }
-      } else {
-        uncached[i].summaryError = true;
-      }
-    }
-
-    saveSummaryCache(cache);
-    notifyEventsUpdated();
-
-  } catch {
-    // Worker not available — gracefully degrade
-    for (const event of uncached) {
-      event.summaryLoading = false;
-      event.summaryError = true;
-    }
-    notifyEventsUpdated();
   }
 }
