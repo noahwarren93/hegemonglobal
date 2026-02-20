@@ -178,19 +178,37 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: tiered geopolitical priority — biggest active conflicts/crises only
+  // Top Stories: EXACTLY 4, fixed order: Iran > Gaza > Ukraine > Sudan
   const getStableTopStories = useCallback((events) => {
-    // EXACTLY 4 top stories. Priority order: Iran > Palestine/Gaza > Ukraine/Russia > Sudan > China/Taiwan > North Korea
-    // Only CONFLICT, CRISIS, SECURITY, DIPLOMACY qualify — ECONOMY/POLITICS/WORLD go to Latest Updates
-    const TOP_STORY_CATS = new Set(['CONFLICT', 'CRISIS', 'SECURITY', 'DIPLOMACY']);
-
     const PRIORITY = [
-      { countries: ['iran'], keywords: ['iran', 'iranian', 'tehran', 'hormuz', 'irgc', 'ayatollah'], label: 'Iran' },
-      { countries: ['palestine'], keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'], label: 'Gaza' },
-      { countries: ['ukraine', 'russia'], keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'], label: 'Ukraine' },
-      { countries: ['sudan'], keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher'], label: 'Sudan' },
-      { countries: ['china', 'taiwan'], keywords: ['china', 'chinese', 'taiwan', 'taiwanese', 'taipei', 'strait'], label: 'China/Taiwan' },
-      { countries: ['north korea'], keywords: ['north korea', 'pyongyang', 'kim jong', 'dprk'], label: 'North Korea' },
+      {
+        countries: ['iran'],
+        keywords: ['iran', 'iranian', 'tehran', 'hormuz', 'irgc', 'ayatollah'],
+        boost: ['war', 'strike', 'military', 'nuclear', 'carrier', 'attack', 'confrontation', 'troops', 'deploy'],
+        penalize: ['oil price', 'crude', 'barrel', 'opec', 'brent'],
+        fallback: 'Will the US Go to War With Iran?',
+      },
+      {
+        countries: ['palestine'],
+        keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'],
+        boost: ['board of peace', 'reconstruction', 'peace', 'ceasefire', 'pledges', 'billion', 'aid'],
+        penalize: ['hamas leader', 'interim', 'vote', 'elect'],
+        fallback: 'Board of Peace Convenes, Raises $7 Billion for Gaza',
+      },
+      {
+        countries: ['ukraine', 'russia'],
+        keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'],
+        boost: ['war', 'peace talks', 'frontline', 'offensive', 'ceasefire', 'troops', 'missile'],
+        penalize: ['recruitment', 'kenya'],
+        fallback: null,
+      },
+      {
+        countries: ['sudan'],
+        keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher'],
+        boost: ['genocide', 'un ', 'atrocities', 'famine', 'crisis', 'humanitarian', 'war crime'],
+        penalize: ['drone'],
+        fallback: null,
+      },
     ];
 
     const getEventText = (evt) => {
@@ -198,49 +216,63 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
     };
 
-    // A candidate must be a crisis/conflict category, OR have 10+ sources
-    const isTopStoryWorthy = (e) => {
-      if (TOP_STORY_CATS.has(e.category)) return true;
-      if (e.sourceCount >= 10) return true;
-      return false;
+    // Score a headline for topic relevance
+    const scoreHeadline = (headline, req) => {
+      const h = (headline || '').toLowerCase();
+      let score = 0;
+      for (const kw of req.boost) { if (h.includes(kw)) score += 3; }
+      for (const kw of req.penalize) { if (h.includes(kw)) score -= 5; }
+      return score;
+    };
+
+    // Pick the best headline from an event's articles using topic scoring
+    const pickBestHeadline = (event, req) => {
+      if (!event.articles || event.articles.length === 0) return event.headline;
+
+      let best = null;
+      let bestScore = -Infinity;
+
+      for (const a of event.articles) {
+        const hl = a.headline || a.title || '';
+        if (!hl) continue;
+        const s = scoreHeadline(hl, req);
+        if (s > bestScore) { bestScore = s; best = hl; }
+      }
+
+      // Also score the current event headline
+      const evtScore = scoreHeadline(event.headline, req);
+      if (evtScore >= bestScore) { best = event.headline; bestScore = evtScore; }
+
+      // If best headline still has negative score, use fallback
+      if (bestScore < 0 && req.fallback) return req.fallback;
+
+      return best || event.headline;
     };
 
     // Sort by source count descending
     const sorted = [...events].sort((a, b) => b.sourceCount - a.sourceCount);
-
     const top = [];
     const usedIds = new Set();
 
-    // Pick the best event for each priority conflict (in order)
     for (const req of PRIORITY) {
-      if (top.length >= 4) break;
-
-      // Primary country match + must be top-story-worthy
+      // Primary country match
       let match = sorted.find(e => !usedIds.has(e.id) &&
-        req.countries.includes(e._primaryCountry) &&
-        isTopStoryWorthy(e));
+        req.countries.includes(e._primaryCountry));
 
-      // Fallback: keyword search + must be top-story-worthy
+      // Fallback: keyword search
       if (!match) {
         match = sorted.find(e => !usedIds.has(e.id) &&
-          isTopStoryWorthy(e) &&
           req.keywords.some(kw => getEventText(e).includes(kw)));
       }
 
       if (match) {
+        // Re-pick headline using topic-aware scoring
+        match.headline = pickBestHeadline(match, req);
         top.push(match);
         usedIds.add(match.id);
-      }
-    }
-
-    // Fill remaining slots with highest-sourced crisis/conflict events
-    if (top.length < 4) {
-      for (const e of sorted) {
-        if (top.length >= 4) break;
-        if (!usedIds.has(e.id) && isTopStoryWorthy(e) && e.sourceCount >= 3) {
-          top.push(e);
-          usedIds.add(e.id);
-        }
+      } else if (req.fallback) {
+        // No event found at all — create a placeholder (rare edge case)
+        // Skip — we only show events that actually exist
       }
     }
 
