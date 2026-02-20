@@ -182,16 +182,73 @@ function extractActions(text) {
   return actions;
 }
 
+// ============================================================
+// Headline Word Similarity
+// ============================================================
+
+const CLUSTER_STOP_WORDS = new Set([
+  'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'but',
+  'is', 'are', 'was', 'were', 'has', 'have', 'had', 'be', 'been', 'with', 'by',
+  'from', 'as', 'its', 'it', 'this', 'that', 'over', 'after', 'new', 'says',
+  'said', 'could', 'may', 'will', 'not', 'no', 'more', 'than', 'about', 'up',
+  'out', 'into', 'amid', 'what', 'how', 'why', 'who', 'all', 'also', 'his',
+  'her', 'their', 'its', 'does', 'do', 'just', 'now', 'being', 'most', 'some'
+]);
+
+function getHeadlineWords(article) {
+  const text = (article.headline || article.title || '').toLowerCase();
+  return new Set(text.split(/\W+/).filter(w => w.length > 2 && !CLUSTER_STOP_WORDS.has(w)));
+}
+
+/**
+ * Compute word overlap ratio between two article headlines.
+ * Returns shared / min(sizeA, sizeB) so short headlines aren't penalized.
+ */
+function headlineWordOverlap(a, b) {
+  if (a._headlineWords.size === 0 || b._headlineWords.size === 0) return 0;
+  let shared = 0;
+  for (const w of a._headlineWords) {
+    if (b._headlineWords.has(w)) shared++;
+  }
+  return shared / Math.min(a._headlineWords.size, b._headlineWords.size);
+}
+
+// Build set of lowercase country names for fast lookup
+let _countryNameCache = null;
+function getCountryNames() {
+  if (!_countryNameCache) {
+    _countryNameCache = new Set(Object.keys(COUNTRY_DEMONYMS).map(c => c.toLowerCase()));
+  }
+  return _countryNameCache;
+}
+
 /**
  * Check if two articles should cluster together.
- * Only uses SPECIFIC (non-stop-listed) entities for matching.
- * Also considers geographic keywords for same-region same-topic clustering.
+ * AGGRESSIVE country-based clustering: same country = same cluster.
+ * Also uses headline word similarity to catch same-story different-source articles.
  */
 function shouldCluster(a, b) {
-  // Count shared specific entities
+  const countryNames = getCountryNames();
+
+  // Count shared specific (non-stop-listed) entities, track country matches
   let sharedSpecific = 0;
+  let sharedCountry = false;
   for (const e of a._entities.specific) {
-    if (b._entities.specific.has(e)) sharedSpecific++;
+    if (b._entities.specific.has(e)) {
+      sharedSpecific++;
+      if (countryNames.has(e)) sharedCountry = true;
+    }
+  }
+
+  // Check stop-listed countries too (US, Russia, China, UK)
+  let sharedStopCountry = false;
+  if (!sharedCountry) {
+    for (const e of a._entities.all) {
+      if (b._entities.all.has(e) && countryNames.has(e)) {
+        sharedStopCountry = true;
+        break;
+      }
+    }
   }
 
   // Count shared geographic keywords
@@ -206,21 +263,35 @@ function shouldCluster(a, b) {
     if (b._actions.has(act)) sharedActions++;
   }
 
+  // Headline word similarity
+  const sim = headlineWordOverlap(a, b);
+
+  // === AGGRESSIVE country-based clustering ===
+  // Same non-stop-listed country → cluster immediately
+  if (sharedCountry) return true;
+
+  // Same stop-listed country (US/Russia/China/UK) + headline overlap → cluster
+  if (sharedStopCountry && sim >= 0.2) return true;
+
+  // === Entity-based rules ===
   // 2+ shared specific entities → cluster
   if (sharedSpecific >= 2) return true;
 
   // 1 specific entity + 1 action → cluster
   if (sharedSpecific >= 1 && sharedActions >= 1) return true;
 
-  // 1 specific entity + 1 shared geo → cluster (same country + same region)
+  // 1 specific entity + 1 shared geo → cluster
   if (sharedSpecific >= 1 && sharedGeo >= 1) return true;
 
-  // 1 shared geo + 2+ shared actions → cluster (same place, same kind of event)
-  if (sharedGeo >= 1 && sharedActions >= 2) return true;
+  // 1 shared geo + 1+ shared actions → cluster
+  if (sharedGeo >= 1 && sharedActions >= 1) return true;
 
-  // 1 shared specific entity clusters if both articles are focused (few entities)
-  // This helps single-source stories about the same country merge together
-  if (sharedSpecific >= 1 && a._entities.specific.size <= 2 && b._entities.specific.size <= 2) return true;
+  // === Headline similarity (catches same story, different wording/source) ===
+  // ~30% word overlap = likely same story
+  if (sim >= 0.3) return true;
+
+  // Shared geo + some headline overlap
+  if (sharedGeo >= 1 && sim >= 0.15) return true;
 
   return false;
 }
@@ -327,7 +398,7 @@ function scoreEvent(event) {
 export function clusterArticles(articles) {
   if (!articles || articles.length === 0) return [];
 
-  // Pre-compute entities, geo, and actions for each article
+  // Pre-compute entities, geo, actions, and headline words for each article
   const articlesWithMeta = articles.map((article, idx) => {
     const text = (article.headline || article.title || '') + ' ' + (article.description || '');
     return {
@@ -335,7 +406,8 @@ export function clusterArticles(articles) {
       _idx: idx,
       _entities: extractEntities(text),
       _geo: extractGeo(text),
-      _actions: extractActions(text)
+      _actions: extractActions(text),
+      _headlineWords: getHeadlineWords(article)
     };
   });
 
@@ -365,7 +437,7 @@ export function clusterArticles(articles) {
     }
   }
 
-  // Safety: break up mega-clusters (>8 articles) by re-checking tighter criteria
+  // Safety: break up mega-clusters (>15 articles) by re-checking tighter criteria
   const rawClusters = {};
   for (let i = 0; i < articlesWithMeta.length; i++) {
     const root = find(i);
@@ -373,10 +445,10 @@ export function clusterArticles(articles) {
     rawClusters[root].push(i);
   }
 
-  // If a cluster has more than 8 articles, split it by requiring 2+ shared specific entities
+  // If a cluster has more than 15 articles, split by headline similarity + shared entities
   const finalGroups = [];
   for (const indices of Object.values(rawClusters)) {
-    if (indices.length <= 8) {
+    if (indices.length <= 15) {
       finalGroups.push(indices);
       continue;
     }
@@ -394,16 +466,19 @@ export function clusterArticles(articles) {
       for (let j = i + 1; j < indices.length; j++) {
         const a = articlesWithMeta[indices[i]];
         const b = articlesWithMeta[indices[j]];
+        const sim = headlineWordOverlap(a, b);
         let shared = 0;
         for (const e of a._entities.specific) { if (b._entities.specific.has(e)) shared++; }
+        // Tighter criteria for mega-cluster splitting:
+        // 2+ shared entities, or 1 entity + geo/action match, or high headline similarity
         if (shared >= 2) subUnion(i, j);
+        else if (sim >= 0.35) subUnion(i, j);
         else if (shared >= 1) {
-          // Also need shared geo or 2+ shared actions
           let geoMatch = false;
           for (const g of a._geo) { if (b._geo.has(g)) { geoMatch = true; break; } }
           let actionCount = 0;
           for (const act of a._actions) { if (b._actions.has(act)) actionCount++; }
-          if (geoMatch || actionCount >= 2) subUnion(i, j);
+          if (geoMatch || actionCount >= 1) subUnion(i, j);
         }
       }
     }
@@ -456,7 +531,7 @@ export function clusterArticles(articles) {
 
     // Clean up articles (remove internal metadata, clean headlines)
     const cleanArticles = clusterArts.map(a => {
-      const { _idx, _entities, _actions, _geo, ...clean } = a;
+      const { _idx, _entities, _actions, _geo, _headlineWords, description: _desc, ...clean } = a;
       if (clean.headline) clean.headline = cleanHeadline(clean.headline);
       if (clean.title) clean.title = cleanHeadline(clean.title);
       return clean;
@@ -485,6 +560,12 @@ export function clusterArticles(articles) {
 
   // Clean up internal score
   for (const e of events) delete e._score;
+
+  // Clustering diagnostics
+  const multiSource = events.filter(e => e.sourceCount > 1).length;
+  const avgSources = events.length > 0 ? (articles.length / events.length).toFixed(1) : 0;
+  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, avg ${avgSources} sources/event)`);
+  events.slice(0, 5).forEach(e => console.log(`  [${e.sourceCount} sources] ${e.headline}`));
 
   return events;
 }

@@ -1111,6 +1111,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           category,
           importance,
           headline: article.title,
+          description: article.description || '',
           source: sourceName,
           url: article.link || ''
         };
