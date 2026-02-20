@@ -1,4 +1,7 @@
 // eventsService.js - Article clustering into event groups
+// APPROACH: Primary-country grouping + headline similarity. NO Union-Find.
+// Each article gets ONE primary country. Articles cluster ONLY within
+// their primary country group, preventing transitive mega-clusters.
 
 import { COUNTRY_DEMONYMS } from './apiService';
 
@@ -9,178 +12,61 @@ import { COUNTRY_DEMONYMS } from './apiService';
 export function cleanHeadline(headline) {
   if (!headline) return '';
   let h = headline.trim();
-  // Strip source attributions at end: em-dash/en-dash/pipe + source name (up to ~25 chars)
   h = h.replace(/\s*[\u2014\u2013\u2015\u00AD—–|]\s*[A-Z][\w\s.&'\u2019,]{0,25}$/, '');
-  // Strip " - Source" (hyphen with spaces): only if what follows is capitalized words (source name, not headline continuation)
   h = h.replace(/\s+-\s+[A-Z][\w.&'\u2019]{0,15}(?:\s+[A-Z][\w.&'\u2019]+){0,3}\s*$/, '');
-  // Strip ": Source" at end (colon attribution)
   h = h.replace(/\s*:\s+[A-Z][\w.&'\u2019]{0,15}(?:\s+[A-Z][\w.&'\u2019]+){0,2}\s*$/, '');
-  // Strip BREAKING:/EXCLUSIVE:/DEVELOPING:/etc. prefixes
   h = h.replace(/^(BREAKING|EXCLUSIVE|DEVELOPING|JUST IN|WATCH|UPDATE|OPINION|ANALYSIS|EDITORIAL|LIVE)\s*[:\-–—|]\s*/i, '');
-  // Strip trailing separators and whitespace
   h = h.replace(/[\s|—–\-:]+$/, '').trim();
   return h;
 }
 
 // ============================================================
-// Entity & Action Extraction
+// Stop-listed entities (too common for clustering)
 // ============================================================
 
-// Entities that are too common to be useful for clustering.
-// These appear in a huge fraction of world news articles and cause
-// unrelated stories to merge into mega-clusters.
 const STOPLIST_ENTITIES = new Set([
   'united states', 'u.s.', 'american', 'washington', 'trump', 'biden',
   'white house', 'congress', 'pentagon', 'state department',
   'united kingdom', 'british', 'uk', 'britain', 'london',
   'china', 'chinese', 'beijing',
   'russia', 'russian', 'moscow', 'kremlin', 'putin',
-  // Generic orgs that appear everywhere
-  'un', 'parliament', 'congress', 'white house'
+  'un', 'parliament', 'white house'
 ]);
 
-// Key organizations and groups to detect as entities
-const ORG_ENTITIES = [
-  'nato', 'eu', 'who', 'imf', 'world bank', 'opec', 'asean', 'brics',
-  'iaea', 'icc', 'icj', 'g7', 'g20', 'african union', 'arab league',
-  'hamas', 'hezbollah', 'houthi', 'taliban', 'isis', 'al-qaeda', 'wagner',
-  'rsf', 'idf', 'cia', 'fbi', 'mi6', 'mossad', 'fsb',
-  'world trade organization', 'wto', 'interpol', 'red cross'
-];
+// ============================================================
+// Geographic keywords → primary country mapping
+// Maps specific regions/cities to their parent country for clustering
+// ============================================================
 
-// Key leader names to detect as entities
-const LEADER_ENTITIES = [
-  'zelensky', 'zelenskyy', 'xi jinping',
-  'macron', 'scholz', 'modi', 'erdogan', 'netanyahu', 'kim jong',
-  'lula', 'milei', 'orban', 'meloni', 'sunak', 'starmer',
-  'marcos', 'kishida', 'trudeau', 'bukele', 'maduro', 'lukashenko',
-  'khamenei', 'mbs', 'bin salman', 'sisi', 'assad'
-];
-
-// Geographic specifics — regions, cities, straits, etc. that pin an event to a place
-const GEO_KEYWORDS = [
-  'strait of hormuz', 'hormuz', 'red sea', 'south china sea', 'taiwan strait',
-  'black sea', 'baltic sea', 'arctic', 'suez canal', 'bab el-mandeb',
-  'donbas', 'donetsk', 'luhansk', 'crimea', 'zaporizhzhia', 'kherson',
-  'darfur', 'khartoum', 'tigray', 'amhara', 'sahel',
-  'gaza', 'west bank', 'golan heights', 'rafah', 'khan younis',
-  'xinjiang', 'tibet', 'hong kong', 'kashmir',
-  'nagorno-karabakh', 'transnistria', 'abkhazia', 'south ossetia',
-  'aleppo', 'idlib', 'raqqa', 'mosul', 'kirkuk',
-  'sinai', 'golan', 'negev', 'galilee',
-  'kabul', 'kandahar', 'helmand',
-  'mariupol', 'bakhmut', 'avdiivka', 'kharkiv', 'odesa',
-  'pyongyang', 'demilitarized zone', 'dmz',
-  'kurdistan', 'kurdish',
-  'north africa', 'sub-saharan', 'horn of africa', 'east africa', 'west africa',
-  'southeast asia', 'central asia', 'middle east', 'persian gulf', 'gulf states',
-  'latin america', 'central america', 'caribbean',
-  'eastern europe', 'western europe', 'nordic', 'balkans', 'caucasus'
-];
-
-// Action words that indicate what kind of event this is
-const ACTION_WORDS = [
-  'strike', 'strikes', 'attack', 'attacks', 'bomb', 'bombing', 'bombings',
-  'missile', 'missiles', 'drone', 'drones', 'airstrikes', 'airstrike',
-  'invasion', 'invade', 'offensive', 'advance', 'retreat',
-  'talks', 'negotiations', 'summit', 'meeting', 'deal', 'agreement', 'pact',
-  'ceasefire', 'truce', 'peace', 'armistice',
-  'sanctions', 'embargo', 'tariff', 'tariffs', 'ban', 'restriction',
-  'election', 'elections', 'vote', 'voting', 'referendum', 'poll', 'polls',
-  'coup', 'overthrow', 'resign', 'resignation', 'impeach', 'impeachment',
-  'protest', 'protests', 'uprising', 'riot', 'riots', 'demonstration',
-  'earthquake', 'flood', 'hurricane', 'typhoon', 'wildfire', 'disaster',
-  'famine', 'drought', 'epidemic', 'pandemic', 'outbreak',
-  'genocide', 'ethnic cleansing', 'atrocity', 'massacre', 'war crimes',
-  'arrest', 'detained', 'trial', 'sentenced', 'convicted', 'indicted',
-  'deploy', 'deployment', 'troops', 'military', 'war', 'conflict',
-  'hostage', 'hostages', 'kidnap', 'abduct',
-  'nuclear', 'weapons', 'arsenal',
-  'trade', 'export', 'import', 'economic', 'recession', 'inflation',
-  'refugee', 'refugees', 'displaced', 'evacuation', 'humanitarian',
-  'spy', 'espionage', 'cyber', 'hack', 'hacking',
-  'assassination', 'killed', 'dead', 'death', 'casualties',
-  'alliance', 'treaty', 'withdraw', 'withdrawal',
-  'ship', 'shipping', 'naval', 'blockade', 'seized'
-];
-
-/**
- * Extract entities (countries, orgs, leaders) from text.
- * Returns { all: Set (including stop-listed), specific: Set (excluding stop-listed) }
- */
-function extractEntities(text) {
-  const lower = text.toLowerCase();
-  const all = new Set();
-  const specific = new Set();
-
-  // Country names and demonyms
-  for (const [country, aliases] of Object.entries(COUNTRY_DEMONYMS)) {
-    const countryLower = country.toLowerCase();
-    let matched = false;
-    if (lower.includes(countryLower)) {
-      matched = true;
-    } else {
-      for (const alias of aliases) {
-        if (lower.includes(alias)) { matched = true; break; }
-      }
-    }
-    if (matched) {
-      all.add(countryLower);
-      if (!STOPLIST_ENTITIES.has(countryLower)) {
-        // Also check aliases against stoplist
-        const aliasStop = aliases.some(a => STOPLIST_ENTITIES.has(a));
-        if (!aliasStop) specific.add(countryLower);
-      }
-    }
-  }
-
-  // Organizations
-  for (const org of ORG_ENTITIES) {
-    if (lower.includes(org)) {
-      all.add(org);
-      if (!STOPLIST_ENTITIES.has(org)) specific.add(org);
-    }
-  }
-
-  // Leaders
-  for (const leader of LEADER_ENTITIES) {
-    if (lower.includes(leader)) {
-      all.add(leader);
-      if (!STOPLIST_ENTITIES.has(leader)) specific.add(leader);
-    }
-  }
-
-  return { all, specific };
-}
-
-/**
- * Extract geographic keywords from text
- */
-function extractGeo(text) {
-  const lower = text.toLowerCase();
-  const geos = new Set();
-  for (const geo of GEO_KEYWORDS) {
-    if (lower.includes(geo)) geos.add(geo);
-  }
-  return geos;
-}
-
-/**
- * Extract action words from text
- */
-function extractActions(text) {
-  const lower = text.toLowerCase();
-  const actions = new Set();
-
-  for (const action of ACTION_WORDS) {
-    const regex = new RegExp('\\b' + action.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-    if (regex.test(lower)) {
-      actions.add(action);
-    }
-  }
-
-  return actions;
-}
+const GEO_TO_COUNTRY = {
+  'gaza': 'palestine', 'west bank': 'palestine', 'rafah': 'palestine',
+  'khan younis': 'palestine', 'golan heights': 'israel', 'golan': 'israel',
+  'negev': 'israel', 'galilee': 'israel',
+  'donbas': 'ukraine', 'donetsk': 'ukraine', 'luhansk': 'ukraine',
+  'crimea': 'ukraine', 'zaporizhzhia': 'ukraine', 'kherson': 'ukraine',
+  'mariupol': 'ukraine', 'bakhmut': 'ukraine', 'avdiivka': 'ukraine',
+  'kharkiv': 'ukraine', 'odesa': 'ukraine',
+  'darfur': 'sudan', 'khartoum': 'sudan',
+  'tigray': 'ethiopia', 'amhara': 'ethiopia',
+  'xinjiang': 'china', 'tibet': 'china', 'hong kong': 'china',
+  'kashmir': 'india',
+  'aleppo': 'syria', 'idlib': 'syria', 'raqqa': 'syria',
+  'mosul': 'iraq', 'kirkuk': 'iraq',
+  'sinai': 'egypt',
+  'kabul': 'afghanistan', 'kandahar': 'afghanistan', 'helmand': 'afghanistan',
+  'pyongyang': 'north korea', 'dmz': 'north korea',
+  'strait of hormuz': 'iran', 'hormuz': 'iran',
+  'taiwan strait': 'taiwan',
+  'kurdistan': 'iraq', 'kurdish': 'iraq',
+  'sahel': '_sahel', // region, not country
+  'red sea': '_red_sea',
+  'south china sea': '_south_china_sea',
+  'black sea': '_black_sea',
+  'baltic sea': '_baltic',
+  'arctic': '_arctic',
+  'suez canal': 'egypt',
+  'bab el-mandeb': '_red_sea',
+};
 
 // ============================================================
 // Headline Word Similarity
@@ -192,110 +78,94 @@ const CLUSTER_STOP_WORDS = new Set([
   'from', 'as', 'its', 'it', 'this', 'that', 'over', 'after', 'new', 'says',
   'said', 'could', 'may', 'will', 'not', 'no', 'more', 'than', 'about', 'up',
   'out', 'into', 'amid', 'what', 'how', 'why', 'who', 'all', 'also', 'his',
-  'her', 'their', 'its', 'does', 'do', 'just', 'now', 'being', 'most', 'some'
+  'her', 'their', 'its', 'does', 'do', 'just', 'now', 'being', 'most', 'some',
+  // Also stop country-related super-common words to prevent false similarity
+  'trump', 'says', 'news', 'report', 'world', 'global', 'international'
 ]);
 
-function getHeadlineWords(article) {
-  const text = (article.headline || article.title || '').toLowerCase();
-  return new Set(text.split(/\W+/).filter(w => w.length > 2 && !CLUSTER_STOP_WORDS.has(w)));
+function getHeadlineWords(text) {
+  return new Set(text.toLowerCase().split(/\W+/).filter(w => w.length > 2 && !CLUSTER_STOP_WORDS.has(w)));
 }
 
 /**
- * Compute word overlap ratio between two article headlines.
- * Returns shared / min(sizeA, sizeB) so short headlines aren't penalized.
+ * Compute word overlap ratio between two word sets.
+ * Returns shared / min(sizeA, sizeB).
  */
-function headlineWordOverlap(a, b) {
-  if (a._headlineWords.size === 0 || b._headlineWords.size === 0) return 0;
+function wordOverlap(wordsA, wordsB) {
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
   let shared = 0;
-  for (const w of a._headlineWords) {
-    if (b._headlineWords.has(w)) shared++;
+  for (const w of wordsA) {
+    if (wordsB.has(w)) shared++;
   }
-  return shared / Math.min(a._headlineWords.size, b._headlineWords.size);
+  return shared / Math.min(wordsA.size, wordsB.size);
 }
 
-// Build set of lowercase country names for fast lookup
-let _countryNameCache = null;
-function getCountryNames() {
-  if (!_countryNameCache) {
-    _countryNameCache = new Set(Object.keys(COUNTRY_DEMONYMS).map(c => c.toLowerCase()));
+// ============================================================
+// Primary Country Extraction
+// ============================================================
+
+// Build lookup structures lazily
+let _countryLookup = null;
+function getCountryLookup() {
+  if (_countryLookup) return _countryLookup;
+  _countryLookup = [];
+  for (const [country, aliases] of Object.entries(COUNTRY_DEMONYMS)) {
+    const countryLower = country.toLowerCase();
+    _countryLookup.push({ name: countryLower, terms: [countryLower, ...aliases] });
   }
-  return _countryNameCache;
+  return _countryLookup;
 }
 
 /**
- * Check if two articles should cluster together.
- * Requires BOTH a shared specific entity AND shared topic indicators.
- * Country alone is NEVER enough — prevents transitive mega-clusters.
+ * Extract the PRIMARY country from a headline.
+ * This is the MAIN SUBJECT country — not every country mentioned.
+ * Uses headline only (not description) to get the true subject.
+ * Returns lowercase country name or null.
  */
-function shouldCluster(a, b) {
-  const countryNames = getCountryNames();
+function extractPrimaryCountry(headline) {
+  const lower = (headline || '').toLowerCase();
+  if (!lower) return null;
 
-  // Count shared specific (non-stop-listed) entities, track country matches
-  let sharedSpecific = 0;
-  let sharedCountry = false;
-  for (const e of a._entities.specific) {
-    if (b._entities.specific.has(e)) {
-      sharedSpecific++;
-      if (countryNames.has(e)) sharedCountry = true;
+  // First check geographic keywords (more specific than country names)
+  for (const [geo, country] of Object.entries(GEO_TO_COUNTRY)) {
+    if (lower.includes(geo) && !country.startsWith('_')) {
+      // Skip stop-listed countries
+      if (!STOPLIST_ENTITIES.has(country)) return country;
     }
   }
 
-  // Check stop-listed countries too (US, Russia, China, UK)
-  let sharedStopCountry = false;
-  if (!sharedCountry) {
-    for (const e of a._entities.all) {
-      if (b._entities.all.has(e) && countryNames.has(e)) {
-        sharedStopCountry = true;
-        break;
+  // Then check country names/demonyms — find FIRST non-stop-listed match
+  const lookup = getCountryLookup();
+  for (const { name, terms } of lookup) {
+    if (STOPLIST_ENTITIES.has(name)) continue;
+    for (const term of terms) {
+      if (STOPLIST_ENTITIES.has(term)) continue;
+      // Word boundary check for short terms to avoid false matches
+      if (term.length <= 3) {
+        const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+        if (regex.test(lower)) return name;
+      } else {
+        if (lower.includes(term)) return name;
       }
     }
   }
 
-  // Count shared geographic keywords
-  let sharedGeo = 0;
-  for (const g of a._geo) {
-    if (b._geo.has(g)) sharedGeo++;
+  return null;
+}
+
+/**
+ * Extract ALL mentioned countries from headline + description (for entity list).
+ */
+function extractAllCountries(text) {
+  const lower = text.toLowerCase();
+  const countries = new Set();
+  const lookup = getCountryLookup();
+  for (const { name, terms } of lookup) {
+    for (const term of terms) {
+      if (lower.includes(term)) { countries.add(name); break; }
+    }
   }
-
-  // Count shared actions
-  let sharedActions = 0;
-  for (const act of a._actions) {
-    if (b._actions.has(act)) sharedActions++;
-  }
-
-  // Headline word similarity
-  const sim = headlineWordOverlap(a, b);
-
-  // === Country + topic confirmation (NEVER country alone) ===
-  // Same non-stop-listed country + shared action word → cluster
-  if (sharedCountry && sharedActions >= 1) return true;
-  // Same non-stop-listed country + meaningful headline overlap → cluster
-  if (sharedCountry && sim >= 0.25) return true;
-  // Same non-stop-listed country + shared geo keyword → cluster
-  if (sharedCountry && sharedGeo >= 1) return true;
-
-  // Same stop-listed country (US/Russia/China/UK) + stronger headline overlap → cluster
-  if (sharedStopCountry && sim >= 0.35) return true;
-
-  // === Entity-based rules ===
-  // 2+ shared specific entities → cluster
-  if (sharedSpecific >= 2) return true;
-  // 1 specific entity + shared action → cluster
-  if (sharedSpecific >= 1 && sharedActions >= 1) return true;
-  // 1 specific entity + shared geo → cluster
-  if (sharedSpecific >= 1 && sharedGeo >= 1) return true;
-
-  // === Headline similarity (catches same story, different wording/source) ===
-  // 40%+ word overlap = likely same story regardless of entities
-  if (sim >= 0.4) return true;
-
-  // Shared geo + headline overlap
-  if (sharedGeo >= 1 && sim >= 0.2) return true;
-
-  // 1 shared geo + shared actions → cluster
-  if (sharedGeo >= 1 && sharedActions >= 1) return true;
-
-  return false;
+  return countries;
 }
 
 // ============================================================
@@ -309,57 +179,30 @@ const SOURCE_RANK = {
   'new york times': 8, 'nyt': 8,
   'financial times': 8, 'ft': 8,
   'the guardian': 7, 'guardian': 7,
-  'al jazeera': 7,
-  'bloomberg': 7,
-  'the economist': 7,
-  'washington post': 7,
-  'foreign policy': 7,
+  'al jazeera': 7, 'bloomberg': 7, 'the economist': 7,
+  'washington post': 7, 'foreign policy': 7,
   'france 24': 6, 'france24': 6,
   'deutsche welle': 6, 'dw': 6,
   'south china morning post': 6, 'scmp': 6,
-  'politico': 6,
-  'nhk world': 6, 'nhk': 6,
-  'kyodo news': 6, 'kyodo': 6,
-  'yonhap': 6,
-  'anadolu agency': 5,
-  'cgtn': 5,
-  'tass': 5,
-  'times of india': 5,
-  'the hill': 5,
-  'fox news': 5,
-  'rt': 4,
-  'xinhua': 4,
-  'mehr news': 4,
+  'politico': 6, 'nhk world': 6, 'nhk': 6,
+  'kyodo news': 6, 'kyodo': 6, 'yonhap': 6,
+  'anadolu agency': 5, 'cgtn': 5, 'tass': 5,
+  'times of india': 5, 'the hill': 5, 'fox news': 5,
+  'rt': 4, 'xinhua': 4, 'mehr news': 4,
   'the telegraph': 6, 'telegraph': 6,
-  'cbc news': 6, 'cbc': 6,
-  'abc australia': 6,
-  'irish times': 6,
-  'the hindu': 5,
-  'haaretz': 6,
-  'times of israel': 5,
-  'nikkei asia': 6, 'nikkei': 6,
-  'straits times': 6,
-  'cna': 6,
+  'cbc news': 6, 'cbc': 6, 'abc australia': 6, 'irish times': 6,
+  'the hindu': 5, 'haaretz': 6, 'times of israel': 5,
+  'nikkei asia': 6, 'nikkei': 6, 'straits times': 6, 'cna': 6,
   'jakarta post': 5, 'the jakarta post': 5,
   'africa news': 5, 'africanews': 5,
   'nation kenya': 4, 'daily nation': 4,
   'the independent': 5, 'independent': 5,
-  'globe and mail': 5,
-  'sydney morning herald': 5, 'smh': 5,
-  'dawn': 5,
-  'middle east eye': 5,
-  'folha': 5,
-  'taipei times': 4,
-  'korea herald': 5,
-  'the national': 4,
-  'vietnam news': 3,
-  'rappler': 4,
-  'buenos aires herald': 3,
-  'premium times': 4,
-  'mail & guardian': 4,
-  'tempo': 3,
-  'daily star': 3,
-  'daily mail': 3,
+  'globe and mail': 5, 'sydney morning herald': 5, 'smh': 5,
+  'dawn': 5, 'middle east eye': 5, 'folha': 5,
+  'taipei times': 4, 'korea herald': 5, 'the national': 4,
+  'vietnam news': 3, 'rappler': 4, 'buenos aires herald': 3,
+  'premium times': 4, 'mail & guardian': 4,
+  'tempo': 3, 'daily star': 3, 'daily mail': 3,
   'new york post': 3, 'ny post': 3
 };
 
@@ -369,11 +212,11 @@ function getSourceRank(source) {
   for (const [name, rank] of Object.entries(SOURCE_RANK)) {
     if (lower.includes(name)) return rank;
   }
-  return 4; // default mid-tier
+  return 4;
 }
 
 // ============================================================
-// Event Ranking Score (for sorting)
+// Category Detection & Event Scoring
 // ============================================================
 
 const CATEGORY_PRIORITY = {
@@ -383,139 +226,99 @@ const CATEGORY_PRIORITY = {
 
 function scoreEvent(event) {
   const catScore = (CATEGORY_PRIORITY[event.category] || 0) * 10;
-  const sourceScore = Math.min(event.sourceCount, 8) * 5; // cap at 8 sources
+  const sourceScore = Math.min(event.sourceCount, 8) * 5;
   const importanceScore = event.importance === 'high' ? 20 : 0;
   return catScore + sourceScore + importanceScore;
 }
 
 // ============================================================
-// Main Clustering Function
+// Main Clustering Function — Primary Country + Headline Similarity
+// NO Union-Find. NO transitive chaining. Direct grouping only.
 // ============================================================
+
+const HARD_CAP = 8; // Maximum articles per cluster. No exceptions.
 
 /**
  * Cluster articles into event groups.
- * @param {Array} articles - Array of article objects
- * @returns {Array} Array of event objects sorted by ranking score
+ * Algorithm:
+ *   1. Extract primary country for each article (from headline only)
+ *   2. Group articles by primary country
+ *   3. Within each country group, sub-cluster by headline similarity (50%+ overlap)
+ *   4. Articles with no primary country cluster only by very high similarity (60%+)
+ *   5. Hard cap: max 8 articles per cluster
  */
 export function clusterArticles(articles) {
   if (!articles || articles.length === 0) return [];
 
-  // Pre-compute entities, geo, actions, and headline words for each article
-  const articlesWithMeta = articles.map((article, idx) => {
-    const text = (article.headline || article.title || '') + ' ' + (article.description || '');
+  // Step 1: Annotate each article
+  const annotated = articles.map((article, idx) => {
+    const headline = article.headline || article.title || '';
+    const fullText = headline + ' ' + (article.description || '');
     return {
       ...article,
       _idx: idx,
-      _entities: extractEntities(text),
-      _geo: extractGeo(text),
-      _actions: extractActions(text),
-      _headlineWords: getHeadlineWords(article)
+      _headline: headline,
+      _headlineWords: getHeadlineWords(headline),
+      _primaryCountry: extractPrimaryCountry(headline),
+      _allCountries: extractAllCountries(fullText),
     };
   });
 
-  // Union-Find for clustering
-  const parent = articlesWithMeta.map((_, i) => i);
+  // Step 2: Group by primary country
+  const countryGroups = new Map(); // country → [article indices]
+  const noCountry = []; // articles with no primary country
 
-  function find(x) {
-    while (parent[x] !== x) {
-      parent[x] = parent[parent[x]];
-      x = parent[x];
-    }
-    return x;
-  }
-
-  function union(a, b) {
-    const ra = find(a);
-    const rb = find(b);
-    if (ra !== rb) parent[ra] = rb;
-  }
-
-  // Compare all pairs
-  for (let i = 0; i < articlesWithMeta.length; i++) {
-    for (let j = i + 1; j < articlesWithMeta.length; j++) {
-      if (shouldCluster(articlesWithMeta[i], articlesWithMeta[j])) {
-        union(i, j);
-      }
+  for (let i = 0; i < annotated.length; i++) {
+    const pc = annotated[i]._primaryCountry;
+    if (pc) {
+      if (!countryGroups.has(pc)) countryGroups.set(pc, []);
+      countryGroups.get(pc).push(i);
+    } else {
+      noCountry.push(i);
     }
   }
 
-  // Safety: break up mega-clusters (>10 articles) by re-checking tighter criteria
-  const rawClusters = {};
-  for (let i = 0; i < articlesWithMeta.length; i++) {
-    const root = find(i);
-    if (!rawClusters[root]) rawClusters[root] = [];
-    rawClusters[root].push(i);
-  }
+  // Step 3: Within each country group, sub-cluster by headline similarity
+  const allClusters = [];
 
-  // HARD CAP: If a cluster has more than 10 articles, split by tighter criteria
-  const finalGroups = [];
-  for (const indices of Object.values(rawClusters)) {
-    if (indices.length <= 10) {
-      finalGroups.push(indices);
-      continue;
-    }
-    // Re-cluster within the mega-cluster using tighter criteria
-    const subParent = indices.map((_, i) => i);
-    function subFind(x) {
-      while (subParent[x] !== x) { subParent[x] = subParent[subParent[x]]; x = subParent[x]; }
-      return x;
-    }
-    function subUnion(a, b) {
-      const ra = subFind(a); const rb = subFind(b);
-      if (ra !== rb) subParent[ra] = rb;
-    }
-    for (let i = 0; i < indices.length; i++) {
-      for (let j = i + 1; j < indices.length; j++) {
-        const a = articlesWithMeta[indices[i]];
-        const b = articlesWithMeta[indices[j]];
-        const sim = headlineWordOverlap(a, b);
-        let shared = 0;
-        for (const e of a._entities.specific) { if (b._entities.specific.has(e)) shared++; }
-        // Tighter criteria for mega-cluster splitting:
-        // 2+ shared entities, or 1 entity + geo/action match, or high headline similarity
-        if (shared >= 2) subUnion(i, j);
-        else if (sim >= 0.35) subUnion(i, j);
-        else if (shared >= 1) {
-          let geoMatch = false;
-          for (const g of a._geo) { if (b._geo.has(g)) { geoMatch = true; break; } }
-          let actionCount = 0;
-          for (const act of a._actions) { if (b._actions.has(act)) actionCount++; }
-          if (geoMatch || actionCount >= 1) subUnion(i, j);
-        }
-      }
-    }
-    const subClusters = {};
-    for (let i = 0; i < indices.length; i++) {
-      const root = subFind(i);
-      if (!subClusters[root]) subClusters[root] = [];
-      subClusters[root].push(indices[i]);
-    }
-    for (const sub of Object.values(subClusters)) {
-      finalGroups.push(sub);
+  for (const [country, indices] of countryGroups.entries()) {
+    const subClusters = subClusterBySimilarity(annotated, indices, 0.35);
+    for (const cluster of subClusters) {
+      allClusters.push(cluster);
     }
   }
 
-  // Build event objects from final groups
-  const events = finalGroups.map(indices => {
-    const clusterArts = indices.map(i => articlesWithMeta[i]);
+  // Step 4: No-country articles — cluster only by very high similarity
+  if (noCountry.length > 0) {
+    const subClusters = subClusterBySimilarity(annotated, noCountry, 0.5);
+    for (const cluster of subClusters) {
+      allClusters.push(cluster);
+    }
+  }
 
-    // Sort articles: highest-ranked source first
+  // Step 5: Build event objects
+  const events = allClusters.map(indices => {
+    const clusterArts = indices.map(i => annotated[i]);
+
+    // Sort by source authority
     const sorted = [...clusterArts].sort((a, b) => getSourceRank(b.source) - getSourceRank(a.source));
-    // Pick broadest headline: shortest among top 3 ranked sources (shorter = more general)
+    // Pick broadest headline from top 3
     const topCandidates = sorted.slice(0, Math.min(3, sorted.length));
     const primary = topCandidates.reduce((best, curr) => {
-      const currHL = (curr.headline || curr.title || '').trim();
-      const bestHL = (best.headline || best.title || '').trim();
+      const currHL = (curr._headline || '').trim();
+      const bestHL = (best._headline || '').trim();
       return currHL.length > 0 && currHL.length < bestHL.length ? curr : best;
     }, topCandidates[0]);
 
-    // Collect all unique specific entities across cluster
+    // Collect entities
     const allEntities = new Set();
     for (const a of clusterArts) {
-      for (const e of a._entities.specific) allEntities.add(e);
+      for (const c of a._allCountries) {
+        if (!STOPLIST_ENTITIES.has(c)) allEntities.add(c);
+      }
     }
 
-    // Determine category by majority vote
+    // Category by majority vote
     const catCounts = {};
     for (const a of clusterArts) {
       const cat = a.category || 'WORLD';
@@ -523,17 +326,13 @@ export function clusterArticles(articles) {
     }
     const category = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0][0];
 
-    // Importance: high if any article is high importance or category is CONFLICT/CRISIS/SECURITY
     const importance = clusterArts.some(a => a.importance === 'high') ||
       ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category)
       ? 'high' : 'medium';
 
-    // Most recent time
-    const mostRecentTime = primary.time || clusterArts[0].time;
-
-    // Clean up articles (remove internal metadata, clean headlines)
+    // Clean articles (remove internal metadata)
     const cleanArticles = clusterArts.map(a => {
-      const { _idx, _entities, _actions, _geo, _headlineWords, ...clean } = a;
+      const { _idx, _headline, _headlineWords, _primaryCountry, _allCountries, ...clean } = a;
       if (clean.headline) clean.headline = cleanHeadline(clean.headline);
       if (clean.title) clean.title = cleanHeadline(clean.title);
       return clean;
@@ -541,11 +340,11 @@ export function clusterArticles(articles) {
 
     const event = {
       id: `evt-${primary._idx}`,
-      headline: cleanHeadline(primary.headline || primary.title || ''),
+      headline: cleanHeadline(primary._headline || ''),
       category,
       importance,
       sourceCount: clusterArts.length,
-      time: mostRecentTime,
+      time: primary.time || clusterArts[0].time,
       articles: cleanArticles,
       entities: [...allEntities],
       summary: null,
@@ -557,23 +356,59 @@ export function clusterArticles(articles) {
     return event;
   });
 
-  // Sort by ranking score (highest first)
+  // Sort by score
   events.sort((a, b) => b._score - a._score);
-
-  // Clean up internal score
   for (const e of events) delete e._score;
 
-  // Clustering diagnostics
+  // Diagnostics
   const multiSource = events.filter(e => e.sourceCount > 1).length;
   const singleSource = events.filter(e => e.sourceCount === 1).length;
+  const maxCluster = events.reduce((m, e) => Math.max(m, e.sourceCount), 0);
   const avgSources = events.length > 0 ? (articles.length / events.length).toFixed(1) : 0;
-  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, ${singleSource} single-source, avg ${avgSources} sources/event)`);
-  // Log distribution
+  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, ${singleSource} single-source, avg ${avgSources} src/evt, max ${maxCluster})`);
   const dist = {};
   for (const e of events) { const k = e.sourceCount; dist[k] = (dist[k] || 0) + 1; }
   console.log(`[Hegemon] Source distribution:`, Object.entries(dist).sort(([a],[b]) => Number(a)-Number(b)).map(([k,v]) => `${k}src:${v}`).join(', '));
-  // Top 8 events by score
-  events.slice(0, 8).forEach(e => console.log(`  [${e.sourceCount} sources] [${e.category}] ${e.headline}`));
+  events.slice(0, 8).forEach(e => console.log(`  [${e.sourceCount} src] [${e.category}] ${e.headline}`));
+  if (maxCluster > HARD_CAP) console.error(`[Hegemon] WARNING: cluster exceeds hard cap! Max: ${maxCluster}`);
 
   return events;
+}
+
+// ============================================================
+// Sub-cluster a group of articles by headline similarity.
+// Single-pass greedy: each article joins the first cluster it
+// matches (50%+ overlap with the cluster's seed headline).
+// NO Union-Find. NO transitivity.
+// Hard cap: HARD_CAP articles per cluster.
+// ============================================================
+
+function subClusterBySimilarity(annotated, indices, threshold) {
+  const clusters = []; // each: { seedWords: Set, members: number[] }
+
+  for (const idx of indices) {
+    const art = annotated[idx];
+    let placed = false;
+
+    for (const cluster of clusters) {
+      // Check if this article matches the cluster's seed
+      if (cluster.members.length >= HARD_CAP) continue; // hard cap
+      const sim = wordOverlap(art._headlineWords, cluster.seedWords);
+      if (sim >= threshold) {
+        cluster.members.push(idx);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      // Start a new cluster with this article as seed
+      clusters.push({
+        seedWords: art._headlineWords,
+        members: [idx]
+      });
+    }
+  }
+
+  return clusters.map(c => c.members);
 }

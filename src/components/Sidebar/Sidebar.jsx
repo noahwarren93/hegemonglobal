@@ -187,12 +187,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: filter entertainment, boost military/nuclear, persist 2 hours
+  // Top Stories: tiered geopolitical priority, 3-hour persistence
   const getStableTopStories = useCallback((events) => {
     const TOP_KEY = 'hegemon_top_stories';
-    const TOP_TTL = 2 * 60 * 60 * 1000; // 2 hours
+    const TOP_TTL = 3 * 60 * 60 * 1000; // 3 hours
 
-    // Block entertainment/celebrity/domestic fluff from Top Stories
+    // NEVER in Top Stories — block entertainment, corporate, domestic fluff
     const TOP_BLOCKED = [
       'actor', 'actress', 'celebrity', 'star dies', 'star dead', 'dies at',
       "grey's anatomy", 'mcsteamy', 'euphoria', 'hollywood', 'als battle',
@@ -201,29 +201,52 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       'royal family', 'meghan markle', 'prince harry', 'sport', 'football',
       'basketball', 'baseball', 'soccer', 'nfl', 'nba', 'concert', 'album',
       'grammy', 'oscar', 'emmy', 'red carpet', 'beloved',
-      'equity compensation', 'stock compensation', 'employee pay', 'corporate hr',
-      'ufo', 'ufos', 'alien', 'aliens', 'nvidia', 'openai deal'
+      // Corporate / financial noise
+      'equity compensation', 'stock compensation', 'stock awards', 'employee pay',
+      'corporate hr', 'corporate earnings', 'quarterly results', 'revenue growth',
+      'trade deficit', 'un payments', 'un dues', 'meta stock', 'meta shares',
+      // Non-geopolitical
+      'ufo', 'ufos', 'alien', 'aliens', 'nvidia', 'openai deal',
+      // Domestic US policy
+      'school board', 'zoning', 'parking', 'hoa', 'city council', 'fcc',
+      'party congress'
     ];
 
-    // Priority keywords that MUST rank highest in Top Stories
-    const TOP_PRIORITY = [
-      'military', 'nuclear', 'war ', 'invasion', 'missile', 'troops',
-      'strait of hormuz', 'hormuz', 'iran', 'ukraine', 'gaza', 'taiwan',
-      'airstrikes', 'airstrike', 'ceasefire', 'escalat', 'buildup',
-      'nato', 'weapons', 'conflict', 'offensive', 'bombing', 'strikes',
-      'hostage', 'genocide', 'humanitarian crisis', 'siege', 'blockade'
+    // TIER 1: Active military conflict, nuclear threats, war, genocide (always Top Stories)
+    const TIER1 = [
+      'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
+      'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
+      'military buildup', 'weapons', 'arsenal', 'enrichment', 'warhead',
+      'siege', 'blockade', 'offensive'
     ];
+    // TIER 2: Peace talks, ceasefire, sanctions, territorial disputes, coups
+    const TIER2 = [
+      'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
+      'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
+      'reconstruction', 'occupation', 'annexed'
+    ];
+    // TIER 3: Elections, summits, trade wars
+    const TIER3 = [
+      'election', 'summit', 'trade war', 'diplomatic', 'nato',
+      'conflict', 'strikes'
+    ];
+
+    const getEventText = (evt) => {
+      return ((evt.headline || '') + ' ' +
+        (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+    };
 
     const isBlocked = (evt) => {
-      const text = (evt.headline || '').toLowerCase() +
-        (evt.articles || []).map(a => (a.headline || '').toLowerCase()).join(' ');
+      const text = getEventText(evt);
       return TOP_BLOCKED.some(kw => text.includes(kw));
     };
 
-    const isPriority = (evt) => {
-      const text = (evt.headline || '').toLowerCase() +
-        (evt.articles || []).map(a => (a.headline || '').toLowerCase()).join(' ');
-      return TOP_PRIORITY.some(kw => text.includes(kw));
+    const getTier = (evt) => {
+      const text = getEventText(evt);
+      if (TIER1.some(kw => text.includes(kw))) return 1;
+      if (TIER2.some(kw => text.includes(kw))) return 2;
+      if (TIER3.some(kw => text.includes(kw))) return 3;
+      return 4;
     };
 
     // Fingerprint: hash of sorted article headlines (stable across ID changes)
@@ -237,17 +260,14 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return 'ts_' + Math.abs(h).toString(36);
     };
 
-    // Filter: 2+ sources, no entertainment/celebrity
+    // Filter and sort candidates: tier first, then source count, then category
     const candidates = events
       .filter(e => e.sourceCount >= 2 && !isBlocked(e))
       .sort((a, b) => {
-        // Priority events first (military, nuclear, war)
-        const aPri = isPriority(a) ? 1 : 0;
-        const bPri = isPriority(b) ? 1 : 0;
-        if (aPri !== bPri) return bPri - aPri;
-        // Then by source count
+        const tierA = getTier(a);
+        const tierB = getTier(b);
+        if (tierA !== tierB) return tierA - tierB; // lower tier number = higher priority
         if (a.sourceCount !== b.sourceCount) return b.sourceCount - a.sourceCount;
-        // Then by category priority (CONFLICT > SECURITY > CRISIS > others)
         const catPri = { CONFLICT: 5, SECURITY: 4, CRISIS: 3, DIPLOMACY: 2 };
         return (catPri[b.category] || 0) - (catPri[a.category] || 0);
       });
@@ -257,7 +277,6 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       if (raw) {
         const persisted = JSON.parse(raw);
         if (Date.now() - persisted.ts < TOP_TTL && persisted.fps && persisted.fps.length > 0) {
-          // Build fingerprint map for current events
           const fpMap = new Map();
           for (const e of events) fpMap.set(fingerprint(e), e);
 
@@ -272,29 +291,33 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             }
           }
 
-          // Fill remaining slots with new candidates
+          // Fill remaining slots
           for (const c of candidates) {
             if (kept.length >= 5) break;
             const cfp = fingerprint(c);
-            if (!usedFps.has(cfp)) {
-              kept.push(c);
-              usedFps.add(cfp);
-            }
+            if (!usedFps.has(cfp)) { kept.push(c); usedFps.add(cfp); }
           }
 
-          // If a priority candidate has more sources than a kept non-priority story, swap it in
+          // Only replace a kept story if new candidate is TIER 1/2 AND has more sources
           for (const c of candidates) {
-            if (kept.length >= 5 && isPriority(c)) {
-              const cfp = fingerprint(c);
-              if (!usedFps.has(cfp)) {
-                // Find lowest-ranked non-priority story to replace
-                const replaceIdx = kept.findIndex(k => !isPriority(k) && c.sourceCount > k.sourceCount);
-                if (replaceIdx >= 0) {
-                  usedFps.delete(fingerprint(kept[replaceIdx]));
-                  kept[replaceIdx] = c;
-                  usedFps.add(cfp);
+            const cTier = getTier(c);
+            if (cTier > 2) continue; // only T1/T2 can replace
+            const cfp = fingerprint(c);
+            if (usedFps.has(cfp)) continue;
+            // Find lowest-priority kept story to replace
+            let worstIdx = -1, worstTier = 0, worstSrc = Infinity;
+            for (let i = 0; i < kept.length; i++) {
+              const kTier = getTier(kept[i]);
+              if (kTier > cTier || (kTier === cTier && kept[i].sourceCount < c.sourceCount)) {
+                if (kTier > worstTier || (kTier === worstTier && kept[i].sourceCount < worstSrc)) {
+                  worstIdx = i; worstTier = kTier; worstSrc = kept[i].sourceCount;
                 }
               }
+            }
+            if (worstIdx >= 0) {
+              usedFps.delete(fingerprint(kept[worstIdx]));
+              kept[worstIdx] = c;
+              usedFps.add(cfp);
             }
           }
 
