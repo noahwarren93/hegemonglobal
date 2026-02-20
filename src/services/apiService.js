@@ -1,12 +1,13 @@
 // apiService.js - News fetching, briefing history, RSS feeds, dynamic risk system
 
 import {
-  COUNTRIES, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK,
+  COUNTRIES, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK, DAILY_EVENTS,
   IRRELEVANT_KEYWORDS, GEOPOLITICAL_SIGNALS, STRONG_GEO_SIGNALS,
   DOMESTIC_NOISE_PATTERNS, ESCALATION_KEYWORDS,
   DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS
 } from '../data/countries';
 import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
+import { clusterArticles } from './eventsService';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 
@@ -1038,12 +1039,19 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...balanced);
 
+      // Cluster articles into events
+      const events = clusterArticles(DAILY_BRIEFING);
+      DAILY_EVENTS.length = 0;
+      DAILY_EVENTS.push(...events);
 
       saveBriefingSnapshot();
       seedPastBriefingIfEmpty();
 
       // Dynamic risk analysis
       updateDynamicRisks(DAILY_BRIEFING);
+
+      // Fire off async AI summary requests (non-blocking)
+      fetchEventSummaries();
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
@@ -1079,9 +1087,16 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           DAILY_BRIEFING.length = 0;
           DAILY_BRIEFING.push(...fallbackArticles);
 
+          // Cluster articles into events
+          const fbEvents = clusterArticles(DAILY_BRIEFING);
+          DAILY_EVENTS.length = 0;
+          DAILY_EVENTS.push(...fbEvents);
+
           saveBriefingSnapshot();
           seedPastBriefingIfEmpty();
           updateDynamicRisks(DAILY_BRIEFING);
+
+          fetchEventSummaries();
 
           if (onComplete) onComplete(DAILY_BRIEFING);
           return;
@@ -1103,27 +1118,85 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 }
 
 // ============================================================
-// Article Summarization (via Cloudflare Worker → Claude API)
+// Event Summarization (via Cloudflare Worker → Claude API)
 // ============================================================
 
-export async function summarizeArticles(articles) {
+// Listeners that want to know when events update (summaries arrive)
+const _eventListeners = [];
+
+export function onEventsUpdated(fn) {
+  _eventListeners.push(fn);
+  return () => {
+    const idx = _eventListeners.indexOf(fn);
+    if (idx >= 0) _eventListeners.splice(idx, 1);
+  };
+}
+
+function notifyEventsUpdated() {
+  for (const fn of _eventListeners) {
+    try { fn(DAILY_EVENTS); } catch (e) { console.warn('Event listener error:', e); }
+  }
+}
+
+export async function fetchEventSummaries() {
+  if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
+
+  // Only send multi-source events or top events (limit to 15 to control costs)
+  const eventsToSummarize = DAILY_EVENTS.slice(0, 15);
+
+  // Mark as loading
+  for (const event of eventsToSummarize) {
+    event.summaryLoading = true;
+  }
+  notifyEventsUpdated();
+
   try {
     const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        articles: articles.map(a => ({
-          title: a.title || a.headline || '',
-          description: a.description || '',
-          source: a.source || a.source_id || '',
-          url: a.url || a.link || ''
+        events: eventsToSummarize.map(e => ({
+          headline: e.headline,
+          category: e.category,
+          articles: e.articles.map(a => ({
+            headline: a.headline || a.title || '',
+            source: a.source || '',
+            description: a.description || ''
+          }))
         }))
       })
     });
-    if (!response.ok) return null;
+
+    if (!response.ok) {
+      for (const event of eventsToSummarize) {
+        event.summaryLoading = false;
+        event.summaryError = true;
+      }
+      notifyEventsUpdated();
+      return;
+    }
+
     const data = await response.json();
-    return data.summaries || null;
+    const summaries = data.summaries || [];
+
+    // Apply summaries to events
+    for (let i = 0; i < eventsToSummarize.length; i++) {
+      eventsToSummarize[i].summaryLoading = false;
+      if (summaries[i] && summaries[i].summary) {
+        eventsToSummarize[i].summary = summaries[i].summary;
+      } else {
+        eventsToSummarize[i].summaryError = true;
+      }
+    }
+
+    notifyEventsUpdated();
+
   } catch {
-    return null;
+    // Worker not available — gracefully degrade
+    for (const event of eventsToSummarize) {
+      event.summaryLoading = false;
+      event.summaryError = true;
+    }
+    notifyEventsUpdated();
   }
 }

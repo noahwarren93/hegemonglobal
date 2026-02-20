@@ -1,14 +1,15 @@
 // Sidebar.jsx - Main sidebar with 6 tabs
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, lastNewsUpdate } from '../../data/countries';
+import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
 import { RISK_COLORS, renderBiasTag, getStateMediaLabel, enforceSourceDiversity, ensureNonWesternInTopStories } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
+import { onEventsUpdated } from '../../services/apiService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 
 const TABS = [
-  { id: 'daily', label: 'Articles' },
+  { id: 'events', label: 'Events' },
   { id: 'newsletter', label: 'Brief' },
   { id: 'elections', label: 'Elections' },
   { id: 'forecast', label: 'Forecast' },
@@ -21,10 +22,12 @@ const ITEMS_PER_PAGE = 15;
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
 export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated }) {
-  const [activeTab, setActiveTab] = useState('daily');
+  const [activeTab, setActiveTab] = useState('events');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [pastOpen, setPastOpen] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState({});
+  const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
@@ -41,6 +44,14 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       }
     };
     return () => { delete window.toggleBriefDropdown; };
+  }, []);
+
+  // Subscribe to events updates (when AI summaries arrive)
+  useEffect(() => {
+    const unsub = onEventsUpdated(() => {
+      setEventsVersion(v => v + 1);
+    });
+    return unsub;
   }, []);
 
   // Update news timestamp
@@ -69,92 +80,195 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (onCountryClick) onCountryClick(countryName);
   }, [onCountryClick]);
 
+  const toggleEventExpand = useCallback((eventId) => {
+    setExpandedEvents(prev => ({ ...prev, [eventId]: !prev[eventId] }));
+  }, []);
+
   // ============================================================
   // Tab Content Renderers
   // ============================================================
 
-  const renderArticlesTab = () => {
-    if (DAILY_BRIEFING.length === 0) {
-      return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Loading news articles...</div>;
+  const catBorderColor = (cat) => {
+    if (cat === 'CONFLICT') return '#ef4444';
+    if (cat === 'CRISIS') return '#f97316';
+    if (cat === 'SECURITY') return '#eab308';
+    if (cat === 'ECONOMY') return '#22c55e';
+    if (cat === 'DIPLOMACY') return '#8b5cf6';
+    if (cat === 'POLITICS') return '#3b82f6';
+    return '#374151';
+  };
+
+  const renderEventCard = (event, isTopStory) => {
+    const isExpanded = expandedEvents[event.id];
+    const hasMultipleSources = event.sourceCount > 1;
+
+    // Clean up headline for display
+    let displayHeadline = event.headline;
+    const dashIdx = displayHeadline.lastIndexOf(' - ');
+    if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
+      displayHeadline = displayHeadline.substring(0, dashIdx).trim();
     }
 
-    const _demote = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
-    const topStories = ensureNonWesternInTopStories(
-      enforceSourceDiversity(DAILY_BRIEFING.filter(item => {
-        if (_demote.some(kw => (item.headline || '').toLowerCase().includes(kw))) return false;
-        return item.importance === 'high' || ['CONFLICT', 'CRISIS', 'SECURITY'].includes(item.category);
-      })).slice(0, 5),
-      DAILY_BRIEFING
-    );
-    const allNews = enforceSourceDiversity(DAILY_BRIEFING).slice(0, visibleCount);
-
-    const catBorderColor = (cat) => cat === 'CONFLICT' ? '#ef4444' : cat === 'CRISIS' ? '#f97316' : '#eab308';
-
-    const renderCard = (article, i, isTopStory) => {
-      let displayHeadline = article.headline;
-      let displaySource = article.source;
-      if (displaySource && displaySource.includes('Google News') && displayHeadline) {
-        const dashIdx = displayHeadline.lastIndexOf(' - ');
-        if (dashIdx > 0) {
-          displaySource = displayHeadline.substring(dashIdx + 3).trim();
-          displayHeadline = displayHeadline.substring(0, dashIdx).trim();
-        }
-      }
-      return (
-        <div key={i} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(article.category)}` } : undefined}>
-          <div className="card-header">
-            <span className={`card-cat ${article.category}`}>{article.category}</span>
-            <span className="card-time">{article.time}</span>
-          </div>
-          <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
-            {article.url && article.url !== '#' ? (
-              <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#4da6ff', textDecoration: 'none' }}>{displayHeadline}</a>
-            ) : (
-              displayHeadline
-            )}
-          </div>
-          <div className="card-source">
-            {article.url && article.url !== '#' ? (
-              <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>{displaySource} ↗</a>
-            ) : (
-              <span style={{ color: '#9ca3af' }}>{displaySource}</span>
-            )}
-            {getStateMediaLabel(displaySource) && (
-              <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                {getStateMediaLabel(displaySource)}
+    return (
+      <div key={event.id} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(event.category)}` } : undefined}>
+        {/* Header row: category + sources badge + time */}
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className={`card-cat ${event.category}`}>{event.category}</span>
+            {hasMultipleSources && (
+              <span style={{
+                fontSize: '7px', fontWeight: 700, color: '#06b6d4',
+                background: 'rgba(6,182,212,0.15)', padding: '2px 5px',
+                borderRadius: '3px', letterSpacing: '0.3px'
+              }}>
+                {event.sourceCount} sources
               </span>
             )}
           </div>
-          <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
+          <span className="card-time">{event.time}</span>
         </div>
-      );
-    };
+
+        {/* Summary or headline */}
+        <div style={{ marginBottom: '4px' }}>
+          {event.summaryLoading ? (
+            <>
+              <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>{displayHeadline}</div>
+              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ display: 'inline-block', width: '8px', height: '8px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                Generating summary...
+              </div>
+            </>
+          ) : event.summary ? (
+            <>
+              <div className="card-headline" style={isTopStory ? { fontWeight: 600, marginBottom: '6px' } : { marginBottom: '6px' }}>{displayHeadline}</div>
+              <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.6, padding: '6px 8px', background: 'rgba(6,182,212,0.05)', borderRadius: '6px', borderLeft: '2px solid rgba(6,182,212,0.3)' }}>
+                {event.summary}
+              </div>
+            </>
+          ) : (
+            <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>{displayHeadline}</div>
+          )}
+        </div>
+
+        {/* Primary source */}
+        {event.articles[0] && (
+          <div className="card-source">
+            {event.articles[0].url && event.articles[0].url !== '#' ? (
+              <a href={event.articles[0].url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>
+                {event.articles[0].source} ↗
+              </a>
+            ) : (
+              <span style={{ color: '#9ca3af' }}>{event.articles[0].source}</span>
+            )}
+            {getStateMediaLabel(event.articles[0].source) && (
+              <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
+                {getStateMediaLabel(event.articles[0].source)}
+              </span>
+            )}
+          </div>
+        )}
+        {event.articles[0] && (
+          <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(event.articles[0].source) }} />
+        )}
+
+        {/* Expand/collapse for multi-source events */}
+        {hasMultipleSources && (
+          <div>
+            <button
+              onClick={() => toggleEventExpand(event.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                background: 'none', border: 'none', color: '#6b7280',
+                fontSize: '9px', cursor: 'pointer', padding: '4px 0',
+                marginTop: '4px', fontFamily: 'inherit'
+              }}
+            >
+              <span style={{ transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', fontSize: '8px' }}>&#9654;</span>
+              {isExpanded ? 'Hide' : 'View'} all {event.sourceCount} sources
+            </button>
+
+            {isExpanded && (
+              <div style={{ marginTop: '4px', padding: '4px 0', borderTop: '1px solid #1f293755' }}>
+                {event.articles.slice(1).map((article, j) => {
+                  let artHeadline = article.headline || article.title || '';
+                  let artSource = article.source || '';
+                  if (artSource.includes('Google News') && artHeadline) {
+                    const di = artHeadline.lastIndexOf(' - ');
+                    if (di > 0) {
+                      artSource = artHeadline.substring(di + 3).trim();
+                      artHeadline = artHeadline.substring(0, di).trim();
+                    }
+                  }
+
+                  return (
+                    <div key={j} style={{ padding: '5px 0', borderBottom: j < event.articles.length - 2 ? '1px solid #1f293733' : 'none' }}>
+                      <div style={{ fontSize: '10px', color: '#d1d5db', lineHeight: 1.4 }}>
+                        {article.url && article.url !== '#' ? (
+                          <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#4da6ff', textDecoration: 'none' }}>{artHeadline}</a>
+                        ) : artHeadline}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        <span style={{ fontSize: '9px', color: '#6b7280' }}>{artSource}</span>
+                        {getStateMediaLabel(artSource) && (
+                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', fontWeight: 600 }}>
+                            {getStateMediaLabel(artSource)}
+                          </span>
+                        )}
+                        <span dangerouslySetInnerHTML={{ __html: renderBiasTag(artSource) }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderEventsTab = () => {
+    if (DAILY_EVENTS.length === 0) {
+      if (DAILY_BRIEFING.length === 0) {
+        return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Loading events...</div>;
+      }
+      return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
+    }
+
+    const topEvents = DAILY_EVENTS.filter(e => e.importance === 'high').slice(0, 5);
+    const restEvents = DAILY_EVENTS.slice(0, visibleCount);
 
     return (
       <>
         {/* Top Stories */}
-        {topStories.length > 0 && (
+        {topEvents.length > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
+              {DAILY_EVENTS.some(e => e.summaryLoading) && (
+                <span style={{ fontSize: '8px', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <span style={{ display: 'inline-block', width: '6px', height: '6px', border: '1.5px solid #1f2937', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  AI summaries loading
+                </span>
+              )}
             </div>
-            {topStories.map((article, i) => renderCard(article, `top-${i}`, true))}
+            {topEvents.map(event => renderEventCard(event, true))}
           </>
         )}
 
         {/* Latest Updates */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(59,130,246,0.1)', borderLeft: '3px solid #3b82f6', margin: '14px 0 10px 0' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>LATEST UPDATES</span>
-          <span style={{ fontSize: '9px', color: '#6b7280' }}>({DAILY_BRIEFING.length} articles)</span>
+          <span style={{ fontSize: '9px', color: '#6b7280' }}>({DAILY_EVENTS.length} events from {DAILY_BRIEFING.length} articles)</span>
         </div>
-        {allNews.map((article, i) => renderCard(article, `all-${i}`, false))}
+        {restEvents.map(event => renderEventCard(event, false))}
 
-        {visibleCount < DAILY_BRIEFING.length && (
+        {visibleCount < DAILY_EVENTS.length && (
           <button onClick={loadMore} style={{
             width: '100%', padding: '12px', marginTop: '10px', background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', border: '1px solid #374151',
             borderRadius: '8px', color: '#9ca3af', cursor: 'pointer', fontSize: '11px', fontWeight: 600
           }}>
-            LOAD MORE ({DAILY_BRIEFING.length - visibleCount} remaining)
+            LOAD MORE ({DAILY_EVENTS.length - visibleCount} remaining)
           </button>
         )}
       </>
@@ -353,7 +467,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'daily': return renderArticlesTab();
+      case 'events': return renderEventsTab();
       case 'newsletter': return renderBriefTab();
       case 'elections': return renderElectionsTab();
       case 'forecast': return renderForecastTab();

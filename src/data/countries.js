@@ -1506,6 +1506,7 @@ export const DAILY_BRIEFING_FALLBACK = [
 
 // Live news storage
 export const DAILY_BRIEFING = [...DAILY_BRIEFING_FALLBACK];
+export const DAILY_EVENTS = [];
 export const lastNewsUpdate = null;
 
 // ============================================================

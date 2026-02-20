@@ -22,6 +22,8 @@
 
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     .date { font-size: 12px; color: #f3f4f6; font-weight: 600; }
 
     .stats { position: absolute; bottom: 16px; left: 230px; z-index: 10; display: flex; gap: 8px; }
