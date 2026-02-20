@@ -2575,7 +2575,15 @@ export const IRRELEVANT_KEYWORDS = [
   'local election', 'school superintendent', 'fire chief',
   // Tabloid celebrity
   'caught between', 'caught on tape', 'leaked video', 'leaked photo',
-  'plastic surgery', 'weight gain', 'weight loss journey'
+  'plastic surgery', 'weight gain', 'weight loss journey',
+  // Additional specific irrelevant items
+  'leukemia', 'leukaemia', 'cancer battle', 'cancer diagnosis',
+  'klatham party', 'ballot barcodes', 'chinatown beating',
+  'palm oil', 'royal arrest', 'slavery exhibit', 'independence mall',
+  'crypto extortion', 'bitcoin scam', 'bitcoin fraud',
+  'stadium deal', 'sports arena', 'arena funding',
+  'dog show', 'cat show', 'spelling bee', 'hot dog eating',
+  'beauty pageant', 'miss universe', 'miss america'
 ];
 
 // Geopolitical relevance signals - STRICT: articles must contain at least one to pass.

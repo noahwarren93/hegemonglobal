@@ -100,34 +100,19 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (!event.summary) return null;
 
     const text = event.summary;
-    // Split into sentences — but avoid breaking on abbreviations like "U.S." or "Dr."
-    // Match sentence-ending punctuation followed by a space and uppercase letter
-    const ABBREVS = new Set(['u.s.', 'u.k.', 'u.n.', 'e.u.', 'dr.', 'mr.', 'mrs.', 'ms.', 'prof.', 'gen.', 'gov.', 'sen.', 'rep.', 'st.', 'no.', 'vs.', 'inc.', 'corp.', 'dept.', 'est.', 'approx.']);
-    const sentences = [];
-    let buf = '';
-    for (let i = 0; i < text.length; i++) {
-      buf += text[i];
-      if ((text[i] === '.' || text[i] === '!' || text[i] === '?') && i + 2 < text.length && text[i + 1] === ' ') {
-        const wordBefore = (buf.trimEnd().split(/\s/).pop() || '').toLowerCase();
-        // Skip if it's a known abbreviation
-        if (ABBREVS.has(wordBefore)) continue;
-        // Real sentence break: next char is uppercase
-        if (text[i + 2] >= 'A' && text[i + 2] <= 'Z') {
-          sentences.push(buf.trim());
-          buf = '';
-        }
+    // Extract just the "What happened" section for the card preview
+    const whatMatch = text.match(/\*\*What happened:\*\*\s*(.*?)(?:\s*\*\*Why it matters:|$)/s);
+    if (whatMatch) {
+      let preview = whatMatch[1].trim();
+      if (preview.length > 160) {
+        preview = preview.substring(0, 157).replace(/\s+\S*$/, '') + '...';
       }
+      return preview;
     }
-    if (buf.trim()) sentences.push(buf.trim());
 
-    if (sentences.length === 0) return text.length > 160 ? text.substring(0, 157) + '...' : text;
-
-    let preview = sentences[0];
-    // If first sentence is very short, include the second
-    if (preview.length < 50 && sentences.length > 1) {
-      preview += ' ' + sentences[1];
-    }
-    // Truncate if still too long
+    // Fallback: first sentence
+    const sentenceMatch = text.match(/^[^.!?]*[.!?]/);
+    let preview = sentenceMatch ? sentenceMatch[0].trim() : text;
     if (preview.length > 160) {
       preview = preview.substring(0, 157).replace(/\s+\S*$/, '') + '...';
     }

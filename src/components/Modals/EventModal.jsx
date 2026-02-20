@@ -27,6 +27,31 @@ function cleanHeadline(headline, source) {
   return { headline: h, source: s };
 }
 
+function renderStructuredSummary(summary) {
+  if (!summary) return null;
+  // Parse **Section:** pattern into styled sections
+  const sections = summary.split(/\*\*([^*]+):\*\*\s*/);
+  if (sections.length >= 3) {
+    const parts = [];
+    // sections[0] is text before first **, usually empty
+    for (let i = 1; i < sections.length; i += 2) {
+      const label = sections[i].trim();
+      const content = (sections[i + 1] || '').trim();
+      if (content) {
+        parts.push(
+          <div key={label} style={{ marginBottom: i + 2 < sections.length ? '8px' : 0 }}>
+            <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{label}: </span>
+            <span>{content}</span>
+          </div>
+        );
+      }
+    }
+    if (parts.length > 0) return parts;
+  }
+  // Fallback: render as plain text
+  return summary;
+}
+
 export default function EventModal({ event, isOpen, onClose }) {
   // Close on Escape
   useEffect(() => {
@@ -84,7 +109,7 @@ export default function EventModal({ event, isOpen, onClose }) {
             <div style={{ padding: '12px 14px', background: '#0d0d14', borderRadius: '8px', borderLeft: '2px solid rgba(6,182,212,0.3)', marginBottom: '16px' }}>
               <div style={{ fontSize: '9px', color: '#06b6d4', fontWeight: 600, letterSpacing: '0.5px', marginBottom: '6px', textTransform: 'uppercase' }}>Intelligence Summary</div>
               <div style={{ fontSize: '12px', color: '#d1d5db', lineHeight: 1.7 }}>
-                {event.summary}
+                {renderStructuredSummary(event.summary)}
               </div>
             </div>
           ) : null}

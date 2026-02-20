@@ -76,7 +76,13 @@ For each event below, provide TWO things:
 
 1. HEADLINE: A broad, attention-grabbing headline (max 12 words) that captures the OVERALL EVENT, not any single article's angle. Think newspaper front page — sweeping and dramatic. Good examples: "Trump's Board of Peace Convenes, Raises Billions for Gaza", "Global Markets Rattled by Trade War Fears", "Sudan Crisis Deepens as Humanitarian Catastrophe Unfolds". Use specific details that make the headline informative but keep it about the big picture.
 
-2. SUMMARY: 3-5 sentences synthesizing what happened across ALL sources. Focus on geopolitical significance — why does this matter? Use the article descriptions and context provided to write a rich, informative analysis. Professional intelligence briefing tone. Plain prose, no markdown.
+2. SUMMARY: A structured analysis with exactly three sections, each 1-2 sentences. Use this exact format with bold section headers:
+
+**What happened:** [Describe the key facts — what occurred, who was involved, and what actions were taken.]
+
+**Why it matters:** [Explain the geopolitical significance — strategic implications, impact on alliances, regional stability, or global order.]
+
+**Outlook:** [Assess likely next steps — what to watch for, potential escalation or resolution paths.]
 
 CRITICAL RULES:
 - NEVER say "limited reporting", "insufficient information", "limited details", "prevents detailed assessment", or anything similar.
@@ -84,11 +90,12 @@ CRITICAL RULES:
 - Use the "Context:" lines to extract specific facts, numbers, and details for your summary.
 - If sources disagree or report different angles, note the discrepancy.
 - Every summary MUST be substantive, specific, and informative — no cop-outs or vague generalities.
+- Keep each section to 1-2 sentences. The entire summary should be 3-6 sentences total.
 
 ${eventDescriptions}
 
 Respond with a JSON array, one per event, in the same order. Format:
-[{"headline": "Broad Grabby Headline Here", "summary": "3-5 sentence analysis..."}, ...]
+[{"headline": "Broad Grabby Headline Here", "summary": "**What happened:** ... **Why it matters:** ... **Outlook:** ..."}, ...]
 
 Return ONLY the JSON array, no other text.`;
 
