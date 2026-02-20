@@ -7,6 +7,7 @@ import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated } from '../../services/apiService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
+import EventModal from '../Modals/EventModal';
 
 const TABS = [
   { id: 'events', label: 'Events' },
@@ -26,7 +27,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [pastOpen, setPastOpen] = useState(false);
-  const [expandedEvents, setExpandedEvents] = useState({});
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
 
@@ -80,10 +81,6 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (onCountryClick) onCountryClick(countryName);
   }, [onCountryClick]);
 
-  const toggleEventExpand = useCallback((eventId) => {
-    setExpandedEvents(prev => ({ ...prev, [eventId]: !prev[eventId] }));
-  }, []);
-
   // ============================================================
   // Tab Content Renderers
   // ============================================================
@@ -98,10 +95,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return '#374151';
   };
 
-  const renderEventCard = (event, isTopStory) => {
-    const isExpanded = expandedEvents[event.id];
-    const hasMultipleSources = event.sourceCount > 1;
+  const getCardPreview = (event) => {
+    if (event.summaryLoading) return null;
+    if (event.summary) {
+      // First sentence, truncated
+      const firstSentence = event.summary.split(/(?<=[.!?])\s/)[0] || event.summary;
+      return firstSentence.length > 140 ? firstSentence.substring(0, 137) + '...' : firstSentence;
+    }
+    return null;
+  };
 
+  const renderEventCard = (event, isTopStory) => {
     // Clean up headline for display
     let displayHeadline = event.headline;
     const dashIdx = displayHeadline.lastIndexOf(' - ');
@@ -109,13 +113,23 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       displayHeadline = displayHeadline.substring(0, dashIdx).trim();
     }
 
+    const preview = getCardPreview(event);
+
     return (
-      <div key={event.id} className="card" style={isTopStory ? { borderLeft: `2px solid ${catBorderColor(event.category)}` } : undefined}>
+      <div
+        key={event.id}
+        className="card"
+        onClick={() => setSelectedEvent(event)}
+        style={{
+          cursor: 'pointer',
+          ...(isTopStory ? { borderLeft: `2px solid ${catBorderColor(event.category)}` } : {})
+        }}
+      >
         {/* Header row: category + sources badge + time */}
         <div className="card-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className={`card-cat ${event.category}`}>{event.category}</span>
-            {hasMultipleSources && (
+            {event.sourceCount > 1 && (
               <span style={{
                 fontSize: '7px', fontWeight: 700, color: '#06b6d4',
                 background: 'rgba(6,182,212,0.15)', padding: '2px 5px',
@@ -128,99 +142,16 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span className="card-time">{event.time}</span>
         </div>
 
-        {/* Summary or headline */}
-        <div style={{ marginBottom: '4px' }}>
-          {event.summaryLoading ? (
-            <>
-              <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>{displayHeadline}</div>
-              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ display: 'inline-block', width: '8px', height: '8px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                Generating summary...
-              </div>
-            </>
-          ) : event.summary ? (
-            <>
-              <div className="card-headline" style={isTopStory ? { fontWeight: 600, marginBottom: '6px' } : { marginBottom: '6px' }}>{displayHeadline}</div>
-              <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.6, padding: '6px 8px', background: 'rgba(6,182,212,0.05)', borderRadius: '6px', borderLeft: '2px solid rgba(6,182,212,0.3)' }}>
-                {event.summary}
-              </div>
-            </>
-          ) : (
-            <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>{displayHeadline}</div>
-          )}
+        {/* Preview text: first sentence of summary OR headline */}
+        <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
+          {preview || displayHeadline}
         </div>
 
-        {/* Primary source */}
-        {event.articles[0] && (
-          <div className="card-source">
-            {event.articles[0].url && event.articles[0].url !== '#' ? (
-              <a href={event.articles[0].url} target="_blank" rel="noopener noreferrer" style={{ color: '#9ca3af', textDecoration: 'none' }}>
-                {event.articles[0].source} ↗
-              </a>
-            ) : (
-              <span style={{ color: '#9ca3af' }}>{event.articles[0].source}</span>
-            )}
-            {getStateMediaLabel(event.articles[0].source) && (
-              <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                {getStateMediaLabel(event.articles[0].source)}
-              </span>
-            )}
-          </div>
-        )}
-        {event.articles[0] && (
-          <div style={{ marginTop: '4px' }} dangerouslySetInnerHTML={{ __html: renderBiasTag(event.articles[0].source) }} />
-        )}
-
-        {/* Expand/collapse for multi-source events */}
-        {hasMultipleSources && (
-          <div>
-            <button
-              onClick={() => toggleEventExpand(event.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
-                background: 'none', border: 'none', color: '#6b7280',
-                fontSize: '9px', cursor: 'pointer', padding: '4px 0',
-                marginTop: '4px', fontFamily: 'inherit'
-              }}
-            >
-              <span style={{ transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', fontSize: '8px' }}>&#9654;</span>
-              {isExpanded ? 'Hide' : 'View'} all {event.sourceCount} sources
-            </button>
-
-            {isExpanded && (
-              <div style={{ marginTop: '4px', padding: '4px 0', borderTop: '1px solid #1f293755' }}>
-                {event.articles.slice(1).map((article, j) => {
-                  let artHeadline = article.headline || article.title || '';
-                  let artSource = article.source || '';
-                  if (artSource.includes('Google News') && artHeadline) {
-                    const di = artHeadline.lastIndexOf(' - ');
-                    if (di > 0) {
-                      artSource = artHeadline.substring(di + 3).trim();
-                      artHeadline = artHeadline.substring(0, di).trim();
-                    }
-                  }
-
-                  return (
-                    <div key={j} style={{ padding: '5px 0', borderBottom: j < event.articles.length - 2 ? '1px solid #1f293733' : 'none' }}>
-                      <div style={{ fontSize: '10px', color: '#d1d5db', lineHeight: 1.4 }}>
-                        {article.url && article.url !== '#' ? (
-                          <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: '#4da6ff', textDecoration: 'none' }}>{artHeadline}</a>
-                        ) : artHeadline}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                        <span style={{ fontSize: '9px', color: '#6b7280' }}>{artSource}</span>
-                        {getStateMediaLabel(artSource) && (
-                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', fontWeight: 600 }}>
-                            {getStateMediaLabel(artSource)}
-                          </span>
-                        )}
-                        <span dangerouslySetInnerHTML={{ __html: renderBiasTag(artSource) }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        {/* Loading indicator */}
+        {event.summaryLoading && (
+          <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ display: 'inline-block', width: '7px', height: '7px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            Summarizing...
           </div>
         )}
       </div>
@@ -478,54 +409,63 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   return (
-    <div className="sidebar">
-      {/* Tabs */}
-      <div className="tabs">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <>
+      <div className="sidebar">
+        {/* Tabs */}
+        <div className="tabs">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status + Font Controls Row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
+          <div style={{ fontSize: '10px', color: '#6b7280' }}>
+            {newsTimestamp ? (
+              <><span style={{ color: '#22c55e' }}>&#9679;</span> {newsTimestamp}</>
+            ) : (
+              'Loading live news...'
+            )}
+          </div>
+          <div id="fontControls" style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+            <button
+              onClick={() => adjustFontSize(-1)}
+              style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              title="Decrease text size"
+            >A-</button>
+            <button
+              onClick={resetFontSize}
+              style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#6b7280', fontSize: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              title="Reset text size"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><polyline points="3 22 3 16 9 16"/></svg>
+            </button>
+            <button
+              onClick={() => adjustFontSize(1)}
+              style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              title="Increase text size"
+            >A+</button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="sidebar-content" ref={contentRef}>
+          {renderTabContent()}
+        </div>
       </div>
 
-      {/* Status + Font Controls Row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
-        <div style={{ fontSize: '10px', color: '#6b7280' }}>
-          {newsTimestamp ? (
-            <><span style={{ color: '#22c55e' }}>&#9679;</span> {newsTimestamp}</>
-          ) : (
-            'Loading live news...'
-          )}
-        </div>
-        <div id="fontControls" style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-          <button
-            onClick={() => adjustFontSize(-1)}
-            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-            title="Decrease text size"
-          >A-</button>
-          <button
-            onClick={resetFontSize}
-            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#6b7280', fontSize: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-            title="Reset text size"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><polyline points="3 22 3 16 9 16"/></svg>
-          </button>
-          <button
-            onClick={() => adjustFontSize(1)}
-            style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid #374151', background: '#111827', color: '#9ca3af', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-            title="Increase text size"
-          >A+</button>
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      <div className="sidebar-content" ref={contentRef}>
-        {renderTabContent()}
-      </div>
-    </div>
+      {/* Event Detail Modal */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
+    </>
   );
 }
