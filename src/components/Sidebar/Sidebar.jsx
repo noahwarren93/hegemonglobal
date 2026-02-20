@@ -97,12 +97,38 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const getCardPreview = (event) => {
     if (event.summaryLoading) return null;
-    if (event.summary) {
-      // First sentence, truncated
-      const firstSentence = event.summary.split(/(?<=[.!?])\s/)[0] || event.summary;
-      return firstSentence.length > 140 ? firstSentence.substring(0, 137) + '...' : firstSentence;
+    if (!event.summary) return null;
+
+    const text = event.summary;
+    // Split into sentences — but avoid breaking on abbreviations like "U.S." or "Dr."
+    // Match sentence-ending punctuation followed by a space and uppercase letter
+    const sentences = [];
+    let buf = '';
+    for (let i = 0; i < text.length; i++) {
+      buf += text[i];
+      if ((text[i] === '.' || text[i] === '!' || text[i] === '?') && i + 2 < text.length && text[i + 1] === ' ') {
+        // Check if next char is uppercase (real sentence break) and current "word" is >2 chars
+        const wordBefore = buf.trimEnd().split(/\s/).pop() || '';
+        if (text[i + 2] >= 'A' && text[i + 2] <= 'Z' && wordBefore.length > 3) {
+          sentences.push(buf.trim());
+          buf = '';
+        }
+      }
     }
-    return null;
+    if (buf.trim()) sentences.push(buf.trim());
+
+    if (sentences.length === 0) return text.length > 160 ? text.substring(0, 157) + '...' : text;
+
+    let preview = sentences[0];
+    // If first sentence is very short, include the second
+    if (preview.length < 50 && sentences.length > 1) {
+      preview += ' ' + sentences[1];
+    }
+    // Truncate if still too long
+    if (preview.length > 160) {
+      preview = preview.substring(0, 157).replace(/\s+\S*$/, '') + '...';
+    }
+    return preview;
   };
 
   const renderEventCard = (event, isTopStory) => {
@@ -166,8 +192,16 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
     }
 
-    const topEvents = DAILY_EVENTS.filter(e => e.importance === 'high').slice(0, 5);
-    const restEvents = DAILY_EVENTS.slice(0, visibleCount);
+    // DAILY_EVENTS is already sorted by score from eventsService (CONFLICT/SECURITY first, more sources, recency)
+    // Top Stories: first 5, but deprioritize single-source non-CONFLICT/SECURITY events
+    const topCandidates = DAILY_EVENTS.filter(e =>
+      e.sourceCount > 1 || e.importance === 'high' || ['CONFLICT', 'SECURITY', 'CRISIS'].includes(e.category)
+    );
+    const topEvents = topCandidates.slice(0, 5);
+    const topIds = new Set(topEvents.map(e => e.id));
+    // Latest Updates: everything NOT in Top Stories, paginated
+    const remaining = DAILY_EVENTS.filter(e => !topIds.has(e.id));
+    const restEvents = remaining.slice(0, visibleCount);
 
     return (
       <>
@@ -194,12 +228,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         {restEvents.map(event => renderEventCard(event, false))}
 
-        {visibleCount < DAILY_EVENTS.length && (
+        {visibleCount < remaining.length && (
           <button onClick={loadMore} style={{
             width: '100%', padding: '12px', marginTop: '10px', background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', border: '1px solid #374151',
             borderRadius: '8px', color: '#9ca3af', cursor: 'pointer', fontSize: '11px', fontWeight: 600
           }}>
-            LOAD MORE ({DAILY_EVENTS.length - visibleCount} remaining)
+            LOAD MORE ({remaining.length - visibleCount} remaining)
           </button>
         )}
       </>
