@@ -70,32 +70,41 @@ Sources (${articles.length}):
 ${articleList}`;
         }).join('\n\n');
 
-        const prompt = `You are an intelligence analyst writing briefings for a geopolitical monitoring platform called Hegemon.
+        const prompt = `You are a headline writer and intelligence analyst for a geopolitical monitoring platform called Hegemon.
 
 For each event below, provide TWO things:
 
-1. HEADLINE: A broad, attention-grabbing headline (max 12 words) that captures the OVERALL EVENT, not any single article's angle. Think newspaper front page — sweeping and dramatic. Good examples: "Trump's Board of Peace Convenes, Raises Billions for Gaza", "Global Markets Rattled by Trade War Fears", "Sudan Crisis Deepens as Humanitarian Catastrophe Unfolds". Use specific details that make the headline informative but keep it about the big picture.
+1. HEADLINE: A short, punchy newspaper-style headline. STRICT RULES:
+   - MAXIMUM 10-12 words. Count them. If over 12, cut words.
+   - Write like a newspaper front page: dramatic, engaging, active verbs.
+   - Never start with titles ("President Trump" → "Trump", "Prime Minister" → just the name).
+   - Include specific details (dollar amounts, country names, key actions).
+   - Good: "Board of Peace Convenes, Raises $7 Billion for Gaza"
+   - Good: "Will the US Go to War With Iran?"
+   - Good: "UN Finds Hallmarks of Genocide in Sudan's El-Fasher"
+   - Good: "Russia-Ukraine War Rages On, Day 1,457"
+   - Bad: "Trump convened the inaugural Board of Peace meeting with nine member nations..." (too long, starts with full name)
+   - Bad: "President Trump warns Iran about nuclear deal deadline as military forces deploy" (too long, has title)
 
-2. SUMMARY: A structured analysis with exactly three sections, each 1-2 sentences. Use this exact format with bold section headers:
+2. SUMMARY: A structured analysis with exactly three sections, each 1-2 sentences:
 
-**What happened:** [Describe the key facts — what occurred, who was involved, and what actions were taken.]
+**What happened:** [Key facts — what occurred, who was involved, what actions were taken.]
 
-**Why it matters:** [Explain the geopolitical significance — strategic implications, impact on alliances, regional stability, or global order.]
+**Why it matters:** [Geopolitical significance — strategic implications, regional stability, global order.]
 
-**Outlook:** [Assess likely next steps — what to watch for, potential escalation or resolution paths.]
+**Outlook:** [Next steps — what to watch for, escalation or resolution paths.]
 
 CRITICAL RULES:
-- NEVER say "limited reporting", "insufficient information", "limited details", "prevents detailed assessment", or anything similar.
-- Even for single-source events, write a real substantive analysis based on the headline and description. Explain what happened, who is involved, and why it matters.
-- Use the "Context:" lines to extract specific facts, numbers, and details for your summary.
-- If sources disagree or report different angles, note the discrepancy.
-- Every summary MUST be substantive, specific, and informative — no cop-outs or vague generalities.
-- Keep each section to 1-2 sentences. The entire summary should be 3-6 sentences total.
+- NEVER say "limited reporting", "insufficient information", or similar cop-outs.
+- Write substantive analysis even for single-source events.
+- Use "Context:" lines to extract specific facts, numbers, and details.
+- Every summary MUST be substantive and informative.
+- Keep each section to 1-2 sentences. Total: 3-6 sentences.
 
 ${eventDescriptions}
 
 Respond with a JSON array, one per event, in the same order. Format:
-[{"headline": "Broad Grabby Headline Here", "summary": "**What happened:** ... **Why it matters:** ... **Outlook:** ..."}, ...]
+[{"headline": "Short Punchy Headline Here", "summary": "**What happened:** ... **Why it matters:** ... **Outlook:** ..."}, ...]
 
 Return ONLY the JSON array, no other text.`;
 

@@ -1289,7 +1289,7 @@ function notifyEventsUpdated() {
 // Summary Caching (localStorage, keyed by article headline hash)
 // ============================================================
 
-const SUMMARY_CACHE_KEY = 'hegemon_summary_cache_v2';
+const SUMMARY_CACHE_KEY = 'hegemon_summary_cache_v3';
 
 function eventSummaryKey(event) {
   if (!event.articles || event.articles.length === 0) return null;

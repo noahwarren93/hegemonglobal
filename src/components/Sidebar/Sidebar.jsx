@@ -100,27 +100,26 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (!event.summary) return null;
 
     const text = event.summary;
-    // Extract just the "What happened" section for the card preview
+    // Extract just the "What happened" section for a brief teaser
     const whatMatch = text.match(/\*\*What happened:\*\*\s*(.*?)(?:\s*\*\*Why it matters:|$)/s);
+    let preview;
     if (whatMatch) {
-      let preview = whatMatch[1].trim();
-      if (preview.length > 160) {
-        preview = preview.substring(0, 157).replace(/\s+\S*$/, '') + '...';
-      }
-      return preview;
+      preview = whatMatch[1].trim();
+    } else {
+      // Fallback: first sentence
+      const sentenceMatch = text.match(/^[^.!?]*[.!?]/);
+      preview = sentenceMatch ? sentenceMatch[0].trim() : text;
     }
 
-    // Fallback: first sentence
-    const sentenceMatch = text.match(/^[^.!?]*[.!?]/);
-    let preview = sentenceMatch ? sentenceMatch[0].trim() : text;
-    if (preview.length > 160) {
-      preview = preview.substring(0, 157).replace(/\s+\S*$/, '') + '...';
+    // Keep preview short — this is a teaser, not the full summary
+    if (preview.length > 120) {
+      preview = preview.substring(0, 117).replace(/\s+\S*$/, '') + '...';
     }
     return preview;
   };
 
   const renderEventCard = (event, isTopStory) => {
-    // Clean up headline for display
+    // Clean up headline for display — keep it SHORT
     let displayHeadline = event.headline;
     const dashIdx = displayHeadline.lastIndexOf(' - ');
     if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
@@ -156,10 +155,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span className="card-time">{event.time}</span>
         </div>
 
-        {/* Preview text: first sentence of summary OR headline */}
+        {/* HEADLINE — always the short punchy headline, never the summary */}
         <div className="card-headline" style={isTopStory ? { fontWeight: 600 } : undefined}>
-          {preview || displayHeadline}
+          {displayHeadline}
         </div>
+
+        {/* Brief preview from summary below headline */}
+        {preview && (
+          <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
+            {preview}
+          </div>
+        )}
 
         {/* Loading indicator */}
         {event.summaryLoading && (
@@ -175,21 +181,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // Top Stories: tiered geopolitical priority, 3-hour persistence
   const getStableTopStories = useCallback((events) => {
     // EXACTLY 4 top stories. Always: Iran, Gaza/Palestine, Ukraine, Sudan.
+    // Use _primaryCountry first, then fall back to keyword search.
     const REQUIRED = [
-      { keywords: ['iran', 'iranian', 'tehran', 'hormuz'], label: 'Iran' },
-      { keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'], label: 'Gaza' },
-      { keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky'], label: 'Ukraine' },
-      { keywords: ['sudan', 'sudanese', 'darfur', 'khartoum'], label: 'Sudan' },
+      { countries: ['iran'], keywords: ['iran', 'iranian', 'tehran', 'hormuz'], label: 'Iran' },
+      { countries: ['palestine'], keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'], label: 'Gaza' },
+      { countries: ['ukraine'], keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky'], label: 'Ukraine' },
+      { countries: ['sudan'], keywords: ['sudan', 'sudanese', 'darfur', 'khartoum'], label: 'Sudan' },
     ];
 
     const getEventText = (evt) => {
       return ((evt.headline || '') + ' ' +
         (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
-    };
-
-    const mentionsAny = (evt, keywords) => {
-      const text = getEventText(evt);
-      return keywords.some(kw => text.includes(kw));
     };
 
     // Sort all events by source count descending (most-sourced = most important)
@@ -200,7 +202,16 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     // Pick the best event for each required conflict
     for (const req of REQUIRED) {
-      const match = sorted.find(e => !usedIds.has(e.id) && mentionsAny(e, req.keywords));
+      // First: try to find an event whose PRIMARY country matches (most accurate)
+      let match = sorted.find(e => !usedIds.has(e.id) &&
+        req.countries.includes(e._primaryCountry));
+
+      // Fallback: keyword search in all text
+      if (!match) {
+        match = sorted.find(e => !usedIds.has(e.id) &&
+          req.keywords.some(kw => getEventText(e).includes(kw)));
+      }
+
       if (match) {
         top.push(match);
         usedIds.add(match.id);
