@@ -1,17 +1,13 @@
-// stocksService.js - Yahoo Finance API, CoinGecko Bitcoin, CORS proxies, caching
+// stocksService.js - Yahoo Finance via Cloudflare Worker, CoinGecko Bitcoin, caching
 
-import { MARKET_CONFIG, STATIC_FALLBACK_DATA } from '../data/stocksData';
+import { MARKET_CONFIG, STATIC_FALLBACK_DATA, MARKET_HOURS } from '../data/stocksData';
 
-// ============================================================
-// CORS Proxy Fallback Chain
-// ============================================================
+const WORKER_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 
+// CORS proxies as last-resort fallback
 const CORS_PROXIES = [
   (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   (url) => 'https://corsproxy.io/?' + encodeURIComponent(url),
-  (url) => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
-  (url) => 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(url),
-  (url) => 'https://cors.bridged.cc/' + encodeURIComponent(url)
 ];
 
 // ============================================================
@@ -49,6 +45,39 @@ function getAllSymbols() {
 }
 
 // ============================================================
+// Market Status (open/closed based on trading hours)
+// ============================================================
+
+export function getMarketStatus(country) {
+  const hours = MARKET_HOURS[country];
+  if (!hours) return { isOpen: false, label: 'Closed' };
+
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: hours.tz,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(now);
+  const weekday = parts.find(p => p.type === 'weekday')?.value;
+  const h = parseInt(parts.find(p => p.type === 'hour')?.value, 10);
+  const m = parseInt(parts.find(p => p.type === 'minute')?.value, 10);
+
+  if (weekday === 'Sat' || weekday === 'Sun') return { isOpen: false, label: 'Weekend' };
+
+  const current = h * 60 + m;
+  const [oH, oM] = hours.open.split(':').map(Number);
+  const [cH, cM] = hours.close.split(':').map(Number);
+
+  if (current >= oH * 60 + oM && current < cH * 60 + cM) {
+    return { isOpen: true, label: 'Open' };
+  }
+  return { isOpen: false, label: 'Closed' };
+}
+
+// ============================================================
 // CoinGecko Bitcoin Fetch (direct, no proxy)
 // ============================================================
 
@@ -64,7 +93,7 @@ function fetchBitcoinFromCoinGecko() {
         symbol: 'BTC-USD',
         price: data.bitcoin.usd,
         changePct: data.bitcoin.usd_24h_change || 0,
-        sparkline: STATIC_FALLBACK_DATA['BTC-USD'].sparkline
+        sparkline: STATIC_FALLBACK_DATA['BTC-USD']?.sparkline || [data.bitcoin.usd, data.bitcoin.usd]
       };
     })
     .catch(err => {
@@ -74,170 +103,124 @@ function fetchBitcoinFromCoinGecko() {
 }
 
 // ============================================================
-// Yahoo Finance V7 Batch Endpoint
+// Fetch via Cloudflare Worker (primary — avoids CORS)
 // ============================================================
 
-function fetchYahooFinanceBatch(proxyIdx = 0) {
-  if (proxyIdx >= CORS_PROXIES.length) return Promise.reject(new Error('All proxies failed'));
-
+async function fetchViaWorker() {
   const allSyms = getAllSymbols();
-  const symbolsStr = allSyms.join(',');
-  const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbolsStr);
-  const proxyUrl = CORS_PROXIES[proxyIdx](url);
+  const resp = await fetchWithTimeout(
+    `${WORKER_BASE}/stock?symbols=${encodeURIComponent(allSyms.join(','))}`,
+    15000
+  );
+  if (!resp.ok) throw new Error('Worker HTTP ' + resp.status);
+  const data = await resp.json();
+  if (!data.quotes) throw new Error('No quotes in response');
 
-  return fetchWithTimeout(proxyUrl, 12000)
-    .then(resp => {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
-    })
-    .then(data => {
-      if (!data || !data.quoteResponse || !data.quoteResponse.result) {
-        throw new Error('Invalid response structure');
-      }
-      const quotes = {};
-      data.quoteResponse.result.forEach(item => {
-        if (item.symbol && item.regularMarketPrice !== undefined && item.regularMarketChangePercent !== undefined) {
-          quotes[item.symbol] = {
-            symbol: item.symbol,
-            price: item.regularMarketPrice,
-            changePct: item.regularMarketChangePercent,
-            sparkline: STATIC_FALLBACK_DATA[item.symbol] ? STATIC_FALLBACK_DATA[item.symbol].sparkline : [item.regularMarketPrice, item.regularMarketPrice]
+  const quotes = {};
+  Object.entries(data.quotes).forEach(([sym, q]) => {
+    quotes[sym] = {
+      symbol: q.symbol || sym,
+      price: q.price,
+      changePct: q.changePct,
+      sparkline: q.sparkline || [q.prevClose || q.price, q.price]
+    };
+  });
+  return quotes;
+}
+
+// ============================================================
+// CORS Proxy Fallback (individual v8 chart requests)
+// ============================================================
+
+function fetchViaCorsProxies() {
+  const allSyms = getAllSymbols();
+  return Promise.all(allSyms.map(sym => {
+    const chartUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=5d&interval=1d&includePrePost=false';
+
+    function tryProxy(idx) {
+      if (idx >= CORS_PROXIES.length) return Promise.resolve(null);
+      const proxyUrl = CORS_PROXIES[idx](chartUrl);
+      return fetchWithTimeout(proxyUrl, 12000)
+        .then(resp => { if (!resp.ok) throw new Error('HTTP ' + resp.status); return resp.json(); })
+        .then(data => {
+          const r = data?.chart?.result?.[0];
+          if (!r) return null;
+          const meta = r.meta;
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.chartPreviousClose || meta.previousClose;
+          if (!price) return null;
+          let closes = [];
+          if (r.indicators?.quote?.[0]?.close) {
+            closes = r.indicators.quote[0].close.filter(v => v != null);
+          }
+          return {
+            symbol: meta.symbol || sym,
+            price,
+            changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+            sparkline: closes.length > 1 ? closes : [prevClose || price, price]
           };
-        }
-      });
-      if (Object.keys(quotes).length === 0) throw new Error('No valid quotes in response');
-      return quotes;
-    })
-    .catch(err => {
-      if (proxyIdx < CORS_PROXIES.length - 1) {
-        return fetchYahooFinanceBatch(proxyIdx + 1);
-      }
-      return Promise.reject(err);
-    });
+        })
+        .catch(() => tryProxy(idx + 1));
+    }
+
+    return tryProxy(0);
+  })).then(results => {
+    const quotes = {};
+    results.forEach(r => { if (r) quotes[r.symbol] = r; });
+    if (Object.keys(quotes).length === 0) throw new Error('No quotes from CORS proxies');
+    return quotes;
+  });
 }
 
 // ============================================================
-// Yahoo Finance V8 Individual Fallback
-// ============================================================
-
-function fetchYahooFinanceIndividual(sym, proxyIdx = 0) {
-  if (proxyIdx >= CORS_PROXIES.length) return Promise.reject(new Error('All proxies failed'));
-
-  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=1d&interval=15m&includePrePost=false';
-  const proxyUrl = CORS_PROXIES[proxyIdx](url);
-
-  return fetchWithTimeout(proxyUrl, 12000)
-    .then(resp => {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
-    })
-    .then(data => {
-      if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) {
-        throw new Error('Invalid chart response');
-      }
-      const result = data.chart.result[0];
-      const meta = result.meta;
-      const price = meta.regularMarketPrice;
-      const prevClose = meta.chartPreviousClose || meta.previousClose;
-
-      if (!price || !prevClose) throw new Error('No price data');
-
-      const changePct = ((price - prevClose) / prevClose) * 100;
-      let closes = [];
-      if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
-        const rawCloses = result.indicators.quote[0].close || [];
-        closes = rawCloses.filter(v => v !== null && v !== undefined);
-      }
-
-      return {
-        symbol: meta.symbol || sym,
-        price,
-        changePct,
-        sparkline: closes.length > 1 ? closes : [prevClose, price]
-      };
-    })
-    .catch(err => {
-      if (proxyIdx < CORS_PROXIES.length - 1) {
-        return fetchYahooFinanceIndividual(sym, proxyIdx + 1);
-      }
-      return Promise.reject(err);
-    });
-}
-
-// ============================================================
-// Individual Ticker Search (for stock search feature)
+// Search Ticker via Worker
 // ============================================================
 
 export async function searchTicker(ticker) {
   const sym = ticker.toUpperCase();
+  try {
+    const resp = await fetchWithTimeout(
+      `${WORKER_BASE}/stock?symbols=${encodeURIComponent(sym)}`,
+      10000
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const q = data.quotes?.[sym];
+    if (!q || !q.price) return null;
 
-  for (let proxyIdx = 0; proxyIdx < CORS_PROXIES.length; proxyIdx++) {
-    try {
-      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=1d&interval=15m&includePrePost=false';
-      const proxyUrl = CORS_PROXIES[proxyIdx](url);
-      const resp = await fetchWithTimeout(proxyUrl, 10000);
-      if (!resp.ok) continue;
-      const data = await resp.json();
-      if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) continue;
-
-      const result = data.chart.result[0];
-      const meta = result.meta;
-      const price = meta.regularMarketPrice;
-      const prevClose = meta.chartPreviousClose || meta.previousClose;
-      if (!price || !prevClose) continue;
-
-      const changePct = ((price - prevClose) / prevClose) * 100;
-      const positive = changePct >= 0;
-
-      let closes = [];
-      if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
-        closes = (result.indicators.quote[0].close || []).filter(v => v !== null && v !== undefined);
+    const positive = q.changePct >= 0;
+    let sparkline = [q.prevClose || q.price, q.price];
+    if (q.sparkline && q.sparkline.length > 1) {
+      const raw = q.sparkline;
+      sparkline = [];
+      for (let i = 0; i < 12; i++) {
+        const idx = Math.floor(i * (raw.length - 1) / 11);
+        sparkline.push(raw[idx]);
       }
-
-      // Downsample sparkline to ~12 points
-      let sparkline = [prevClose, price];
-      if (closes.length > 2) {
-        sparkline = [];
-        for (let i = 0; i < 12; i++) {
-          const idx = Math.floor(i * (closes.length - 1) / 11);
-          sparkline.push(closes[idx]);
-        }
-      }
-
-      return {
-        symbol: meta.symbol || sym,
-        name: meta.shortName || meta.longName || '',
-        price: formatStockPrice(price),
-        change: (positive ? '+' : '') + changePct.toFixed(2) + '%',
-        positive,
-        sparkline
-      };
-    } catch {
-      continue;
     }
+
+    return {
+      symbol: q.symbol || sym,
+      name: q.shortName || q.longName || '',
+      price: formatStockPrice(q.price),
+      change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
+      positive,
+      sparkline
+    };
+  } catch {
+    return null;
   }
-  return null;
 }
 
 // ============================================================
-// Main Fetch: batch first, then individual fallback
+// Main Fetch: Worker first, CORS proxy fallback
 // ============================================================
 
 export function fetchStockQuotes() {
-  return fetchYahooFinanceBatch()
-    .then(quotes => quotes)
-    .catch(batchErr => {
-      console.warn('Batch fetch failed, falling back to individual requests:', batchErr.message);
-      const allSyms = getAllSymbols();
-      const promises = allSyms.map(sym => fetchYahooFinanceIndividual(sym).catch(() => null));
-      return Promise.all(promises).then(results => {
-        const quotes = {};
-        results.forEach(r => { if (r) quotes[r.symbol] = r; });
-        if (Object.keys(quotes).length === 0) {
-          throw new Error('Both batch and individual fetches failed');
-        }
-        return quotes;
-      });
+  return fetchViaWorker()
+    .catch(err => {
+      console.warn('Worker fetch failed:', err.message, '- trying CORS proxies');
+      return fetchViaCorsProxies();
     });
 }
 
@@ -262,7 +245,7 @@ function cacheGet(key) {
       localStorage.removeItem(key);
       return null;
     }
-    return c.data;
+    return c;
   } catch {
     return null;
   }
@@ -290,11 +273,10 @@ function buildStocksData(quotes, isStaticFallback) {
             change: (positive ? '+' : '') + staticData.changePct.toFixed(2) + '%',
             changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(staticData.price * staticData.changePct / 100)),
             positive,
-            noData: false,
-            isStatic: true
+            noData: false
           };
         }
-        return { name: s.name, value: '\u2014', change: '\u2014', changeAbs: '\u2014', positive: true, noData: true, isStatic: false };
+        return { name: s.name, value: '\u2014', change: '\u2014', changeAbs: '\u2014', positive: true, noData: true };
       }
       hasAnyData = true;
       const pre = s.pre || '';
@@ -305,8 +287,7 @@ function buildStocksData(quotes, isStaticFallback) {
         change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
         changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.price * q.changePct / 100)),
         positive,
-        noData: false,
-        isStatic: false
+        noData: false
       };
     });
 
@@ -353,22 +334,21 @@ function buildStocksData(quotes, isStaticFallback) {
 }
 
 // ============================================================
-// Main Load Function (returns stocksData via callback)
+// Main Load Function
 // ============================================================
 
 let fetchInProgress = false;
 
 export async function loadStockData(onUpdate) {
-  if (fetchInProgress) return;
-  fetchInProgress = true;
-
-  // Check localStorage cache first
+  // Show cached data immediately
   const cached = cacheGet('hegemon_stocks_cache');
   if (cached) {
-    fetchInProgress = false;
-    if (onUpdate) onUpdate({ data: cached, lastUpdated: new Date(), error: false });
-    return;
+    onUpdate({ data: cached.data, lastUpdated: new Date(cached.ts), error: false, isUpdating: true });
   }
+
+  // Prevent concurrent fetches
+  if (fetchInProgress) return;
+  fetchInProgress = true;
 
   try {
     const [quotes, btcData] = await Promise.all([
@@ -384,16 +364,15 @@ export async function loadStockData(onUpdate) {
       const stocksData = buildStocksData(quotes, false);
       cacheSet('hegemon_stocks_cache', stocksData, 900000); // 15 min
       fetchInProgress = false;
-      if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: false });
+      if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: false, isUpdating: false });
     } else {
-      // All APIs failed - use static fallback
       console.warn('All API requests failed, using static fallback');
       const staticQuotes = {};
       Object.keys(STATIC_FALLBACK_DATA).forEach(sym => { staticQuotes[sym] = STATIC_FALLBACK_DATA[sym]; });
       const stocksData = buildStocksData(staticQuotes, true);
       cacheSet('hegemon_stocks_cache', stocksData, 3600000); // 1 hour
       fetchInProgress = false;
-      if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: true });
+      if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: true, isUpdating: false });
     }
   } catch (err) {
     console.error('Stock data fetch failed:', err);
@@ -402,6 +381,6 @@ export async function loadStockData(onUpdate) {
     const stocksData = buildStocksData(staticQuotes, true);
     cacheSet('hegemon_stocks_cache', stocksData, 3600000);
     fetchInProgress = false;
-    if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: true });
+    if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: true, isUpdating: false });
   }
 }

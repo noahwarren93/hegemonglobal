@@ -188,6 +188,72 @@ Return ONLY the JSON array, no other text.`;
     }
 
     // ============================================================
+    // GET /stock?symbols=SYM1,SYM2 — Yahoo Finance proxy (avoids CORS)
+    // ============================================================
+    if (url.pathname === '/stock' && request.method === 'GET') {
+      const symbols = url.searchParams.get('symbols');
+      if (!symbols) {
+        return new Response(
+          JSON.stringify({ error: 'Missing symbols parameter' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        // Fetch each symbol individually via v8 chart API
+        const symList = symbols.split(',').map(s => s.trim()).filter(Boolean);
+        const results = {};
+
+        await Promise.all(symList.map(async (sym) => {
+          try {
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=5d&interval=1d&includePrePost=false`;
+            const resp = await fetch(yahooUrl, {
+              headers: { 'User-Agent': 'Mozilla/5.0' },
+              cf: { cacheTtl: 60 }
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data?.chart?.result?.[0]) return;
+
+            const r = data.chart.result[0];
+            const meta = r.meta;
+            const price = meta.regularMarketPrice;
+            const prevClose = meta.chartPreviousClose || meta.previousClose;
+            if (!price) return;
+
+            let closes = [];
+            if (r.indicators?.quote?.[0]?.close) {
+              closes = r.indicators.quote[0].close.filter(v => v !== null && v !== undefined);
+            }
+
+            results[sym] = {
+              symbol: meta.symbol || sym,
+              price,
+              prevClose: prevClose || price,
+              changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+              shortName: meta.shortName || '',
+              longName: meta.longName || '',
+              sparkline: closes.length > 0 ? closes : [prevClose || price, price]
+            };
+          } catch (e) {
+            console.warn(`Failed to fetch ${sym}:`, e.message);
+          }
+        }));
+
+        return new Response(
+          JSON.stringify({ quotes: results }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        console.error('Stock proxy error:', err);
+        return new Response(
+          JSON.stringify({ error: 'Stock fetch error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
     // 404 for unknown routes
     // ============================================================
     return new Response(

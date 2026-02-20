@@ -1,4 +1,23 @@
-// stocksData.js - Market configuration and static data
+// stocksData.js - Market configuration, trading hours, and static data
+
+export const MARKET_HOURS = {
+  'United States': { tz: 'America/New_York', open: '09:30', close: '16:00' },
+  'China': { tz: 'Asia/Shanghai', open: '09:30', close: '15:00' },
+  'Japan': { tz: 'Asia/Tokyo', open: '09:00', close: '15:00' },
+  'United Kingdom': { tz: 'Europe/London', open: '08:00', close: '16:30' },
+  'European Union': { tz: 'Europe/Berlin', open: '09:00', close: '17:30' },
+  'India': { tz: 'Asia/Kolkata', open: '09:15', close: '15:30' },
+  'Canada': { tz: 'America/Toronto', open: '09:30', close: '16:00' },
+  'South Korea': { tz: 'Asia/Seoul', open: '09:00', close: '15:30' },
+  'Australia': { tz: 'Australia/Sydney', open: '10:00', close: '16:00' },
+  'Brazil': { tz: 'America/Sao_Paulo', open: '10:00', close: '17:00' },
+  'Taiwan': { tz: 'Asia/Taipei', open: '09:00', close: '13:30' },
+  'Russia': { tz: 'Europe/Moscow', open: '10:00', close: '18:50' },
+  'Saudi Arabia': { tz: 'Asia/Riyadh', open: '10:00', close: '15:00' },
+  'Turkey': { tz: 'Europe/Istanbul', open: '10:00', close: '18:00' },
+  'South Africa': { tz: 'Africa/Johannesburg', open: '09:00', close: '17:00' },
+  'Nigeria': { tz: 'Africa/Lagos', open: '09:30', close: '14:30' }
+};
 
 export const MARKET_CONFIG = [
   { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', symbols: [
@@ -20,7 +39,7 @@ export const MARKET_CONFIG = [
   ]},
   { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', symbols: [
     { name: 'FTSE 100', sym: '^FTSE' },
-    { name: 'FTSE 250', sym: '^MCX' }
+    { name: 'FTSE 250', sym: '^FTMC' }
   ]},
   { country: 'European Union', flag: '\u{1F1EA}\u{1F1FA}', symbols: [
     { name: 'Euro Stoxx 50', sym: '^STOXX50E' },
@@ -82,7 +101,7 @@ export const STATIC_FALLBACK_DATA = {
   '^TOPX': { price: 4050, changePct: 0.12, sparkline: [4045, 4046, 4047, 4048, 4048, 4049, 4049, 4050, 4050, 4050, 4050, 4050] },
   // --- United Kingdom (Feb 12) ---
   '^FTSE': { price: 10402, changePct: -0.67, sparkline: [10472, 10460, 10450, 10440, 10430, 10425, 10420, 10415, 10410, 10408, 10405, 10402] },
-  '^MCX': { price: 25480, changePct: -0.82, sparkline: [25690, 25650, 25620, 25590, 25570, 25550, 25530, 25510, 25500, 25490, 25485, 25480] },
+  '^FTMC': { price: 25480, changePct: -0.82, sparkline: [25690, 25650, 25620, 25590, 25570, 25550, 25530, 25510, 25500, 25490, 25485, 25480] },
   // --- European Union (Feb 12; Euro Stoxx 50 hit records) ---
   '^STOXX50E': { price: 6105, changePct: 1.12, sparkline: [6040, 6050, 6060, 6065, 6070, 6075, 6080, 6085, 6090, 6095, 6100, 6105] },
   '^GDAXI': { price: 24853, changePct: -0.01, sparkline: [24856, 24855, 24854, 24855, 24856, 24855, 24854, 24853, 24854, 24853, 24853, 24853] },

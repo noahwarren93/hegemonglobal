@@ -275,6 +275,7 @@ export default function HomePage() {
   const [stocksModalCountry, setStocksModalCountry] = useState(null);
   const [stocksData, setStocksData] = useState(null);
   const [stocksLastUpdated, setStocksLastUpdated] = useState(null);
+  const [stocksUpdating, setStocksUpdating] = useState(false);
 
   // --- Stat popup ---
   const [statPopupType, setStatPopupType] = useState(null);
@@ -323,17 +324,16 @@ export default function HomePage() {
     }, NEWS_REFRESH_INTERVAL);
 
     // Load stock data for stocks modal
-    loadStockData(({ data, lastUpdated }) => {
+    const stockCallback = ({ data, lastUpdated, isUpdating }) => {
       setStocksData(data);
       setStocksLastUpdated(lastUpdated);
-    });
+      setStocksUpdating(!!isUpdating);
+    };
+    loadStockData(stockCallback);
 
     const stocksInterval = setInterval(() => {
-      loadStockData(({ data, lastUpdated }) => {
-        setStocksData(data);
-        setStocksLastUpdated(lastUpdated);
-      });
-    }, 180000);
+      loadStockData(stockCallback);
+    }, 300000);
 
     return () => {
       clearInterval(newsInterval);
@@ -661,6 +661,7 @@ export default function HomePage() {
           onOpenStocksModal={handleOpenStocksModal}
           stocksData={stocksData}
           stocksLastUpdated={stocksLastUpdated}
+          stocksUpdating={stocksUpdating}
         />
       </div>
 
