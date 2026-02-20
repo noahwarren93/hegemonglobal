@@ -21,9 +21,14 @@
       .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .stat-popup.active { transform: translate(-50%, -50%); }
 
-      /* Globe tool buttons (TOS, Search, Rotate) - bottom right */
-      .globe-tools { right: 8px; bottom: 8px; top: auto; }
+      /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column */
+      .globe-tools { right: 8px; bottom: 42px; top: auto; flex-direction: column; }
       .globe-tool-btn { width: 28px; height: 28px; padding: 6px; }
+      .globe-tool-btn-labeled { width: 28px; height: 28px; padding: 6px; font-size: 0; gap: 0; }
+
+      /* Reset button - bottom right, below globe-tools */
+      .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 7px; font-size: 8px; }
+      .globe-reset-btn svg { width: 9px; height: 9px; }
 
       /* Feature buttons (Trade Routes, Compare Mode) - left side above stats */
       #featureBtnsDesktop { left: 8px !important; right: auto !important; bottom: 70px; top: auto !important; flex-direction: row; gap: 4px; }
@@ -33,7 +38,7 @@
       .compare-hint { font-size: 8px; padding: 5px 10px; }
 
       /* Search overlay on mobile */
-      .search-overlay { right: 10px; top: auto; bottom: 80px; width: 250px; max-height: 300px; }
+      .search-overlay { right: 10px; top: auto; bottom: 140px; width: 250px; max-height: 300px; }
 
       /* Trade info panel on mobile */
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
@@ -68,8 +73,13 @@
       .stat-value { font-size: 12px; }
       .stat-label { font-size: 5px; }
 
-      .globe-tools { right: 8px; bottom: 8px; gap: 4px; }
+      .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
       .globe-tool-btn { width: 26px; height: 26px; }
+      .globe-tool-btn-labeled { width: 26px; height: 26px; }
+
+      /* Reset button even smaller on small screens */
+      .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 6px; font-size: 7px; }
+      .globe-reset-btn svg { width: 8px; height: 8px; }
 
       /* Feature buttons - row layout above stats on left */
       #featureBtnsDesktop { left: 8px !important; bottom: 60px; gap: 3px; }
@@ -81,5 +91,5 @@
 
       .globe-container { height: 52vh; }
       .sidebar { height: 48vh; }
-      .search-overlay { right: 8px; width: 220px; }
+      .search-overlay { right: 8px; width: 220px; bottom: 130px; }
     }

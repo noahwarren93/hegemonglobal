@@ -722,40 +722,17 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         <div className="globe-spinner" />
       </div>
       <Tooltip data={tooltipData} mousePos={mousePos} />
-      {/* Reset View Button */}
+      {/* Reset Button */}
       <button
+        className="globe-reset-btn"
         onClick={resetView}
         title="Reset View"
-        style={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-          zIndex: 10,
-          background: 'rgba(10,10,15,0.95)',
-          WebkitBackdropFilter: 'blur(12px)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid #1f2937',
-          borderRadius: '8px',
-          padding: '6px 12px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '5px',
-          color: '#9ca3af',
-          fontSize: '10px',
-          fontWeight: 500,
-          fontFamily: 'inherit',
-          transition: 'all 0.2s',
-          letterSpacing: '0.3px',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#374151'; e.currentTarget.style.color = '#e5e7eb'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1f2937'; e.currentTarget.style.color = '#9ca3af'; }}
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 12a9 9 0 1 1 3 6.9"/>
           <polyline points="3 22 3 12 13 12"/>
         </svg>
-        Reset View
+        Reset
       </button>
       <div
         ref={tradeTooltipRef}

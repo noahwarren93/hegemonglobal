@@ -609,13 +609,14 @@ export default function HomePage() {
               </svg>
             </button>
             <button
-              className={`globe-tool-btn${autoRotate ? ' active' : ''}`}
+              className={`globe-tool-btn globe-tool-btn-labeled${autoRotate ? ' active' : ''}`}
               onClick={handleToggleRotate}
               title="Toggle Auto-Rotate"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.66-5.66l-2.83 2.83m-5.66 5.66l-2.83 2.83m0-11.32l2.83 2.83m5.66 5.66l2.83 2.83"/>
               </svg>
+              Rotate
             </button>
           </div>
 

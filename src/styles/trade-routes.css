@@ -17,6 +17,12 @@
 
     .globe-tool-btn.active { border-color: #06b6d4; color: #06b6d4; }
 
+    .globe-tool-btn-labeled { width: auto; gap: 4px; padding: 8px 10px; font-size: 9px; font-weight: 600; letter-spacing: 0.3px; font-family: inherit; }
+
+    /* Reset button (inside GlobeView) */
+    .globe-reset-btn { position: absolute; bottom: 16px; right: 16px; z-index: 10; background: rgba(10,10,15,0.95); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid #1f2937; border-radius: 6px; padding: 4px 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #9ca3af; font-size: 9px; font-weight: 500; font-family: inherit; transition: all 0.2s; letter-spacing: 0.3px; }
+    .globe-reset-btn:hover { border-color: #374151; color: #e5e7eb; }
+
     /* Search Overlay */
     .search-overlay { position: absolute; top: 80px; right: 340px; z-index: 30; width: 280px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; display: none; max-height: 400px; overflow: hidden; }
 
