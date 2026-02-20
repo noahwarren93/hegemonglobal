@@ -71,12 +71,18 @@ For each event below, provide TWO things:
 
 1. HEADLINE: A broad, attention-grabbing headline (max 12 words). Think newspaper front page — focus on the big picture, not granular details. Examples of good headlines: "Middle East Tensions Escalate as Regional Powers Clash", "Global Markets Rattled by Trade War Fears", "European Security Architecture Faces New Challenges". Avoid specific names or numbers — keep it sweeping and dramatic.
 
-2. SUMMARY: 3-5 sentences synthesizing what happened across all sources. If sources disagree or report different angles, note the discrepancy. Focus on geopolitical significance — why does this matter for global stability? Use a professional, concise intelligence briefing tone. Plain prose paragraphs, no markdown.
+2. SUMMARY: 2-4 sentences synthesizing what happened. Focus on geopolitical significance — why does this matter? Use a professional, concise intelligence briefing tone. Plain prose, no markdown.
+
+CRITICAL RULES:
+- NEVER say "limited reporting", "insufficient information", "limited details", "prevents detailed assessment", or anything similar. Every event has enough information for a substantive summary.
+- Even for single-source events, write a real analysis based on the headline and any description provided. Explain what happened, who is involved, and why it matters geopolitically.
+- If sources disagree or report different angles, note the discrepancy.
+- Every summary MUST be substantive and informative — no cop-outs.
 
 ${eventDescriptions}
 
 Respond with a JSON array, one per event, in the same order. Format:
-[{"headline": "Broad Grabby Headline Here", "summary": "3-5 sentence analysis..."}, ...]
+[{"headline": "Broad Grabby Headline Here", "summary": "2-4 sentence analysis..."}, ...]
 
 Return ONLY the JSON array, no other text.`;
 

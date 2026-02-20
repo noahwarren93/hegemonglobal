@@ -1041,6 +1041,18 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
     const allArticles = feedResults.flat();
 
+    // Log per-source article counts for debugging
+    const sourceCounts = {};
+    for (let i = 0; i < RSS_FEEDS.daily.length; i++) {
+      const name = RSS_FEEDS.daily[i].source;
+      const count = feedResults[i] ? feedResults[i].length : 0;
+      sourceCounts[name] = count;
+    }
+    const working = Object.entries(sourceCounts).filter(([, c]) => c > 0);
+    const failed = Object.entries(sourceCounts).filter(([, c]) => c === 0);
+    console.log(`[Hegemon] RSS feeds: ${working.length} working, ${failed.length} failed, ${allArticles.length} total articles`);
+    if (failed.length > 0) console.log('[Hegemon] Failed feeds:', failed.map(([n]) => n).join(', '));
+
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 

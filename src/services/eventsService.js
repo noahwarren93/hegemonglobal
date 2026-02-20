@@ -3,6 +3,26 @@
 import { COUNTRY_DEMONYMS } from './apiService';
 
 // ============================================================
+// Headline Cleanup (strip source attributions, prefixes, junk)
+// ============================================================
+
+export function cleanHeadline(headline) {
+  if (!headline) return '';
+  let h = headline.trim();
+  // Strip source attributions at end: em-dash/en-dash/pipe + source name (up to ~25 chars)
+  h = h.replace(/\s*[\u2014\u2013\u2015\u00AD—–|]\s*[A-Z][\w\s.&'\u2019,]{0,25}$/, '');
+  // Strip " - Source" (hyphen with spaces): only if what follows is capitalized words (source name, not headline continuation)
+  h = h.replace(/\s+-\s+[A-Z][\w.&'\u2019]{0,15}(?:\s+[A-Z][\w.&'\u2019]+){0,3}\s*$/, '');
+  // Strip ": Source" at end (colon attribution)
+  h = h.replace(/\s*:\s+[A-Z][\w.&'\u2019]{0,15}(?:\s+[A-Z][\w.&'\u2019]+){0,2}\s*$/, '');
+  // Strip BREAKING:/EXCLUSIVE:/DEVELOPING:/etc. prefixes
+  h = h.replace(/^(BREAKING|EXCLUSIVE|DEVELOPING|JUST IN|WATCH|UPDATE|OPINION|ANALYSIS|EDITORIAL|LIVE)\s*[:\-–—|]\s*/i, '');
+  // Strip trailing separators and whitespace
+  h = h.replace(/[\s|—–\-:]+$/, '').trim();
+  return h;
+}
+
+// ============================================================
 // Entity & Action Extraction
 // ============================================================
 
@@ -197,6 +217,10 @@ function shouldCluster(a, b) {
 
   // 1 shared geo + 2+ shared actions → cluster (same place, same kind of event)
   if (sharedGeo >= 1 && sharedActions >= 2) return true;
+
+  // 1 shared specific entity clusters if both articles are focused (few entities)
+  // This helps single-source stories about the same country merge together
+  if (sharedSpecific >= 1 && a._entities.specific.size <= 2 && b._entities.specific.size <= 2) return true;
 
   return false;
 }
@@ -430,15 +454,17 @@ export function clusterArticles(articles) {
     // Most recent time
     const mostRecentTime = primary.time || clusterArts[0].time;
 
-    // Clean up articles (remove internal metadata)
+    // Clean up articles (remove internal metadata, clean headlines)
     const cleanArticles = clusterArts.map(a => {
       const { _idx, _entities, _actions, _geo, ...clean } = a;
+      if (clean.headline) clean.headline = cleanHeadline(clean.headline);
+      if (clean.title) clean.title = cleanHeadline(clean.title);
       return clean;
     });
 
     const event = {
       id: `evt-${primary._idx}`,
-      headline: primary.headline || primary.title || '',
+      headline: cleanHeadline(primary.headline || primary.title || ''),
       category,
       importance,
       sourceCount: clusterArts.length,
