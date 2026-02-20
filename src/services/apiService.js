@@ -12,6 +12,14 @@ import { clusterArticles } from './eventsService';
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 
 // ============================================================
+// Yield to main thread — prevents blocking during heavy processing
+// ============================================================
+
+function yieldToMain() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+// ============================================================
 // HTML Entity Decoder
 // ============================================================
 
@@ -1056,66 +1064,89 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
+      // --- Yield to main thread before heavy filtering ---
+      await yieldToMain();
+
       // Staleness filter — reject articles older than 48 hours
       const now = Date.now();
       const STALENESS_MS = 48 * 60 * 60 * 1000;
       const freshArticles = allArticles.filter(article => {
-        if (!article.pubDate) return true; // keep if no date
+        if (!article.pubDate) return true;
         const age = now - new Date(article.pubDate).getTime();
         return age < STALENESS_MS;
       });
 
+      // --- Yield before relevance filtering (heavy: keyword scans) ---
+      await yieldToMain();
+
       // Filter: irrelevant keywords, sports, domestic noise, non-English, require geo score >= 1
-      const relevantArticles = freshArticles.filter(article => {
+      // Process in batches to avoid blocking
+      const relevantArticles = [];
+      for (let i = 0; i < freshArticles.length; i++) {
+        const article = freshArticles[i];
         const title = article.title || '';
         const text = (title + ' ' + (article.description || '')).toLowerCase();
-        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
         const category = detectCategory(title, article.description);
-        if (category === 'SPORTS') return false;
+        if (category === 'SPORTS') continue;
         const fullText = title + ' ' + (article.description || '');
-        if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
-        // Filter non-English articles: reject titles with high non-ASCII ratio
+        if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
         const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
-        if (title.length > 10 && nonAscii / title.length > 0.15) return false;
-        // Block common non-English patterns
+        if (title.length > 10 && nonAscii / title.length > 0.15) continue;
         if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
             !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
-          // Count how many non-English words appear
           const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
-          if (nonEnCount >= 2) return false;
+          if (nonEnCount >= 2) continue;
         }
-        return scoreGeopoliticalRelevance(fullText) >= 1;
-      });
+        if (scoreGeopoliticalRelevance(fullText) < 1) continue;
+        relevantArticles.push(article);
 
-      // Source-aware dedup: only remove TRUE duplicates (syndicated wire copy).
-      // Keep articles from different sources about the same event — clustering will group them.
-      const seenEntries = []; // {normalized, source}
-      const uniqueArticles = relevantArticles.filter(article => {
+        // Yield every 50 articles to keep UI responsive
+        if (i > 0 && i % 50 === 0) await yieldToMain();
+      }
+
+      // --- Yield before dedup (O(n²), heaviest step) ---
+      await yieldToMain();
+
+      // Source-aware dedup: process in batches with yields
+      const seenEntries = [];
+      const uniqueArticles = [];
+      for (let i = 0; i < relevantArticles.length; i++) {
+        const article = relevantArticles[i];
         const source = formatSourceName(article.source_id);
         const normalized = (article.title || '').toLowerCase()
           .replace(/[^a-z0-9 ]/g, '')
           .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
           .replace(/\s+/g, ' ')
           .trim();
-        // Exact normalized match from ANY source = syndicated dupe
-        if (seenEntries.some(s => s.normalized === normalized)) return false;
-        // Overlap check: strict for different sources (95%), looser for same source (70%)
-        for (const existing of seenEntries) {
-          if (normalized.length > 20 && existing.normalized.length > 20) {
-            const wordsA = new Set(normalized.split(' '));
-            const wordsB = new Set(existing.normalized.split(' '));
-            let overlap = 0;
-            for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
-            const maxLen = Math.max(wordsA.size, wordsB.size);
-            const threshold = existing.source === source ? 0.7 : 0.95;
-            if (maxLen > 0 && overlap / maxLen >= threshold) return false;
+        let isDupe = false;
+        if (seenEntries.some(s => s.normalized === normalized)) { isDupe = true; }
+        if (!isDupe) {
+          for (const existing of seenEntries) {
+            if (normalized.length > 20 && existing.normalized.length > 20) {
+              const wordsA = new Set(normalized.split(' '));
+              const wordsB = new Set(existing.normalized.split(' '));
+              let overlap = 0;
+              for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
+              const maxLen = Math.max(wordsA.size, wordsB.size);
+              const threshold = existing.source === source ? 0.7 : 0.95;
+              if (maxLen > 0 && overlap / maxLen >= threshold) { isDupe = true; break; }
+            }
           }
         }
-        seenEntries.push({ normalized, source });
-        return true;
-      });
+        if (!isDupe) {
+          seenEntries.push({ normalized, source });
+          uniqueArticles.push(article);
+        }
+
+        // Yield every 30 articles during dedup (O(n²) is heavy)
+        if (i > 0 && i % 30 === 0) await yieldToMain();
+      }
 
       console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
+
+      // --- Yield before article mapping ---
+      await yieldToMain();
 
       // Build new briefing - mutate shared array (200 cap for robust clustering)
       const newArticles = uniqueArticles.slice(0, 200).map(article => {
@@ -1184,8 +1215,11 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...balanced);
 
-      // Cluster articles into events
-      const events = clusterArticles(DAILY_BRIEFING);
+      // --- Yield before clustering (CPU-heavy) ---
+      await yieldToMain();
+
+      // Cluster articles into events (async with yields)
+      const events = await clusterArticles(DAILY_BRIEFING);
       DAILY_EVENTS.length = 0;
       DAILY_EVENTS.push(...events);
 
@@ -1193,11 +1227,11 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       seedPastBriefingIfEmpty();
       saveNewsToLocalStorage();
 
-      // Dynamic risk analysis
-      updateDynamicRisks(DAILY_BRIEFING);
+      // Dynamic risk analysis (non-blocking)
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
 
       // Fire off async AI summary requests (non-blocking)
-      fetchEventSummaries();
+      setTimeout(() => fetchEventSummaries(), 100);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
@@ -1233,17 +1267,17 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           DAILY_BRIEFING.length = 0;
           DAILY_BRIEFING.push(...fallbackArticles);
 
-          // Cluster articles into events
-          const fbEvents = clusterArticles(DAILY_BRIEFING);
+          // Cluster articles into events (async with yields)
+          const fbEvents = await clusterArticles(DAILY_BRIEFING);
           DAILY_EVENTS.length = 0;
           DAILY_EVENTS.push(...fbEvents);
 
           saveBriefingSnapshot();
           seedPastBriefingIfEmpty();
           saveNewsToLocalStorage();
-          updateDynamicRisks(DAILY_BRIEFING);
+          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
 
-          fetchEventSummaries();
+          setTimeout(() => fetchEventSummaries(), 100);
 
           if (onComplete) onComplete(DAILY_BRIEFING);
           return;

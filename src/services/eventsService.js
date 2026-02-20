@@ -277,14 +277,20 @@ function scoreEvent(event) {
 
 const HARD_CAP = 40;
 
-export function clusterArticles(articles) {
+function _yieldToMain() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+export async function clusterArticles(articles) {
   if (!articles || articles.length === 0) return [];
 
-  // Step 1: Annotate each article
-  const annotated = articles.map((article, idx) => {
+  // Step 1: Annotate each article — yield every 30 to keep UI responsive
+  const annotated = [];
+  for (let idx = 0; idx < articles.length; idx++) {
+    const article = articles[idx];
     const headline = article.headline || article.title || '';
     const fullText = headline + ' ' + (article.description || '');
-    return {
+    annotated.push({
       ...article,
       _idx: idx,
       _headline: headline,
@@ -292,8 +298,9 @@ export function clusterArticles(articles) {
       _primaryCountry: extractPrimaryCountry(headline),
       _topics: extractTopics(fullText),
       _allCountries: extractAllCountries(fullText),
-    };
-  });
+    });
+    if (idx > 0 && idx % 30 === 0) await _yieldToMain();
+  }
 
   // Step 2: Group by primary country
   const countryGroups = new Map();
@@ -339,6 +346,9 @@ export function clusterArticles(articles) {
     const subs = subClusterBySimilarity(annotated, noCountry, 0.4);
     for (const sub of subs) allClusters.push(sub);
   }
+
+  // Yield before building events
+  await _yieldToMain();
 
   // Step 4: Build event objects
   const rawEvents = allClusters.map(indices => buildEvent(annotated, indices));
