@@ -157,8 +157,8 @@ const RSS_FEEDS = {
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
     { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
-    { url: 'https://www.reutersagency.com/feed/?best-topics=world', source: 'Reuters' },
-    { url: 'https://rsshub.app/apnews/topics/world-news', source: 'AP News' },
+    { url: 'https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Reuters' },
+    { url: 'https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'AP News' },
     { url: 'https://www.politico.com/rss/politico-world-news.xml', source: 'Politico' },
     { url: 'https://www.economist.com/international/rss.xml', source: 'The Economist' },
     { url: 'https://foreignpolicy.com/feed/', source: 'Foreign Policy' },
@@ -169,7 +169,7 @@ const RSS_FEEDS = {
     { url: 'https://nypost.com/feed/', source: 'New York Post' },
     { url: 'https://thehill.com/feed/', source: 'The Hill' },
     { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
-    { url: 'https://www.telegraph.co.uk/news/rss.xml', source: 'The Telegraph' },
+    { url: 'https://news.google.com/rss/search?q=site:telegraph.co.uk+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'The Telegraph' },
     { url: 'https://www.ft.com/rss/home', source: 'Financial Times' },
     { url: 'https://www.cbc.ca/webfeed/rss/rss-world', source: 'CBC News' },
     { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
@@ -183,7 +183,7 @@ const RSS_FEEDS = {
     { url: 'https://www.france24.com/en/rss', source: 'France 24' },
     { url: 'https://rss.dw.com/rdf/rss-en-world', source: 'Deutsche Welle' },
     { url: 'https://www.aa.com.tr/en/rss/default?cat=world', source: 'Anadolu Agency' },
-    { url: 'https://english.kyodonews.net/rss/all.xml', source: 'Kyodo News' },
+    { url: 'https://news.google.com/rss/search?q=site:english.kyodonews.net+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Kyodo News' },
     { url: 'https://en.mehrnews.com/rss', source: 'Mehr News' },
     { url: 'https://www.cgtn.com/subscribe/rss/section/world.xml', source: 'CGTN' },
     { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
@@ -192,13 +192,13 @@ const RSS_FEEDS = {
     { url: 'https://www.thehindu.com/news/international/feeder/default.rss', source: 'The Hindu' },
     { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
     { url: 'https://www.africanews.com/feed/', source: 'Africa News' },
-    { url: 'https://asia.nikkei.com/rss', source: 'Nikkei Asia' },
+    { url: 'https://news.google.com/rss/search?q=site:asia.nikkei.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Nikkei Asia' },
     { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311', source: 'CNA' },
     { url: 'https://www.straitstimes.com/news/world/rss.xml', source: 'Straits Times' },
-    { url: 'https://www.haaretz.com/cmlink/1.628765', source: 'Haaretz' },
-    { url: 'https://www.thejakartapost.com/feed', source: 'Jakarta Post' },
+    { url: 'https://news.google.com/rss/search?q=site:haaretz.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Haaretz' },
+    { url: 'https://news.google.com/rss/search?q=site:thejakartapost.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Jakarta Post' },
     { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
-    { url: 'https://nation.africa/kenya/rss', source: 'Nation Kenya' },
+    { url: 'https://news.google.com/rss/search?q=site:nation.africa+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Nation Kenya' },
     // --- New sources (expanded coverage) ---
     { url: 'https://www.independent.co.uk/news/world/rss', source: 'The Independent' },
     { url: 'https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/world/', source: 'Globe and Mail' },
@@ -1106,8 +1106,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
 
-      // Build new briefing - mutate shared array (increased from 50 to 100 for better clustering)
-      const newArticles = uniqueArticles.slice(0, 100).map(article => {
+      // Build new briefing - mutate shared array (200 cap for robust clustering)
+      const newArticles = uniqueArticles.slice(0, 200).map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
         const sourceName = formatSourceName(article.source_id);

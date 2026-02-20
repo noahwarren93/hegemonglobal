@@ -200,7 +200,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       'recipe', 'cooking', 'fashion', 'beauty', 'kardashian', 'influencer',
       'royal family', 'meghan markle', 'prince harry', 'sport', 'football',
       'basketball', 'baseball', 'soccer', 'nfl', 'nba', 'concert', 'album',
-      'grammy', 'oscar', 'emmy', 'red carpet', 'beloved'
+      'grammy', 'oscar', 'emmy', 'red carpet', 'beloved',
+      'equity compensation', 'stock compensation', 'employee pay', 'corporate hr',
+      'ufo', 'ufos', 'alien', 'aliens', 'nvidia', 'openai deal'
     ];
 
     // Priority keywords that MUST rank highest in Top Stories

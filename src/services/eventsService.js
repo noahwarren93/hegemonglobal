@@ -224,8 +224,8 @@ function getCountryNames() {
 
 /**
  * Check if two articles should cluster together.
- * AGGRESSIVE country-based clustering: same country = same cluster.
- * Also uses headline word similarity to catch same-story different-source articles.
+ * Requires BOTH a shared specific entity AND shared topic indicators.
+ * Country alone is NEVER enough — prevents transitive mega-clusters.
  */
 function shouldCluster(a, b) {
   const countryNames = getCountryNames();
@@ -266,32 +266,34 @@ function shouldCluster(a, b) {
   // Headline word similarity
   const sim = headlineWordOverlap(a, b);
 
-  // === AGGRESSIVE country-based clustering ===
-  // Same non-stop-listed country → cluster immediately
-  if (sharedCountry) return true;
+  // === Country + topic confirmation (NEVER country alone) ===
+  // Same non-stop-listed country + shared action word → cluster
+  if (sharedCountry && sharedActions >= 1) return true;
+  // Same non-stop-listed country + meaningful headline overlap → cluster
+  if (sharedCountry && sim >= 0.25) return true;
+  // Same non-stop-listed country + shared geo keyword → cluster
+  if (sharedCountry && sharedGeo >= 1) return true;
 
-  // Same stop-listed country (US/Russia/China/UK) + headline overlap → cluster
-  if (sharedStopCountry && sim >= 0.2) return true;
+  // Same stop-listed country (US/Russia/China/UK) + stronger headline overlap → cluster
+  if (sharedStopCountry && sim >= 0.35) return true;
 
   // === Entity-based rules ===
   // 2+ shared specific entities → cluster
   if (sharedSpecific >= 2) return true;
-
-  // 1 specific entity + 1 action → cluster
+  // 1 specific entity + shared action → cluster
   if (sharedSpecific >= 1 && sharedActions >= 1) return true;
-
-  // 1 specific entity + 1 shared geo → cluster
+  // 1 specific entity + shared geo → cluster
   if (sharedSpecific >= 1 && sharedGeo >= 1) return true;
 
-  // 1 shared geo + 1+ shared actions → cluster
-  if (sharedGeo >= 1 && sharedActions >= 1) return true;
-
   // === Headline similarity (catches same story, different wording/source) ===
-  // ~30% word overlap = likely same story
-  if (sim >= 0.3) return true;
+  // 40%+ word overlap = likely same story regardless of entities
+  if (sim >= 0.4) return true;
 
-  // Shared geo + some headline overlap
-  if (sharedGeo >= 1 && sim >= 0.15) return true;
+  // Shared geo + headline overlap
+  if (sharedGeo >= 1 && sim >= 0.2) return true;
+
+  // 1 shared geo + shared actions → cluster
+  if (sharedGeo >= 1 && sharedActions >= 1) return true;
 
   return false;
 }
@@ -437,7 +439,7 @@ export function clusterArticles(articles) {
     }
   }
 
-  // Safety: break up mega-clusters (>15 articles) by re-checking tighter criteria
+  // Safety: break up mega-clusters (>10 articles) by re-checking tighter criteria
   const rawClusters = {};
   for (let i = 0; i < articlesWithMeta.length; i++) {
     const root = find(i);
@@ -445,10 +447,10 @@ export function clusterArticles(articles) {
     rawClusters[root].push(i);
   }
 
-  // If a cluster has more than 15 articles, split by headline similarity + shared entities
+  // HARD CAP: If a cluster has more than 10 articles, split by tighter criteria
   const finalGroups = [];
   for (const indices of Object.values(rawClusters)) {
-    if (indices.length <= 15) {
+    if (indices.length <= 10) {
       finalGroups.push(indices);
       continue;
     }

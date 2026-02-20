@@ -2560,7 +2560,11 @@ export const IRRELEVANT_KEYWORDS = [
   'subpoena', 'contempt of congress', 'floor vote',
   // Olympics & sports event fluff
   'winter olympics', 'summer olympics', 'olympics', 'olympic games',
-  'runaway dog', 'cross country race', 'hu-ski', 'interrupting', 'interrupts'
+  'runaway dog', 'cross country race', 'hu-ski', 'interrupting', 'interrupts',
+  // UFO / alien / non-geopolitical tech
+  'ufo', 'ufos', 'alien', 'aliens', 'extraterrestrial', 'ufo files', 'ufo hearing',
+  'nvidia', 'openai deal', 'stranded women', 'stranded woman',
+  'unidentified aerial', 'flying saucer', 'roswell'
 ];
 
 // Geopolitical relevance signals - STRICT: articles must contain at least one to pass.
