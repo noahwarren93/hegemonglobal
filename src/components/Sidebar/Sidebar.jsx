@@ -178,14 +178,87 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
         {/* Loading indicator */}
         {event.summaryLoading && (
-          <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ fontSize: '8px', color: '#06b6d4', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ display: 'inline-block', width: '7px', height: '7px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            Summarizing...
+            Updating...
           </div>
         )}
       </div>
     );
   };
+
+  // Top Stories stability: persist for 2 hours, match across refreshes by headline fingerprint
+  const getStableTopStories = useCallback((events) => {
+    const TOP_KEY = 'hegemon_top_stories';
+    const TOP_TTL = 2 * 60 * 60 * 1000; // 2 hours
+
+    // Fingerprint: hash of sorted article headlines (stable across ID changes)
+    const fingerprint = (evt) => {
+      if (!evt.articles || evt.articles.length === 0) return evt.id;
+      const titles = evt.articles
+        .map(a => (a.headline || a.title || '').toLowerCase().trim().substring(0, 50))
+        .sort().join('|');
+      let h = 0;
+      for (let i = 0; i < titles.length; i++) h = ((h << 5) - h + titles.charCodeAt(i)) | 0;
+      return 'ts_' + Math.abs(h).toString(36);
+    };
+
+    const candidates = events.filter(e => e.sourceCount >= 2);
+
+    try {
+      const raw = localStorage.getItem(TOP_KEY);
+      if (raw) {
+        const persisted = JSON.parse(raw);
+        if (Date.now() - persisted.ts < TOP_TTL && persisted.fps && persisted.fps.length > 0) {
+          // Build fingerprint map for current events
+          const fpMap = new Map();
+          for (const e of events) fpMap.set(fingerprint(e), e);
+
+          // Keep persisted stories that still exist
+          const kept = [];
+          const usedFps = new Set();
+          for (const fp of persisted.fps) {
+            const match = fpMap.get(fp);
+            if (match && match.sourceCount >= 2) {
+              kept.push(match);
+              usedFps.add(fp);
+            }
+          }
+
+          // Fill remaining slots — only add if significantly bigger (2+ more sources than smallest kept)
+          const minKeptSources = kept.length > 0 ? Math.min(...kept.map(e => e.sourceCount)) : 0;
+          for (const c of candidates) {
+            if (kept.length >= 5) break;
+            const cfp = fingerprint(c);
+            if (!usedFps.has(cfp)) {
+              // New story: add if we have empty slots, or if it has significantly more sources
+              if (kept.length < 5 || c.sourceCount >= minKeptSources + 2) {
+                kept.push(c);
+                usedFps.add(cfp);
+              }
+            }
+          }
+
+          const top = kept.slice(0, 5);
+          localStorage.setItem(TOP_KEY, JSON.stringify({
+            ts: persisted.ts, // Keep original timestamp for TTL
+            fps: top.map(e => fingerprint(e))
+          }));
+          return top;
+        }
+      }
+    } catch (e) { console.warn('Top stories cache error:', e.message); }
+
+    // No persisted data or expired — use current top candidates
+    const top = candidates.slice(0, 5);
+    try {
+      localStorage.setItem(TOP_KEY, JSON.stringify({
+        ts: Date.now(),
+        fps: top.map(e => fingerprint(e))
+      }));
+    } catch {}
+    return top;
+  }, []);
 
   const renderEventsTab = () => {
     if (DAILY_EVENTS.length === 0) {
@@ -195,10 +268,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
     }
 
-    // DAILY_EVENTS is already sorted by score from eventsService (CONFLICT/SECURITY first, more sources, recency)
-    // Top Stories: first 5, but deprioritize single-source non-CONFLICT/SECURITY events
-    const topCandidates = DAILY_EVENTS.filter(e => e.sourceCount >= 2);
-    const topEvents = topCandidates.slice(0, 5);
+    // Stable Top Stories: persisted for 2 hours, require 2+ sources
+    const topEvents = getStableTopStories(DAILY_EVENTS);
     const topIds = new Set(topEvents.map(e => e.id));
     // Latest Updates: everything NOT in Top Stories, paginated
     const remaining = DAILY_EVENTS.filter(e => !topIds.has(e.id));

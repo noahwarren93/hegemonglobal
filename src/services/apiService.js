@@ -1269,24 +1269,84 @@ function notifyEventsUpdated() {
   }
 }
 
+// ============================================================
+// Summary Caching (localStorage, keyed by article headline hash)
+// ============================================================
+
+const SUMMARY_CACHE_KEY = 'hegemon_summary_cache';
+
+function eventSummaryKey(event) {
+  if (!event.articles || event.articles.length === 0) return null;
+  const parts = event.articles
+    .map(a => (a.headline || a.title || '').toLowerCase().trim().substring(0, 50))
+    .sort();
+  let str = parts.join('|');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return 'sum_' + Math.abs(hash).toString(36);
+}
+
+function loadSummaryCache() {
+  try {
+    const raw = localStorage.getItem(SUMMARY_CACHE_KEY);
+    if (!raw) return {};
+    const cache = JSON.parse(raw);
+    // Clean entries older than 24 hours
+    const now = Date.now();
+    let changed = false;
+    for (const [k, v] of Object.entries(cache)) {
+      if (now - v.savedAt > 24 * 60 * 60 * 1000) { delete cache[k]; changed = true; }
+    }
+    if (changed) {
+      try { localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(cache)); } catch {}
+    }
+    return cache;
+  } catch { return {}; }
+}
+
+function saveSummaryCache(cache) {
+  try { localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(cache)); }
+  catch (e) { console.warn('Summary cache save failed:', e.message); }
+}
+
 export async function fetchEventSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
 
-  // Send ALL events — single-source events also get summaries
-  const eventsToSummarize = DAILY_EVENTS;
+  const cache = loadSummaryCache();
+  const uncached = [];
 
-  // Mark as loading
-  for (const event of eventsToSummarize) {
-    event.summaryLoading = true;
+  // Apply cached summaries immediately
+  for (const event of DAILY_EVENTS) {
+    const key = eventSummaryKey(event);
+    if (key && cache[key]) {
+      event.summary = cache[key].summary;
+      if (cache[key].headline) event.headline = cache[key].headline;
+      event.summaryLoading = false;
+    } else {
+      uncached.push(event);
+      event.summaryLoading = true;
+    }
   }
+
+  const cachedCount = DAILY_EVENTS.length - uncached.length;
+  if (cachedCount > 0) {
+    console.log(`[Hegemon] Summaries: ${cachedCount} cached, ${uncached.length} need fetching`);
+  }
+
+  // Notify immediately so cached summaries display
   notifyEventsUpdated();
+
+  // If everything is cached, we're done
+  if (uncached.length === 0) return;
 
   try {
     const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        events: eventsToSummarize.map(e => ({
+        events: uncached.map(e => ({
           headline: e.headline,
           category: e.category,
           articles: e.articles.map(a => ({
@@ -1299,7 +1359,7 @@ export async function fetchEventSummaries() {
     });
 
     if (!response.ok) {
-      for (const event of eventsToSummarize) {
+      for (const event of uncached) {
         event.summaryLoading = false;
         event.summaryError = true;
       }
@@ -1310,24 +1370,34 @@ export async function fetchEventSummaries() {
     const data = await response.json();
     const summaries = data.summaries || [];
 
-    // Apply summaries and AI-generated headlines to events
-    for (let i = 0; i < eventsToSummarize.length; i++) {
-      eventsToSummarize[i].summaryLoading = false;
+    // Apply summaries and AI-generated headlines, save to cache
+    for (let i = 0; i < uncached.length; i++) {
+      uncached[i].summaryLoading = false;
       if (summaries[i] && summaries[i].summary) {
-        eventsToSummarize[i].summary = summaries[i].summary;
+        uncached[i].summary = summaries[i].summary;
         if (summaries[i].headline) {
-          eventsToSummarize[i].headline = summaries[i].headline;
+          uncached[i].headline = summaries[i].headline;
+        }
+        // Cache this summary
+        const key = eventSummaryKey(uncached[i]);
+        if (key) {
+          cache[key] = {
+            headline: uncached[i].headline,
+            summary: summaries[i].summary,
+            savedAt: Date.now()
+          };
         }
       } else {
-        eventsToSummarize[i].summaryError = true;
+        uncached[i].summaryError = true;
       }
     }
 
+    saveSummaryCache(cache);
     notifyEventsUpdated();
 
   } catch {
     // Worker not available — gracefully degrade
-    for (const event of eventsToSummarize) {
+    for (const event of uncached) {
       event.summaryLoading = false;
       event.summaryError = true;
     }

@@ -55,9 +55,14 @@ export default {
         // Build prompt for Claude — batch all events in one call for efficiency
         const eventDescriptions = events.map((event, i) => {
           const articles = event.articles || [];
-          const articleList = articles.map(a =>
-            `  - "${a.headline || a.title}" (${a.source || 'Unknown source'})`
-          ).join('\n');
+          const articleList = articles.slice(0, 10).map(a => {
+            let line = `  - "${a.headline || a.title}" (${a.source || 'Unknown source'})`;
+            if (a.description) {
+              const desc = a.description.replace(/<[^>]+>/g, '').trim().substring(0, 200);
+              if (desc.length > 20) line += `\n    Context: ${desc}`;
+            }
+            return line;
+          }).join('\n');
 
           return `EVENT ${i + 1}: "${event.headline}"
 Category: ${event.category || 'WORLD'}
@@ -69,20 +74,21 @@ ${articleList}`;
 
 For each event below, provide TWO things:
 
-1. HEADLINE: A broad, attention-grabbing headline (max 12 words). Think newspaper front page — focus on the big picture, not granular details. Examples of good headlines: "Middle East Tensions Escalate as Regional Powers Clash", "Global Markets Rattled by Trade War Fears", "European Security Architecture Faces New Challenges". Avoid specific names or numbers — keep it sweeping and dramatic.
+1. HEADLINE: A broad, attention-grabbing headline (max 12 words) that captures the OVERALL EVENT, not any single article's angle. Think newspaper front page — sweeping and dramatic. Good examples: "Trump's Board of Peace Convenes, Raises Billions for Gaza", "Global Markets Rattled by Trade War Fears", "Sudan Crisis Deepens as Humanitarian Catastrophe Unfolds". Use specific details that make the headline informative but keep it about the big picture.
 
-2. SUMMARY: 2-4 sentences synthesizing what happened. Focus on geopolitical significance — why does this matter? Use a professional, concise intelligence briefing tone. Plain prose, no markdown.
+2. SUMMARY: 3-5 sentences synthesizing what happened across ALL sources. Focus on geopolitical significance — why does this matter? Use the article descriptions and context provided to write a rich, informative analysis. Professional intelligence briefing tone. Plain prose, no markdown.
 
 CRITICAL RULES:
-- NEVER say "limited reporting", "insufficient information", "limited details", "prevents detailed assessment", or anything similar. Every event has enough information for a substantive summary.
-- Even for single-source events, write a real analysis based on the headline and any description provided. Explain what happened, who is involved, and why it matters geopolitically.
+- NEVER say "limited reporting", "insufficient information", "limited details", "prevents detailed assessment", or anything similar.
+- Even for single-source events, write a real substantive analysis based on the headline and description. Explain what happened, who is involved, and why it matters.
+- Use the "Context:" lines to extract specific facts, numbers, and details for your summary.
 - If sources disagree or report different angles, note the discrepancy.
-- Every summary MUST be substantive and informative — no cop-outs.
+- Every summary MUST be substantive, specific, and informative — no cop-outs or vague generalities.
 
 ${eventDescriptions}
 
 Respond with a JSON array, one per event, in the same order. Format:
-[{"headline": "Broad Grabby Headline Here", "summary": "2-4 sentence analysis..."}, ...]
+[{"headline": "Broad Grabby Headline Here", "summary": "3-5 sentence analysis..."}, ...]
 
 Return ONLY the JSON array, no other text.`;
 
@@ -95,7 +101,7 @@ Return ONLY the JSON array, no other text.`;
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 4096,
+            max_tokens: 8192,
             messages: [{
               role: 'user',
               content: prompt

@@ -531,7 +531,7 @@ export function clusterArticles(articles) {
 
     // Clean up articles (remove internal metadata, clean headlines)
     const cleanArticles = clusterArts.map(a => {
-      const { _idx, _entities, _actions, _geo, _headlineWords, description: _desc, ...clean } = a;
+      const { _idx, _entities, _actions, _geo, _headlineWords, ...clean } = a;
       if (clean.headline) clean.headline = cleanHeadline(clean.headline);
       if (clean.title) clean.title = cleanHeadline(clean.title);
       return clean;
