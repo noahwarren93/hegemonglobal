@@ -309,16 +309,23 @@ export default function HomePage() {
     const now = new Date();
     setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
 
-    // Splash dismiss tracking
-    const splash = { news: false, stocks: false, minTime: false, dismissed: false };
+    // Splash dismiss tracking — waits for news + stocks + globe + minimum time
+    const splash = { news: false, stocks: false, globe: false, minTime: false, dismissed: false };
     const checkSplashDismiss = () => {
       if (splash.dismissed) return;
-      if (splash.news && splash.stocks && splash.minTime) {
+      if (splash.news && splash.stocks && splash.globe && splash.minTime) {
         splash.dismissed = true;
         setSplashFading(true);
         setTimeout(() => setSplashVisible(false), 800);
       }
     };
+
+    // Listen for globe texture loaded
+    const handleGlobeReady = () => {
+      splash.globe = true;
+      checkSplashDismiss();
+    };
+    window.addEventListener('globeReady', handleGlobeReady);
 
     // Minimum splash display time (1.5s for premium boot feel)
     const minTimer = setTimeout(() => {
@@ -373,6 +380,7 @@ export default function HomePage() {
       clearTimeout(newsStartTimer);
       clearInterval(newsInterval);
       clearInterval(stocksInterval);
+      window.removeEventListener('globeReady', handleGlobeReady);
     };
   }, []);
 

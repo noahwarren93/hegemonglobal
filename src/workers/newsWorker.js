@@ -449,8 +449,8 @@ function isDuplicate(normalized, source, seenEntries) {
 // ============================================================
 
 async function processNews() {
-  const FETCH_BATCH = 10;
-  const BATCH_DELAY = 200; // ms between fetch batches
+  const FETCH_BATCH = 3;
+  const BATCH_DELAY = 500; // ms between fetch batches
   const feeds = RSS_FEEDS.daily;
 
   // Shared state for incremental processing

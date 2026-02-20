@@ -566,30 +566,33 @@ export function calculateDynamicRisk(countryName) {
 export async function updateDynamicRisks(articles) {
   if (!articles || articles.length === 0) return [];
 
-  const articlesByCountry = {};
-  for (const countryName in COUNTRIES) {
-    const relevant = articles.filter(article =>
-      isRelevantToCountry(article.headline || article.title || '', article.description || '', countryName)
-    );
-    if (relevant.length > 0) {
-      articlesByCountry[countryName] = relevant;
-    }
-  }
-
+  const countryNames = Object.keys(COUNTRIES);
   const changedCountries = [];
-  for (const countryName in articlesByCountry) {
-    const oldRisk = COUNTRIES[countryName].risk;
+  const CHUNK = 20; // Process 20 countries per frame to avoid blocking UI
 
-    updateCountryRiskAccumulator(countryName, articlesByCountry[countryName]);
-    const newRisk = calculateDynamicRisk(countryName);
+  for (let i = 0; i < countryNames.length; i += CHUNK) {
+    const chunk = countryNames.slice(i, i + CHUNK);
 
-    COUNTRIES[countryName].risk = newRisk;
+    for (const countryName of chunk) {
+      const relevant = articles.filter(article =>
+        isRelevantToCountry(article.headline || article.title || '', article.description || '', countryName)
+      );
+      if (relevant.length > 0) {
+        const oldRisk = COUNTRIES[countryName].risk;
+        updateCountryRiskAccumulator(countryName, relevant);
+        const newRisk = calculateDynamicRisk(countryName);
+        COUNTRIES[countryName].risk = newRisk;
+        if (oldRisk !== newRisk) {
+          changedCountries.push({ name: countryName, from: oldRisk, to: newRisk });
+        }
+      }
+    }
 
-    if (oldRisk !== newRisk) {
-      changedCountries.push({ name: countryName, from: oldRisk, to: newRisk });
+    // Yield to main thread between chunks so UI stays responsive
+    if (i + CHUNK < countryNames.length) {
+      await new Promise(r => setTimeout(r, 0));
     }
   }
-
 
   return changedCountries;
 }
@@ -928,12 +931,15 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_EVENTS.length = 0;
       DAILY_EVENTS.push(...result.events);
 
-      saveBriefingSnapshot();
-      seedPastBriefingIfEmpty();
-      saveNewsToLocalStorage();
+      // Defer localStorage writes so they don't block UI
+      setTimeout(() => {
+        saveBriefingSnapshot();
+        seedPastBriefingIfEmpty();
+        saveNewsToLocalStorage();
+      }, 50);
 
-      // Dynamic risk analysis (non-blocking)
-      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
+      // Dynamic risk analysis (chunked, non-blocking)
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 100);
 
       // AI summaries AFTER events are rendered
       setTimeout(() => fetchEventSummaries(), 100);

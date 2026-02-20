@@ -255,6 +255,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     const hideLoader = () => {
       const el = document.getElementById('globeLoader');
       if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 800); }
+      window.dispatchEvent(new Event('globeReady'));
     };
     const earthTexture = textureLoader.load(
       'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
