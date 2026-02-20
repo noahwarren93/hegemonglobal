@@ -61,3 +61,74 @@
     /* ===== TRADE ROUTES & FEATURE BUTTON STYLES ===== */
 
     /* ===== COMPARE MODE STYLES ===== */
+
+    /* ===== LOADING SPLASH SCREEN ===== */
+
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #050508;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+    }
+
+    .splash-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-content {
+      text-align: center;
+    }
+
+    .splash-logo {
+      font-size: 48px;
+      font-weight: 800;
+      color: #06b6d4;
+      letter-spacing: 8px;
+      text-shadow: 0 0 40px rgba(6, 182, 212, 0.4), 0 0 80px rgba(6, 182, 212, 0.15);
+      animation: splashGlow 2.5s ease-in-out infinite;
+    }
+
+    @keyframes splashGlow {
+      0%, 100% { text-shadow: 0 0 40px rgba(6, 182, 212, 0.35), 0 0 80px rgba(6, 182, 212, 0.12); }
+      50% { text-shadow: 0 0 60px rgba(6, 182, 212, 0.6), 0 0 120px rgba(6, 182, 212, 0.25), 0 0 160px rgba(6, 182, 212, 0.1); }
+    }
+
+    .splash-subtitle {
+      font-size: 11px;
+      color: #475569;
+      letter-spacing: 6px;
+      font-weight: 600;
+      margin-top: 12px;
+      text-transform: uppercase;
+    }
+
+    .splash-progress {
+      margin: 48px auto 0;
+      width: 200px;
+      height: 1px;
+      background: rgba(71, 85, 105, 0.15);
+      border-radius: 1px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .splash-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+      animation: splashScan 1.8s ease-in-out infinite;
+    }
+
+    @keyframes splashScan {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }

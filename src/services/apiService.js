@@ -690,13 +690,55 @@ function parseRSSItems(data, sourceName) {
 }
 
 // ============================================================
+// Headline Quality Scoring (factual/conflict > opinion/reaction)
+// ============================================================
+
+const FACTUAL_BOOST_TERMS = [
+  'war', 'offensive', 'ceasefire', 'troops', 'military operation',
+  'attack', 'conflict', 'invasion', 'advance', 'retreat', 'deploy',
+  'forces', 'drone strike', 'weapons', 'killed', 'casualties',
+  'shelling', 'frontline', 'counteroffensive', 'seized', 'captured',
+  'territory', 'strikes', 'missile', 'nuclear', 'border',
+  'humanitarian', 'refugee', 'evacuation', 'summit', 'treaty',
+  'agreement', 'coup', 'protest', 'enters day', 'fighting',
+  'battle', 'airstrike', 'bombing', 'sanctions', 'escalation',
+  'incursion', 'blockade', 'convoy', 'artillery', 'ground operation'
+];
+
+const OPINION_PENALIZE_TERMS = [
+  'dismisses', 'urges', 'slams', 'blasts', 'reacts',
+  'responds', 'says', 'calls on', 'accuses', 'criticizes',
+  'condemns', 'warns', 'threatens', 'claims', 'denies',
+  'demands', 'challenges', 'mocks', 'praises', 'thanks',
+  'reveals', 'opinion', 'editorial', 'analysis', 'commentary',
+  'vows', 'hints', 'suggests', 'believes'
+];
+
+function scoreHeadlineQuality(title) {
+  const lower = (title || '').toLowerCase();
+  let score = 0;
+  for (const term of FACTUAL_BOOST_TERMS) {
+    if (lower.includes(term)) score += 2;
+  }
+  for (const term of OPINION_PENALIZE_TERMS) {
+    if (lower.includes(term)) score -= 3;
+  }
+  return score;
+}
+
+// ============================================================
 // Format articles for display
 // ============================================================
 
 function formatArticlesForDisplay(articles, countryName) {
   const relevant = articles.filter(a => isRelevantToCountry(a.title, a.description, countryName));
   const toUse = relevant.length > 0 ? relevant : articles;
-  return toUse.slice(0, 15).map(article => ({
+
+  // Score and sort: factual/conflict headlines first, opinion/reaction last
+  const scored = toUse.map(a => ({ article: a, score: scoreHeadlineQuality(a.title) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, 15).map(({ article }) => ({
     headline: article.title,
     source: formatSourceName(article.source_id),
     time: timeAgo(article.pubDate),
@@ -743,6 +785,9 @@ export async function fetchCountryNews(countryName) {
       isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
     );
     if (briefingRelevant.length >= 2) {
+      briefingRelevant.sort((a, b) =>
+        scoreHeadlineQuality(b.title || b.headline) - scoreHeadlineQuality(a.title || a.headline)
+      );
       const result = briefingRelevant.slice(0, 10).map(article => ({
         headline: article.title || article.headline,
         source: formatSourceName(article.source_id || article.source || 'News'),
@@ -808,6 +853,9 @@ export async function fetchCountryNews(countryName) {
       isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
     );
     if (anyRelevant.length > 0) {
+      anyRelevant.sort((a, b) =>
+        scoreHeadlineQuality(b.title || b.headline) - scoreHeadlineQuality(a.title || a.headline)
+      );
       const result = anyRelevant.slice(0, 10).map(article => ({
         headline: article.title || article.headline,
         source: formatSourceName(article.source_id || article.source || 'News'),

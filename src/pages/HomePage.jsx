@@ -284,6 +284,10 @@ export default function HomePage() {
   // --- Loading ---
   const [, setIsLoading] = useState(true);
 
+  // --- Splash screen ---
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+
   // --- Auto-rotate ---
   const [autoRotate, setAutoRotate] = useState(true);
 
@@ -305,9 +309,29 @@ export default function HomePage() {
     const now = new Date();
     setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
 
+    // Splash dismiss tracking
+    const splash = { news: false, stocks: false, minTime: false, dismissed: false };
+    const checkSplashDismiss = () => {
+      if (splash.dismissed) return;
+      if (splash.news && splash.stocks && splash.minTime) {
+        splash.dismissed = true;
+        setSplashFading(true);
+        setTimeout(() => setSplashVisible(false), 800);
+      }
+    };
+
+    // Minimum splash display time (1.5s for premium boot feel)
+    const minTimer = setTimeout(() => {
+      splash.minTime = true;
+      checkSplashDismiss();
+    }, 1500);
+
     // Show cached news immediately, then fetch fresh in background
     const hasCached = loadNewsFromLocalStorage();
-    if (hasCached) setIsLoading(false);
+    if (hasCached) {
+      setIsLoading(false);
+      splash.news = true;
+    }
 
     // Defer news fetching by 3 seconds so globe fully renders first (zero jank)
     const newsStartTimer = setTimeout(() => {
@@ -317,6 +341,8 @@ export default function HomePage() {
         },
         onComplete: () => {
           setIsLoading(false);
+          splash.news = true;
+          checkSplashDismiss();
         }
       });
     }, 3000);
@@ -331,6 +357,10 @@ export default function HomePage() {
       setStocksData(data);
       setStocksLastUpdated(lastUpdated);
       setStocksUpdating(!!isUpdating);
+      if (data) {
+        splash.stocks = true;
+        checkSplashDismiss();
+      }
     };
     loadStockData(stockCallback);
 
@@ -339,6 +369,7 @@ export default function HomePage() {
     }, 300000);
 
     return () => {
+      clearTimeout(minTimer);
       clearTimeout(newsStartTimer);
       clearInterval(newsInterval);
       clearInterval(stocksInterval);
@@ -523,6 +554,17 @@ export default function HomePage() {
 
   return (
     <>
+      {splashVisible && (
+        <div className={`splash-screen${splashFading ? ' fade-out' : ''}`}>
+          <div className="splash-content">
+            <div className="splash-logo">HEGEMON</div>
+            <div className="splash-subtitle">GLOBAL RISK MONITOR</div>
+            <div className="splash-progress">
+              <div className="splash-progress-bar" />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="app">
         {/* ===== Globe Area (left) ===== */}
         <div className="globe-container">
