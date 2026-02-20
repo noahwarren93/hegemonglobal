@@ -85,7 +85,7 @@ export function saveBriefingSnapshot() {
     const history = loadBriefingHistory();
     history[todayKey] = {
       date: todayKey,
-      articles: DAILY_BRIEFING.slice(0, 50).map(a => ({
+      articles: DAILY_BRIEFING.slice(0, 100).map(a => ({
         time: a.time,
         category: a.category,
         importance: a.importance,
@@ -271,7 +271,7 @@ function saveNewsToLocalStorage() {
     if (DAILY_BRIEFING.length === 0) return;
     localStorage.setItem(NEWS_LS_KEY, JSON.stringify({
       ts: Date.now(),
-      articles: DAILY_BRIEFING.slice(0, 50)
+      articles: DAILY_BRIEFING.slice(0, 100)
     }));
     if (DAILY_EVENTS.length > 0) {
       localStorage.setItem(EVENTS_LS_KEY, JSON.stringify({
@@ -1076,33 +1076,38 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         return scoreGeopoliticalRelevance(fullText) >= 1;
       });
 
-      // Smart deduplicate — catch near-exact dupes but keep distinct stories on same topic
-      const seenNormalized = [];
+      // Source-aware dedup: only remove TRUE duplicates (syndicated wire copy).
+      // Keep articles from different sources about the same event — clustering will group them.
+      const seenEntries = []; // {normalized, source}
       const uniqueArticles = relevantArticles.filter(article => {
+        const source = formatSourceName(article.source_id);
         const normalized = (article.title || '').toLowerCase()
           .replace(/[^a-z0-9 ]/g, '')
           .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
           .replace(/\s+/g, ' ')
           .trim();
-        // Exact normalized match
-        if (seenNormalized.some(s => s === normalized)) return false;
-        // Character overlap ratio — only flag as dupe if >= 80% similar
-        for (const existing of seenNormalized) {
-          if (normalized.length > 20 && existing.length > 20) {
+        // Exact normalized match from ANY source = syndicated dupe
+        if (seenEntries.some(s => s.normalized === normalized)) return false;
+        // Overlap check: strict for different sources (95%), looser for same source (70%)
+        for (const existing of seenEntries) {
+          if (normalized.length > 20 && existing.normalized.length > 20) {
             const wordsA = new Set(normalized.split(' '));
-            const wordsB = new Set(existing.split(' '));
+            const wordsB = new Set(existing.normalized.split(' '));
             let overlap = 0;
             for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
             const maxLen = Math.max(wordsA.size, wordsB.size);
-            if (maxLen > 0 && overlap / maxLen >= 0.8) return false;
+            const threshold = existing.source === source ? 0.7 : 0.95;
+            if (maxLen > 0 && overlap / maxLen >= threshold) return false;
           }
         }
-        seenNormalized.push(normalized);
+        seenEntries.push({ normalized, source });
         return true;
       });
 
-      // Build new briefing - mutate shared array
-      const newArticles = uniqueArticles.slice(0, 50).map(article => {
+      console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
+
+      // Build new briefing - mutate shared array (increased from 50 to 100 for better clustering)
+      const newArticles = uniqueArticles.slice(0, 100).map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
         const sourceName = formatSourceName(article.source_id);

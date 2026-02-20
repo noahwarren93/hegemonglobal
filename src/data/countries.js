@@ -2475,6 +2475,14 @@ export const IRRELEVANT_KEYWORDS = [
   'tv show', 'reality tv', 'american idol', 'bachelor', 'bachelorette', 'survivor',
   'kardashian', 'influencer', 'tiktok star', 'instagram', 'viral video', 'went viral',
   'red carpet', 'paparazzi', 'tabloid', 'gossip', 'scandal',
+  // Celebrity deaths & entertainment personalities
+  'actor dies', 'actor dead', 'actor passes', 'actress dies', 'actress dead', 'actress passes',
+  'star dies', 'star dead', 'star passes', 'celebrity death', 'celebrity dies',
+  'als battle', 'als diagnosis', 'tv star dies', 'tv star dead',
+  'film star dies', 'hollywood star', 'sitcom', 'soap opera', 'game show', 'talent show',
+  "grey's anatomy", 'eric dane', 'mcsteamy', 'euphoria',
+  'emmy winner dies', 'oscar winner dies', 'grammy winner dies',
+  'beloved actor', 'beloved actress', 'remembered for', 'tributes pour',
   // Lifestyle fluff
   'recipe', 'cooking', 'fashion', 'beauty', 'lifestyle', 'horoscope', 'zodiac',
   'dating', 'relationship advice', 'wedding', 'divorce', 'weight loss', 'diet',

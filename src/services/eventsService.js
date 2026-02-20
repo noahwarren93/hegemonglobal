@@ -563,9 +563,15 @@ export function clusterArticles(articles) {
 
   // Clustering diagnostics
   const multiSource = events.filter(e => e.sourceCount > 1).length;
+  const singleSource = events.filter(e => e.sourceCount === 1).length;
   const avgSources = events.length > 0 ? (articles.length / events.length).toFixed(1) : 0;
-  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, avg ${avgSources} sources/event)`);
-  events.slice(0, 5).forEach(e => console.log(`  [${e.sourceCount} sources] ${e.headline}`));
+  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, ${singleSource} single-source, avg ${avgSources} sources/event)`);
+  // Log distribution
+  const dist = {};
+  for (const e of events) { const k = e.sourceCount; dist[k] = (dist[k] || 0) + 1; }
+  console.log(`[Hegemon] Source distribution:`, Object.entries(dist).sort(([a],[b]) => Number(a)-Number(b)).map(([k,v]) => `${k}src:${v}`).join(', '));
+  // Top 8 events by score
+  events.slice(0, 8).forEach(e => console.log(`  [${e.sourceCount} sources] [${e.category}] ${e.headline}`));
 
   return events;
 }
