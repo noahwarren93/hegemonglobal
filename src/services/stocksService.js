@@ -173,6 +173,34 @@ function fetchViaCorsProxies() {
 }
 
 // ============================================================
+// Fetch Chart Data (for line chart in modal)
+// ============================================================
+
+export async function fetchChartData(symbol, range = '5d', interval = '1d') {
+  try {
+    const resp = await fetchWithTimeout(
+      `${WORKER_BASE}/stock?symbols=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`,
+      15000
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const q = data.quotes?.[symbol];
+    if (!q || !q.price) return null;
+    return {
+      symbol: q.symbol || symbol,
+      price: q.price,
+      prevClose: q.prevClose,
+      changePct: q.changePct,
+      shortName: q.shortName || '',
+      closes: q.sparkline || [],
+      timestamps: q.timestamps || []
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================
 // Search Ticker via Worker
 // ============================================================
 

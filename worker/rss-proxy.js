@@ -188,7 +188,7 @@ Return ONLY the JSON array, no other text.`;
     }
 
     // ============================================================
-    // GET /stock?symbols=SYM1,SYM2 — Yahoo Finance proxy (avoids CORS)
+    // GET /stock?symbols=SYM1,SYM2&range=5d&interval=1d — Yahoo Finance proxy
     // ============================================================
     if (url.pathname === '/stock' && request.method === 'GET') {
       const symbols = url.searchParams.get('symbols');
@@ -199,14 +199,21 @@ Return ONLY the JSON array, no other text.`;
         );
       }
 
+      // Accept optional range and interval params
+      const rangeParam = url.searchParams.get('range') || '5d';
+      const intervalParam = url.searchParams.get('interval') || '1d';
+      const VALID_RANGES = new Set(['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'ytd', 'max']);
+      const VALID_INTERVALS = new Set(['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo']);
+      const safeRange = VALID_RANGES.has(rangeParam) ? rangeParam : '5d';
+      const safeInterval = VALID_INTERVALS.has(intervalParam) ? intervalParam : '1d';
+
       try {
-        // Fetch each symbol individually via v8 chart API
         const symList = symbols.split(',').map(s => s.trim()).filter(Boolean);
         const results = {};
 
         await Promise.all(symList.map(async (sym) => {
           try {
-            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=5d&interval=1d&includePrePost=false`;
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=${safeRange}&interval=${safeInterval}&includePrePost=false`;
             const resp = await fetch(yahooUrl, {
               headers: { 'User-Agent': 'Mozilla/5.0' },
               cf: { cacheTtl: 60 }
@@ -221,9 +228,16 @@ Return ONLY the JSON array, no other text.`;
             const prevClose = meta.chartPreviousClose || meta.previousClose;
             if (!price) return;
 
-            let closes = [];
-            if (r.indicators?.quote?.[0]?.close) {
-              closes = r.indicators.quote[0].close.filter(v => v !== null && v !== undefined);
+            // Filter closes and timestamps together (remove null values)
+            const rawCloses = r.indicators?.quote?.[0]?.close || [];
+            const rawTimestamps = r.timestamp || [];
+            const closes = [];
+            const timestamps = [];
+            for (let i = 0; i < rawCloses.length; i++) {
+              if (rawCloses[i] !== null && rawCloses[i] !== undefined) {
+                closes.push(rawCloses[i]);
+                if (i < rawTimestamps.length) timestamps.push(rawTimestamps[i]);
+              }
             }
 
             results[sym] = {
@@ -233,7 +247,8 @@ Return ONLY the JSON array, no other text.`;
               changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
               shortName: meta.shortName || '',
               longName: meta.longName || '',
-              sparkline: closes.length > 0 ? closes : [prevClose || price, price]
+              sparkline: closes.length > 0 ? closes : [prevClose || price, price],
+              timestamps: timestamps.length > 0 ? timestamps : []
             };
           } catch (e) {
             console.warn(`Failed to fetch ${sym}:`, e.message);

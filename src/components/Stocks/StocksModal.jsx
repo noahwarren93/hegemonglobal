@@ -1,104 +1,204 @@
-// StocksModal.jsx - Detailed stock view modal with search
+// StocksModal.jsx - Detailed stock view modal with SVG line chart
 
 import { useState, useEffect, useCallback } from 'react';
-import { STOCKS_DETAIL } from '../../data/stocksData';
-import { getMarketStatus, searchTicker, formatStockPrice } from '../../services/stocksService';
+import { STOCKS_DETAIL, MARKET_CONFIG } from '../../data/stocksData';
+import { getMarketStatus, fetchChartData, formatStockPrice } from '../../services/stocksService';
 
-function StockSearch() {
-  const [query, setQuery] = useState('');
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const TIME_RANGES = [
+  { key: '1D', range: '1d', interval: '5m' },
+  { key: '1W', range: '5d', interval: '1h' },
+  { key: '1M', range: '1mo', interval: '1d' },
+  { key: '1Y', range: '1y', interval: '1wk' },
+];
 
-  const handleSearch = useCallback(async () => {
-    const q = query.trim();
-    if (!q) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    try {
-      const data = await searchTicker(q);
-      if (data) {
-        setResult(data);
-      } else {
-        setError('Ticker not found');
-      }
-    } catch {
-      setError('Search failed');
+// ============================================================
+// Smooth SVG Path (Catmull-Rom to Cubic Bezier)
+// ============================================================
+
+function buildSmoothPath(points) {
+  if (points.length < 2) return '';
+  if (points.length === 2) {
+    return `M${points[0].x},${points[0].y}L${points[1].x},${points[1].y}`;
+  }
+  let d = `M${points[0].x},${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += `C${cp1x},${cp1y},${cp2x},${cp2y},${p2.x},${p2.y}`;
+  }
+  return d;
+}
+
+// ============================================================
+// Y-Axis Label Formatting
+// ============================================================
+
+function formatYLabel(val) {
+  if (Math.abs(val) >= 10000) return val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (Math.abs(val) >= 100) return val.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ============================================================
+// X-Axis Label Formatting
+// ============================================================
+
+function formatXLabel(timestamp, rangeKey) {
+  const d = new Date(timestamp * 1000);
+  switch (rangeKey) {
+    case '1D': return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    case '1W': return d.toLocaleDateString('en-US', { weekday: 'short' });
+    case '1M': return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    case '1Y': return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    default: return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+}
+
+// ============================================================
+// SVG Line Chart Component
+// ============================================================
+
+function StockChart({ chartData, rangeKey }) {
+  if (!chartData || !chartData.closes || chartData.closes.length < 2) {
+    return (
+      <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', fontSize: '10px' }}>
+        No chart data available
+      </div>
+    );
+  }
+
+  const W = 400, H = 180;
+  const PAD = { top: 10, right: 10, bottom: 24, left: 52 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top - PAD.bottom;
+
+  const { closes, timestamps } = chartData;
+  const minVal = Math.min(...closes);
+  const maxVal = Math.max(...closes);
+  const valRange = maxVal - minVal || 1;
+  const yPad = valRange * 0.06;
+  const yMin = minVal - yPad;
+  const yMax = maxVal + yPad;
+  const yRange = yMax - yMin;
+
+  const points = closes.map((v, i) => ({
+    x: PAD.left + (i / (closes.length - 1)) * cW,
+    y: PAD.top + (1 - (v - yMin) / yRange) * cH
+  }));
+
+  const linePath = buildSmoothPath(points);
+  const bottom = PAD.top + cH;
+  const fillPath = linePath + `L${points[points.length - 1].x},${bottom}L${points[0].x},${bottom}Z`;
+
+  const isUp = closes[closes.length - 1] >= closes[0];
+  const color = isUp ? '#22c55e' : '#ef4444';
+
+  // Grid lines (4 horizontal)
+  const grids = [];
+  for (let i = 0; i <= 3; i++) {
+    const y = PAD.top + (i / 3) * cH;
+    const val = yMax - (i / 3) * yRange;
+    grids.push({ y, label: formatYLabel(val) });
+  }
+
+  // X-axis labels (5 evenly spaced)
+  const xLabels = [];
+  if (timestamps && timestamps.length >= 2) {
+    const n = Math.min(5, timestamps.length);
+    for (let i = 0; i < n; i++) {
+      const idx = Math.floor(i * (timestamps.length - 1) / (n - 1));
+      xLabels.push({
+        x: PAD.left + (idx / (closes.length - 1)) * cW,
+        label: formatXLabel(timestamps[idx], rangeKey)
+      });
     }
-    setLoading(false);
-  }, [query]);
+  }
 
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <div style={{ fontSize: '9px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Search Any Ticker</div>
-      <div style={{ display: 'flex', gap: '4px' }}>
-        <input
-          type="text"
-          placeholder="Ticker (e.g. AAPL, TSLA, MSFT)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value.toUpperCase())}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-          style={{
-            flex: 1, padding: '6px 10px', fontSize: '11px', background: '#111827',
-            border: '1px solid #374151', borderRadius: '4px', color: '#e5e7eb',
-            outline: 'none'
-          }}
-        />
-        <button
-          onClick={handleSearch}
-          disabled={loading}
-          style={{
-            padding: '6px 14px', fontSize: '10px', fontWeight: 600, background: '#1f2937',
-            border: '1px solid #374151', borderRadius: '4px', color: '#9ca3af',
-            cursor: 'pointer'
-          }}
-        >
-          {loading ? '...' : 'GO'}
-        </button>
-      </div>
-      {error && <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px' }}>{error}</div>}
-      {result && (
-        <div style={{ marginTop: '8px', padding: '10px', background: '#0d0d14', borderRadius: '6px', border: '1px solid #1f2937' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-            <div>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#e5e7eb' }}>{result.symbol}</span>
-              {result.name && <span style={{ fontSize: '10px', color: '#6b7280', marginLeft: '6px' }}>{result.name}</span>}
-            </div>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#e5e7eb', fontVariantNumeric: 'tabular-nums' }}>{result.price}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: result.positive ? '#22c55e' : '#ef4444', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-              {result.change}
-            </span>
-            {result.sparkline && result.sparkline.length > 1 && (
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1px', height: '18px' }}>
-                {result.sparkline.map((val, k) => {
-                  const max = Math.max(...result.sparkline);
-                  const min = Math.min(...result.sparkline);
-                  const range = max - min || 1;
-                  const h = ((val - min) / range) * 15 + 3;
-                  const isUp = k > 0 ? val >= result.sparkline[k - 1] : true;
-                  return (
-                    <div key={k} style={{ width: '3px', height: `${h}px`, borderRadius: '1px', background: isUp ? '#22c55e' : '#ef4444' }} />
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      {/* Grid lines */}
+      {grids.map((g, i) => (
+        <g key={i}>
+          <line x1={PAD.left} y1={g.y} x2={PAD.left + cW} y2={g.y} stroke="#1f2937" strokeWidth="0.5" />
+          <text x={PAD.left - 5} y={g.y + 3} textAnchor="end" fontSize="7" fill="#4b5563" fontFamily="system-ui, sans-serif">{g.label}</text>
+        </g>
+      ))}
+      {/* Fill area under curve */}
+      <path d={fillPath} fill="url(#chartFill)" />
+      {/* Line */}
+      <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Current price dashed line */}
+      <line
+        x1={PAD.left} y1={points[points.length - 1].y}
+        x2={PAD.left + cW} y2={points[points.length - 1].y}
+        stroke={color} strokeWidth="0.5" strokeDasharray="3,3" opacity="0.4"
+      />
+      {/* X labels */}
+      {xLabels.map((l, i) => (
+        <text key={i} x={l.x} y={bottom + 14} textAnchor="middle" fontSize="7" fill="#4b5563" fontFamily="system-ui, sans-serif">{l.label}</text>
+      ))}
+    </svg>
   );
 }
 
+// ============================================================
+// Main Modal Component
+// ============================================================
+
 export default function StocksModal({ country, stocksData, lastUpdated, isOpen, onClose }) {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [rangeKey, setRangeKey] = useState('1W');
+  const [chartData, setChartData] = useState(null);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResult, setSearchResult] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [showingSearch, setShowingSearch] = useState(false);
+
+  // Load chart data for a symbol + range
+  const loadChart = useCallback(async (symbol, rk) => {
+    const tr = TIME_RANGES.find(t => t.key === rk) || TIME_RANGES[1];
+    setChartLoading(true);
+    const data = await fetchChartData(symbol, tr.range, tr.interval);
+    setChartData(data);
+    setChartLoading(false);
+  }, []);
+
+  // Reset and load on open / country change
+  useEffect(() => {
+    if (!isOpen || !country) return;
+    const mc = MARKET_CONFIG.find(m => m.country === country);
+    if (!mc) return;
+
+    setSelectedIdx(0);
+    setRangeKey('1W');
+    setShowingSearch(false);
+    setSearchResult(null);
+    setSearchQuery('');
+    setSearchError(null);
+    setChartData(null);
+
+    const sym = mc.symbols[0]?.sym;
+    if (sym) loadChart(sym, '1W');
+  }, [isOpen, country, loadChart]);
+
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
@@ -108,8 +208,79 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
   const data = stocksData ? stocksData.find(d => d.country === country) : null;
   if (!data) return null;
 
+  const marketConfig = MARKET_CONFIG.find(m => m.country === country);
   const detail = STOCKS_DETAIL[country];
   const status = getMarketStatus(country);
+
+  // Handle index click
+  const handleIndexClick = (i) => {
+    if (data.indices[i]?.noData) return;
+    setSelectedIdx(i);
+    setShowingSearch(false);
+    setSearchResult(null);
+    setSearchError(null);
+    const sym = marketConfig?.symbols[i]?.sym;
+    if (sym) loadChart(sym, rangeKey);
+  };
+
+  // Handle time range change
+  const handleRangeChange = (rk) => {
+    setRangeKey(rk);
+    if (showingSearch && searchResult) {
+      loadChart(searchResult.symbol, rk);
+    } else {
+      const sym = marketConfig?.symbols[selectedIdx]?.sym;
+      if (sym) loadChart(sym, rk);
+    }
+  };
+
+  // Handle search
+  const handleSearch = async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearchLoading(true);
+    setSearchError(null);
+    const tr = TIME_RANGES.find(t => t.key === rangeKey) || TIME_RANGES[1];
+    const result = await fetchChartData(q.toUpperCase(), tr.range, tr.interval);
+    if (result && result.price) {
+      const positive = result.changePct >= 0;
+      setSearchResult({
+        symbol: result.symbol,
+        name: result.shortName || '',
+        price: formatStockPrice(result.price),
+        change: (positive ? '+' : '') + result.changePct.toFixed(2) + '%',
+        positive
+      });
+      setChartData(result);
+      setShowingSearch(true);
+    } else {
+      setSearchError('Ticker not found');
+    }
+    setSearchLoading(false);
+  };
+
+  // Chart header info
+  let chartSymbol = '', chartPrice = '', chartChange = '', chartPositive = true, chartName = '';
+  if (showingSearch && searchResult) {
+    chartSymbol = searchResult.symbol;
+    chartPrice = searchResult.price;
+    chartChange = searchResult.change;
+    chartPositive = searchResult.positive;
+    chartName = searchResult.name;
+  } else if (chartData) {
+    chartSymbol = chartData.symbol;
+    chartPrice = formatStockPrice(chartData.price);
+    const pct = chartData.changePct;
+    chartChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    chartPositive = pct >= 0;
+    chartName = chartData.shortName || '';
+  } else if (data.indices[selectedIdx] && !data.indices[selectedIdx].noData) {
+    const idx = data.indices[selectedIdx];
+    chartSymbol = marketConfig?.symbols[selectedIdx]?.name || idx.name;
+    chartPrice = idx.value;
+    chartChange = idx.change;
+    chartPositive = idx.positive;
+  }
 
   return (
     <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -133,32 +304,84 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
 
         {/* Body */}
         <div className="modal-body">
-          {/* Sentiment */}
-          <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '12px' }}>
-            {data.sentiment}
+          {/* ===== Chart Section ===== */}
+          <div style={{ background: '#08080f', borderRadius: '8px', padding: '12px', marginBottom: '16px', border: '1px solid #1f2937' }}>
+            {/* Chart header: symbol + price + change */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#e5e7eb' }}>{chartSymbol}</span>
+                {chartName && <span style={{ fontSize: '9px', color: '#6b7280', marginLeft: '6px' }}>{chartName}</span>}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#e5e7eb', fontVariantNumeric: 'tabular-nums' }}>{chartPrice}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: chartPositive ? '#22c55e' : '#ef4444', marginLeft: '8px', fontVariantNumeric: 'tabular-nums' }}>
+                  {chartChange}
+                </span>
+              </div>
+            </div>
+
+            {/* Chart */}
+            {chartLoading ? (
+              <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="loading-spinner" />
+              </div>
+            ) : (
+              <StockChart chartData={chartData} rangeKey={rangeKey} />
+            )}
+
+            {/* Time range buttons */}
+            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', justifyContent: 'center' }}>
+              {TIME_RANGES.map(tr => (
+                <button
+                  key={tr.key}
+                  onClick={() => handleRangeChange(tr.key)}
+                  style={{
+                    padding: '4px 14px', fontSize: '9px', fontWeight: 600,
+                    background: rangeKey === tr.key ? '#1f2937' : 'transparent',
+                    border: `1px solid ${rangeKey === tr.key ? '#374151' : '#1f293766'}`,
+                    borderRadius: '4px',
+                    color: rangeKey === tr.key ? '#e5e7eb' : '#6b7280',
+                    cursor: 'pointer', transition: 'all 0.15s'
+                  }}
+                >
+                  {tr.key}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Market Overview */}
+          {/* ===== Market Overview (clickable indices) ===== */}
           <div className="stocks-section">
             <div className="stocks-section-title">Market Overview</div>
             {data.indices.map((idx, i) => {
               if (idx.noData) {
                 return (
                   <div key={i} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    display: 'flex', alignItems: 'center',
                     padding: '6px 0', borderBottom: '1px solid #1f293744'
                   }}>
-                    <span style={{ color: '#9ca3af', fontSize: '11px' }}>{idx.name}</span>
-                    <span style={{ color: '#6b7280', fontSize: '11px' }}>Data unavailable</span>
+                    <span style={{ color: '#6b7280', fontSize: '11px', flex: 1 }}>{idx.name}</span>
+                    <span style={{ color: '#4b5563', fontSize: '10px' }}>Unavailable</span>
                   </div>
                 );
               }
+              const isSelected = !showingSearch && selectedIdx === i;
               return (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center',
-                  padding: '6px 0', borderBottom: '1px solid #1f293744'
-                }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px', flex: 1 }}>{idx.name}</span>
+                <div
+                  key={i}
+                  onClick={() => handleIndexClick(i)}
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    padding: '6px 4px', borderBottom: '1px solid #1f293744',
+                    cursor: 'pointer', borderRadius: '4px',
+                    background: isSelected ? 'rgba(34,197,94,0.08)' : 'transparent',
+                    borderLeft: isSelected ? '2px solid #22c55e' : '2px solid transparent',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  <span style={{ color: isSelected ? '#e5e7eb' : '#9ca3af', fontSize: '11px', flex: 1, fontWeight: isSelected ? 600 : 400 }}>
+                    {idx.name}
+                  </span>
                   <span style={{ color: '#e5e7eb', fontSize: '12px', fontWeight: 600, textAlign: 'right', minWidth: '70px', fontVariantNumeric: 'tabular-nums' }}>
                     {idx.value}
                   </span>
@@ -173,26 +396,62 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
             })}
           </div>
 
-          {/* Sparkline */}
-          {data.sparkline && data.sparkline.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '28px', margin: '12px 0' }}>
-              {data.sparkline.map((val, k) => {
-                const max = Math.max(...data.sparkline);
-                const min = Math.min(...data.sparkline);
-                const range = max - min || 1;
-                const h = ((val - min) / range) * 22 + 6;
-                const isUp = k > 0 ? val >= data.sparkline[k - 1] : true;
-                return (
-                  <div key={k} style={{ flex: 1, height: `${h}px`, borderRadius: '2px', background: isUp ? '#22c55e' : '#ef4444', opacity: 0.7 }} />
-                );
-              })}
+          {/* ===== Stock Search ===== */}
+          <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+            <div style={{ fontSize: '9px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Search Any Ticker</div>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <input
+                type="text"
+                placeholder="Ticker (e.g. AAPL, TSLA, MSFT)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                style={{
+                  flex: 1, padding: '6px 10px', fontSize: '11px', background: '#111827',
+                  border: '1px solid #374151', borderRadius: '4px', color: '#e5e7eb', outline: 'none'
+                }}
+              />
+              <button
+                onClick={handleSearch}
+                disabled={searchLoading}
+                style={{
+                  padding: '6px 14px', fontSize: '10px', fontWeight: 600, background: '#1f2937',
+                  border: '1px solid #374151', borderRadius: '4px', color: '#9ca3af', cursor: 'pointer'
+                }}
+              >
+                {searchLoading ? '...' : 'GO'}
+              </button>
             </div>
-          )}
+            {searchError && <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '4px' }}>{searchError}</div>}
+            {searchResult && (
+              <div
+                style={{
+                  marginTop: '8px', padding: '8px 10px', background: showingSearch ? 'rgba(34,197,94,0.08)' : '#0d0d14',
+                  borderRadius: '6px', border: `1px solid ${showingSearch ? '#22c55e44' : '#1f2937'}`,
+                  cursor: 'pointer', transition: 'all 0.15s'
+                }}
+                onClick={() => {
+                  setShowingSearch(true);
+                  loadChart(searchResult.symbol, rangeKey);
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#e5e7eb' }}>{searchResult.symbol}</span>
+                    {searchResult.name && <span style={{ fontSize: '9px', color: '#6b7280', marginLeft: '6px' }}>{searchResult.name}</span>}
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#e5e7eb', fontVariantNumeric: 'tabular-nums' }}>{searchResult.price}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: searchResult.positive ? '#22c55e' : '#ef4444', marginLeft: '6px', fontVariantNumeric: 'tabular-nums' }}>
+                      {searchResult.change}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
-          {/* Stock Search */}
-          <StockSearch />
-
-          {/* Why It Matters / Outlook */}
+          {/* ===== Why It Matters / Outlook ===== */}
           {detail ? (
             <>
               <div className="stocks-section">
