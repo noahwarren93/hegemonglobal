@@ -178,15 +178,19 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: tiered geopolitical priority, 3-hour persistence
+  // Top Stories: tiered geopolitical priority — biggest active conflicts/crises only
   const getStableTopStories = useCallback((events) => {
-    // EXACTLY 4 top stories. Always: Iran, Gaza/Palestine, Ukraine, Sudan.
-    // Use _primaryCountry first, then fall back to keyword search.
-    const REQUIRED = [
-      { countries: ['iran'], keywords: ['iran', 'iranian', 'tehran', 'hormuz'], label: 'Iran' },
+    // EXACTLY 4 top stories. Priority order: Iran > Palestine/Gaza > Ukraine/Russia > Sudan > China/Taiwan > North Korea
+    // Only CONFLICT, CRISIS, SECURITY, DIPLOMACY qualify — ECONOMY/POLITICS/WORLD go to Latest Updates
+    const TOP_STORY_CATS = new Set(['CONFLICT', 'CRISIS', 'SECURITY', 'DIPLOMACY']);
+
+    const PRIORITY = [
+      { countries: ['iran'], keywords: ['iran', 'iranian', 'tehran', 'hormuz', 'irgc', 'ayatollah'], label: 'Iran' },
       { countries: ['palestine'], keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'], label: 'Gaza' },
-      { countries: ['ukraine'], keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky'], label: 'Ukraine' },
-      { countries: ['sudan'], keywords: ['sudan', 'sudanese', 'darfur', 'khartoum'], label: 'Sudan' },
+      { countries: ['ukraine', 'russia'], keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'], label: 'Ukraine' },
+      { countries: ['sudan'], keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher'], label: 'Sudan' },
+      { countries: ['china', 'taiwan'], keywords: ['china', 'chinese', 'taiwan', 'taiwanese', 'taipei', 'strait'], label: 'China/Taiwan' },
+      { countries: ['north korea'], keywords: ['north korea', 'pyongyang', 'kim jong', 'dprk'], label: 'North Korea' },
     ];
 
     const getEventText = (evt) => {
@@ -194,21 +198,32 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
     };
 
-    // Sort all events by source count descending (most-sourced = most important)
+    // A candidate must be a crisis/conflict category, OR have 10+ sources
+    const isTopStoryWorthy = (e) => {
+      if (TOP_STORY_CATS.has(e.category)) return true;
+      if (e.sourceCount >= 10) return true;
+      return false;
+    };
+
+    // Sort by source count descending
     const sorted = [...events].sort((a, b) => b.sourceCount - a.sourceCount);
 
     const top = [];
     const usedIds = new Set();
 
-    // Pick the best event for each required conflict
-    for (const req of REQUIRED) {
-      // First: try to find an event whose PRIMARY country matches (most accurate)
-      let match = sorted.find(e => !usedIds.has(e.id) &&
-        req.countries.includes(e._primaryCountry));
+    // Pick the best event for each priority conflict (in order)
+    for (const req of PRIORITY) {
+      if (top.length >= 4) break;
 
-      // Fallback: keyword search in all text
+      // Primary country match + must be top-story-worthy
+      let match = sorted.find(e => !usedIds.has(e.id) &&
+        req.countries.includes(e._primaryCountry) &&
+        isTopStoryWorthy(e));
+
+      // Fallback: keyword search + must be top-story-worthy
       if (!match) {
         match = sorted.find(e => !usedIds.has(e.id) &&
+          isTopStoryWorthy(e) &&
           req.keywords.some(kw => getEventText(e).includes(kw)));
       }
 
@@ -218,11 +233,11 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       }
     }
 
-    // If any required slot couldn't be filled, fill with highest-sourced remaining events
+    // Fill remaining slots with highest-sourced crisis/conflict events
     if (top.length < 4) {
       for (const e of sorted) {
         if (top.length >= 4) break;
-        if (!usedIds.has(e.id) && e.sourceCount >= 2) {
+        if (!usedIds.has(e.id) && isTopStoryWorthy(e) && e.sourceCount >= 3) {
           top.push(e);
           usedIds.add(e.id);
         }

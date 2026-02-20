@@ -309,7 +309,7 @@ export default function HomePage() {
     const hasCached = loadNewsFromLocalStorage();
     if (hasCached) setIsLoading(false);
 
-    // Defer news fetching by 150ms so the globe and UI render first (zero jank)
+    // Defer news fetching by 3 seconds so globe fully renders first (zero jank)
     const newsStartTimer = setTimeout(() => {
       fetchLiveNews({
         onStatusUpdate: (status) => {
@@ -319,7 +319,7 @@ export default function HomePage() {
           setIsLoading(false);
         }
       });
-    }, 150);
+    }, 3000);
 
     // Auto-refresh news
     const newsInterval = setInterval(() => {

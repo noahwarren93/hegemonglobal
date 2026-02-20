@@ -931,7 +931,7 @@ function notifyEventsUpdated() {
 // Summary Caching (localStorage, keyed by article headline hash)
 // ============================================================
 
-const SUMMARY_CACHE_KEY = 'hegemon_summary_cache_v3';
+const SUMMARY_CACHE_KEY = 'hegemon_summary_cache_v4';
 
 function eventSummaryKey(event) {
   if (!event.articles || event.articles.length === 0) return null;
@@ -975,12 +975,11 @@ export async function fetchEventSummaries() {
   const cache = loadSummaryCache();
   const uncached = [];
 
-  // Apply cached summaries immediately
+  // Apply cached summaries immediately (headlines come from articles, not AI)
   for (const event of DAILY_EVENTS) {
     const key = eventSummaryKey(event);
     if (key && cache[key]) {
       event.summary = cache[key].summary;
-      if (cache[key].headline) event.headline = cache[key].headline;
       event.summaryLoading = false;
     } else {
       uncached.push(event);
@@ -1036,18 +1035,14 @@ export async function fetchEventSummaries() {
       const data = await response.json();
       const summaries = data.summaries || [];
 
-      // Apply summaries and AI-generated headlines, save to cache
+      // Apply summaries only (headlines come from articles, not AI)
       for (let i = 0; i < batch.length; i++) {
         batch[i].summaryLoading = false;
         if (summaries[i] && summaries[i].summary) {
           batch[i].summary = summaries[i].summary;
-          if (summaries[i].headline) {
-            batch[i].headline = summaries[i].headline;
-          }
           const key = eventSummaryKey(batch[i]);
           if (key) {
             cache[key] = {
-              headline: batch[i].headline,
               summary: summaries[i].summary,
               savedAt: Date.now()
             };
