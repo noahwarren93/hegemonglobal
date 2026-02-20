@@ -278,7 +278,7 @@ function scoreEvent(event) {
 const HARD_CAP = 40;
 
 function _yieldToMain() {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
 export async function clusterArticles(articles) {
@@ -299,7 +299,7 @@ export async function clusterArticles(articles) {
       _topics: extractTopics(fullText),
       _allCountries: extractAllCountries(fullText),
     });
-    if (idx > 0 && idx % 30 === 0) await _yieldToMain();
+    if (idx > 0 && idx % 20 === 0) await _yieldToMain();
   }
 
   // Step 2: Group by primary country
@@ -323,6 +323,9 @@ export async function clusterArticles(articles) {
 
   const allClusters = [];
 
+  // Yield before clustering phase
+  await _yieldToMain();
+
   // Step 3a: Non-stoplist countries — all articles with same country go into ONE cluster
   // If >8 articles, sub-cluster by topic keywords
   for (const [country, indices] of countryGroups.entries()) {
@@ -334,6 +337,9 @@ export async function clusterArticles(articles) {
       for (const sub of subs) allClusters.push(sub);
     }
   }
+
+  // Yield between clustering phases
+  await _yieldToMain();
 
   // Step 3b: Stoplist countries (US/UK/China/Russia) — require shared topic keyword
   for (const [country, indices] of stoplistGroups.entries()) {

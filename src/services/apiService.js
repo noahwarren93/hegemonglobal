@@ -16,7 +16,7 @@ const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 // ============================================================
 
 function yieldToMain() {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
 // ============================================================
@@ -1101,8 +1101,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (scoreGeopoliticalRelevance(fullText) < 1) continue;
         relevantArticles.push(article);
 
-        // Yield every 50 articles to keep UI responsive
-        if (i > 0 && i % 50 === 0) await yieldToMain();
+        // Yield every 20 articles to keep UI responsive
+        if (i > 0 && i % 20 === 0) await yieldToMain();
       }
 
       // --- Yield before dedup (O(n²), heaviest step) ---
@@ -1139,8 +1139,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           uniqueArticles.push(article);
         }
 
-        // Yield every 30 articles during dedup (O(n²) is heavy)
-        if (i > 0 && i % 30 === 0) await yieldToMain();
+        // Yield every 20 articles during dedup (O(n²) is heavy)
+        if (i > 0 && i % 20 === 0) await yieldToMain();
       }
 
       console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);

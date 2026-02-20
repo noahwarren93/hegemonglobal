@@ -309,14 +309,17 @@ export default function HomePage() {
     const hasCached = loadNewsFromLocalStorage();
     if (hasCached) setIsLoading(false);
 
-    fetchLiveNews({
-      onStatusUpdate: (status) => {
-        if (status === 'fetching' && !hasCached) setIsLoading(true);
-      },
-      onComplete: () => {
-        setIsLoading(false);
-      }
-    });
+    // Defer news fetching by 150ms so the globe and UI render first (zero jank)
+    const newsStartTimer = setTimeout(() => {
+      fetchLiveNews({
+        onStatusUpdate: (status) => {
+          if (status === 'fetching' && !hasCached) setIsLoading(true);
+        },
+        onComplete: () => {
+          setIsLoading(false);
+        }
+      });
+    }, 150);
 
     // Auto-refresh news
     const newsInterval = setInterval(() => {
@@ -336,6 +339,7 @@ export default function HomePage() {
     }, 300000);
 
     return () => {
+      clearTimeout(newsStartTimer);
       clearInterval(newsInterval);
       clearInterval(stocksInterval);
     };
