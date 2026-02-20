@@ -102,14 +102,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const text = event.summary;
     // Split into sentences — but avoid breaking on abbreviations like "U.S." or "Dr."
     // Match sentence-ending punctuation followed by a space and uppercase letter
+    const ABBREVS = new Set(['u.s.', 'u.k.', 'u.n.', 'e.u.', 'dr.', 'mr.', 'mrs.', 'ms.', 'prof.', 'gen.', 'gov.', 'sen.', 'rep.', 'st.', 'no.', 'vs.', 'inc.', 'corp.', 'dept.', 'est.', 'approx.']);
     const sentences = [];
     let buf = '';
     for (let i = 0; i < text.length; i++) {
       buf += text[i];
       if ((text[i] === '.' || text[i] === '!' || text[i] === '?') && i + 2 < text.length && text[i + 1] === ' ') {
-        // Check if next char is uppercase (real sentence break) and current "word" is >2 chars
-        const wordBefore = buf.trimEnd().split(/\s/).pop() || '';
-        if (text[i + 2] >= 'A' && text[i + 2] <= 'Z' && wordBefore.length > 3) {
+        const wordBefore = (buf.trimEnd().split(/\s/).pop() || '').toLowerCase();
+        // Skip if it's a known abbreviation
+        if (ABBREVS.has(wordBefore)) continue;
+        // Real sentence break: next char is uppercase
+        if (text[i + 2] >= 'A' && text[i + 2] <= 'Z') {
           sentences.push(buf.trim());
           buf = '';
         }

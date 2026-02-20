@@ -151,21 +151,39 @@ export function seedPastBriefingIfEmpty() {
 
 const RSS_FEEDS = {
   daily: [
+    // --- Western sources (~60%) ---
     { url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en', source: 'Google News World' },
     { url: 'https://news.google.com/rss/search?q=world+news+today&hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
     { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
+    { url: 'https://www.reutersagency.com/feed/?best-topics=world', source: 'Reuters' },
+    { url: 'https://rsshub.app/apnews/topics/world-news', source: 'AP News' },
+    { url: 'https://www.politico.com/rss/politico-world-news.xml', source: 'Politico' },
+    { url: 'https://www.economist.com/international/rss.xml', source: 'The Economist' },
+    { url: 'https://foreignpolicy.com/feed/', source: 'Foreign Policy' },
+    { url: 'https://feeds.bloomberg.com/politics/news.rss', source: 'Bloomberg' },
+    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
     { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' },
+    { url: 'https://nypost.com/feed/', source: 'New York Post' },
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },
+    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
+    // --- Non-Western sources (~40%) ---
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK World' },
+    { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap' },
+    { url: 'http://www.news.cn/english/rss/worldrss.xml', source: 'Xinhua' },
+    { url: 'https://www.rt.com/rss/news/', source: 'RT' },
+    { url: 'https://www.france24.com/en/rss', source: 'France 24' },
+    { url: 'https://rss.dw.com/rdf/rss-en-world', source: 'Deutsche Welle' },
+    { url: 'https://www.aa.com.tr/en/rss/default?cat=world', source: 'Anadolu Agency' },
+    { url: 'https://english.kyodonews.net/rss/all.xml', source: 'Kyodo News' },
+    { url: 'https://en.mehrnews.com/rss', source: 'Mehr News' },
     { url: 'https://www.cgtn.com/subscribe/rss/section/world.xml', source: 'CGTN' },
     { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
     { url: 'https://tass.com/rss/v2.xml', source: 'TASS' },
     { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' },
-    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
-    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
-    { url: 'https://nypost.com/feed/', source: 'New York Post' },
-    { url: 'https://thehill.com/feed/', source: 'The Hill' },
-    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
@@ -734,17 +752,30 @@ export function isRelevantToCountry(title, description, countryName) {
 // ============================================================
 
 export async function fetchRSS(feedUrl, sourceName) {
-  // rss2json only — Worker proxy disabled until stable
+  // Try rss2json first
   try {
     const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
     const response = await fetch(proxyUrl);
-    if (!response.ok) return [];
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'ok' && data.items && data.items.length > 0) {
+        return parseRSSItems(data, sourceName);
+      }
+    }
+  } catch (error) {
+    console.warn(`rss2json failed for ${sourceName}:`, error.message);
+  }
 
+  // Fallback: Cloudflare Worker RSS proxy (handles feeds rss2json can't parse)
+  try {
+    const workerUrl = `${RSS_PROXY_BASE}/rss?url=${encodeURIComponent(feedUrl)}`;
+    const response = await fetch(workerUrl);
+    if (!response.ok) return [];
     const data = await response.json();
-    if (data.status !== 'ok' || !data.items) return [];
+    if (data.status !== 'ok' || !data.items || data.items.length === 0) return [];
     return parseRSSItems(data, sourceName);
   } catch (error) {
-    console.warn(`RSS fetch failed for ${sourceName}:`, error.message);
+    console.warn(`Worker proxy also failed for ${sourceName}:`, error.message);
     return [];
   }
 }
@@ -1141,8 +1172,8 @@ function notifyEventsUpdated() {
 export async function fetchEventSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
 
-  // Only send multi-source events or top events (limit to 15 to control costs)
-  const eventsToSummarize = DAILY_EVENTS.slice(0, 15);
+  // Send ALL events — single-source events also get summaries
+  const eventsToSummarize = DAILY_EVENTS;
 
   // Mark as loading
   for (const event of eventsToSummarize) {

@@ -206,7 +206,7 @@ function shouldCluster(a, b) {
 // ============================================================
 
 const SOURCE_RANK = {
-  'reuters': 10, 'ap': 10, 'associated press': 10,
+  'reuters': 10, 'ap': 10, 'ap news': 10, 'associated press': 10,
   'bbc': 9, 'bbc world': 9, 'bbc news': 9,
   'wall street journal': 8, 'wsj': 8,
   'new york times': 8, 'nyt': 8,
@@ -216,12 +216,23 @@ const SOURCE_RANK = {
   'bloomberg': 7,
   'the economist': 7,
   'washington post': 7,
+  'foreign policy': 7,
+  'france 24': 6, 'france24': 6,
+  'deutsche welle': 6, 'dw': 6,
   'south china morning post': 6, 'scmp': 6,
+  'politico': 6,
+  'nhk world': 6, 'nhk': 6,
+  'kyodo news': 6, 'kyodo': 6,
+  'yonhap': 6,
+  'anadolu agency': 5,
   'cgtn': 5,
   'tass': 5,
   'times of india': 5,
   'the hill': 5,
   'fox news': 5,
+  'rt': 4,
+  'xinhua': 4,
+  'mehr news': 4,
   'daily mail': 3,
   'new york post': 3, 'ny post': 3
 };
