@@ -6,7 +6,8 @@ import {
   DOMESTIC_NOISE_PATTERNS, ESCALATION_KEYWORDS,
   DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS, COUNTRY_DEMONYMS
 } from '../data/countries';
-import { formatSourceName, timeAgo } from '../utils/riskColors';
+import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
+import { clusterArticles } from './eventsService';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 
@@ -32,6 +33,10 @@ function decodeHTMLEntities(text) {
     .replace(/&nbsp;/g, ' ')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code))
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+function yieldToMain() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
 // ============================================================
@@ -878,80 +883,251 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Web Worker for off-main-thread news processing
-// ============================================================
-
-let _newsWorker = null;
-
-function getNewsWorker() {
-  if (_newsWorker) return _newsWorker;
-  _newsWorker = new Worker(
-    new URL('../workers/newsWorker.js', import.meta.url),
-    { type: 'module' }
-  );
-  return _newsWorker;
-}
-
-// ============================================================
-// Fetch Live News — delegates ALL processing to Web Worker
+// Fetch Live News — main thread with yields for responsiveness
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
+
   if (onStatusUpdate) onStatusUpdate('fetching');
 
   try {
-    const worker = getNewsWorker();
+    // Fetch from multiple RSS feeds in parallel
+    const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
+    const feedResults = await Promise.all(feedPromises);
 
-    const result = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Worker timeout after 60s'));
-      }, 60000);
+    const allArticles = feedResults.flat();
 
-      worker.onmessage = (e) => {
-        clearTimeout(timeout);
-        if (e.data.type === 'result') {
-          resolve(e.data);
-        } else if (e.data.type === 'error') {
-          reject(new Error(e.data.message));
+    // Log per-source article counts for debugging
+    const sourceCounts = {};
+    for (let i = 0; i < RSS_FEEDS.daily.length; i++) {
+      const name = RSS_FEEDS.daily[i].source;
+      const count = feedResults[i] ? feedResults[i].length : 0;
+      sourceCounts[name] = count;
+    }
+    const working = Object.entries(sourceCounts).filter(([, c]) => c > 0);
+    const failed = Object.entries(sourceCounts).filter(([, c]) => c === 0);
+    console.log(`[Hegemon] RSS feeds: ${working.length} working, ${failed.length} failed, ${allArticles.length} total articles`);
+    if (failed.length > 0) console.log('[Hegemon] Failed feeds:', failed.map(([n]) => n).join(', '));
+
+    if (allArticles.length > 0) {
+      allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+      await yieldToMain();
+
+      // Staleness filter — reject articles older than 48 hours
+      const now = Date.now();
+      const STALENESS_MS = 48 * 60 * 60 * 1000;
+      const freshArticles = allArticles.filter(article => {
+        if (!article.pubDate) return true;
+        const age = now - new Date(article.pubDate).getTime();
+        return age < STALENESS_MS;
+      });
+
+      await yieldToMain();
+
+      // Filter: irrelevant keywords, sports, domestic noise, non-English, require geo score >= 1
+      const relevantArticles = [];
+      for (let i = 0; i < freshArticles.length; i++) {
+        const article = freshArticles[i];
+        const title = article.title || '';
+        const text = (title + ' ' + (article.description || '')).toLowerCase();
+        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
+        const category = detectCategory(title, article.description);
+        if (category === 'SPORTS') continue;
+        const fullText = title + ' ' + (article.description || '');
+        if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
+        const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+        if (title.length > 10 && nonAscii / title.length > 0.15) continue;
+        if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
+            !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
+          const nonEnCount = (title.match(/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada|dari|untuk|dengan|atau|ini|itu|comme|sont|nous|leur)\b/gi) || []).length;
+          if (nonEnCount >= 2) continue;
         }
-      };
-      worker.onerror = (err) => {
-        clearTimeout(timeout);
-        reject(err);
-      };
-      worker.postMessage({ type: 'fetchNews' });
-    });
+        if (scoreGeopoliticalRelevance(fullText) < 1) continue;
+        relevantArticles.push(article);
 
-    if (result.briefing && result.briefing.length > 0) {
+        if (i > 0 && i % 20 === 0) await yieldToMain();
+      }
+
+      await yieldToMain();
+
+      // Source-aware dedup
+      const seenEntries = [];
+      const uniqueArticles = [];
+      for (let i = 0; i < relevantArticles.length; i++) {
+        const article = relevantArticles[i];
+        const source = formatSourceName(article.source_id);
+        const normalized = (article.title || '').toLowerCase()
+          .replace(/[^a-z0-9 ]/g, '')
+          .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        let isDupe = false;
+        if (seenEntries.some(s => s.normalized === normalized)) { isDupe = true; }
+        if (!isDupe) {
+          for (const existing of seenEntries) {
+            if (normalized.length > 20 && existing.normalized.length > 20) {
+              const wordsA = new Set(normalized.split(' '));
+              const wordsB = new Set(existing.normalized.split(' '));
+              let overlap = 0;
+              for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
+              const maxLen = Math.max(wordsA.size, wordsB.size);
+              const threshold = existing.source === source ? 0.7 : 0.95;
+              if (maxLen > 0 && overlap / maxLen >= threshold) { isDupe = true; break; }
+            }
+          }
+        }
+        if (!isDupe) {
+          seenEntries.push({ normalized, source });
+          uniqueArticles.push(article);
+        }
+
+        if (i > 0 && i % 20 === 0) await yieldToMain();
+      }
+
+      console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
+
+      await yieldToMain();
+
+      // Build new briefing (200 cap)
+      const newArticles = uniqueArticles.slice(0, 200).map(article => {
+        const category = detectCategory(article.title, article.description);
+        const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
+        const sourceName = formatSourceName(article.source_id);
+        return {
+          time: timeAgo(article.pubDate),
+          category,
+          importance,
+          headline: article.title,
+          description: article.description || '',
+          source: sourceName,
+          url: article.link || ''
+        };
+      });
+
+      // Ensure political diversity
+      const rcCount = newArticles.filter(a => { const b = getSourceBias(a.source); return b === 'RC' || b === 'R'; }).length;
+      if (rcCount < 3) {
+        const rightFallbacks = DAILY_BRIEFING_FALLBACK.filter(a => {
+          const b = getSourceBias(a.source);
+          return b === 'RC' || b === 'R';
+        });
+        const needed = Math.min(4 - rcCount, rightFallbacks.length);
+        if (needed > 0) {
+          const interval = Math.max(1, Math.floor(newArticles.length / (needed + 1)));
+          for (let i = 0; i < needed; i++) {
+            const pos = Math.min((i + 1) * interval + i, newArticles.length);
+            newArticles.splice(pos, 0, rightFallbacks[i]);
+          }
+        }
+      }
+
+      // Disperse bias clusters
+      const dispersed = disperseBiasArticles(newArticles);
+
+      // Balance western/non-western source ratio
+      const balanced = balanceSourceOrigins(dispersed);
+
+      // Demote low-priority stories out of top 10
+      const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
+      for (let i = 0; i < Math.min(10, balanced.length); i++) {
+        const h = (balanced[i].headline || '').toLowerCase();
+        if (DEMOTE_KEYWORDS.some(kw => h.includes(kw))) {
+          const [item] = balanced.splice(i, 1);
+          const dest = Math.min(14, balanced.length);
+          balanced.splice(dest, 0, item);
+          i--;
+        }
+      }
+
+      // Deprioritize tabloid sources — never in top 5
+      const DEPRIORITIZE_SOURCES = ['new york post', 'ny post', 'daily mail'];
+      for (let i = 0; i < Math.min(5, balanced.length); i++) {
+        const src = (balanced[i].source || '').toLowerCase();
+        if (DEPRIORITIZE_SOURCES.some(ds => src.includes(ds))) {
+          const [item] = balanced.splice(i, 1);
+          const dest = Math.min(balanced.length, 5);
+          balanced.splice(dest, 0, item);
+          i--;
+        }
+      }
+
       // Mutate shared DAILY_BRIEFING array
       DAILY_BRIEFING.length = 0;
-      DAILY_BRIEFING.push(...result.briefing);
+      DAILY_BRIEFING.push(...balanced);
 
-      // Set events
+      await yieldToMain();
+
+      // Cluster articles into events
+      const events = await clusterArticles(DAILY_BRIEFING);
       DAILY_EVENTS.length = 0;
-      DAILY_EVENTS.push(...result.events);
+      DAILY_EVENTS.push(...events);
 
-      // Defer localStorage writes so they don't block UI
-      setTimeout(() => {
-        saveBriefingSnapshot();
-        seedPastBriefingIfEmpty();
-        saveNewsToLocalStorage();
-      }, 50);
+      saveBriefingSnapshot();
+      seedPastBriefingIfEmpty();
+      saveNewsToLocalStorage();
 
-      // Dynamic risk analysis (chunked, non-blocking)
-      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 100);
+      // Dynamic risk analysis (non-blocking)
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
 
-      // AI summaries AFTER events are rendered
+      // Fire off async AI summary requests (non-blocking)
       setTimeout(() => fetchEventSummaries(), 100);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
     }
   } catch (error) {
-    console.warn('[Hegemon] Worker failed, using fallback:', error.message);
+    console.warn('RSS feeds failed:', error.message);
   }
 
-  // All sources failed — use fallback
+  // Fallback: try each backup API
+  const dailyApiOrder = ['gnews', 'newsdata', 'mediastack'];
+  for (const apiName of dailyApiOrder) {
+    try {
+      const api = NEWS_APIS[apiName];
+      if (!api || !api.key || !api.buildDailyUrl) continue;
+      const response = await fetch(api.buildDailyUrl(api.key));
+      if (response.ok) {
+        const data = await response.json();
+        const results = api.parseResults(data);
+        if (results && results.length > 0) {
+          const fallbackArticles = results.filter(article => {
+            const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+            if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+            return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
+          }).map(article => ({
+            time: timeAgo(article.pubDate),
+            category: detectCategory(article.title, article.description),
+            importance: 'medium',
+            headline: article.title,
+            source: formatSourceName(article.source_id),
+            url: article.link || ''
+          }));
+
+          DAILY_BRIEFING.length = 0;
+          DAILY_BRIEFING.push(...fallbackArticles);
+
+          const fbEvents = await clusterArticles(DAILY_BRIEFING);
+          DAILY_EVENTS.length = 0;
+          DAILY_EVENTS.push(...fbEvents);
+
+          saveBriefingSnapshot();
+          seedPastBriefingIfEmpty();
+          saveNewsToLocalStorage();
+          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
+          setTimeout(() => fetchEventSummaries(), 100);
+
+          if (onComplete) onComplete(DAILY_BRIEFING);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn(`${apiName} fallback failed:`, e.message);
+    }
+  }
+
+  // All sources failed
+  console.error('All news sources failed');
   if (DAILY_BRIEFING.length === 0) {
     DAILY_BRIEFING.length = 0;
     DAILY_BRIEFING.push(...DAILY_BRIEFING_FALLBACK);
