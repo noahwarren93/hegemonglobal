@@ -309,48 +309,47 @@ export default function HomePage() {
     const now = new Date();
     setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
 
-    // Splash dismiss tracking — waits for news + stocks + globe + minimum time
-    const splash = { news: false, stocks: false, globe: false, minTime: false, dismissed: false };
-    const checkSplashDismiss = () => {
-      if (splash.dismissed) return;
-      if (splash.news && splash.stocks && splash.globe && splash.minTime) {
-        splash.dismissed = true;
-        setSplashFading(true);
-        setTimeout(() => setSplashVisible(false), 800);
-      }
+    // Splash: dismiss early if globe is ready, hard cap at 5s no matter what
+    let splashDismissed = false;
+    const dismissSplash = () => {
+      if (splashDismissed) return;
+      splashDismissed = true;
+      setSplashFading(true);
+      setTimeout(() => setSplashVisible(false), 400);
     };
 
-    // Listen for globe texture loaded
-    const handleGlobeReady = () => {
-      splash.globe = true;
-      checkSplashDismiss();
+    // Early dismiss: globe ready + 1.5s minimum
+    let globeReady = false;
+    let minTimePassed = false;
+    const checkEarlyDismiss = () => {
+      if (globeReady && minTimePassed) dismissSplash();
     };
+    const handleGlobeReady = () => { globeReady = true; checkEarlyDismiss(); };
     window.addEventListener('globeReady', handleGlobeReady);
+    const minTimer = setTimeout(() => { minTimePassed = true; checkEarlyDismiss(); }, 1500);
 
-    // Minimum splash display time (1.5s for premium boot feel)
-    const minTimer = setTimeout(() => {
-      splash.minTime = true;
-      checkSplashDismiss();
-    }, 1500);
+    // Hard cap: 5 seconds, dismiss no matter what
+    const hardCapTimer = setTimeout(dismissSplash, 5000);
 
-    // Show cached news immediately, then fetch fresh in background
+    // Load cached news immediately (no splash dependency)
     const hasCached = loadNewsFromLocalStorage();
-    if (hasCached) {
-      setIsLoading(false);
-      splash.news = true;
-    }
+    if (hasCached) setIsLoading(false);
 
-    // Defer news fetching by 3 seconds so globe fully renders first (zero jank)
+    // Load stocks (no splash dependency)
+    const stockCallback = ({ data, lastUpdated, isUpdating }) => {
+      setStocksData(data);
+      setStocksLastUpdated(lastUpdated);
+      setStocksUpdating(!!isUpdating);
+    };
+    loadStockData(stockCallback);
+
+    // Defer news fetching 3s after splash dismisses (globe is visible by then)
     const newsStartTimer = setTimeout(() => {
       fetchLiveNews({
         onStatusUpdate: (status) => {
           if (status === 'fetching' && !hasCached) setIsLoading(true);
         },
-        onComplete: () => {
-          setIsLoading(false);
-          splash.news = true;
-          checkSplashDismiss();
-        }
+        onComplete: () => setIsLoading(false)
       });
     }, 3000);
 
@@ -359,24 +358,13 @@ export default function HomePage() {
       fetchLiveNews();
     }, NEWS_REFRESH_INTERVAL);
 
-    // Load stock data for stocks modal
-    const stockCallback = ({ data, lastUpdated, isUpdating }) => {
-      setStocksData(data);
-      setStocksLastUpdated(lastUpdated);
-      setStocksUpdating(!!isUpdating);
-      if (data) {
-        splash.stocks = true;
-        checkSplashDismiss();
-      }
-    };
-    loadStockData(stockCallback);
-
     const stocksInterval = setInterval(() => {
       loadStockData(stockCallback);
     }, 300000);
 
     return () => {
       clearTimeout(minTimer);
+      clearTimeout(hardCapTimer);
       clearTimeout(newsStartTimer);
       clearInterval(newsInterval);
       clearInterval(stocksInterval);

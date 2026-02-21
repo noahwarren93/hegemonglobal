@@ -35,8 +35,8 @@ function decodeHTMLEntities(text) {
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
-function yieldToMain() {
-  return new Promise(resolve => requestAnimationFrame(resolve));
+function yieldToMain(ms = 0) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // ============================================================
@@ -883,7 +883,7 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Fetch Live News — main thread with yields for responsiveness
+// Fetch Live News — batched RSS, setTimeout yields, zero globe freeze
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
@@ -891,41 +891,51 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
   if (onStatusUpdate) onStatusUpdate('fetching');
 
   try {
-    // Fetch from multiple RSS feeds in parallel
-    const feedPromises = RSS_FEEDS.daily.map(feed => fetchRSS(feed.url, feed.source));
-    const feedResults = await Promise.all(feedPromises);
+    // Fetch RSS in batches of 5 with 50ms gaps to avoid blocking the main thread
+    const feeds = RSS_FEEDS.daily;
+    const BATCH_SIZE = 5;
+    const BATCH_GAP = 50;
+    const allArticles = [];
+    let workingCount = 0;
+    let failedCount = 0;
 
-    const allArticles = feedResults.flat();
-
-    // Log per-source article counts for debugging
-    const sourceCounts = {};
-    for (let i = 0; i < RSS_FEEDS.daily.length; i++) {
-      const name = RSS_FEEDS.daily[i].source;
-      const count = feedResults[i] ? feedResults[i].length : 0;
-      sourceCounts[name] = count;
+    for (let i = 0; i < feeds.length; i += BATCH_SIZE) {
+      const batch = feeds.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(feed => fetchRSS(feed.url, feed.source))
+      );
+      for (const articles of batchResults) {
+        if (articles && articles.length > 0) {
+          workingCount++;
+          allArticles.push(...articles);
+        } else {
+          failedCount++;
+        }
+      }
+      // Yield between batches so globe stays interactive
+      if (i + BATCH_SIZE < feeds.length) {
+        await yieldToMain(BATCH_GAP);
+      }
     }
-    const working = Object.entries(sourceCounts).filter(([, c]) => c > 0);
-    const failed = Object.entries(sourceCounts).filter(([, c]) => c === 0);
-    console.log(`[Hegemon] RSS feeds: ${working.length} working, ${failed.length} failed, ${allArticles.length} total articles`);
-    if (failed.length > 0) console.log('[Hegemon] Failed feeds:', failed.map(([n]) => n).join(', '));
+
+    console.log(`[Hegemon] RSS feeds: ${workingCount} working, ${failedCount} failed, ${allArticles.length} total articles`);
 
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-      await yieldToMain();
+      await yieldToMain(1);
 
       // Staleness filter — reject articles older than 48 hours
       const now = Date.now();
       const STALENESS_MS = 48 * 60 * 60 * 1000;
       const freshArticles = allArticles.filter(article => {
         if (!article.pubDate) return true;
-        const age = now - new Date(article.pubDate).getTime();
-        return age < STALENESS_MS;
+        return (now - new Date(article.pubDate).getTime()) < STALENESS_MS;
       });
 
-      await yieldToMain();
+      await yieldToMain(1);
 
-      // Filter: irrelevant keywords, sports, domestic noise, non-English, require geo score >= 1
+      // Filter: irrelevant, sports, domestic noise, non-English, geo score >= 1
       const relevantArticles = [];
       for (let i = 0; i < freshArticles.length; i++) {
         const article = freshArticles[i];
@@ -946,12 +956,13 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (scoreGeopoliticalRelevance(fullText) < 1) continue;
         relevantArticles.push(article);
 
-        if (i > 0 && i % 20 === 0) await yieldToMain();
+        // Yield every 30 articles
+        if (i > 0 && i % 30 === 0) await yieldToMain(1);
       }
 
-      await yieldToMain();
+      await yieldToMain(1);
 
-      // Source-aware dedup
+      // Source-aware dedup (yield every 30 to prevent stutter)
       const seenEntries = [];
       const uniqueArticles = [];
       for (let i = 0; i < relevantArticles.length; i++) {
@@ -982,12 +993,12 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           uniqueArticles.push(article);
         }
 
-        if (i > 0 && i % 20 === 0) await yieldToMain();
+        if (i > 0 && i % 30 === 0) await yieldToMain(1);
       }
 
       console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
 
-      await yieldToMain();
+      await yieldToMain(1);
 
       // Build new briefing (200 cap)
       const newArticles = uniqueArticles.slice(0, 200).map(article => {
@@ -1056,22 +1067,25 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...balanced);
 
-      await yieldToMain();
+      await yieldToMain(1);
 
       // Cluster articles into events
       const events = await clusterArticles(DAILY_BRIEFING);
       DAILY_EVENTS.length = 0;
       DAILY_EVENTS.push(...events);
 
-      saveBriefingSnapshot();
-      seedPastBriefingIfEmpty();
-      saveNewsToLocalStorage();
+      // Defer heavy side-effects so UI renders first
+      setTimeout(() => {
+        saveBriefingSnapshot();
+        seedPastBriefingIfEmpty();
+        saveNewsToLocalStorage();
+      }, 50);
 
-      // Dynamic risk analysis (non-blocking)
-      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
+      // Dynamic risk analysis (chunked, non-blocking)
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 200);
 
-      // Fire off async AI summary requests (non-blocking)
-      setTimeout(() => fetchEventSummaries(), 100);
+      // AI summaries after events render
+      setTimeout(() => fetchEventSummaries(), 300);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
@@ -1111,11 +1125,13 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           DAILY_EVENTS.length = 0;
           DAILY_EVENTS.push(...fbEvents);
 
-          saveBriefingSnapshot();
-          seedPastBriefingIfEmpty();
-          saveNewsToLocalStorage();
-          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 0);
-          setTimeout(() => fetchEventSummaries(), 100);
+          setTimeout(() => {
+            saveBriefingSnapshot();
+            seedPastBriefingIfEmpty();
+            saveNewsToLocalStorage();
+          }, 50);
+          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 200);
+          setTimeout(() => fetchEventSummaries(), 300);
 
           if (onComplete) onComplete(DAILY_BRIEFING);
           return;
