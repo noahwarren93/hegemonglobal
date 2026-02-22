@@ -5,6 +5,7 @@ import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAIL
 import { RISK_COLORS, renderBiasTag, getStateMediaLabel, enforceSourceDiversity, ensureNonWesternInTopStories } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated } from '../../services/apiService';
+import { scoreHeadlineNeutrality } from '../../services/eventsService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
@@ -216,12 +217,14 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         (evt.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
     };
 
-    // Score a headline for topic relevance
-    const scoreHeadline = (headline, req) => {
+    // Score a headline for topic relevance + neutrality
+    const scoreHeadline = (headline, req, source) => {
       const h = (headline || '').toLowerCase();
       let score = 0;
       for (const kw of req.boost) { if (h.includes(kw)) score += 3; }
       for (const kw of req.penalize) { if (h.includes(kw)) score -= 5; }
+      // Penalize editorialized/snarky headlines
+      score += scoreHeadlineNeutrality(headline, source);
       return score;
     };
 
@@ -235,12 +238,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       for (const a of event.articles) {
         const hl = a.headline || a.title || '';
         if (!hl) continue;
-        const s = scoreHeadline(hl, req);
+        const s = scoreHeadline(hl, req, a.source);
         if (s > bestScore) { bestScore = s; best = hl; }
       }
 
       // Also score the current event headline
-      const evtScore = scoreHeadline(event.headline, req);
+      const evtScore = scoreHeadline(event.headline, req, null);
       if (evtScore >= bestScore) { best = event.headline; bestScore = evtScore; }
 
       // If best headline still has negative score, use fallback

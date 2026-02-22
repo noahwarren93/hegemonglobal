@@ -306,6 +306,8 @@ export function loadNewsFromLocalStorage() {
       if (Date.now() - evCached.ts < NEWS_LS_TTL && evCached.events && evCached.events.length > 0) {
         DAILY_EVENTS.length = 0;
         DAILY_EVENTS.push(...evCached.events);
+        // Notify sidebar so cached events render immediately (not after fetch)
+        setTimeout(() => notifyEventsUpdated(), 0);
       }
     }
 
@@ -1074,6 +1076,9 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_EVENTS.length = 0;
       DAILY_EVENTS.push(...events);
 
+      // Apply cached summaries IMMEDIATELY so events render with summaries (no flash)
+      applyCachedSummaries();
+
       // Defer heavy side-effects so UI renders first
       setTimeout(() => {
         saveBriefingSnapshot();
@@ -1084,7 +1089,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       // Dynamic risk analysis (chunked, non-blocking)
       setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 200);
 
-      // AI summaries after events render
+      // Fetch only truly uncached summaries from API
       setTimeout(() => fetchEventSummaries(), 300);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
@@ -1124,6 +1129,9 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           const fbEvents = await clusterArticles(DAILY_BRIEFING);
           DAILY_EVENTS.length = 0;
           DAILY_EVENTS.push(...fbEvents);
+
+          // Apply cached summaries immediately
+          applyCachedSummaries();
 
           setTimeout(() => {
             saveBriefingSnapshot();
@@ -1215,14 +1223,36 @@ function saveSummaryCache(cache) {
   catch (e) { console.warn('Summary cache save failed:', e.message); }
 }
 
+/**
+ * Synchronously apply cached summaries to DAILY_EVENTS.
+ * Called immediately after clustering so events render with summaries (no flash).
+ */
+function applyCachedSummaries() {
+  if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
+  const cache = loadSummaryCache();
+  let applied = 0;
+  for (const event of DAILY_EVENTS) {
+    const key = eventSummaryKey(event);
+    if (key && cache[key]) {
+      event.summary = cache[key].summary;
+      event.summaryLoading = false;
+      applied++;
+    }
+  }
+  if (applied > 0) {
+    console.log(`[Hegemon] Pre-applied ${applied} cached summaries`);
+  }
+}
+
 export async function fetchEventSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
 
   const cache = loadSummaryCache();
   const uncached = [];
 
-  // Apply cached summaries immediately (headlines come from articles, not AI)
+  // Check for cached summaries (some may already be applied by applyCachedSummaries)
   for (const event of DAILY_EVENTS) {
+    if (event.summary) continue; // Already has summary (from cache or prior apply)
     const key = eventSummaryKey(event);
     if (key && cache[key]) {
       event.summary = cache[key].summary;

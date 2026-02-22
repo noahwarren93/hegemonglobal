@@ -458,18 +458,66 @@ function subClusterBySimilarity(annotated, indices, threshold) {
 }
 
 // ============================================================
+// Headline Neutrality Scoring (penalize editorialized/snarky headlines)
+// ============================================================
+
+const EDITORIAL_PENALTY_WORDS = [
+  'busy', 'pumping iron', 'slammed', 'claps back', 'destroys', 'epic',
+  'shocking', "you won't believe", 'blasts', 'rips', 'torches', 'eviscerates',
+  'obliterates', 'schools', 'owns', 'roasts', 'dunks on', 'melts down',
+  'loses it', 'goes off', 'sounds alarm', 'drops bombshell', 'breaks silence',
+  'doubled down', 'fires back', 'humiliates', 'crushes', 'wrecks', 'savage',
+  'brutal', 'insane', 'unhinged', 'deranged', 'unbelievable', 'jaw-dropping',
+  'mind-blowing', 'bombshell', 'stunner', 'game-changer', 'mic drop',
+];
+
+const EDITORIAL_OPINION_SOURCES = new Set([
+  'daily mail', 'new york post', 'ny post', 'rt', 'the hill',
+  'washington times', 'fox news',
+]);
+
+export function scoreHeadlineNeutrality(headline, source) {
+  const lower = (headline || '').toLowerCase();
+  let score = 0;
+
+  // Penalize editorial/snarky language
+  for (const word of EDITORIAL_PENALTY_WORDS) {
+    if (lower.includes(word)) score -= 10;
+  }
+
+  // Penalize sarcastic quotes ('Secretary of War', 'peace plan', etc.)
+  const sarcQuotes = headline.match(/['\u2018\u2019].{3,30}['\u2018\u2019]/g);
+  if (sarcQuotes) score -= 5 * sarcQuotes.length;
+
+  // Penalize very long headlines (usually editorialized)
+  if (headline.length > 100) score -= 3;
+
+  // Boost short, factual headlines
+  if (headline.length > 10 && headline.length < 70) score += 2;
+
+  // Penalize opinion-heavy sources when picking representative headline
+  if (source && EDITORIAL_OPINION_SOURCES.has(source.toLowerCase())) score -= 3;
+
+  return score;
+}
+
+// ============================================================
 // Build event object from cluster indices
 // ============================================================
 
 function buildEvent(annotated, indices) {
   const clusterArts = indices.map(i => annotated[i]);
 
+  // Sort by source rank, then score top candidates by neutrality
   const sorted = [...clusterArts].sort((a, b) => getSourceRank(b.source) - getSourceRank(a.source));
-  const topCandidates = sorted.slice(0, Math.min(3, sorted.length));
+  const topCandidates = sorted.slice(0, Math.min(5, sorted.length));
   const primary = topCandidates.reduce((best, curr) => {
     const currHL = (curr._headline || '').trim();
     const bestHL = (best._headline || '').trim();
-    return currHL.length > 0 && currHL.length < bestHL.length ? curr : best;
+    if (!currHL) return best;
+    const currScore = getSourceRank(curr.source) + scoreHeadlineNeutrality(currHL, curr.source);
+    const bestScore = getSourceRank(best.source) + scoreHeadlineNeutrality(bestHL, best.source);
+    return currScore > bestScore ? curr : best;
   }, topCandidates[0]);
 
   const allEntities = new Set();
