@@ -153,9 +153,14 @@ export function seedPastBriefingIfEmpty() {
 // RSS Feed Configuration
 // ============================================================
 
+// 30 reliable feeds only — broken/slow feeds removed (Xinhua, RT, TASS, Mehr,
+// CGTN, Bloomberg, FT, Economist, Foreign Policy, Folha, Tempo, VnExpress,
+// Buenos Aires Herald, Premium Times, Mail & Guardian, Bangkok Post,
+// Daily Star Bangladesh, Globe and Mail, SMH, Irish Times, Washington Times,
+// ABC Australia, NHK World, Jakarta Post, Nation Kenya, duplicate Google feeds)
 const RSS_FEEDS = {
   daily: [
-    // --- Western sources (~60%) ---
+    // --- Tier 1: Always reliable, high-value ---
     { url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en', source: 'Google News World' },
     { url: 'https://news.google.com/rss/search?q=world+news+today&hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
@@ -163,63 +168,31 @@ const RSS_FEEDS = {
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
     { url: 'https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Reuters' },
     { url: 'https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'AP News' },
-    { url: 'https://www.politico.com/rss/politico-world-news.xml', source: 'Politico' },
-    { url: 'https://www.economist.com/international/rss.xml', source: 'The Economist' },
-    { url: 'https://foreignpolicy.com/feed/', source: 'Foreign Policy' },
-    { url: 'https://feeds.bloomberg.com/politics/news.rss', source: 'Bloomberg' },
-    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
-    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
-    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' },
-    { url: 'https://nypost.com/feed/', source: 'New York Post' },
-    { url: 'https://thehill.com/feed/', source: 'The Hill' },
-    { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
-    { url: 'https://news.google.com/rss/search?q=site:telegraph.co.uk+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'The Telegraph' },
-    { url: 'https://www.ft.com/rss/home', source: 'Financial Times' },
-    { url: 'https://www.cbc.ca/webfeed/rss/rss-world', source: 'CBC News' },
-    { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
-    { url: 'https://www.irishtimes.com/cmlink/news-1.1319192', source: 'Irish Times' },
-    // --- Non-Western sources (~40%) ---
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
-    { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK World' },
-    { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap' },
-    { url: 'http://www.news.cn/english/rss/worldrss.xml', source: 'Xinhua' },
-    { url: 'https://www.rt.com/rss/news/', source: 'RT' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
     { url: 'https://www.france24.com/en/rss', source: 'France 24' },
     { url: 'https://rss.dw.com/rdf/rss-en-world', source: 'Deutsche Welle' },
+    // --- Tier 2: Usually reliable ---
+    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News' },
+    { url: 'https://thehill.com/feed/', source: 'The Hill' },
+    { url: 'https://www.politico.com/rss/politico-world-news.xml', source: 'Politico' },
+    { url: 'https://news.google.com/rss/search?q=site:telegraph.co.uk+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'The Telegraph' },
+    { url: 'https://www.cbc.ca/webfeed/rss/rss-world', source: 'CBC News' },
+    { url: 'https://www.independent.co.uk/news/world/rss', source: 'The Independent' },
+    { url: 'https://www.dailymail.co.uk/news/worldnews/index.rss', source: 'Daily Mail' },
+    { url: 'https://nypost.com/feed/', source: 'New York Post' },
+    // --- Non-Western Tier 2 ---
     { url: 'https://www.aa.com.tr/en/rss/default?cat=world', source: 'Anadolu Agency' },
+    { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap' },
     { url: 'https://news.google.com/rss/search?q=site:english.kyodonews.net+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Kyodo News' },
-    { url: 'https://en.mehrnews.com/rss', source: 'Mehr News' },
-    { url: 'https://www.cgtn.com/subscribe/rss/section/world.xml', source: 'CGTN' },
     { url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms', source: 'Times of India' },
-    { url: 'https://tass.com/rss/v2.xml', source: 'TASS' },
     { url: 'https://www.scmp.com/rss/91/feed', source: 'South China Morning Post' },
-    { url: 'https://www.thehindu.com/news/international/feeder/default.rss', source: 'The Hindu' },
     { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
     { url: 'https://www.africanews.com/feed/', source: 'Africa News' },
     { url: 'https://news.google.com/rss/search?q=site:asia.nikkei.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Nikkei Asia' },
-    { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311', source: 'CNA' },
-    { url: 'https://www.straitstimes.com/news/world/rss.xml', source: 'Straits Times' },
     { url: 'https://news.google.com/rss/search?q=site:haaretz.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Haaretz' },
-    { url: 'https://news.google.com/rss/search?q=site:thejakartapost.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Jakarta Post' },
-    { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
-    { url: 'https://news.google.com/rss/search?q=site:nation.africa+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Nation Kenya' },
-    // --- New sources (expanded coverage) ---
-    { url: 'https://www.independent.co.uk/news/world/rss', source: 'The Independent' },
-    { url: 'https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/world/', source: 'Globe and Mail' },
-    { url: 'https://www.smh.com.au/rss/world.xml', source: 'Sydney Morning Herald' },
     { url: 'https://www.dawn.com/feeds/home', source: 'Dawn' },
-    { url: 'https://www.thedailystar.net/top-news/rss.xml', source: 'Daily Star Bangladesh' },
-    { url: 'https://rss.tempo.co/en', source: 'Tempo' },
-    { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times' },
-    { url: 'https://mg.co.za/feed/', source: 'Mail & Guardian' },
     { url: 'https://www.middleeasteye.net/rss', source: 'Middle East Eye' },
-    { url: 'https://news.google.com/rss/search?q=site:thenationalnews.com&hl=en', source: 'Google News' },
-    { url: 'https://feeds.folha.uol.com.br/mundo/rss091.xml', source: 'Folha' },
-    { url: 'https://buenosairesherald.com/feed/', source: 'Buenos Aires Herald' },
-    { url: 'https://www.taipeitimes.com/xml/index.rss', source: 'Taipei Times' },
-    { url: 'https://news.google.com/rss/search?q=site:koreaherald.com+when:7d&hl=en', source: 'Google News' },
-    { url: 'https://e.vnexpress.net/rss/news.rss', source: 'VnExpress' },
-    { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
   ],
   search: (query) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
 };
@@ -268,7 +241,7 @@ const apiFailures = {};
 
 const NEWS_LS_KEY = 'hegemon_news_cache';
 const EVENTS_LS_KEY = 'hegemon_events_cache';
-const NEWS_LS_TTL = 30 * 60 * 1000; // 30 minutes
+const NEWS_LS_TTL = 24 * 60 * 60 * 1000; // 24 hours — always show cached data on load
 
 function saveNewsToLocalStorage() {
   try {
@@ -646,31 +619,50 @@ export function isRelevantToCountry(title, description, countryName) {
 // RSS Fetching
 // ============================================================
 
+const FEED_TIMEOUT_MS = 5000; // 5-second hard timeout per feed
+
 export async function fetchRSS(feedUrl, sourceName) {
+  const startTime = performance.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FEED_TIMEOUT_MS);
+
   // Try rss2json first
   try {
     const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
-    const response = await fetch(proxyUrl);
+    const response = await fetch(proxyUrl, { signal: controller.signal });
     if (response.ok) {
       const data = await response.json();
       if (data.status === 'ok' && data.items && data.items.length > 0) {
+        clearTimeout(timeout);
+        const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+        console.log(`[RSS] OK ${sourceName}: ${data.items.length} items (${elapsed}s)`);
         return parseRSSItems(data, sourceName);
       }
     }
   } catch (error) {
-    console.warn(`rss2json failed for ${sourceName}:`, error.message);
+    if (error.name === 'AbortError') {
+      clearTimeout(timeout);
+      console.warn(`[RSS] TIMEOUT ${sourceName} (5s)`);
+      return [];
+    }
   }
 
-  // Fallback: Cloudflare Worker RSS proxy (handles feeds rss2json can't parse)
+  // Fallback: Cloudflare Worker (same abort signal — shared 5s budget)
   try {
     const workerUrl = `${RSS_PROXY_BASE}/rss?url=${encodeURIComponent(feedUrl)}`;
-    const response = await fetch(workerUrl);
+    const response = await fetch(workerUrl, { signal: controller.signal });
+    clearTimeout(timeout);
     if (!response.ok) return [];
     const data = await response.json();
     if (data.status !== 'ok' || !data.items || data.items.length === 0) return [];
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+    console.log(`[RSS] OK ${sourceName}: ${data.items.length} items (${elapsed}s, worker)`);
     return parseRSSItems(data, sourceName);
   } catch (error) {
-    console.warn(`Worker proxy also failed for ${sourceName}:`, error.message);
+    clearTimeout(timeout);
+    if (error.name === 'AbortError') {
+      console.warn(`[RSS] TIMEOUT ${sourceName} (5s)`);
+    }
     return [];
   }
 }
@@ -885,42 +877,38 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Fetch Live News — batched RSS, setTimeout yields, zero globe freeze
+// Fetch Live News — ALL feeds in parallel, 5s timeout, timing logs
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
+  const totalStartTime = performance.now();
   if (onStatusUpdate) onStatusUpdate('fetching');
 
   try {
-    // Fetch RSS in batches of 5 with 50ms gaps to avoid blocking the main thread
     const feeds = RSS_FEEDS.daily;
-    const BATCH_SIZE = 5;
-    const BATCH_GAP = 50;
+
+    // Fetch ALL feeds in parallel — each has its own 5s AbortController timeout
+    console.log(`[Hegemon] Fetching ${feeds.length} RSS feeds in parallel...`);
+    const results = await Promise.allSettled(
+      feeds.map(feed => fetchRSS(feed.url, feed.source))
+    );
+
     const allArticles = [];
     let workingCount = 0;
     let failedCount = 0;
 
-    for (let i = 0; i < feeds.length; i += BATCH_SIZE) {
-      const batch = feeds.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map(feed => fetchRSS(feed.url, feed.source))
-      );
-      for (const articles of batchResults) {
-        if (articles && articles.length > 0) {
-          workingCount++;
-          allArticles.push(...articles);
-        } else {
-          failedCount++;
-        }
-      }
-      // Yield between batches so globe stays interactive
-      if (i + BATCH_SIZE < feeds.length) {
-        await yieldToMain(BATCH_GAP);
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
+        workingCount++;
+        allArticles.push(...result.value);
+      } else {
+        failedCount++;
       }
     }
 
-    console.log(`[Hegemon] RSS feeds: ${workingCount} working, ${failedCount} failed, ${allArticles.length} total articles`);
+    const rssElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
+    console.log(`[Hegemon] RSS complete: ${workingCount}/${feeds.length} feeds OK, ${allArticles.length} articles in ${rssElapsed}s`);
 
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -1079,6 +1067,9 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       // Apply cached summaries IMMEDIATELY so events render with summaries (no flash)
       applyCachedSummaries();
 
+      const totalElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
+      console.log(`[Hegemon] Events ready: ${events.length} events in ${totalElapsed}s total`);
+
       // Defer heavy side-effects so UI renders first
       setTimeout(() => {
         saveBriefingSnapshot();
@@ -1087,10 +1078,10 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       }, 50);
 
       // Dynamic risk analysis (chunked, non-blocking)
-      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 200);
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
 
-      // Fetch only truly uncached summaries from API
-      setTimeout(() => fetchEventSummaries(), 300);
+      // Fetch only truly uncached summaries AFTER events are displayed
+      setTimeout(() => fetchEventSummaries(), 2000);
 
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
@@ -1138,8 +1129,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
             seedPastBriefingIfEmpty();
             saveNewsToLocalStorage();
           }, 50);
-          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 200);
-          setTimeout(() => fetchEventSummaries(), 300);
+          setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
+          setTimeout(() => fetchEventSummaries(), 2000);
 
           if (onComplete) onComplete(DAILY_BRIEFING);
           return;
