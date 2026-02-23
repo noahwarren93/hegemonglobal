@@ -19,29 +19,37 @@ const SECTIONS = [
 // Radar Chart — copied from original compare.js drawRadarChart()
 // ============================================================
 
-function parseToTrillions(str) {
+function parseToBillions(str) {
   if (!str) return 0;
   const num = parseFloat(str.replace(/[^0-9.]/g, ''));
   if (isNaN(num)) return 0;
-  if (str.indexOf('T') !== -1) return num;
-  if (str.indexOf('B') !== -1) return num / 1000;
-  if (str.indexOf('M') !== -1) return num / 1000000;
+  if (str.indexOf('T') !== -1) return num * 1000;
+  if (str.indexOf('B') !== -1) return num;
+  if (str.indexOf('M') !== -1) return num / 1000;
   return num;
+}
+
+// Log-scale normalization: spreads values so small countries are still visible
+// instead of being crushed to near-zero by linear scaling
+function logNorm(val, max) {
+  if (val <= 0) return 0;
+  return Math.min(1, Math.log10(1 + val) / Math.log10(1 + max));
 }
 
 function getVals(name) {
   const d = COMPARE_DATA[name];
-  if (!d) return [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
-  const gdpT = parseToTrillions(d.gdp);
-  const milT = parseToTrillions(d.milSpend);
-  const fdiT = parseToTrillions(d.fdi);
+  if (!d) return [0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
+  const gdpB = parseToBillions(d.gdp);
+  const milB = parseToBillions(d.milSpend);
+  const fdiB = parseToBillions(d.fdi);
+  const inflation = parseFloat(d.inflation) || 0;
   return [
-    Math.min(1, gdpT / 25),
-    Math.min(1, milT / 0.9),
-    Math.min(1, parseFloat(d.democracy) / 10),
-    Math.min(1, parseFloat(d.hdi)),
-    Math.min(1, (100 - parseFloat(d.unemployment)) / 100),
-    Math.min(1, fdiT / 0.3)
+    logNorm(gdpB, 26000),                          // Economy: GDP (US ~$25.5T = ~0.95)
+    logNorm(milB, 900),                             // Military: spending (US $886B = ~0.99)
+    Math.min(1, parseFloat(d.democracy) / 10),      // Democracy: 0-10 score (linear, already good spread)
+    Math.min(1, parseFloat(d.hdi)),                  // Development: HDI 0-1 (linear, already good spread)
+    Math.max(0, Math.min(1, 1 - inflation / 30)),    // Stability: low inflation = stable (Turkey 65% = 0, US 3% = 0.9)
+    logNorm(fdiB, 300)                               // Trade: FDI inflows (US $285B = ~0.99)
   ];
 }
 

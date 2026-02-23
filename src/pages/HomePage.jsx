@@ -295,7 +295,7 @@ export default function HomePage() {
   const [currentDate, setCurrentDate] = useState('');
 
   // --- Trade routes hook ---
-  const { showTradeRoutes, hideTradeRoutes, handleTradeClick } = useTradeRoutes();
+  const { showTradeRoutes, hideTradeRoutes, handleTradeClick, highlightedCountry } = useTradeRoutes();
 
   // ============================================================
   // Initialize on mount
@@ -676,7 +676,15 @@ export default function HomePage() {
           <TradeInfoPanel
             country={tradeInfoCountry}
             isOpen={tradeInfoOpen}
-            onClose={() => { setTradeInfoOpen(false); setTradeInfoCountry(null); }}
+            onClose={() => {
+              setTradeInfoOpen(false);
+              setTradeInfoCountry(null);
+              // Reset trade routes to full visibility (undo highlight dimming)
+              if (tradeRoutesActive) {
+                highlightedCountry.current = null;
+                showTradeRoutes();
+              }
+            }}
           />
 
           {/* Stat Popup */}

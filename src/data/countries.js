@@ -161,16 +161,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Regional Proxy Conflicts',
+  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Nuclear Crisis / US Military Confrontation',
     analysis: {
-      what: 'Iran orchestrates a network of proxy forces: Hezbollah in Lebanon, Hamas in Gaza, Houthis in Yemen, and militias in Iraq and Syria. The nuclear program has advanced significantly—Iran enriches uranium to 60% purity with enough material for multiple bombs if further enriched. The JCPOA collapsed after US withdrawal in 2018. The regime brutally suppressed the "Woman, Life, Freedom" protests, killing hundreds. Supreme Leader Khamenei (85) faces succession questions.',
-      why: 'Iran\'s nuclear threshold status could trigger regional proliferation (Saudi Arabia, Turkey, Egypt). Iranian proxies can strike Israel, disrupt Gulf shipping, and destabilize Arab governments. Houthi attacks have disrupted 12% of global trade. Iran\'s alliance with Russia (providing drones for Ukraine) and China challenges Western interests. The risk of direct Israel-Iran war has never been higher.',
-      next: 'Nuclear breakout remains possible if Iran decides benefits outweigh costs. Watch for: IAEA reports, proxy escalation, oil smuggling enforcement, and succession maneuvering. Israel has conducted covert sabotage and may strike nuclear facilities if diplomacy fails.'
+      what: 'Massive US military buildup in the Middle East — two aircraft carrier strike groups, 13+ warships, fighter jets, and B-2 bombers deployed. Trump issued Iran a 10-15 day ultimatum to accept a nuclear deal or face "bad things." Iran responded that US bases across the region are "legitimate targets" and conducted live-fire naval drills in the Strait of Hormuz. Iran is repairing and fortifying nuclear sites damaged by previous sabotage, enriching uranium to 60% purity with enough material for multiple bombs. Iran\'s proxy network — Hezbollah in Lebanon, Houthis in Yemen, Hamas in Gaza, Iraqi Shia militias — remains capable of striking US and Israeli assets across the region. Tensions at highest point since the 2020 Soleimani assassination.',
+      why: 'The Strait of Hormuz carries 20-30% of global oil transit — any conflict spikes energy prices worldwide. Iran is a nuclear threshold state; strikes on nuclear facilities could paradoxically accelerate weapons development. Regional escalation could draw in Israel, Saudi Arabia, and Gulf states. US-Israel coordination on potential strikes is intensifying. This is the closest the US and Iran have come to direct military confrontation. Iranian proxies can open multiple fronts simultaneously — Red Sea shipping (Houthis), northern Israel (Hezbollah), Iraq (Shia militias), potentially closing the Strait itself.',
+      next: 'Four scenarios: (1) US/Israeli limited strikes on nuclear facilities with contained Iranian retaliation, (2) last-minute diplomatic deal under extreme pressure, (3) continued posturing and gradual de-escalation, or (4) full-scale regional war if strikes trigger coordinated proxy retaliation across multiple fronts. Key variables: Trump\'s willingness to authorize strikes, Iran\'s calculation on negotiating vs. fighting, Israel\'s independent military action, and oil market reactions. Watch for IAEA inspection access, carrier positioning, and back-channel diplomacy through Oman.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'IAEA reports further uranium enrichment progress', url: '#' },
-      { source: 'AP', bias: 'center', time: '5h ago', headline: 'Iran-backed militias strike US base in Iraq', url: '#' },
-      { source: 'FT', bias: 'center', time: '8h ago', headline: 'Tehran signals openness to nuclear talks', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'US deploys second carrier strike group to Middle East', url: '#' },
+      { source: 'AP', bias: 'center', time: '3h ago', headline: 'Iran conducts live-fire drills in Strait of Hormuz', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Trump gives Iran ultimatum on nuclear deal', url: '#' }
     ]
   },
 

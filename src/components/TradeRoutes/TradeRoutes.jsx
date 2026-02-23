@@ -130,7 +130,7 @@ export function useTradeRoutes() {
 
       let lineOpacity = 0.7;
       if (highlightCountry && route.from !== highlightCountry && route.to !== highlightCountry) {
-        lineOpacity = 0.08;
+        lineOpacity = 0.2;
       }
 
       const offsets = [0, 0.0012, -0.0012];
