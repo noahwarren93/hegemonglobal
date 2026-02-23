@@ -376,7 +376,7 @@ export default function HomePage() {
   // Sync compare mode to globe meshes (matching original addCountryToCompare/removeCountryFromCompare)
   // ============================================================
 
-  const COMPARE_COLORS = useMemo(() => ['#3b82f6', '#ef4444', '#22c55e'], []);
+  const COMPARE_COLORS = useMemo(() => ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7'], []);
 
   useEffect(() => {
     const gv = window._globeView;
@@ -421,8 +421,8 @@ export default function HomePage() {
         if (prev.includes(countryName)) {
           return prev.filter(c => c !== countryName);
         }
-        // Shift oldest if already 3
-        if (prev.length >= 3) {
+        // Shift oldest if already 5
+        if (prev.length >= 5) {
           return [...prev.slice(1), countryName];
         }
         return [...prev, countryName];
@@ -497,7 +497,7 @@ export default function HomePage() {
   // Compare panel handlers
   const handleAddCompareCountry = useCallback((name) => {
     setCompareCountries(prev => {
-      if (prev.includes(name) || prev.length >= 3) return prev;
+      if (prev.includes(name) || prev.length >= 5) return prev;
       return [...prev, name];
     });
   }, []);

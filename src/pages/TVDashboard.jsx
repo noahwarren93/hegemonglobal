@@ -51,17 +51,56 @@ const STOCKS_DATA = [
 ];
 
 const TV_TRADE_ROUTES = [
-  { from: 'United States', to: 'China', volume: '$582B', goods: 'Electronics, Agriculture', status: 'tension' },
-  { from: 'United States', to: 'Canada', volume: '$783B', goods: 'Vehicles, Oil', status: 'healthy' },
+  // Americas
+  { from: 'United States', to: 'Canada', volume: '$783B', goods: 'Vehicles, Oil, Machinery', status: 'healthy' },
   { from: 'United States', to: 'Mexico', volume: '$687B', goods: 'Vehicles, Electronics', status: 'healthy' },
-  { from: 'China', to: 'Japan', volume: '$318B', goods: 'Electronics, Chemicals', status: 'tension' },
-  { from: 'United States', to: 'Japan', volume: '$248B', goods: 'Vehicles, Machinery', status: 'healthy' },
+  { from: 'United States', to: 'China', volume: '$582B', goods: 'Electronics, Agriculture', status: 'tension' },
   { from: 'United States', to: 'United Kingdom', volume: '$295B', goods: 'Finance, Pharma', status: 'healthy' },
-  { from: 'Russia', to: 'China', volume: '$240B', goods: 'Oil, Gas', status: 'healthy' },
-  { from: 'United States', to: 'Russia', volume: '$12B', goods: 'Limited', status: 'sanctioned' },
+  { from: 'United States', to: 'Japan', volume: '$248B', goods: 'Vehicles, Machinery', status: 'healthy' },
+  { from: 'United States', to: 'Germany', volume: '$250B', goods: 'Vehicles, Pharma, Machinery', status: 'healthy' },
+  { from: 'United States', to: 'South Korea', volume: '$170B', goods: 'Semiconductors, Vehicles', status: 'healthy' },
+  { from: 'India', to: 'United States', volume: '$128B', goods: 'IT Services, Pharma', status: 'healthy' },
+  { from: 'United States', to: 'Vietnam', volume: '$124B', goods: 'Electronics, Textiles', status: 'healthy' },
+  { from: 'United States', to: 'Taiwan', volume: '$115B', goods: 'Semiconductors, Electronics', status: 'tension' },
+  { from: 'Mexico', to: 'China', volume: '$90B', goods: 'Electronics, Auto Parts', status: 'tension' },
+  { from: 'United States', to: 'Brazil', volume: '$80B', goods: 'Aircraft, Soybeans, Oil', status: 'healthy' },
+  { from: 'Canada', to: 'China', volume: '$75B', goods: 'Resources, Agriculture', status: 'tension' },
+  // Europe
+  { from: 'Germany', to: 'China', volume: '$298B', goods: 'Vehicles, Machinery, Chemicals', status: 'tension' },
+  { from: 'Netherlands', to: 'Germany', volume: '$230B', goods: 'Chemicals, Energy', status: 'healthy' },
+  { from: 'Germany', to: 'France', volume: '$180B', goods: 'Vehicles, Machinery', status: 'healthy' },
+  { from: 'United Kingdom', to: 'Germany', volume: '$160B', goods: 'Finance, Vehicles', status: 'healthy' },
+  { from: 'Germany', to: 'Poland', volume: '$158B', goods: 'Vehicles, Electronics', status: 'healthy' },
+  { from: 'Germany', to: 'Italy', volume: '$145B', goods: 'Machinery, Vehicles', status: 'healthy' },
+  { from: 'Turkey', to: 'Russia', volume: '$62B', goods: 'Gas, Agriculture', status: 'tension' },
+  { from: 'India', to: 'Russia', volume: '$65B', goods: 'Oil, Defense Equipment', status: 'healthy' },
+  // Asia-Pacific
+  { from: 'China', to: 'South Korea', volume: '$360B', goods: 'Semiconductors, Chemicals', status: 'healthy' },
+  { from: 'China', to: 'Japan', volume: '$318B', goods: 'Electronics, Chemicals', status: 'tension' },
+  { from: 'China', to: 'Taiwan', volume: '$280B', goods: 'Semiconductors, Electronics', status: 'tension' },
+  { from: 'Russia', to: 'China', volume: '$240B', goods: 'Oil, Gas, Minerals', status: 'healthy' },
+  { from: 'China', to: 'Australia', volume: '$230B', goods: 'Iron Ore, Coal, LNG', status: 'tension' },
+  { from: 'China', to: 'Vietnam', volume: '$175B', goods: 'Electronics, Textiles', status: 'healthy' },
+  { from: 'Brazil', to: 'China', volume: '$157B', goods: 'Soybeans, Iron Ore', status: 'healthy' },
+  { from: 'India', to: 'China', volume: '$136B', goods: 'Electronics, Pharma', status: 'tension' },
+  { from: 'Singapore', to: 'China', volume: '$115B', goods: 'Electronics, Chemicals', status: 'healthy' },
+  { from: 'India', to: 'UAE', volume: '$85B', goods: 'Oil, Gold', status: 'healthy' },
+  { from: 'Japan', to: 'South Korea', volume: '$82B', goods: 'Electronics, Chemicals', status: 'healthy' },
+  { from: 'Japan', to: 'Australia', volume: '$70B', goods: 'LNG, Coal, Iron Ore', status: 'healthy' },
+  // Middle East / Africa
   { from: 'Saudi Arabia', to: 'China', volume: '$98B', goods: 'Crude Oil', status: 'healthy' },
-  { from: 'India', to: 'United States', volume: '$128B', goods: 'IT, Pharma', status: 'healthy' },
-  { from: 'Brazil', to: 'China', volume: '$157B', goods: 'Soybeans, Iron Ore', status: 'healthy' }
+  { from: 'Saudi Arabia', to: 'India', volume: '$52B', goods: 'Crude Oil', status: 'healthy' },
+  { from: 'Saudi Arabia', to: 'Japan', volume: '$50B', goods: 'Crude Oil', status: 'healthy' },
+  { from: 'South Africa', to: 'China', volume: '$45B', goods: 'Minerals, Resources', status: 'healthy' },
+  { from: 'Qatar', to: 'Japan', volume: '$35B', goods: 'LNG', status: 'healthy' },
+  { from: 'Iran', to: 'China', volume: '$30B', goods: 'Crude Oil', status: 'sanctioned' },
+  { from: 'Nigeria', to: 'India', volume: '$15B', goods: 'Crude Oil', status: 'healthy' },
+  // Sanctioned
+  { from: 'United States', to: 'Russia', volume: '$12B', goods: 'Limited', status: 'sanctioned' },
+  { from: 'European Union', to: 'Russia', volume: '$45B', goods: 'Limited', status: 'sanctioned' },
+  { from: 'United States', to: 'Iran', volume: '$0.1B', goods: 'Humanitarian Only', status: 'sanctioned' },
+  { from: 'United States', to: 'North Korea', volume: '$0B', goods: 'Embargo', status: 'sanctioned' },
+  { from: 'United States', to: 'Cuba', volume: '$0.3B', goods: 'Agriculture, Medicine', status: 'sanctioned' },
 ];
 
 const ALL_SCREENS = ['globe', 'headlines', 'hotspots', 'risk', 'markets', 'forecast'];

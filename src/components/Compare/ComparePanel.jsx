@@ -5,7 +5,7 @@ import { COUNTRIES } from '../../data/countries';
 import { COMPARE_DATA } from '../../data/compareData';
 import { COUNTRY_DEMONYMS } from '../../services/apiService';
 
-const COMPARE_COLORS = ['#3b82f6', '#ef4444', '#22c55e'];
+const COMPARE_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7'];
 
 const SECTIONS = [
   { title: 'Economic', rows: [['GDP','gdp'],['GDP Growth','gdpGrowth'],['GDP/Capita','gdpPerCapita'],['Inflation','inflation'],['Unemployment','unemployment'],['Debt %GDP','debt']] },

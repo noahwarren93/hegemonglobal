@@ -26,7 +26,11 @@ const COORD_FALLBACKS = {
   'France': { lat: 48.86, lng: 2.35 },
   'Netherlands': { lat: 52.37, lng: 4.90 },
   'Taiwan': { lat: 25.03, lng: 121.57 },
-  'Argentina': { lat: -34.60, lng: -58.38 }
+  'Argentina': { lat: -34.60, lng: -58.38 },
+  'Singapore': { lat: 1.35, lng: 103.82 },
+  'Qatar': { lat: 25.29, lng: 51.53 },
+  'Nigeria': { lat: 9.08, lng: 7.49 },
+  'South Africa': { lat: -25.75, lng: 28.23 }
 };
 
 function getCountryCoords(name) {
