@@ -877,7 +877,7 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Fetch Live News — ALL feeds in parallel, 5s timeout, timing logs
+// Fetch Live News — batched RSS (5 at a time), 5s timeout, timing logs
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
@@ -888,23 +888,28 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
   try {
     const feeds = RSS_FEEDS.daily;
 
-    // Fetch ALL feeds in parallel — each has its own 5s AbortController timeout
-    console.log(`[Hegemon] Fetching ${feeds.length} RSS feeds in parallel...`);
-    const results = await Promise.allSettled(
-      feeds.map(feed => fetchRSS(feed.url, feed.source))
-    );
-
+    // Fetch RSS feeds in batches of 5 with 100ms gaps so main thread can breathe
+    const BATCH = 5;
+    console.log(`[Hegemon] Fetching ${feeds.length} RSS feeds in batches of ${BATCH}...`);
     const allArticles = [];
     let workingCount = 0;
     let failedCount = 0;
 
-    for (const result of results) {
-      if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
-        workingCount++;
-        allArticles.push(...result.value);
-      } else {
-        failedCount++;
+    for (let i = 0; i < feeds.length; i += BATCH) {
+      const batch = feeds.slice(i, i + BATCH);
+      const results = await Promise.allSettled(
+        batch.map(feed => fetchRSS(feed.url, feed.source))
+      );
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
+          workingCount++;
+          allArticles.push(...result.value);
+        } else {
+          failedCount++;
+        }
       }
+      // Yield to browser between batches
+      if (i + BATCH < feeds.length) await yieldToMain(100);
     }
 
     const rssElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
@@ -1061,14 +1066,35 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       // Cluster articles into events
       const events = await clusterArticles(DAILY_BRIEFING);
-      DAILY_EVENTS.length = 0;
-      DAILY_EVENTS.push(...events);
 
-      // Apply cached summaries IMMEDIATELY so events render with summaries (no flash)
-      applyCachedSummaries();
+      // Apply cached summaries before rendering so events appear with summaries
+      const cache = loadSummaryCache();
+      for (const event of events) {
+        const key = eventSummaryKey(event);
+        if (key && cache[key]) {
+          event.summary = cache[key].summary;
+          event.summaryLoading = false;
+        }
+      }
+
+      // Batch render: top stories first (4 events), then 10 at a time with 100ms gaps
+      DAILY_EVENTS.length = 0;
+      const topSlice = events.slice(0, 4);
+      DAILY_EVENTS.push(...topSlice);
+      notifyEventsUpdated();
 
       const totalElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
-      console.log(`[Hegemon] Events ready: ${events.length} events in ${totalElapsed}s total`);
+      console.log(`[Hegemon] Top stories ready: ${topSlice.length} events in ${totalElapsed}s`);
+
+      // Batch remaining events 10 at a time
+      const RENDER_BATCH = 10;
+      for (let i = 4; i < events.length; i += RENDER_BATCH) {
+        await yieldToMain(100);
+        const batch = events.slice(i, i + RENDER_BATCH);
+        DAILY_EVENTS.push(...batch);
+        notifyEventsUpdated();
+      }
+      console.log(`[Hegemon] All ${events.length} events rendered`);
 
       // Defer heavy side-effects so UI renders first
       setTimeout(() => {
@@ -1235,46 +1261,49 @@ function applyCachedSummaries() {
   }
 }
 
+const SUMMARY_TIMEOUT_MS = 10000; // 10-second timeout on /summarize
+
 export async function fetchEventSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
 
   const cache = loadSummaryCache();
-  const uncached = [];
+  const uncachedTop = [];    // top stories (first 4 events) — prioritized
+  const uncachedRest = [];   // latest updates
 
-  // Check for cached summaries (some may already be applied by applyCachedSummaries)
-  for (const event of DAILY_EVENTS) {
-    if (event.summary) continue; // Already has summary (from cache or prior apply)
+  // Check for cached summaries (some may already be applied during batch render)
+  for (let i = 0; i < DAILY_EVENTS.length; i++) {
+    const event = DAILY_EVENTS[i];
+    if (event.summary) continue; // Already has summary
     const key = eventSummaryKey(event);
     if (key && cache[key]) {
       event.summary = cache[key].summary;
       event.summaryLoading = false;
     } else {
-      uncached.push(event);
       event.summaryLoading = true;
+      if (i < 4) uncachedTop.push(event);
+      else uncachedRest.push(event);
     }
   }
 
-  const cachedCount = DAILY_EVENTS.length - uncached.length;
+  const cachedCount = DAILY_EVENTS.length - uncachedTop.length - uncachedRest.length;
   if (cachedCount > 0) {
-    console.log(`[Hegemon] Summaries: ${cachedCount} cached, ${uncached.length} need fetching`);
+    console.log(`[Hegemon] Summaries: ${cachedCount} cached, ${uncachedTop.length} top + ${uncachedRest.length} rest need fetching`);
   }
 
-  // Notify immediately so cached summaries display
   notifyEventsUpdated();
 
-  // If everything is cached, we're done
-  if (uncached.length === 0) return;
+  if (uncachedTop.length === 0 && uncachedRest.length === 0) return;
 
-  // Batch events — send max 15 at a time to avoid overwhelming the worker/Claude
-  const BATCH_SIZE = 15;
-  for (let batchStart = 0; batchStart < uncached.length; batchStart += BATCH_SIZE) {
-    const batch = uncached.slice(batchStart, batchStart + BATCH_SIZE);
-
+  // Helper: fetch a batch of summaries with 10s timeout
+  async function fetchSummaryBatch(batch, batchNum) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), SUMMARY_TIMEOUT_MS);
     try {
-      console.log(`[Hegemon] Fetching summaries for batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (${batch.length} events)`);
+      console.log(`[Hegemon] Fetching summaries batch ${batchNum} (${batch.length} events)`);
       const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           events: batch.map(e => ({
             headline: e.headline,
@@ -1287,48 +1316,54 @@ export async function fetchEventSummaries() {
           }))
         })
       });
+      clearTimeout(timeout);
 
       if (!response.ok) {
         const errText = await response.text().catch(() => 'no body');
         console.error(`[Hegemon] Summary API error (${response.status}):`, errText);
-        for (const event of batch) {
-          event.summaryLoading = false;
-          event.summaryError = true;
-        }
+        for (const event of batch) { event.summaryLoading = false; event.summaryError = true; }
         notifyEventsUpdated();
-        continue;
+        return;
       }
 
       const data = await response.json();
       const summaries = data.summaries || [];
 
-      // Apply summaries only (headlines come from articles, not AI)
       for (let i = 0; i < batch.length; i++) {
         batch[i].summaryLoading = false;
         if (summaries[i] && summaries[i].summary) {
           batch[i].summary = summaries[i].summary;
           const key = eventSummaryKey(batch[i]);
-          if (key) {
-            cache[key] = {
-              summary: summaries[i].summary,
-              savedAt: Date.now()
-            };
-          }
+          if (key) { cache[key] = { summary: summaries[i].summary, savedAt: Date.now() }; }
         } else {
           batch[i].summaryError = true;
         }
       }
-
       saveSummaryCache(cache);
       notifyEventsUpdated();
 
     } catch (err) {
-      console.error('[Hegemon] Summary fetch error:', err.message || err);
-      for (const event of batch) {
-        event.summaryLoading = false;
-        event.summaryError = true;
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        console.warn(`[Hegemon] Summary batch ${batchNum} timed out (10s)`);
+      } else {
+        console.error('[Hegemon] Summary fetch error:', err.message || err);
       }
+      for (const event of batch) { event.summaryLoading = false; event.summaryError = true; }
       notifyEventsUpdated();
     }
+  }
+
+  // 1. Top stories first (all at once)
+  let batchNum = 1;
+  if (uncachedTop.length > 0) {
+    await fetchSummaryBatch(uncachedTop, batchNum++);
+  }
+
+  // 2. Latest updates in batches of 5
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < uncachedRest.length; i += BATCH_SIZE) {
+    const batch = uncachedRest.slice(i, i + BATCH_SIZE);
+    await fetchSummaryBatch(batch, batchNum++);
   }
 }
