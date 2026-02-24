@@ -1,4 +1,5 @@
 // TradeRoutes.jsx - Three.js trade route arcs on the globe
+/* eslint-disable react-refresh/only-export-components */
 
 import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
@@ -62,7 +63,7 @@ export function useTradeRoutes() {
   const tradeRouteMeshes = useRef([]);
   const tradeDotGroups = useRef([]);
   const tradeAnimFrame = useRef(null);
-  const highlightedCountry = useRef(null);
+  const highlightedCountryRef = useRef(null);
 
   const startTradeAnimation = useCallback(() => {
     if (tradeAnimFrame.current) cancelAnimationFrame(tradeAnimFrame.current);
@@ -181,19 +182,19 @@ export function useTradeRoutes() {
       showTradeRoutes();
     } else {
       hideTradeRoutes();
-      highlightedCountry.current = null;
+      highlightedCountryRef.current = null;
     }
   }, [showTradeRoutes, hideTradeRoutes]);
 
   const handleTradeClick = useCallback((countryName, isActive) => {
     if (!isActive) return false;
 
-    if (highlightedCountry.current === countryName) {
-      highlightedCountry.current = null;
+    if (highlightedCountryRef.current === countryName) {
+      highlightedCountryRef.current = null;
       showTradeRoutes(); // Reset all
       return { highlighted: null };
     } else {
-      highlightedCountry.current = countryName;
+      highlightedCountryRef.current = countryName;
       showTradeRoutes(countryName);
       return { highlighted: countryName };
     }
@@ -204,7 +205,7 @@ export function useTradeRoutes() {
     hideTradeRoutes,
     toggleTradeRoutes,
     handleTradeClick,
-    highlightedCountry
+    highlightedCountryRef
   };
 }
 

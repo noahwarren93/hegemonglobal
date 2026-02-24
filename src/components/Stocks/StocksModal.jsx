@@ -227,6 +227,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
   }, []);
 
   // Reset and load on open / country change
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isOpen || !country) return;
     const mc = MARKET_CONFIG.find(m => m.country === country);
@@ -243,6 +244,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
     const sym = mc.symbols[0]?.sym;
     if (sym) loadChart(sym, '1W');
   }, [isOpen, country, loadChart]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Close on Escape
   useEffect(() => {

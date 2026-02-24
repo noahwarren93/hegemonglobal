@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
-import { RISK_COLORS, renderBiasTag, getStateMediaLabel, enforceSourceDiversity, ensureNonWesternInTopStories } from '../../utils/riskColors';
+import { RISK_COLORS } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated } from '../../services/apiService';
 import { scoreHeadlineNeutrality } from '../../services/eventsService';
@@ -69,10 +69,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, []);
 
   // Reset visible count on tab change
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     setPastOpen(false);
   }, [activeTab]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);

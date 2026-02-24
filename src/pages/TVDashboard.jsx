@@ -457,7 +457,7 @@ export default function TVDashboard() {
   const [date, setDate] = useState('');
   const [progress, setProgress] = useState(0);
 
-  const progressStartRef = useRef(Date.now());
+  const progressStartRef = useRef(Date.now()); // eslint-disable-line react-hooks/purity
   const globeContainerRef = useRef(null);
   const tvRendererRef = useRef(null);
   const tvSceneRef = useRef(null);

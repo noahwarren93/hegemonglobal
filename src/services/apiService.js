@@ -982,7 +982,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     console.log(`[Hegemon] Fetching ${feeds.length} RSS feeds in batches of ${BATCH}...`);
     const allArticles = [];
     let workingCount = 0;
-    let failedCount = 0;
 
     for (let i = 0; i < feeds.length; i += BATCH) {
       const batch = feeds.slice(i, i + BATCH);
@@ -993,8 +992,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
           workingCount++;
           allArticles.push(...result.value);
-        } else {
-          failedCount++;
         }
       }
       // Yield to browser between batches
@@ -1030,7 +1027,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (category === 'SPORTS') continue;
         const fullText = title + ' ' + (article.description || '');
         if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
-        const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+        const nonAscii = (title.match(/[^\u0020-\u007E]/g) || []).length;
         if (title.length > 10 && nonAscii / title.length > 0.15) continue;
         if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
             !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
@@ -1318,7 +1315,7 @@ function loadSummaryCache() {
       if (now - v.savedAt > 24 * 60 * 60 * 1000) { delete cache[k]; changed = true; }
     }
     if (changed) {
-      try { localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(cache)); } catch {}
+      try { localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(cache)); } catch { /* storage full */ }
     }
     return cache;
   } catch { return {}; }

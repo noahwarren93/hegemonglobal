@@ -354,7 +354,7 @@ async function fetchRSS(feedUrl, sourceName) {
         return parseRSSItems(data, sourceName);
       }
     }
-  } catch (error) {
+  } catch {
     // rss2json failed, try worker proxy
   }
 
@@ -365,7 +365,7 @@ async function fetchRSS(feedUrl, sourceName) {
     const data = await response.json();
     if (data.status !== 'ok' || !data.items || data.items.length === 0) return [];
     return parseRSSItems(data, sourceName);
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -409,7 +409,7 @@ function isArticleRelevant(article) {
   if (detectCategory(title, article.description) === 'SPORTS') return false;
   const fullText = title + ' ' + (article.description || '');
   if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
-  const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+  const nonAscii = (title.match(/[^\u0020-\u007E]/g) || []).length;
   if (title.length > 10 && nonAscii / title.length > 0.15) return false;
   if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
       !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {

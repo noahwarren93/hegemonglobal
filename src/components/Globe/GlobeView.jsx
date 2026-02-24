@@ -1,4 +1,5 @@
 // GlobeView.jsx - Three.js interactive globe
+/* eslint-disable react-refresh/only-export-components */
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';

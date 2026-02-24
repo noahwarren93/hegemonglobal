@@ -331,7 +331,7 @@ export async function clusterArticles(articles) {
 
   // Step 3a: Non-stoplist countries — all articles with same country go into ONE cluster
   // If >8 articles, sub-cluster by topic keywords
-  for (const [country, indices] of countryGroups.entries()) {
+  for (const [, indices] of countryGroups.entries()) {
     if (indices.length <= HARD_CAP) {
       allClusters.push(indices);
     } else {
@@ -345,7 +345,7 @@ export async function clusterArticles(articles) {
   await _yieldToMain();
 
   // Step 3b: Stoplist countries (US/UK/China/Russia) — require shared topic keyword
-  for (const [country, indices] of stoplistGroups.entries()) {
+  for (const [, indices] of stoplistGroups.entries()) {
     const subs = subClusterByTopic(annotated, indices);
     for (const sub of subs) allClusters.push(sub);
   }

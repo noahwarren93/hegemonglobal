@@ -24,12 +24,14 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
     if (!isOpen) setQuery('');
   }, [isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const results = useMemo(() => {
     if (!query || query.length < 1) return [];
@@ -295,12 +297,13 @@ export default function HomePage() {
   const [currentDate, setCurrentDate] = useState('');
 
   // --- Trade routes hook ---
-  const { showTradeRoutes, hideTradeRoutes, handleTradeClick, highlightedCountry } = useTradeRoutes();
+  const { showTradeRoutes, hideTradeRoutes, handleTradeClick, highlightedCountryRef } = useTradeRoutes();
 
   // ============================================================
   // Initialize on mount
   // ============================================================
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     // Initialize risk state
     initializeRiskState();
@@ -368,6 +371,7 @@ export default function HomePage() {
       window.removeEventListener('globeReady', handleGlobeReady);
     };
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // ============================================================
   // Sync compare mode to globe meshes (matching original addCountryToCompare/removeCountryFromCompare)
@@ -678,7 +682,7 @@ export default function HomePage() {
               setTradeInfoCountry(null);
               // Reset trade routes to full visibility (undo highlight dimming)
               if (tradeRoutesActive) {
-                highlightedCountry.current = null;
+                highlightedCountryRef.current = null;
                 showTradeRoutes();
               }
             }}

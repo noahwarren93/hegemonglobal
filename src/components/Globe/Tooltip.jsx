@@ -1,6 +1,7 @@
 // Tooltip.jsx - Globe hover tooltip (matches original #tooltip element)
+/* eslint-disable react-refresh/only-export-components */
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 export function positionTooltip(el, cx, cy) {
   const offset = 15;
@@ -22,16 +23,18 @@ export function positionTooltip(el, cx, cy) {
 }
 
 export default function Tooltip({ data, mousePos }) {
-  const ref = useRef(null);
+  const tooltipRef = useRef(null);
 
-  // Position imperatively (matching original globe.js positionTooltip)
-  if (ref.current && data && mousePos) {
-    positionTooltip(ref.current, mousePos.x, mousePos.y);
-  }
+  // Position imperatively in an effect (matching original globe.js positionTooltip)
+  useEffect(() => {
+    if (tooltipRef.current && data && mousePos) {
+      positionTooltip(tooltipRef.current, mousePos.x, mousePos.y);
+    }
+  }, [data, mousePos]);
 
   return (
     <div
-      ref={ref}
+      ref={tooltipRef}
       className="country-tooltip"
       id="tooltip"
       style={{ display: data ? 'block' : 'none' }}

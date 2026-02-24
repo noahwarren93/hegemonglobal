@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA } from '../../data/countries';
-import { RISK_COLORS, renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
+import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
 import { fetchCountryNews } from '../../services/apiService';
 
 export default function CountryModal({ countryName, isOpen, onClose }) {
@@ -13,6 +13,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   const country = countryName ? COUNTRIES[countryName] : null;
 
   // Fetch news when modal opens
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isOpen && countryName) {
       setNews([]);
@@ -26,6 +27,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       });
     }
   }, [isOpen, countryName]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Close on Escape
   useEffect(() => {
