@@ -323,9 +323,11 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
   } else if (chartData) {
     chartSymbol = chartData.symbol;
     chartPrice = formatStockPrice(chartData.price);
-    const pct = chartData.changePct || 0;
-    chartChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chartPositive = pct >= 0;
+    const idx = data.indices[selectedIdx];
+    if (idx && !idx.noData) {
+      chartChange = idx.change;
+      chartPositive = idx.positive;
+    }
     chartName = chartData.shortName || '';
   } else if (data.indices[selectedIdx] && !data.indices[selectedIdx].noData) {
     const idx = data.indices[selectedIdx];
