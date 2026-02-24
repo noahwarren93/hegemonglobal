@@ -209,9 +209,9 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
   }, []);
 
   return (
-    <div className="watchlist" style={{ maxHeight: 360, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="watchlist" style={{ maxHeight: 'none', overflowY: 'hidden' }}>
       <div className="watchlist-title">CRITICAL WATCHLIST</div>
-      <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+      <div style={{ maxHeight: 250, overflowY: 'auto' }}>
         {watchlistCountries.map(([name, c]) => (
           <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
             <span className="wl-country">{c.flag} {name}</span>
@@ -219,7 +219,7 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
           </div>
         ))}
       </div>
-      <div style={{ borderTop: '1px solid #1f293766', paddingTop: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+      <div style={{ borderTop: '1px solid #1f293766', paddingTop: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={onToggleTradeRoutes}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           Trade Routes

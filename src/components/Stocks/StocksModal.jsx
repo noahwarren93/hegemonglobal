@@ -294,13 +294,20 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
     const tr = TIME_RANGES.find(t => t.key === rangeKey) || TIME_RANGES[1];
     const result = await fetchChartData(q.toUpperCase(), tr.range, tr.interval);
     if (result && result.price) {
-      const positive = result.changePct >= 0;
+      // Calculate percentage from chart data points
+      let pct = 0;
+      if (result.closes && result.closes.length >= 2) {
+        const first = result.closes[0];
+        const last = result.closes[result.closes.length - 1];
+        pct = first ? ((last - first) / first) * 100 : 0;
+      }
+      const positive = pct >= 0;
       setSearchResult({
         symbol: result.symbol,
         name: result.shortName || '',
         exchangeName: result.exchangeName || '',
         price: formatStockPrice(result.price),
-        change: (positive ? '+' : '') + result.changePct.toFixed(2) + '%',
+        change: (positive ? '+' : '') + pct.toFixed(2) + '%',
         positive
       });
       setChartData(result);
@@ -322,7 +329,13 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
   } else if (chartData) {
     chartSymbol = chartData.symbol;
     chartPrice = formatStockPrice(chartData.price);
-    const pct = chartData.changePct;
+    // Calculate percentage directly from chart data points
+    let pct = 0;
+    if (chartData.closes && chartData.closes.length >= 2) {
+      const first = chartData.closes[0];
+      const last = chartData.closes[chartData.closes.length - 1];
+      pct = first ? ((last - first) / first) * 100 : 0;
+    }
     chartChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
     chartPositive = pct >= 0;
     chartName = chartData.shortName || '';
@@ -418,11 +431,13 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                 );
               }
               const isSelected = !showingSearch && selectedIdx === i;
-              // When this index is selected and chart data is loaded, use chart-derived percentage
+              // When this index is selected and chart data is loaded, calculate percentage from chart data points
               let displayChange = idx.change;
               let displayPositive = idx.positive;
               if (isSelected && chartData && chartData.closes && chartData.closes.length >= 2) {
-                const pct = chartData.changePct;
+                const first = chartData.closes[0];
+                const last = chartData.closes[chartData.closes.length - 1];
+                const pct = first ? ((last - first) / first) * 100 : 0;
                 displayChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
                 displayPositive = pct >= 0;
               }
