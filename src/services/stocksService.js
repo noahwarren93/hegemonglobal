@@ -369,7 +369,11 @@ function buildStocksData(quotes, isStaticFallback) {
 let fetchInProgress = false;
 
 export async function loadStockData(onUpdate) {
-  // Show cached data immediately
+  // One-time cache bust after changePct fix
+  if (!localStorage.getItem('hegemon_stocks_v2')) {
+    localStorage.removeItem('hegemon_stocks_cache');
+    localStorage.setItem('hegemon_stocks_v2', '1');
+  }
   const cached = cacheGet('hegemon_stocks_cache');
   if (cached) {
     onUpdate({ data: cached.data, lastUpdated: new Date(cached.ts), error: false, isUpdating: true });
@@ -392,7 +396,7 @@ export async function loadStockData(onUpdate) {
 
     if (count > 0) {
       const stocksData = buildStocksData(quotes, false);
-      cacheSet('hegemon_stocks_cache', stocksData, 900000); // 15 min
+      cacheSet('hegemon_stocks_cache', stocksData, 300000); // 5 min
       fetchInProgress = false;
       if (onUpdate) onUpdate({ data: stocksData, lastUpdated: new Date(), error: false, isUpdating: false });
     } else {
