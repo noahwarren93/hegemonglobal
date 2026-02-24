@@ -2,44 +2,44 @@
 
 export const COUNTRIES = {
   // ==================== CATASTROPHIC ====================
-  'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', region: 'Eastern Europe', pop: '37M', gdp: '$160B', leader: 'Volodymyr Zelenskyy', title: 'Active War Zone',
+  'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', region: 'Eastern Europe', pop: '37M', gdp: '$160B', leader: 'Volodymyr Zelenskyy', title: 'War & Peace Talks',
     analysis: {
-      what: 'Russia launched a full-scale invasion in February 2022, marking the largest military conflict in Europe since World War II. The war has evolved into a grinding war of attrition, with both sides suffering hundreds of thousands of casualties. Ukraine has lost approximately 20% of its territory, including Crimea (annexed in 2014) and portions of the Donbas region. Western nations have provided over $200 billion in military and economic aid, including advanced weapons systems like HIMARS, Patriot missiles, and F-16 fighter jets. Critical infrastructure has been systematically targeted, causing widespread power outages and civilian displacement, with millions of Ukrainians becoming refugees across Europe.',
-      why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO, prompting Finland and Sweden to join the alliance. Global energy markets were thrown into chaos as Europe scrambled to reduce dependence on Russian gas, accelerating the green energy transition. Food security became a global concern as Ukraine—one of the world\'s largest grain exporters—saw its agricultural output disrupted, affecting food prices in Africa and the Middle East. The outcome will define the international order for decades: whether territorial conquest through military force remains viable in the 21st century.',
-      next: 'Multiple scenarios remain possible: a frozen conflict similar to Korea, with a ceasefire but no peace treaty; a negotiated settlement involving territorial compromises; continued attritional warfare lasting years; or potential escalation involving NATO directly. Key factors to watch include: Western political will, ammunition production capacity on both sides, Ukrainian mobilization challenges, and Russian economic resilience.'
+      what: 'Russia\'s full-scale invasion, launched in February 2022, continues into its fourth year as the largest military conflict in Europe since WWII. Both sides have suffered hundreds of thousands of casualties. Ukraine has lost approximately 20% of its territory. Active peace negotiations are now underway—Geneva talks in February 2026 showed "gradual but significant progress" on military tracks, with trilateral US-Ukraine-Russia negotiations ongoing. A 35-country coalition has pledged to support ceasefire monitoring, with France and the UK committing troops. However, territorial disputes remain the core sticking point, with Russia demanding Ukrainian withdrawal from Donbas as a precondition.',
+      why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO. The outcome will define the international order for decades: whether territorial conquest through military force remains viable. Peace negotiations are the most significant diplomatic development since the war began, driven by Trump administration pressure and battlefield exhaustion on both sides.',
+      next: 'Active peace talks create the first real possibility of a ceasefire since the war began. Watch for: Geneva negotiation progress, territorial compromise formulas, security guarantee framework, and whether both sides accept monitoring mechanisms. Key variables: Trump\'s diplomatic leverage, Putin\'s territorial demands, Zelenskyy\'s red lines, and European security commitments.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Heavy fighting reported along eastern front lines', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '3h ago', headline: 'Winter energy crisis tests Ukrainian resilience', url: '#' },
-      { source: 'WSJ', bias: 'center-right', time: '6h ago', headline: 'Pentagon announces new $800M aid package', url: '#' },
-      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Zelenskyy addresses European Parliament', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Geneva talks show progress on military ceasefire track', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '3h ago', headline: '35-country coalition pledges ceasefire monitoring support', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '6h ago', headline: 'Territorial disputes remain core sticking point', url: '#' },
+      { source: 'AP', bias: 'center', time: '8h ago', headline: 'Zelenskyy outlines security guarantee demands', url: '#' }
     ]
   },
 
-  'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', region: 'Eastern Europe', pop: '144M', gdp: '$1.78T', leader: 'Vladimir Putin', title: 'Active Aggressor',
+  'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', region: 'Eastern Europe', pop: '144M', gdp: '$1.78T', leader: 'Vladimir Putin', title: 'War & Negotiations',
     analysis: {
-      what: 'Russia is conducting the largest military operation since World War II, deploying hundreds of thousands of troops in Ukraine. The country faces unprecedented Western sanctions—over 16,000 individual measures—targeting its financial system, energy exports, technology imports, and oligarch assets. Despite predictions of economic collapse, Russia has adapted through shadow fleet oil sales, trade rerouting via China and India, and massive military-industrial mobilization. Domestically, Putin has consolidated authoritarian control, crushing opposition (Navalny died in prison), suppressing independent media, and criminalizing anti-war speech. Military casualties are estimated at 300,000+ killed and wounded.',
-      why: 'Russia possesses the world\'s largest nuclear arsenal and a permanent UN Security Council seat. The invasion has shattered the post-Cold War European security order. Russia\'s energy leverage over Europe reshaped global energy markets. The conflict has pushed Russia into deeper partnership with China, Iran, and North Korea, potentially forming a new axis challenging Western hegemony. Russian disinformation and election interference continue to destabilize democracies worldwide.',
-      next: 'Russia appears committed to a long war, having shifted to a war economy with 40% of the budget dedicated to defense. Putin likely calculates that Western resolve will fade. Potential scenarios include: continued slow territorial gains; a negotiated settlement; domestic instability if casualties become unsustainable; or dangerous escalation including tactical nuclear threats.'
+      what: 'Russia continues its war in Ukraine while engaging in trilateral peace negotiations with the US and Ukraine. Geneva talks in February 2026 showed progress on military tracks but Russia demands Ukrainian withdrawal from Donbas as a precondition—a non-starter for Kyiv. The country faces unprecedented Western sanctions—over 16,000 measures—but has adapted through shadow fleet oil sales and trade rerouting via China and India. The war economy consumes 40% of the budget. Military casualties are estimated at 300,000+ killed and wounded. Domestically, Putin has consolidated total authoritarian control.',
+      why: 'Russia possesses the world\'s largest nuclear arsenal and a permanent UN Security Council seat. The invasion has shattered the post-Cold War European security order. Russia\'s partnership with China, Iran, and North Korea forms a growing axis challenging Western hegemony. The peace negotiations represent the first serious diplomatic opening since the war began.',
+      next: 'Russia is negotiating from a position of territorial control but economic strain. Watch for: negotiation posture, territorial demands, sanctions pressure, military-economic sustainability, and whether Putin accepts a ceasefire that falls short of his maximalist demands. The outcome will reshape global power dynamics for decades.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Russian economy shows resilience despite sanctions', url: '#' },
-      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Moscow increases military production targets for 2026', url: '#' },
-      { source: 'Bloomberg', bias: 'center-right', time: '7h ago', headline: 'Ruble stabilizes as oil revenues recover', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Russia demands Donbas withdrawal as peace precondition', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'War economy strains Russian budget as talks continue', url: '#' },
+      { source: 'Bloomberg', bias: 'center-right', time: '7h ago', headline: 'Geneva talks show limited progress on political track', url: '#' }
     ]
   },
 
-  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Occupation & Humanitarian Crisis',
+  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
     analysis: {
-      what: 'Palestine encompasses the West Bank and Gaza Strip, both under varying degrees of Israeli control. Following Hamas\'s October 7, 2023 attack on Israel—which killed approximately 1,200 Israelis and took 250 hostages—Israel launched a massive military campaign in Gaza, killing over 35,000 Palestinians and displacing nearly 2 million. Famine conditions have spread. In the West Bank, the Palestinian Authority governs limited areas under Israeli military occupation while over 700,000 settlers expand into Palestinian territory. Settler violence and IDF raids have intensified since October 2023. The PA faces a legitimacy crisis with no elections since 2006, while Hamas retains control in Gaza despite the devastation.',
-      why: 'The Palestinian situation is the central fault line of Middle East geopolitics with the highest potential to ignite a wider regional war since the 1973 Yom Kippur War. Iran-backed Hezbollah has engaged in cross-border fighting with Israel, and Houthi rebels in Yemen have attacked Red Sea shipping, disrupting 12% of global trade. The humanitarian catastrophe has inflamed public opinion across the Muslim world and strained US relations with Arab allies. Palestinian statehood recognition has gained momentum internationally, while settlements make a two-state solution increasingly difficult.',
-      next: 'Multiple trajectories are possible: expanded regional war, a fragile ceasefire, prolonged low-intensity conflict, or international intervention. Post-Abbas succession planning is critical for the PA. Post-war Gaza governance remains unresolved. Watch for: hostage negotiations, Hezbollah escalation, Iranian decision-making, settler violence trends, and international recognition moves. The fundamental question of Palestinian statehood remains the core unresolved issue.'
+      what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 45,000 Palestinians and displaced nearly 2 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,620+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas under Israeli occupation while 700,000+ settlers expand into Palestinian territory. Post-war Gaza governance remains unresolved.',
+      why: 'The Gaza war and ceasefire process have reshaped Middle East geopolitics. Hezbollah was significantly weakened by Israel\'s military operations. The humanitarian catastrophe has inflamed global opinion and strained US relations with allies. Palestinian statehood recognition has gained momentum internationally. The ceasefire\'s fragility threatens a return to full-scale conflict.',
+      next: 'Phase 2 negotiations will determine long-term outcomes. Watch for: ceasefire compliance, Gaza reconstruction and governance, humanitarian access, West Bank settler violence, and international recognition moves. The fundamental question of Palestinian statehood remains the core unresolved issue of Middle East politics.'
     },
     news: [
-      { source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'UN warns famine conditions spreading in northern Gaza', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Ceasefire talks resume in Cairo with US mediation', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'West Bank raids intensify amid rising tensions', url: '#' },
-      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Settlement expansion plans draw international criticism', url: '#' }
+      { source: 'Al Jazeera', bias: 'left', time: '1h ago', headline: 'Phase 2 ceasefire faces implementation challenges', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Humanitarian aid access remains severely restricted', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'West Bank raids continue amid fragile ceasefire', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Gaza reconstruction plans stall over governance disputes', url: '#' }
     ]
   },
 
@@ -56,29 +56,29 @@ export const COUNTRIES = {
     ]
   },
 
-  'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil Resistance War',
+  'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil War Stalemate',
     analysis: {
-      what: 'Since the February 2021 military coup that overthrew the elected government of Aung San Suu Kyi, Myanmar has descended into civil war. Armed resistance groups—including ethnic armies and newly formed People\'s Defense Forces—have gained significant territory against the junta. The military has lost control of large swathes of border regions. Over 2 million people are internally displaced. The junta has responded with airstrikes on civilians, village burnings, and mass executions. The economy has collapsed with widespread poverty.',
-      why: 'Myanmar\'s instability creates refugee flows into Thailand, Bangladesh, and India. The country is a major corridor for drug trafficking (methamphetamine, heroin). China has significant economic interests and influence over ethnic armies. The conflict tests ASEAN\'s non-interference principle and regional stability. A junta collapse could create power vacuums exploited by various armed groups.',
-      next: 'The junta is losing ground but unlikely to collapse quickly given Chinese support. Resistance forces are gaining but lack coordination for final victory. Watch for: territorial shifts, military defections, Chinese mediation attempts, and humanitarian access. A federal democratic transition remains the opposition\'s goal but faces enormous obstacles.'
+      what: 'Myanmar\'s civil war following the 2021 military coup has reached a volatile stalemate. Resistance forces control roughly 38% of the country but face setbacks—the junta retook 26 bases/camps in 2025. The military held sham elections in January 2026, widely boycotted and disrupted by resistance forces. Military airstrikes have killed 170+ civilians since December 2025. Over 2 million people are internally displaced. The junta has responded with airstrikes on civilians, village burnings, and mass executions. The economy has collapsed.',
+      why: 'Myanmar\'s instability creates refugee flows into Thailand, Bangladesh, and India. The country is a major corridor for drug trafficking. China has significant interests and influence over ethnic armies. The resistance lacks unified political leadership, and public exhaustion is growing. International attention has waned except from China. The conflict economy dominates.',
+      next: 'Neither side appears capable of decisive military victory. Watch for: territorial shifts, resistance coordination, Chinese mediation, junta legitimacy efforts through sham elections, and humanitarian access. The junta is adapting strategically while the resistance faces fragmentation challenges.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Resistance forces capture key border town', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Military airstrikes kill dozens in Sagaing', url: '#' },
-      { source: 'Nikkei', bias: 'center', time: '9h ago', headline: 'Junta struggles to maintain territorial control', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Junta elections widely boycotted amid ongoing conflict', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '6h ago', headline: 'Military airstrikes kill civilians in Bago Region', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '9h ago', headline: 'Resistance controls 38% but faces setbacks', url: '#' }
     ]
   },
 
-  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Ongoing Civil War',
+  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Houthi Red Sea Crisis',
     analysis: {
-      what: 'Yemen\'s civil war began in 2014 when Houthi rebels seized the capital Sanaa. A Saudi-led coalition intervened in 2015 but failed to defeat the Houthis. The war has killed over 150,000 people and created the world\'s worst humanitarian crisis, with 21 million needing aid. Since October 2023, Houthis have attacked Red Sea shipping in solidarity with Gaza, using drones and missiles to strike commercial vessels. US and UK have conducted airstrikes on Houthi positions in response.',
-      why: 'Houthi attacks have disrupted 12% of global trade passing through the Red Sea, forcing ships to reroute around Africa. This increases shipping costs and delivery times worldwide. Yemen is a proxy battleground between Iran (backing Houthis) and Saudi Arabia. The conflict destabilizes the Arabian Peninsula and threatens global energy infrastructure. Failure to resolve it perpetuates humanitarian suffering.',
-      next: 'Saudi Arabia has sought de-escalation and China brokered Saudi-Iran talks, but Houthi attacks complicate peace efforts. Watch for: Red Sea shipping disruptions, US military responses, Saudi-Houthi negotiations, and humanitarian conditions. A comprehensive peace deal remains elusive as Houthis have strengthened their position.'
+      what: 'Yemen\'s Houthi movement has become a key player in the broader Iran-US confrontation. Since October 2023, Houthis have attacked Red Sea shipping with drones and missiles, disrupting global trade. The US has conducted extensive airstrikes on Houthi positions, escalating further amid the Iran nuclear standoff. The Houthis are a critical part of Iran\'s proxy network and have stated US bases across the region are "legitimate targets." The underlying civil war continues with 21 million needing humanitarian aid.',
+      why: 'Houthi attacks have disrupted 12% of global trade passing through the Red Sea, forcing ships to reroute around Africa. As the Iran-US confrontation intensifies, Houthis could open a major front in any wider conflict. Yemen is a proxy battleground between Iran and Saudi Arabia/US. The conflict destabilizes the Arabian Peninsula and threatens global energy infrastructure.',
+      next: 'Yemen is now inextricable from the Iran nuclear crisis. If US-Iran talks fail and military strikes occur, Houthis would likely escalate attacks on shipping and potentially target US military assets. Watch for: Red Sea shipping disruptions, Iran negotiations impact, US military responses, and humanitarian conditions.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Houthis claim missile strike on cargo ship in Red Sea', url: '#' },
-      { source: 'AP', bias: 'center', time: '4h ago', headline: 'US conducts new airstrikes on Houthi positions', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '7h ago', headline: 'UN warns of worsening famine conditions', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Houthis threaten escalation if Iran attacked', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'US intensifies airstrikes on Houthi positions', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '7h ago', headline: 'Red Sea shipping disruptions continue', url: '#' }
     ]
   },
 
@@ -108,16 +108,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'extreme', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'Eastern Conflict',
+  'DRC': { lat: -4.04, lng: 21.76, flag: '🇨🇩', risk: 'extreme', region: 'Africa', pop: '99M', gdp: '$65B', leader: 'Félix Tshisekedi', title: 'M23 Occupation Crisis',
     analysis: {
-      what: 'The eastern Democratic Republic of Congo has been engulfed in conflict for decades, but violence has escalated dramatically since 2022. The M23 rebel group, backed by Rwanda, has seized significant territory near Goma. Over 100 armed groups operate in the region. Nearly 7 million people are internally displaced—more than any other country. Massacres, sexual violence, and child soldier recruitment are widespread. The Congolese army is ineffective despite UN peacekeeping presence.',
-      why: 'DRC holds vast mineral wealth critical to global technology—cobalt for batteries, coltan for electronics, gold, and diamonds. Armed groups control many mining operations, fueling conflict. Rwanda\'s involvement creates regional tensions. The humanitarian crisis is among the world\'s worst but receives little attention. Instability affects all neighboring countries.',
-      next: 'Regional diplomatic efforts have failed to stop fighting. Rwanda denies supporting M23 despite overwhelming evidence. Watch for: M23 advances, regional mediation attempts, UN mission changes, and humanitarian access. Without addressing Rwanda\'s role and governance failures, conflict will continue indefinitely.'
+      what: 'The eastern DRC crisis escalated dramatically when M23 rebels (backed by Rwanda) captured Goma, the North Kivu capital, in January 2025, followed by Bukavu in South Kivu. Over a year later, M23 still occupies both cities, causing a severe humanitarian crisis—over 1 million Goma residents face economic collapse, bank closures, and cash shortages. Fighting resumed in February 2026 despite an Angolan-brokered ceasefire. Qatari-mediated peace talks continue but progress is slow. The EU announced $95.8 million in humanitarian aid in February 2026.',
+      why: 'DRC holds vast mineral wealth critical to global technology—cobalt for batteries, coltan for electronics, gold, and diamonds. M23\'s control of major cities represents the most significant rebel territorial gains in decades. Rwanda\'s involvement has been extensively documented despite denials. The humanitarian crisis is among the world\'s worst with 7+ million displaced.',
+      next: 'M23 shows no signs of withdrawing from occupied cities. Watch for: peace talk outcomes, ceasefire compliance, humanitarian access, and international pressure on Rwanda. Without addressing Rwanda\'s role, the conflict will continue to devastate eastern Congo.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'M23 rebels advance toward strategic city', url: '#' },
-      { source: 'UN News', bias: 'center', time: '5h ago', headline: 'Displacement reaches record 7 million', url: '#' },
-      { source: 'AP', bias: 'center', time: '9h ago', headline: 'UN peacekeepers ordered to withdraw', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Fighting resumes in eastern DRC despite ceasefire', url: '#' },
+      { source: 'UN News', bias: 'center', time: '5h ago', headline: 'One year under M23 rule: Goma faces deepening crisis', url: '#' },
+      { source: 'AP', bias: 'center', time: '9h ago', headline: 'EU pledges nearly $100M in humanitarian aid', url: '#' }
     ]
   },
 
@@ -135,16 +135,16 @@ export const COUNTRIES = {
   },
 
   // ==================== EXTREME ====================
-  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Regional Conflict',
+  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Post-War Tensions',
     analysis: {
-      what: 'Israel is conducting its largest military operation since 1973 following Hamas\'s October 7, 2023 attack. Ground operations in Gaza have been extensive but costly. Hezbollah engages in daily cross-border fire in the north, displacing 80,000 Israelis. Netanyahu\'s coalition includes far-right ministers pushing controversial policies. Domestic protests over judicial reform paused during war but tensions remain. The economy has been strained by mobilizing 300,000 reservists.',
-      why: 'Israel is the US\'s closest Middle East ally, receiving $3.8 billion annually in military aid. The conflict tests US diplomatic influence and its ability to balance Israeli security with humanitarian concerns. Regional escalation could draw in Iran and trigger oil price spikes. Israeli technology is globally integrated. The Palestinian question shapes Muslim world politics.',
-      next: 'Post-war Gaza governance remains unresolved. Watch for: Hezbollah escalation, Iran confrontation, hostage negotiations, Netanyahu coalition stability, and US policy shifts. Long-term scenarios range from expanded regional war to an imposed peace framework.'
+      what: 'Israel\'s military operations in Gaza following Hamas\'s October 7, 2023 attack resulted in ceasefires in January and October 2025, with Phase 2 negotiations ongoing. Hezbollah was significantly weakened after Israel killed its top leadership including Nasrallah, with a ceasefire in November 2024. However, Israel has been accused of 11,000+ ceasefire violations in Lebanon and extensive violations in Gaza. Netanyahu\'s far-right coalition continues pushing controversial policies including West Bank settlement expansion. The economy is recovering from the strain of mobilizing 300,000 reservists.',
+      why: 'Israel is the US\'s closest Middle East ally, receiving $3.8 billion annually in military aid. The post-war period will define the region for decades. Gaza governance remains unresolved. International criticism and ICC warrant requests have increased Israel\'s diplomatic isolation. Israeli technology remains globally integrated.',
+      next: 'Post-war Gaza governance is the critical unresolved question. Watch for: ceasefire compliance, Iran nuclear confrontation, Netanyahu coalition stability, ICC proceedings, and US policy. The long-term trajectory depends on whether a political solution emerges or conflict resumes.'
     },
     news: [
-      { source: 'Times of Israel', bias: 'center-right', time: '1h ago', headline: 'IDF expands operations in central Gaza', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Hezbollah exchanges fire intensify on northern border', url: '#' },
-      { source: 'Haaretz', bias: 'center-left', time: '6h ago', headline: 'Protests resume over hostage deal delays', url: '#' }
+      { source: 'Times of Israel', bias: 'center-right', time: '1h ago', headline: 'Phase 2 ceasefire negotiations continue', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Lebanon ceasefire holds despite violations', url: '#' },
+      { source: 'Haaretz', bias: 'center-left', time: '6h ago', headline: 'Coalition pushes settlement expansion plans', url: '#' }
     ]
   },
 
@@ -189,27 +189,27 @@ export const COUNTRIES = {
 
   'Syria': { lat: 34.80, lng: 38.99, flag: '🇸🇾', risk: 'extreme', region: 'Middle East', pop: '22M', gdp: '$9B', leader: 'Ahmad al-Sharaa', title: 'Post-Assad Transition',
     analysis: {
-      what: 'Syria\'s civil war, which began in 2011, has largely frozen with Assad controlling about 70% of territory backed by Russia and Iran. The northeast remains under Kurdish-led SDF control with US military presence. Idlib province is held by rebel groups. The economy has collapsed under sanctions and war damage. Over half the pre-war population has been displaced. Israel regularly strikes Iranian targets in Syria. The country produces most of the world\'s captagon (amphetamines).',
-      why: 'Syria hosts Russian and Iranian military bases, projecting their power into the Mediterranean and toward Israel. The refugee crisis reshaped European politics. Assad\'s survival demonstrates how authoritarian regimes can outlast international pressure. Drug trafficking destabilizes neighbors. Reconstruction would require massive investment no one will provide while Assad remains.',
-      next: 'Frozen conflict is the likely indefinite state. Watch for: Israeli strikes on Iranian assets, US troop presence debates, Kurdish autonomy negotiations, and normalization efforts by Arab states. Meaningful reconstruction or refugee return appears impossible.'
+      what: 'Assad was overthrown in December 2024 by HTS rebels led by Ahmad al-Sharaa (Abu Mohammed al-Julani), ending over 50 years of Assad family rule. Al-Sharaa was declared transitional president in January 2025. The interim government is working to establish authority but faces enormous challenges: the northeast remains under Kurdish-led SDF control with US military presence, sectarian tensions persist, and ISIS exploits instability. A January 2026 agreement saw SDF ceding control of Deir al-Zour and Raqqa provinces. The economy is devastated and over half the pre-war population remains displaced.',
+      why: 'Syria\'s transition from Assad\'s authoritarian rule is one of the most significant geopolitical shifts in the Middle East in decades. Russia lost its key Arab ally and Mediterranean military bases. Iran\'s "land bridge" to Hezbollah was severed. The outcome will determine whether Syria becomes a functioning state or fragments further. Reconstruction will require massive international investment. Millions of refugees may begin returning if stability holds.',
+      next: 'The transitional government must unify a fractured country while managing competing armed factions. Watch for: Kurdish autonomy negotiations, ISIS resurgence, sectarian violence, international reconstruction aid, and whether al-Sharaa can transition from rebel leader to statesman. The 2026 northeastern offensive shows stability is far from assured.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Israeli airstrikes target Iranian positions near Damascus', url: '#' },
-      { source: 'AP', bias: 'center', time: '5h ago', headline: 'UN warns of worsening humanitarian conditions', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '9h ago', headline: 'Earthquake recovery stalls amid sanctions', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Transitional government faces security challenges in northeast', url: '#' },
+      { source: 'AP', bias: 'center', time: '5h ago', headline: 'SDF agreement hands provinces to interim authorities', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '9h ago', headline: 'Reconstruction plans stall as funding remains scarce', url: '#' }
     ]
   },
 
-  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'State Collapse',
+  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Post-Ceasefire Recovery',
     analysis: {
-      what: 'Lebanon has experienced economic collapse since 2019—the currency lost 98% of its value, banks froze deposits, and the middle class was wiped out. The Beirut port explosion in 2020 killed 200+ and destroyed large areas. Political paralysis left the country without a president for two years. Hezbollah, more powerful than the state, has engaged in cross-border fighting with Israel since October 2023, risking full-scale war. Essential services barely function.',
-      why: 'Lebanon sits on the Israel-Hezbollah fault line—full war would be devastating for the region. Hezbollah possesses 150,000+ rockets that can hit any Israeli city. Lebanon\'s collapse creates refugee outflows and regional instability. It demonstrates the consequences of sectarian governance and corruption. The banking crisis has implications for regional finance.',
-      next: 'Full Israel-Hezbollah war remains a serious risk depending on Gaza developments. Watch for: escalation triggers, ceasefire negotiations, economic deterioration, and political reform efforts. Recovery requires reforms that entrenched elites resist.'
+      what: 'Lebanon elected Joseph Aoun as president in January 2025, ending a two-year vacancy. An Israel-Hezbollah ceasefire took effect in November 2024 after devastating Israeli military operations that killed Hezbollah\'s top leadership including Hassan Nasrallah. Hezbollah was significantly weakened but refuses full disarmament until Israel complies with ceasefire terms. The Lebanese army has begun first phases of Hezbollah disarmament. The economy remains in collapse—the currency lost 98% of value, banks froze deposits, and essential services barely function.',
+      why: 'Hezbollah\'s weakening has created a rare window for Lebanese state-building. But the ceasefire has been extensively violated—Israel committed 11,000+ violations. Lebanon\'s recovery depends on institutional reform, Hezbollah\'s diminished role, and international support. The banking crisis remains unresolved.',
+      next: 'President Aoun faces the challenge of rebuilding state authority while managing Hezbollah disarmament. Watch for: ceasefire compliance, Hezbollah\'s political future, economic reform, and international reconstruction aid. The window for genuine reform may be narrow.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Hezbollah and Israel exchange heavy fire on border', url: '#' },
-      { source: 'AP', bias: 'center', time: '4h ago', headline: 'New president faces daunting economic challenges', url: '#' },
-      { source: 'FT', bias: 'center', time: '7h ago', headline: 'IMF deal stalls amid political deadlock', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Lebanese army advances Hezbollah disarmament plan', url: '#' },
+      { source: 'AP', bias: 'center', time: '4h ago', headline: 'President Aoun pushes economic reform agenda', url: '#' },
+      { source: 'FT', bias: 'center', time: '7h ago', headline: 'Israel ceasefire violations strain fragile peace', url: '#' }
     ]
   },
 
@@ -506,43 +506,43 @@ export const COUNTRIES = {
   },
 
   // STORMY COUNTRIES
-  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$25.5T', leader: 'Donald Trump', title: 'Political Polarization',
+  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$25.5T', leader: 'Donald Trump', title: 'Assertive Foreign Policy',
     analysis: {
-      what: 'America remains deeply polarized, with partisan divisions affecting nearly every aspect of governance. The economy has shown resilience—avoiding recession, with low unemployment and cooling inflation—but high interest rates and housing costs strain households. Immigration has surged at the southern border. Foreign policy is stretched across multiple crises: supporting Ukraine, navigating Middle East turmoil, competing with China. Congress remains gridlocked with narrow margins.',
-      why: 'As the world\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance, American decisions reverberate globally. US commitment to Ukraine is essential for European security. The US-China relationship will shape the 21st-century order. Dollar hegemony underpins the global financial system.',
-      next: 'The 2026 midterm elections will determine Congressional control and set the trajectory for 2028. Key issues include economy, immigration, and foreign policy. Watch for: Ukraine aid commitment, China policy, government shutdowns, and Supreme Court decisions.'
+      what: 'Trump\'s second term has reshaped US foreign policy with aggressive unilateral action: the capture of Venezuelan President Maduro in January 2026, an Iran nuclear ultimatum with massive military buildup, and brokering Ukraine-Russia peace talks in Geneva. Domestically, mass deportations and federal spending cuts have been polarizing. Trade wars have escalated with tariffs on allies and adversaries alike. The economy shows resilience but tariff uncertainty rattles markets.',
+      why: 'As the world\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance, American decisions reverberate globally. Trump\'s transactional approach to alliances has unsettled traditional partners. US-brokered Ukraine talks represent the most significant peace effort since the war began. The Iran confrontation could trigger a regional war.',
+      next: 'The 2026 midterm elections will determine Congressional control. Watch for: Iran nuclear standoff, Ukraine peace negotiations, Venezuela stability, tariff impacts on global trade, and whether Trump\'s aggressive foreign policy yields lasting results or new conflicts.'
     },
     news: [
-      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Congress debates border security package', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Fed signals steady rates through spring', url: '#' },
-      { source: 'WSJ', bias: 'center-right', time: '5h ago', headline: 'Economy adds 200,000 jobs in latest report', url: '#' },
-      { source: 'NYT', bias: 'center-left', time: '7h ago', headline: 'Immigration debate dominates Capitol Hill', url: '#' }
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Geneva talks on Ukraine show incremental progress', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Iran ultimatum deadline approaches amid military buildup', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '5h ago', headline: 'Tariff uncertainty rattles global markets', url: '#' },
+      { source: 'NYT', bias: 'center-left', time: '7h ago', headline: 'Federal spending cuts face legal challenges', url: '#' }
     ]
   },
 
   'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'stormy', region: 'Western Europe', pop: '68M', gdp: '$2.8T', leader: 'Emmanuel Macron', title: 'Political Fragmentation',
     analysis: {
-      what: 'France faces political fragmentation with Macron\'s centrist coalition weakened and both the far-right (Le Pen) and far-left (Mélenchon) gaining ground. Snap elections in 2024 produced a hung parliament. Pension reform protests showed deep social discontent. The economy struggles with high debt and sluggish growth. Immigration and security remain divisive issues.',
-      why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. French politics shape EU direction. Macron has pushed European strategic autonomy. Far-right gains would significantly impact EU and NATO.',
-      next: 'Macron is a lame duck until 2027 elections. Watch for: coalition stability, Le Pen\'s positioning, economic reforms, and EU leadership role. Political uncertainty will persist.'
+      what: 'France faces severe political instability. The 2024 snap elections produced a hung parliament, and France has cycled through multiple PMs—François Bayrou fell in September 2025 over the budget, and Sébastien Lecornu was appointed, briefly resigned, and was re-appointed in October 2025. Macron\'s centrist coalition is weakened with both the far-right (Le Pen) and far-left (Mélenchon) gaining ground. The economy struggles with high debt and sluggish growth.',
+      why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. The political paralysis hampers EU decision-making. France has committed troops to a potential Ukraine ceasefire monitoring force. Far-right gains would significantly impact EU and NATO.',
+      next: 'Macron is a lame duck until 2027 elections. Watch for: PM Lecornu\'s survival, Le Pen\'s positioning, budget battles, and EU leadership role. France\'s political instability is increasingly a European problem.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Government survives no-confidence vote', url: '#' },
-      { source: 'Le Monde', bias: 'center-left', time: '5h ago', headline: 'Budget negotiations stall in parliament', url: '#' },
-      { source: 'FT', bias: 'center', time: '8h ago', headline: 'France faces EU pressure over deficit', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'PM Lecornu faces budget pressure from opposition', url: '#' },
+      { source: 'Le Monde', bias: 'center-left', time: '5h ago', headline: 'Le Pen consolidates far-right support', url: '#' },
+      { source: 'FT', bias: 'center', time: '8h ago', headline: 'France pledges troops for Ukraine monitoring force', url: '#' }
     ]
   },
 
-  'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'stormy', region: 'Western Europe', pop: '84M', gdp: '$4.2T', leader: 'Olaf Scholz', title: 'Economic Transition',
+  'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'stormy', region: 'Western Europe', pop: '84M', gdp: '$4.2T', leader: 'Friedrich Merz', title: 'New Government',
     analysis: {
-      what: 'Germany faces structural economic challenges as its industrial model—based on cheap Russian energy and exports to China—unravels. The economy has stagnated. Energy transition costs are high. The coalition government is fractious. The far-right AfD has surged to second place in polls. Immigration remains divisive.',
-      why: 'Germany is Europe\'s largest economy and the EU\'s de facto leader. German industry is central to European supply chains. Its energy transition affects climate goals. Political shifts here reshape the entire EU.',
-      next: 'Elections in 2025 will likely bring political change. Watch for: economic indicators, AfD\'s trajectory, coalition dynamics, and EU positioning. Germany is at an inflection point.'
+      what: 'Friedrich Merz (CDU/CSU) became chancellor in May 2025 after winning the February 2025 election with the highest voter turnout since reunification (82.5%). He leads a grand coalition with the SPD. Germany faces structural economic challenges as its industrial model—based on cheap Russian energy and exports to China—has unraveled. The economy has stagnated. Energy transition costs are high. The far-right AfD remains a significant political force. Immigration and defense spending dominate policy debates.',
+      why: 'Germany is Europe\'s largest economy and the EU\'s de facto leader. German industry is central to European supply chains. Merz has signaled a more assertive foreign policy and increased defense spending. Political shifts here reshape the entire EU. Germany\'s economic recovery is critical for European stability.',
+      next: 'Merz must revive the economy while managing coalition tensions with the SPD. Watch for: economic indicators, defense spending increases, AfD\'s trajectory, and EU leadership on Ukraine. Germany faces generational challenges requiring structural reform.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Industrial output falls for third straight month', url: '#' },
-      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Coalition tensions rise over budget', url: '#' },
-      { source: 'DW', bias: 'center', time: '8h ago', headline: 'AfD leads polls in eastern states', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Merz government unveils economic reform package', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Germany increases defense budget significantly', url: '#' },
+      { source: 'DW', bias: 'center', time: '8h ago', headline: 'Grand coalition faces first policy tests', url: '#' }
     ]
   },
 
@@ -585,16 +585,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'South Korea': { lat: 35.91, lng: 127.77, flag: '🇰🇷', risk: 'stormy', region: 'East Asia', pop: '52M', gdp: '$1.7T', leader: 'Yoon Suk Yeol', title: 'Political Crisis',
+  'South Korea': { lat: 35.91, lng: 127.77, flag: '🇰🇷', risk: 'stormy', region: 'East Asia', pop: '52M', gdp: '$1.7T', leader: 'Lee Jae-myung', title: 'Post-Crisis Recovery',
     analysis: {
-      what: 'President Yoon Suk Yeol shocked the nation by declaring martial law in December 2024, quickly reversed after parliamentary opposition. He faces impeachment proceedings. Political polarization is intense. Relations with Japan have improved but North Korean threats persist. The economy faces headwinds from China slowdown affecting exports.',
-      why: 'South Korea is a major economy, technological powerhouse (Samsung, semiconductors), and crucial US ally. It hosts 28,000 US troops facing North Korea. Political instability affects regional security. Korean pop culture has global reach.',
-      next: 'Yoon\'s political survival is uncertain. Watch for: impeachment proceedings, early elections, North Korea policy, and US alliance management. A political transition may occur.'
+      what: 'South Korea experienced its most severe constitutional crisis since democratization when President Yoon Suk Yeol declared martial law in December 2024, quickly reversed by parliament. He was impeached (204 of 300 votes), the Constitutional Court upheld removal unanimously in April 2025, and in February 2026 Yoon was sentenced to life in prison for insurrection. Lee Jae-myung won the June 2025 snap election and has worked to restore stability. The economy remains a technological powerhouse but faces headwinds from China\'s slowdown.',
+      why: 'South Korea is a major economy, technological powerhouse (Samsung, semiconductors), and crucial US ally. It hosts 28,000 US troops facing North Korea. The democratic system proved resilient—martial law was reversed in hours, impeachment proceeded through institutions, and peaceful elections followed. Korean pop culture has global reach.',
+      next: 'Lee Jae-myung must rebuild institutional trust and manage North Korean threats. Watch for: economic performance, North Korea policy, US alliance management, and political reconciliation. South Korea\'s democracy emerged strengthened from its greatest test.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Impeachment vote scheduled amid protests', url: '#' },
-      { source: 'Yonhap', bias: 'center', time: '4h ago', headline: 'Constitutional court weighs martial law legality', url: '#' },
-      { source: 'AP', bias: 'center', time: '7h ago', headline: 'Mass demonstrations continue nationwide', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Yoon sentenced to life in prison for insurrection', url: '#' },
+      { source: 'Yonhap', bias: 'center', time: '4h ago', headline: 'Lee government focuses on economic recovery', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'South Korea strengthens semiconductor investments', url: '#' }
     ]
   },
 
@@ -842,13 +842,13 @@ export const COUNTRIES = {
 
   'Japan': { lat: 36.20, lng: 138.25, flag: '🇯🇵', risk: 'clear', region: 'East Asia', pop: '125M', gdp: '$4.2T', leader: 'Sanae Takaichi', title: 'Defense Buildup',
     analysis: {
-      what: 'Japan has undertaken its most significant defense transformation since WWII, doubling military spending and acquiring counterstrike capabilities in response to China and North Korea. New PM Ishiba has pushed for even more, including a potential Asian NATO. The economy has finally exited decades of deflation with wages rising. Demographic decline (population shrinking by 500,000/year) poses long-term challenges.',
-      why: 'Japan is the world\'s third-largest economy and crucial US ally. Its defense buildup reshapes Asian security dynamics. Japanese technology and manufacturing remain globally important. Yen weakness has affected global currency markets.',
-      next: 'The defense transformation will continue as regional tensions persist. Watch for: China relations, US alliance management, economic normalization, and demographic policies. Japan is becoming a more "normal" military power.'
+      what: 'PM Sanae Takaichi won a major election victory in February 2026, forming a coalition government with the Japan Innovation Party. Japan has undertaken its most significant defense transformation since WWII, doubling military spending and acquiring counterstrike capabilities in response to China and North Korea. The economy has finally exited decades of deflation with wages rising. Demographic decline (population shrinking by 500,000/year) poses long-term challenges.',
+      why: 'Japan is the world\'s third-largest economy and crucial US ally. Its defense buildup reshapes Asian security dynamics. Japanese technology and manufacturing remain globally important. Takaichi is Japan\'s first female PM and has taken a more assertive stance on defense and economic nationalism.',
+      next: 'The defense transformation will continue as regional tensions persist. Watch for: China relations, US alliance management, economic normalization, and demographic policies. Japan is becoming a more "normal" military power under Takaichi\'s leadership.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Defense budget reaches record levels', url: '#' },
-      { source: 'Nikkei', bias: 'center', time: '4h ago', headline: 'Wages show sustained growth for first time in decades', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Takaichi forms second cabinet after election victory', url: '#' },
+      { source: 'Nikkei', bias: 'center', time: '4h ago', headline: 'Defense budget reaches record levels', url: '#' }
     ]
   },
 
@@ -985,15 +985,15 @@ export const COUNTRIES = {
     ]
   },
 
-  'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Karl Nehammer', title: 'Far-Right Gains',
+  'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Christian Stocker', title: 'Three-Party Coalition',
     analysis: {
-      what: 'The far-right FPÖ won elections in 2024 but has struggled to form a government due to other parties refusing to coalition. Austria maintains neutrality while being surrounded by NATO members. The economy depends heavily on trade with Germany. Immigration and Russia relations are divisive issues.',
-      why: 'Austria\'s political shifts reflect broader European far-right trends. The country\'s neutrality creates complications for European defense. Austrian banking has historical ties to Eastern Europe. The country is a transit point for migration.',
-      next: 'Government formation remains challenging. Watch for: coalition negotiations, Russia policy, and migration debates. Austria\'s political direction is uncertain.'
+      what: 'The far-right FPÖ won the 2024 election but Herbert Kickl failed to form a government as other parties refused to coalition with him. Chancellor Christian Stocker was sworn in March 2025 leading an unprecedented three-party coalition (ÖVP + SPD + Neos)—the first tripartite government since 1949. Austria maintains neutrality while being surrounded by NATO members. The economy has emerged from recession with growth resuming in 2026.',
+      why: 'Austria\'s political shifts reflect broader European far-right trends, though the centrist coalition blocked FPÖ from power. The country\'s neutrality creates complications for European defense. Austrian banking has historical ties to Eastern Europe. The country is a transit point for migration.',
+      next: 'The three-party coalition faces the challenge of maintaining unity across different ideological positions. Watch for: coalition stability, FPÖ opposition pressure, Russia policy, and migration debates. The next election will test whether the far-right can be contained.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Coalition talks continue amid deadlock', url: '#' },
-      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Far-right gains reshape political landscape', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2h ago', headline: 'Three-party coalition navigates policy differences', url: '#' },
+      { source: 'FT', bias: 'center', time: '5h ago', headline: 'Austrian economy shows signs of recovery', url: '#' }
     ]
   },
 
@@ -1131,15 +1131,15 @@ export const COUNTRIES = {
     ]
   },
 
-  'Uruguay': { lat: -32.52, lng: -55.77, flag: '🇺🇾', risk: 'clear', region: 'South America', pop: '3.5M', gdp: '$71B', leader: 'Lacalle Pou', title: 'Stable Democracy',
+  'Uruguay': { lat: -32.52, lng: -55.77, flag: '🇺🇾', risk: 'clear', region: 'South America', pop: '3.5M', gdp: '$71B', leader: 'Yamandú Orsi', title: 'Stable Democracy',
     analysis: {
-      what: 'Uruguay remains South America\'s most stable and democratic country with strong institutions and low corruption. The economy depends on agriculture and services. Progressive social policies (marijuana legalization, abortion rights) continue. The small population limits influence but enables nimble governance.',
-      why: 'Uruguay is a model of stability and good governance for Latin America. Its banking system attracts regional deposits. Progressive policies influence debates elsewhere. The country maintains good relations across the political spectrum.',
-      next: 'Presidential elections in 2024 resulted in change. Watch for: economic policy, regional relations, and social policies. Uruguay\'s stability should continue regardless of who governs.'
+      what: 'Uruguay remains South America\'s most stable and democratic country with strong institutions and low corruption. President Yamandú Orsi (Broad Front, center-left) took office in March 2025 after winning the November 2024 election, marking a peaceful transfer of power. The economy depends on agriculture and services. Progressive social policies continue. The small population limits influence but enables nimble governance.',
+      why: 'Uruguay is a model of stability and good governance for Latin America. Its banking system attracts regional deposits. Progressive policies influence debates elsewhere. The peaceful left-right power alternation demonstrates democratic maturity rare in the region.',
+      next: 'Orsi must strengthen social safety nets while maintaining fiscal discipline. Watch for: economic policy, regional relations, and social reform agenda. Uruguay\'s stability should continue as institutions remain robust.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'New government maintains fiscal discipline', url: '#' },
-      { source: 'El Observador', bias: 'center', time: '6h ago', headline: 'Agricultural exports strong despite drought', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Orsi government outlines social reform priorities', url: '#' },
+      { source: 'El Observador', bias: 'center', time: '6h ago', headline: 'Agricultural exports strong amid global demand', url: '#' }
     ]
   },
 
