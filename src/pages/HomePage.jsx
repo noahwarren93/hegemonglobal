@@ -198,7 +198,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-function Watchlist({ onCountryClick }) {
+function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries }) {
   const watchlistCountries = useMemo(() => {
     return Object.entries(COUNTRIES)
       .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
@@ -209,14 +209,29 @@ function Watchlist({ onCountryClick }) {
   }, []);
 
   return (
-    <div className="watchlist" style={{ position: 'relative', top: 'auto', left: 'auto' }}>
+    <div className="watchlist" style={{ maxHeight: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div className="watchlist-title">CRITICAL WATCHLIST</div>
-      {watchlistCountries.map(([name, c]) => (
-        <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
-          <span className="wl-country">{c.flag} {name}</span>
-          <span className={`wl-risk risk-${c.risk}`} style={{ color: '#fff' }}>{c.risk.toUpperCase()}</span>
-        </div>
-      ))}
+      <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+        {watchlistCountries.map(([name, c]) => (
+          <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
+            <span className="wl-country">{c.flag} {name}</span>
+            <span className={`wl-risk risk-${c.risk}`} style={{ color: '#fff' }}>{c.risk.toUpperCase()}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ borderTop: '1px solid #1f293766', paddingTop: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+        <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={onToggleTradeRoutes}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Trade Routes
+        </button>
+        <button className={`globe-feature-btn${compareMode ? ' active' : ''}`} onClick={onToggleCompare}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Compare Mode
+        </button>
+        {compareMode && compareCountries.length === 0 && (
+          <div className="compare-hint" style={{ marginTop: 4 }}>Click countries on the globe to compare</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -590,44 +605,15 @@ export default function HomePage() {
             <div className="date">{currentDate}</div>
           </div>
 
-          {/* Watchlist + Feature Buttons (stacked, no overlap) */}
-          <div style={{ position: 'absolute', left: 16, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - 160px)' }}>
-            <Watchlist onCountryClick={handleCountryClick} />
-
-            {/* Feature Buttons — always visible at bottom */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-              <button
-                className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`}
-                onClick={handleToggleTradeRoutes}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-                Trade Routes
-              </button>
-              <button
-                className={`globe-feature-btn${compareMode ? ' active' : ''}`}
-                onClick={handleToggleCompare}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                </svg>
-                Compare Mode
-              </button>
-
-              {/* Compare hint — position:relative to sit below button, not overlap */}
-              {compareMode && compareCountries.length === 0 && (
-                <div className="compare-hint" style={{ position: 'relative', marginTop: 4 }}>
-                  Click countries on the globe to compare
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Watchlist + Feature Buttons */}
+          <Watchlist
+            onCountryClick={handleCountryClick}
+            tradeRoutesActive={tradeRoutesActive}
+            onToggleTradeRoutes={handleToggleTradeRoutes}
+            compareMode={compareMode}
+            onToggleCompare={handleToggleCompare}
+            compareCountries={compareCountries}
+          />
 
           {/* Risk Legend */}
           <RiskLegend />
