@@ -1,0 +1,14 @@
+import{r as i,j as e,n as r}from"./index-BG4zDyd1.js";const d=`<h2>OUR MISSION</h2>
+<p>Geopolitical intelligence shouldn't be as complicated as it is. Hegemon Global delivers real-time global risk monitoring to anyone who wants to understand what's happening in the world and why it matters. This tool is useful for analysts and policymakers, journalists, and the everyday person.</p>
+
+<h2>WHAT WE DO</h2>
+<p>We built an intelligence platform that does what no single news source can. Hegemon tracks breaking geopolitical events across 100+ sources worldwide, including Western and non-Western. It clusters them into unified event reports. Every source is labeled for political bias, and state media is flagged. AI generates intelligence briefings on each event so you get the full picture in seconds, not hours.</p>
+<p>Beyond news, Hegemon monitors global markets, maps active trade routes and sanctions impacts, classifies every country's risk level from Clear to Catastrophic in real time, and lets you compare nations side by side across economic, military, and stability metrics. A daily intelligence brief breaks down the most significant developments from the day before.</p>
+<p><strong>One platform. Every angle. No blind spots.</strong></p>
+
+<h2>WHY IT EXISTS</h2>
+<p>The world doesn't slow down for anyone. Conflicts escalate overnight. Markets react to every small development. Sanctions reshape trade routes in hours. Every outlet covers it through its own lens, pushing its own agendas, leaving you to piece together the truth from dozens of tabs.</p>
+<p>We built Hegemon because the people who want and need to understand the world shouldn't have to spend hours doing it. One platform. Every source. The full picture.</p>
+
+<h2>CONTACT</h2>
+<p>hegemonglobal0@gmail.com</p>`;function h({isOpen:o,onClose:n}){const[t,a]=i.useState("mission");if(i.useEffect(()=>{if(!o)return;const s=c=>{c.key==="Escape"&&n()};return window.addEventListener("keydown",s),()=>window.removeEventListener("keydown",s)},[o,n]),!o)return null;const l=t==="mission"?d:t==="privacy"?r.privacy:r.terms;return e.jsx("div",{className:"tos-overlay active",onClick:s=>{s.target===s.currentTarget&&n()},children:e.jsxs("div",{className:"tos-modal",children:[e.jsxs("div",{className:"tos-header",children:[e.jsxs("div",{className:"tos-tabs",children:[e.jsx("button",{className:`tos-tab ${t==="mission"?"active":""}`,onClick:()=>a("mission"),children:"Mission"}),e.jsx("button",{className:`tos-tab ${t==="privacy"?"active":""}`,onClick:()=>a("privacy"),children:"Privacy Policy"}),e.jsx("button",{className:`tos-tab ${t==="terms"?"active":""}`,onClick:()=>a("terms"),children:"Terms of Service"})]}),e.jsx("button",{className:"tos-close",onClick:n,children:"×"})]}),e.jsx("div",{className:"tos-body",dangerouslySetInnerHTML:{__html:l}})]})})}export{h as default};
