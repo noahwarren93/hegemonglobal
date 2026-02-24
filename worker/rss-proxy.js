@@ -1714,11 +1714,14 @@ Return ONLY the JSON array, no other text.`;
                 if (i < rawTimestamps.length) timestamps.push(rawTimestamps[i]);
               }
             }
+            // Use first chart data point as reference so percentage matches chart direction
+            const chartStart = closes.length > 0 ? closes[0] : prevClose;
+            const refPrice = chartStart || prevClose || price;
             results[sym] = {
               symbol: meta.symbol || sym,
               price,
               prevClose: prevClose || price,
-              changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+              changePct: refPrice ? ((price - refPrice) / refPrice) * 100 : 0,
               shortName: meta.shortName || '',
               longName: meta.longName || '',
               exchangeName: meta.fullExchangeName || meta.exchangeName || '',
