@@ -877,13 +877,102 @@ export async function fetchCountryNews(countryName) {
 }
 
 // ============================================================
-// Fetch Live News — batched RSS (5 at a time), 5s timeout, timing logs
+// Fetch Pre-Generated Events from Worker (instant, no client-side processing)
+// ============================================================
+
+async function fetchPreGeneratedEvents() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch(`${RSS_PROXY_BASE}/events`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (!data || !data.events || data.events.length === 0) return false;
+
+    const minutesAgo = data.lastUpdated
+      ? Math.round((Date.now() - data.lastUpdated) / 60000)
+      : null;
+    console.log(`[Hegemon] Pre-generated events: ${data.events.length} events, updated ${minutesAgo}m ago`);
+
+    // Reject stale data (older than 30 minutes)
+    if (minutesAgo !== null && minutesAgo > 30) {
+      console.log('[Hegemon] Pre-generated data too stale, falling back');
+      return false;
+    }
+
+    // Populate DAILY_BRIEFING
+    if (data.briefing && data.briefing.length > 0) {
+      DAILY_BRIEFING.length = 0;
+      DAILY_BRIEFING.push(...data.briefing.map(a => ({
+        ...a,
+        time: timeAgo(a.pubDate),
+        headline: a.headline || a.title,
+      })));
+    }
+
+    // Populate DAILY_EVENTS
+    DAILY_EVENTS.length = 0;
+    for (const event of data.events) {
+      DAILY_EVENTS.push({
+        ...event,
+        time: timeAgo(event.pubDate),
+        summaryLoading: false,
+        summaryError: !event.summary,
+        articles: (event.articles || []).map(a => ({
+          ...a,
+          time: timeAgo(a.pubDate),
+        }))
+      });
+    }
+
+    // Store last updated timestamp for UI
+    window._eventsLastUpdated = data.lastUpdated;
+
+    notifyEventsUpdated();
+    saveNewsToLocalStorage();
+
+    return true;
+  } catch (err) {
+    console.warn('[Hegemon] Pre-generated events fetch failed:', err.message);
+    return false;
+  }
+}
+
+// ============================================================
+// Fetch Live News — tries pre-generated first, falls back to RSS
 // ============================================================
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
   const totalStartTime = performance.now();
   if (onStatusUpdate) onStatusUpdate('fetching');
+
+  // Try pre-generated events first (instant — single GET call)
+  const preGenerated = await fetchPreGeneratedEvents();
+  if (preGenerated) {
+    const elapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
+    console.log(`[Hegemon] Pre-generated events loaded in ${elapsed}s`);
+
+    // Trigger side effects
+    setTimeout(() => {
+      saveBriefingSnapshot();
+      seedPastBriefingIfEmpty();
+    }, 50);
+    setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
+
+    if (onStatusUpdate) onStatusUpdate('complete');
+    if (onComplete) onComplete(DAILY_BRIEFING);
+    return;
+  }
+
+  // Fall back to client-side RSS fetching
+  console.log('[Hegemon] Falling back to client-side RSS fetching');
 
   try {
     const feeds = RSS_FEEDS.daily;

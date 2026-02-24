@@ -1,3 +1,10 @@
 name = "hegemon-rss-proxy"
 main = "rss-proxy.js"
 compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "HEGEMON_CACHE"
+id = "cd9ecdf3837a4eaeb5f99e6d317f1911"
+
+[triggers]
+crons = ["*/10 * * * *"]
