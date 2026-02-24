@@ -343,15 +343,13 @@ export default function HomePage() {
     };
     loadStockData(stockCallback);
 
-    // Defer news fetching 3s after splash dismisses (globe is visible by then)
-    const newsStartTimer = setTimeout(() => {
-      fetchLiveNews({
-        onStatusUpdate: (status) => {
-          if (status === 'fetching' && !hasCached) setIsLoading(true);
-        },
-        onComplete: () => setIsLoading(false)
-      });
-    }, 3000);
+    // Fetch news immediately (pre-generated events from Worker are instant)
+    fetchLiveNews({
+      onStatusUpdate: (status) => {
+        if (status === 'fetching' && !hasCached) setIsLoading(true);
+      },
+      onComplete: () => setIsLoading(false)
+    });
 
     // Auto-refresh news
     const newsInterval = setInterval(() => {
@@ -365,7 +363,6 @@ export default function HomePage() {
     return () => {
       clearTimeout(minTimer);
       clearTimeout(hardCapTimer);
-      clearTimeout(newsStartTimer);
       clearInterval(newsInterval);
       clearInterval(stocksInterval);
       window.removeEventListener('globeReady', handleGlobeReady);

@@ -770,6 +770,27 @@ const EDITORIAL_OPINION_SOURCES = new Set([
   'washington times', 'fox news',
 ]);
 
+// Peripheral/side-story headline patterns — penalized when picking the main headline
+const PERIPHERAL_PATTERNS = [
+  'embassy advis', 'nationals leave', 'nationals to leave', 'travel warning',
+  'travel advisory', 'advises citizens', 'advises nationals', 'urged to leave',
+  'evacuate citizens', 'issues advisory', 'warns citizens', 'warns nationals',
+  'consular', 'embassy closes', 'flights suspended', 'airlines cancel',
+  'tourists stranded', 'expats urged', 'stock falls', 'stock drops',
+  'shares drop', 'market reacts', 'oil prices', 'gas prices',
+];
+
+// Core event headline keywords — boosted when picking the main headline
+const CORE_EVENT_KEYWORDS = [
+  'war', 'strike', 'strikes', 'military', 'nuclear', 'carrier', 'attack',
+  'attacks', 'confrontation', 'buildup', 'offensive', 'invasion',
+  'troops', 'missile', 'missiles', 'airstrikes', 'airstrike', 'bombing',
+  'ceasefire', 'peace talks', 'sanctions', 'coup', 'escalat', 'blockade',
+  'siege', 'hostage', 'genocide', 'ethnic cleansing', 'occupation',
+  'demands', 'threatens', 'threat', 'warns', 'ultimatum', 'rejects',
+  'defies', 'refuses', 'confronts', 'deploys', 'launches', 'fires',
+];
+
 function scoreHeadlineNeutrality(headline, source) {
   const lower = (headline || '').toLowerCase();
   let score = 0;
@@ -781,6 +802,17 @@ function scoreHeadlineNeutrality(headline, source) {
   if (headline.length > 100) score -= 3;
   if (headline.length > 10 && headline.length < 70) score += 2;
   if (source && EDITORIAL_OPINION_SOURCES.has(source.toLowerCase())) score -= 3;
+
+  // Penalize peripheral/side-story headlines (embassy advisories, market reactions, etc.)
+  for (const pat of PERIPHERAL_PATTERNS) {
+    if (lower.includes(pat)) { score -= 15; break; }
+  }
+
+  // Boost core event headlines (war, strike, military, etc.)
+  for (const kw of CORE_EVENT_KEYWORDS) {
+    if (lower.includes(kw)) { score += 5; break; }
+  }
+
   return score;
 }
 
@@ -1392,6 +1424,43 @@ export default {
         console.error('Events endpoint error:', err);
         return new Response(
           JSON.stringify({ error: 'Failed to read events' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /debug — diagnostics for pre-generated events
+    // ============================================================
+    if (url.pathname === '/debug' && request.method === 'GET') {
+      try {
+        const raw = await env.HEGEMON_CACHE.get('latest_events');
+        if (!raw) {
+          return new Response(
+            JSON.stringify({ status: 'empty', lastUpdated: null, eventCount: 0, summaryCount: 0 }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        const data = JSON.parse(raw);
+        const eventCount = (data.events || []).length;
+        const summaryCount = (data.events || []).filter(e => e.summary).length;
+        const briefingCount = (data.briefing || []).length;
+        const minutesAgo = data.lastUpdated
+          ? Math.round((Date.now() - data.lastUpdated) / 60000)
+          : null;
+        const topHeadlines = (data.events || []).slice(0, 10).map(e => ({
+          headline: e.headline,
+          sources: e.sourceCount,
+          country: e._primaryCountry,
+          hasSummary: !!e.summary
+        }));
+        return new Response(
+          JSON.stringify({ status: 'ok', lastUpdated: data.lastUpdated, minutesAgo, eventCount, summaryCount, briefingCount, topHeadlines }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

@@ -900,8 +900,8 @@ async function fetchPreGeneratedEvents() {
       : null;
     console.log(`[Hegemon] Pre-generated events: ${data.events.length} events, updated ${minutesAgo}m ago`);
 
-    // Reject stale data (older than 30 minutes)
-    if (minutesAgo !== null && minutesAgo > 30) {
+    // Reject stale data (older than 60 minutes — cron runs every 10m)
+    if (minutesAgo !== null && minutesAgo > 60) {
       console.log('[Hegemon] Pre-generated data too stale, falling back');
       return false;
     }
