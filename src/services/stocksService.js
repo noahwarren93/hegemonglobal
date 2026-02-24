@@ -118,11 +118,19 @@ async function fetchViaWorker() {
 
   const quotes = {};
   Object.entries(data.quotes).forEach(([sym, q]) => {
+    const sparkline = q.sparkline || [q.prevClose || q.price, q.price];
+    // Calculate changePct from sparkline so it matches chart direction
+    let changePct = q.changePct;
+    if (sparkline.length >= 2) {
+      const first = sparkline[0];
+      const last = sparkline[sparkline.length - 1];
+      changePct = first ? ((last - first) / first) * 100 : 0;
+    }
     quotes[sym] = {
       symbol: q.symbol || sym,
       price: q.price,
-      changePct: q.changePct,
-      sparkline: q.sparkline || [q.prevClose || q.price, q.price]
+      changePct,
+      sparkline
     };
   });
   return quotes;
@@ -153,11 +161,19 @@ function fetchViaCorsProxies() {
           if (r.indicators?.quote?.[0]?.close) {
             closes = r.indicators.quote[0].close.filter(v => v != null);
           }
+          const sparkline = closes.length > 1 ? closes : [prevClose || price, price];
+          // Calculate changePct from sparkline so it matches chart direction
+          let changePct = 0;
+          if (sparkline.length >= 2) {
+            const first = sparkline[0];
+            const last = sparkline[sparkline.length - 1];
+            changePct = first ? ((last - first) / first) * 100 : 0;
+          }
           return {
             symbol: meta.symbol || sym,
             price,
-            changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
-            sparkline: closes.length > 1 ? closes : [prevClose || price, price]
+            changePct,
+            sparkline
           };
         })
         .catch(() => tryProxy(idx + 1));

@@ -418,6 +418,14 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                 );
               }
               const isSelected = !showingSearch && selectedIdx === i;
+              // When this index is selected and chart data is loaded, use chart-derived percentage
+              let displayChange = idx.change;
+              let displayPositive = idx.positive;
+              if (isSelected && chartData && chartData.closes && chartData.closes.length >= 2) {
+                const pct = chartData.changePct;
+                displayChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+                displayPositive = pct >= 0;
+              }
               return (
                 <div
                   key={i}
@@ -438,10 +446,10 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                     {idx.value}
                   </span>
                   <span style={{
-                    color: idx.positive ? '#22c55e' : '#ef4444',
+                    color: displayPositive ? '#22c55e' : '#ef4444',
                     fontSize: '11px', fontWeight: 700, textAlign: 'right', minWidth: '60px', fontVariantNumeric: 'tabular-nums'
                   }}>
-                    {idx.change}
+                    {displayChange}
                   </span>
                 </div>
               );
