@@ -209,8 +209,8 @@ function Watchlist({ onCountryClick }) {
   }, []);
 
   return (
-    <div className="watchlist" style={{ position: 'relative', top: 'auto', left: 'auto' }}>
-      <div className="watchlist-title">CRITICAL WATCHLIST</div>
+    <div className="watchlist" style={{ position: 'relative', top: 'auto', left: 'auto', flex: '1 1 0', minHeight: 0, maxHeight: 'none', overflowY: 'auto' }}>
+      <div className="watchlist-title" style={{ position: 'sticky', top: 0, background: 'rgba(10,10,15,0.95)', zIndex: 1, paddingBottom: 8 }}>CRITICAL WATCHLIST</div>
       {watchlistCountries.map(([name, c]) => (
         <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
           <span className="wl-country">{c.flag} {name}</span>
@@ -591,11 +591,11 @@ export default function HomePage() {
           </div>
 
           {/* Watchlist + Feature Buttons (stacked, no overlap) */}
-          <div style={{ position: 'absolute', left: 16, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - 200px)' }}>
+          <div style={{ position: 'absolute', left: 16, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'calc(100vh - 160px)' }}>
             <Watchlist onCountryClick={handleCountryClick} />
 
-            {/* Feature Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {/* Feature Buttons — always visible at bottom */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
               <button
                 className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`}
                 onClick={handleToggleTradeRoutes}
