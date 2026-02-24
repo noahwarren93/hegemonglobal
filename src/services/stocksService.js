@@ -186,14 +186,22 @@ export async function fetchChartData(symbol, range = '5d', interval = '1d') {
     const data = await resp.json();
     const q = data.quotes?.[symbol];
     if (!q || !q.price) return null;
+    const closes = q.sparkline || [];
+    // Calculate changePct from chart data so percentage always matches chart direction
+    let changePct = 0;
+    if (closes.length >= 2) {
+      const first = closes[0];
+      const last = closes[closes.length - 1];
+      changePct = first ? ((last - first) / first) * 100 : 0;
+    }
     return {
       symbol: q.symbol || symbol,
       price: q.price,
       prevClose: q.prevClose,
-      changePct: q.changePct,
+      changePct,
       shortName: q.shortName || '',
       exchangeName: q.exchangeName || '',
-      closes: q.sparkline || [],
+      closes,
       timestamps: q.timestamps || []
     };
   } catch {
