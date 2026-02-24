@@ -241,7 +241,6 @@ export async function searchTicker(ticker) {
     const q = data.quotes?.[sym];
     if (!q || !q.price) return null;
 
-    const positive = q.changePct >= 0;
     let sparkline = [q.prevClose || q.price, q.price];
     if (q.sparkline && q.sparkline.length > 1) {
       const raw = q.sparkline;
@@ -251,12 +250,20 @@ export async function searchTicker(ticker) {
         sparkline.push(raw[idx]);
       }
     }
+    // Recalculate changePct from sparkline for consistency
+    let changePct = q.changePct;
+    if (sparkline.length >= 2) {
+      const first = sparkline[0];
+      const last = sparkline[sparkline.length - 1];
+      if (first) changePct = ((last - first) / first) * 100;
+    }
+    const positive = changePct >= 0;
 
     return {
       symbol: q.symbol || sym,
       name: q.shortName || q.longName || '',
       price: formatStockPrice(q.price),
-      change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
+      change: (positive ? '+' : '') + changePct.toFixed(2) + '%',
       positive,
       sparkline
     };
@@ -333,12 +340,19 @@ function buildStocksData(quotes, isStaticFallback) {
       }
       hasAnyData = true;
       const pre = s.pre || '';
-      const positive = q.changePct >= 0;
+      // Always recalculate changePct from sparkline for consistency
+      let pct = q.changePct;
+      if (q.sparkline && q.sparkline.length >= 2) {
+        const first = q.sparkline[0];
+        const last = q.sparkline[q.sparkline.length - 1];
+        if (first) pct = ((last - first) / first) * 100;
+      }
+      const positive = pct >= 0;
       return {
         name: s.name,
         value: pre + formatStockPrice(q.price),
-        change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
-        changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.price * q.changePct / 100)),
+        change: (positive ? '+' : '') + pct.toFixed(2) + '%',
+        changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.price * pct / 100)),
         positive,
         noData: false
       };
@@ -356,7 +370,10 @@ function buildStocksData(quotes, isStaticFallback) {
         const idx = Math.floor(i * (raw.length - 1) / 11);
         sparkline.push(raw[idx]);
       }
-      mainChangePct = mainQuote.changePct;
+      // Recalculate from sparkline for consistency
+      const first = raw[0];
+      const last = raw[raw.length - 1];
+      mainChangePct = first ? ((last - first) / first) * 100 : 0;
     } else if (STATIC_FALLBACK_DATA[market.symbols[0].sym]) {
       const staticMain = STATIC_FALLBACK_DATA[market.symbols[0].sym];
       sparkline = staticMain.sparkline.slice();
@@ -409,7 +426,8 @@ export async function loadStockData(onUpdate) {
       fetchBitcoinFromCoinGecko().catch(() => null)
     ]);
 
-    if (btcData) quotes['BTC-USD'] = btcData;
+    // Only use CoinGecko BTC if worker didn't return it
+    if (btcData && !quotes['BTC-USD']) quotes['BTC-USD'] = btcData;
 
     const count = Object.keys(quotes).length;
 

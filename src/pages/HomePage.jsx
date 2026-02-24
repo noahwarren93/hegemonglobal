@@ -198,20 +198,18 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-const WATCHLIST_NAMES = [
-  'Ukraine', 'Russia', 'Palestine', 'Sudan', 'Myanmar', 'Yemen', 'Haiti',
-  'Afghanistan', 'Burkina Faso', 'DRC', 'Iran'
-];
-
 function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries }) {
   const watchlistCountries = useMemo(() => {
-    return WATCHLIST_NAMES
-      .filter(name => COUNTRIES[name])
-      .map(name => [name, COUNTRIES[name]]);
+    return Object.entries(COUNTRIES)
+      .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
+      .sort((a, b) => {
+        const tierDiff = ({ catastrophic: 0, extreme: 1 }[a[1].risk] || 0) - ({ catastrophic: 0, extreme: 1 }[b[1].risk] || 0);
+        return tierDiff !== 0 ? tierDiff : a[0].localeCompare(b[0]);
+      });
   }, []);
 
   return (
-    <div className="watchlist" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="watchlist" style={{ maxHeight: 360, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div className="watchlist-title">CRITICAL WATCHLIST</div>
       <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
         {watchlistCountries.map(([name, c]) => (
