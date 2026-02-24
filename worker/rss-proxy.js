@@ -1702,7 +1702,8 @@ Return ONLY the JSON array, no other text.`;
             const r = data.chart.result[0];
             const meta = r.meta;
             const price = meta.regularMarketPrice;
-            const prevClose = meta.chartPreviousClose || meta.previousClose;
+            const chartPrevClose = meta.chartPreviousClose || meta.previousClose;
+            const dailyPrevClose = meta.previousClose || meta.chartPreviousClose;
             if (!price) return;
             const rawCloses = r.indicators?.quote?.[0]?.close || [];
             const rawTimestamps = r.timestamp || [];
@@ -1714,12 +1715,11 @@ Return ONLY the JSON array, no other text.`;
                 if (i < rawTimestamps.length) timestamps.push(rawTimestamps[i]);
               }
             }
-            const refPrice = prevClose || price;
             results[sym] = {
               symbol: meta.symbol || sym,
               price,
-              prevClose: prevClose || price,
-              changePct: refPrice ? ((price - refPrice) / refPrice) * 100 : 0,
+              prevClose: chartPrevClose || price,
+              changePct: dailyPrevClose ? ((price - dailyPrevClose) / dailyPrevClose) * 100 : 0,
               shortName: meta.shortName || '',
               longName: meta.longName || '',
               exchangeName: meta.fullExchangeName || meta.exchangeName || '',
