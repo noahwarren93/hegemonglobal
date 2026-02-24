@@ -118,19 +118,11 @@ async function fetchViaWorker() {
 
   const quotes = {};
   Object.entries(data.quotes).forEach(([sym, q]) => {
-    const sparkline = q.sparkline || [q.prevClose || q.price, q.price];
-    // Calculate changePct from sparkline so it matches chart direction
-    let changePct = q.changePct;
-    if (sparkline.length >= 2) {
-      const first = sparkline[0];
-      const last = sparkline[sparkline.length - 1];
-      changePct = first ? ((last - first) / first) * 100 : 0;
-    }
     quotes[sym] = {
       symbol: q.symbol || sym,
       price: q.price,
-      changePct,
-      sparkline
+      changePct: q.changePct,
+      sparkline: q.sparkline || [q.prevClose || q.price, q.price]
     };
   });
   return quotes;
@@ -161,19 +153,11 @@ function fetchViaCorsProxies() {
           if (r.indicators?.quote?.[0]?.close) {
             closes = r.indicators.quote[0].close.filter(v => v != null);
           }
-          const sparkline = closes.length > 1 ? closes : [prevClose || price, price];
-          // Calculate changePct from sparkline so it matches chart direction
-          let changePct = 0;
-          if (sparkline.length >= 2) {
-            const first = sparkline[0];
-            const last = sparkline[sparkline.length - 1];
-            changePct = first ? ((last - first) / first) * 100 : 0;
-          }
           return {
             symbol: meta.symbol || sym,
             price,
-            changePct,
-            sparkline
+            changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+            sparkline: closes.length > 1 ? closes : [prevClose || price, price]
           };
         })
         .catch(() => tryProxy(idx + 1));
@@ -202,22 +186,14 @@ export async function fetchChartData(symbol, range = '5d', interval = '1d') {
     const data = await resp.json();
     const q = data.quotes?.[symbol];
     if (!q || !q.price) return null;
-    const closes = q.sparkline || [];
-    // Calculate changePct from chart data so percentage always matches chart direction
-    let changePct = 0;
-    if (closes.length >= 2) {
-      const first = closes[0];
-      const last = closes[closes.length - 1];
-      changePct = first ? ((last - first) / first) * 100 : 0;
-    }
     return {
       symbol: q.symbol || symbol,
       price: q.price,
       prevClose: q.prevClose,
-      changePct,
+      changePct: q.changePct,
       shortName: q.shortName || '',
       exchangeName: q.exchangeName || '',
-      closes,
+      closes: q.sparkline || [],
       timestamps: q.timestamps || []
     };
   } catch {
@@ -241,6 +217,7 @@ export async function searchTicker(ticker) {
     const q = data.quotes?.[sym];
     if (!q || !q.price) return null;
 
+    const positive = q.changePct >= 0;
     let sparkline = [q.prevClose || q.price, q.price];
     if (q.sparkline && q.sparkline.length > 1) {
       const raw = q.sparkline;
@@ -250,20 +227,12 @@ export async function searchTicker(ticker) {
         sparkline.push(raw[idx]);
       }
     }
-    // Recalculate changePct from sparkline for consistency
-    let changePct = q.changePct;
-    if (sparkline.length >= 2) {
-      const first = sparkline[0];
-      const last = sparkline[sparkline.length - 1];
-      if (first) changePct = ((last - first) / first) * 100;
-    }
-    const positive = changePct >= 0;
 
     return {
       symbol: q.symbol || sym,
       name: q.shortName || q.longName || '',
       price: formatStockPrice(q.price),
-      change: (positive ? '+' : '') + changePct.toFixed(2) + '%',
+      change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
       positive,
       sparkline
     };
@@ -340,19 +309,12 @@ function buildStocksData(quotes, isStaticFallback) {
       }
       hasAnyData = true;
       const pre = s.pre || '';
-      // Always recalculate changePct from sparkline for consistency
-      let pct = q.changePct;
-      if (q.sparkline && q.sparkline.length >= 2) {
-        const first = q.sparkline[0];
-        const last = q.sparkline[q.sparkline.length - 1];
-        if (first) pct = ((last - first) / first) * 100;
-      }
-      const positive = pct >= 0;
+      const positive = q.changePct >= 0;
       return {
         name: s.name,
         value: pre + formatStockPrice(q.price),
-        change: (positive ? '+' : '') + pct.toFixed(2) + '%',
-        changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.price * pct / 100)),
+        change: (positive ? '+' : '') + q.changePct.toFixed(2) + '%',
+        changeAbs: (positive ? '+' : '-') + pre + formatStockPrice(Math.abs(q.price * q.changePct / 100)),
         positive,
         noData: false
       };
@@ -370,10 +332,7 @@ function buildStocksData(quotes, isStaticFallback) {
         const idx = Math.floor(i * (raw.length - 1) / 11);
         sparkline.push(raw[idx]);
       }
-      // Recalculate from sparkline for consistency
-      const first = raw[0];
-      const last = raw[raw.length - 1];
-      mainChangePct = first ? ((last - first) / first) * 100 : 0;
+      mainChangePct = mainQuote.changePct;
     } else if (STATIC_FALLBACK_DATA[market.symbols[0].sym]) {
       const staticMain = STATIC_FALLBACK_DATA[market.symbols[0].sym];
       sparkline = staticMain.sparkline.slice();

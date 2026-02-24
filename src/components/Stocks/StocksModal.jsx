@@ -294,13 +294,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
     const tr = TIME_RANGES.find(t => t.key === rangeKey) || TIME_RANGES[1];
     const result = await fetchChartData(q.toUpperCase(), tr.range, tr.interval);
     if (result && result.price) {
-      // Calculate percentage from chart data points
-      let pct = 0;
-      if (result.closes && result.closes.length >= 2) {
-        const first = result.closes[0];
-        const last = result.closes[result.closes.length - 1];
-        pct = first ? ((last - first) / first) * 100 : 0;
-      }
+      const pct = result.changePct || 0;
       const positive = pct >= 0;
       setSearchResult({
         symbol: result.symbol,
@@ -329,13 +323,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
   } else if (chartData) {
     chartSymbol = chartData.symbol;
     chartPrice = formatStockPrice(chartData.price);
-    // Calculate percentage directly from chart data points
-    let pct = 0;
-    if (chartData.closes && chartData.closes.length >= 2) {
-      const first = chartData.closes[0];
-      const last = chartData.closes[chartData.closes.length - 1];
-      pct = first ? ((last - first) / first) * 100 : 0;
-    }
+    const pct = chartData.changePct || 0;
     chartChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
     chartPositive = pct >= 0;
     chartName = chartData.shortName || '';
@@ -431,16 +419,6 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                 );
               }
               const isSelected = !showingSearch && selectedIdx === i;
-              // When this index is selected and chart data is loaded, calculate percentage from chart data points
-              let displayChange = idx.change;
-              let displayPositive = idx.positive;
-              if (isSelected && chartData && chartData.closes && chartData.closes.length >= 2) {
-                const first = chartData.closes[0];
-                const last = chartData.closes[chartData.closes.length - 1];
-                const pct = first ? ((last - first) / first) * 100 : 0;
-                displayChange = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-                displayPositive = pct >= 0;
-              }
               return (
                 <div
                   key={i}
@@ -461,10 +439,10 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
                     {idx.value}
                   </span>
                   <span style={{
-                    color: displayPositive ? '#22c55e' : '#ef4444',
+                    color: idx.positive ? '#22c55e' : '#ef4444',
                     fontSize: '11px', fontWeight: 700, textAlign: 'right', minWidth: '60px', fontVariantNumeric: 'tabular-nums'
                   }}>
-                    {displayChange}
+                    {idx.change}
                   </span>
                 </div>
               );

@@ -209,9 +209,9 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
   }, []);
 
   return (
-    <div className="watchlist" style={{ maxHeight: 'none', overflowY: 'hidden' }}>
+    <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible' }}>
       <div className="watchlist-title">CRITICAL WATCHLIST</div>
-      <div style={{ maxHeight: 250, overflowY: 'auto' }}>
+      <div style={{ maxHeight: 220, overflowY: 'auto' }}>
         {watchlistCountries.map(([name, c]) => (
           <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
             <span className="wl-country">{c.flag} {name}</span>

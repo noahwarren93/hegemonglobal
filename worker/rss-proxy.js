@@ -1714,9 +1714,7 @@ Return ONLY the JSON array, no other text.`;
                 if (i < rawTimestamps.length) timestamps.push(rawTimestamps[i]);
               }
             }
-            // Use first chart data point as reference so percentage matches chart direction
-            const chartStart = closes.length > 0 ? closes[0] : prevClose;
-            const refPrice = chartStart || prevClose || price;
+            const refPrice = prevClose || price;
             results[sym] = {
               symbol: meta.symbol || sym,
               price,
