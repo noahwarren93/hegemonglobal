@@ -546,17 +546,33 @@ export function calculateDynamicRisk(countryName) {
 export async function updateDynamicRisks(articles) {
   if (!articles || articles.length === 0) return [];
 
+  // Pre-compute lowercase text ONCE per article (avoids 19,600× recomputation)
+  const prepared = articles.map(a => ({
+    article: a,
+    text: ((a.headline || a.title || '') + ' ' + (a.description || '')).toLowerCase()
+  }));
+
   const countryNames = Object.keys(COUNTRIES);
   const changedCountries = [];
-  const CHUNK = 20; // Process 20 countries per frame to avoid blocking UI
+  const CHUNK = 10; // Smaller chunks = more frequent yields = smoother UI
 
   for (let i = 0; i < countryNames.length; i += CHUNK) {
     const chunk = countryNames.slice(i, i + CHUNK);
 
     for (const countryName of chunk) {
-      const relevant = articles.filter(article =>
-        isRelevantToCountry(article.headline || article.title || '', article.description || '', countryName)
-      );
+      // Fast relevance check: only match country names/demonyms
+      // (articles are already pre-filtered by Worker, no need to re-check IRRELEVANT_KEYWORDS)
+      const countryLower = countryName.toLowerCase();
+      const terms = COUNTRY_DEMONYMS[countryName] || [countryLower];
+      const allTerms = [countryLower, ...terms];
+
+      const relevant = [];
+      for (const p of prepared) {
+        if (allTerms.some(term => p.text.includes(term))) {
+          relevant.push(p.article);
+        }
+      }
+
       if (relevant.length > 0) {
         const oldRisk = COUNTRIES[countryName].risk;
         updateCountryRiskAccumulator(countryName, relevant);
@@ -570,7 +586,7 @@ export async function updateDynamicRisks(articles) {
 
     // Yield to main thread between chunks so UI stays responsive
     if (i + CHUNK < countryNames.length) {
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise(r => setTimeout(r, 4));
     }
   }
 
