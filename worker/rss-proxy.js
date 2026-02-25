@@ -198,6 +198,7 @@ const RSS_FEEDS = [
   { url: 'https://news.google.com/rss/search?q=site:haaretz.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Haaretz' },
   { url: 'https://www.dawn.com/feeds/home', source: 'Dawn' },
   { url: 'https://www.middleeasteye.net/rss', source: 'Middle East Eye' },
+  { url: 'https://www.washingtontimes.com/rss/headlines/news/world/', source: 'Washington Times' },
 ];
 
 // ============================================================
