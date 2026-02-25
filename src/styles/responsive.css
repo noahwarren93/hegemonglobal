@@ -17,7 +17,7 @@
       .stats { bottom: 8px; left: 8px; right: auto; gap: 4px; flex-wrap: wrap; max-width: 55%; }
       .stat-card { padding: 6px 8px; min-width: 50px; }
       .stat-value { font-size: 14px; }
-      .stat-label { font-size: 5px; }
+      .stat-label { font-size: 6px; }
       .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .stat-popup.active { transform: translate(-50%, -50%); }
 
@@ -50,13 +50,15 @@
       .compare-panel.expanded { max-height: 65vh; overflow-y: auto; }
 
       .tabs { flex-wrap: nowrap; overflow-x: auto; }
-      .tab { min-width: auto; padding: 8px 6px; font-size: 7.5px; white-space: nowrap; }
+      .tab { min-width: auto; padding: 8px 6px; font-size: 9px; white-space: nowrap; }
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
       .modal-header { padding: 12px; }
       .modal-title { font-size: 16px; }
       .modal-body { padding: 12px; }
       .breaking-banner { padding: 6px 10px; }
       .breaking-text { font-size: 10px; }
+      .tos-close { min-width: 44px; min-height: 44px; padding: 10px; font-size: 22px; }
+      body { overflow-x: hidden; }
     }
 
     @media (max-width: 480px) {
@@ -71,7 +73,8 @@
       .stats { max-width: 50%; gap: 3px; }
       .stat-card { padding: 5px 6px; min-width: 44px; }
       .stat-value { font-size: 12px; }
-      .stat-label { font-size: 5px; }
+      .stat-label { font-size: 5.5px; }
+      .tab { font-size: 8.5px; }
 
       .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
       .globe-tool-btn { width: 26px; height: 26px; }

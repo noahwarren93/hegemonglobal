@@ -370,17 +370,6 @@ export async function clusterArticles(articles) {
   events.sort((a, b) => b._score - a._score);
   for (const e of events) delete e._score;
 
-  // Diagnostics
-  const multiSource = events.filter(e => e.sourceCount > 1).length;
-  const singleSource = events.filter(e => e.sourceCount === 1).length;
-  const maxCluster = events.reduce((m, e) => Math.max(m, e.sourceCount), 0);
-  const avgSources = events.length > 0 ? (articles.length / events.length).toFixed(1) : 0;
-  console.log(`[Hegemon] Clustering: ${articles.length} articles → ${events.length} events (${multiSource} multi-source, ${singleSource} single, avg ${avgSources} src/evt, max ${maxCluster})`);
-  const dist = {};
-  for (const e of events) { const k = e.sourceCount; dist[k] = (dist[k] || 0) + 1; }
-  console.log(`[Hegemon] Distribution:`, Object.entries(dist).sort(([a],[b]) => Number(a)-Number(b)).map(([k,v]) => `${k}src:${v}`).join(', '));
-  events.slice(0, 8).forEach(e => console.log(`  [${e.sourceCount} src] [${e.category}] ${e.headline}`));
-
   return events;
 }
 
@@ -594,7 +583,7 @@ function mergeByCountry(events) {
   }
 
   // Merge groups with 2+ events
-  for (const [country, indices] of countryMap.entries()) {
+  for (const [, indices] of countryMap.entries()) {
     if (indices.length <= 1) continue;
 
     // Pick the event with the highest score as the base
@@ -613,7 +602,6 @@ function mergeByCountry(events) {
 
     base.sourceCount = base.articles.length;
     base._score = scoreEvent(base);
-    console.log(`[Hegemon] Merged ${indices.length} ${country} events → ${base.sourceCount} sources`);
   }
 
   // Build final list: all events not consumed

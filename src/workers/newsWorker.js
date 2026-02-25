@@ -456,17 +456,12 @@ async function processNews() {
   // Shared state for incremental processing
   const seenEntries = [];
   const uniqueArticles = [];
-  let totalRaw = 0, totalFresh = 0, totalRelevant = 0;
-  let workingCount = 0, failedCount = 0;
 
   // Process one batch of raw articles: filter → dedup incrementally
   function processBatchArticles(rawArticles) {
     for (const article of rawArticles) {
-      totalRaw++;
       if (!isArticleFresh(article)) continue;
-      totalFresh++;
       if (!isArticleRelevant(article)) continue;
-      totalRelevant++;
 
       const source = formatSourceName(article.source_id);
       const normalized = normalizeForDedup(article.title);
@@ -487,8 +482,6 @@ async function processNews() {
     // Process each feed's articles immediately
     for (let j = 0; j < batchResults.length; j++) {
       const articles = batchResults[j] || [];
-      if (articles.length > 0) workingCount++;
-      else failedCount++;
       processBatchArticles(articles);
     }
 
@@ -498,16 +491,12 @@ async function processNews() {
     }
   }
 
-  console.log(`[Worker] RSS feeds: ${workingCount} working, ${failedCount} failed, ${totalRaw} total articles`);
-
   if (uniqueArticles.length === 0) {
     return { briefing: DAILY_BRIEFING_FALLBACK, events: [] };
   }
 
   // Sort unique articles by date (already filtered & deduped)
   uniqueArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-  console.log(`[Worker] Pipeline: ${totalRaw} raw → ${totalFresh} fresh → ${totalRelevant} relevant → ${uniqueArticles.length} unique`);
 
   // 5. Build briefing articles (200 cap)
   const newArticles = uniqueArticles.slice(0, 200).map(article => {

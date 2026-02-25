@@ -638,7 +638,6 @@ export function isRelevantToCountry(title, description, countryName) {
 const FEED_TIMEOUT_MS = 5000; // 5-second hard timeout per feed
 
 export async function fetchRSS(feedUrl, sourceName) {
-  const startTime = performance.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FEED_TIMEOUT_MS);
 
@@ -650,8 +649,6 @@ export async function fetchRSS(feedUrl, sourceName) {
       const data = await response.json();
       if (data.status === 'ok' && data.items && data.items.length > 0) {
         clearTimeout(timeout);
-        const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-        console.log(`[RSS] OK ${sourceName}: ${data.items.length} items (${elapsed}s)`);
         return parseRSSItems(data, sourceName);
       }
     }
@@ -671,8 +668,6 @@ export async function fetchRSS(feedUrl, sourceName) {
     if (!response.ok) return [];
     const data = await response.json();
     if (data.status !== 'ok' || !data.items || data.items.length === 0) return [];
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-    console.log(`[RSS] OK ${sourceName}: ${data.items.length} items (${elapsed}s, worker)`);
     return parseRSSItems(data, sourceName);
   } catch (error) {
     clearTimeout(timeout);
@@ -914,11 +909,9 @@ async function fetchPreGeneratedEvents() {
     const minutesAgo = data.lastUpdated
       ? Math.round((Date.now() - data.lastUpdated) / 60000)
       : null;
-    console.log(`[Hegemon] Pre-generated events: ${data.events.length} events, updated ${minutesAgo}m ago`);
-
     // Reject stale data (older than 6 hours — cron runs every 10m but may be delayed)
     if (minutesAgo !== null && minutesAgo > 360) {
-      console.log('[Hegemon] Pre-generated data too stale, falling back');
+      console.warn('[Hegemon] Pre-generated data too stale, falling back');
       return false;
     }
 
@@ -966,15 +959,11 @@ async function fetchPreGeneratedEvents() {
 
 export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
-  const totalStartTime = performance.now();
   if (onStatusUpdate) onStatusUpdate('fetching');
 
   // Try pre-generated events first (instant — single GET call)
   const preGenerated = await fetchPreGeneratedEvents();
   if (preGenerated) {
-    const elapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
-    console.log(`[Hegemon] Pre-generated events loaded in ${elapsed}s`);
-
     // Trigger side effects
     setTimeout(() => {
       saveBriefingSnapshot();
@@ -988,16 +977,14 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
   }
 
   // Fall back to client-side RSS fetching
-  console.log('[Hegemon] Falling back to client-side RSS fetching');
+  console.warn('[Hegemon] Falling back to client-side RSS fetching');
 
   try {
     const feeds = RSS_FEEDS.daily;
 
     // Fetch RSS feeds in batches of 5 with 100ms gaps so main thread can breathe
     const BATCH = 5;
-    console.log(`[Hegemon] Fetching ${feeds.length} RSS feeds in batches of ${BATCH}...`);
     const allArticles = [];
-    let workingCount = 0;
 
     for (let i = 0; i < feeds.length; i += BATCH) {
       const batch = feeds.slice(i, i + BATCH);
@@ -1006,16 +993,12 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       );
       for (const result of results) {
         if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
-          workingCount++;
           allArticles.push(...result.value);
         }
       }
       // Yield to browser between batches
       if (i + BATCH < feeds.length) await yieldToMain(100);
     }
-
-    const rssElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
-    console.log(`[Hegemon] RSS complete: ${workingCount}/${feeds.length} feeds OK, ${allArticles.length} articles in ${rssElapsed}s`);
 
     if (allArticles.length > 0) {
       allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -1092,8 +1075,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
         if (i > 0 && i % 30 === 0) await yieldToMain(1);
       }
-
-      console.log(`[Hegemon] Pipeline: ${allArticles.length} raw → ${freshArticles.length} fresh → ${relevantArticles.length} relevant → ${uniqueArticles.length} unique`);
 
       await yieldToMain(1);
 
@@ -1185,9 +1166,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       DAILY_EVENTS.push(...topSlice);
       notifyEventsUpdated();
 
-      const totalElapsed = ((performance.now() - totalStartTime) / 1000).toFixed(1);
-      console.log(`[Hegemon] Top stories ready: ${topSlice.length} events in ${totalElapsed}s`);
-
       // Batch remaining events 10 at a time
       const RENDER_BATCH = 10;
       for (let i = 4; i < events.length; i += RENDER_BATCH) {
@@ -1196,8 +1174,6 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         DAILY_EVENTS.push(...batch);
         notifyEventsUpdated();
       }
-      console.log(`[Hegemon] All ${events.length} events rendered`);
-
       // Defer heavy side-effects so UI renders first
       setTimeout(() => {
         saveBriefingSnapshot();
@@ -1349,17 +1325,12 @@ function saveSummaryCache(cache) {
 function applyCachedSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
   const cache = loadSummaryCache();
-  let applied = 0;
   for (const event of DAILY_EVENTS) {
     const key = eventSummaryKey(event);
     if (key && cache[key]) {
       event.summary = cache[key].summary;
       event.summaryLoading = false;
-      applied++;
     }
-  }
-  if (applied > 0) {
-    console.log(`[Hegemon] Pre-applied ${applied} cached summaries`);
   }
 }
 
@@ -1387,11 +1358,6 @@ export async function fetchEventSummaries() {
     }
   }
 
-  const cachedCount = DAILY_EVENTS.length - uncachedTop.length - uncachedRest.length;
-  if (cachedCount > 0) {
-    console.log(`[Hegemon] Summaries: ${cachedCount} cached, ${uncachedTop.length} top + ${uncachedRest.length} rest need fetching`);
-  }
-
   notifyEventsUpdated();
 
   if (uncachedTop.length === 0 && uncachedRest.length === 0) return;
@@ -1401,7 +1367,6 @@ export async function fetchEventSummaries() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), SUMMARY_TIMEOUT_MS);
     try {
-      console.log(`[Hegemon] Fetching summaries batch ${batchNum} (${batch.length} events)`);
       const response = await fetch(`${RSS_PROXY_BASE}/summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
-import { RISK_COLORS } from '../../utils/riskColors';
+import { RISK_COLORS, getSourceBias, getStateMediaLabel } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated } from '../../services/apiService';
 import { scoreHeadlineNeutrality } from '../../services/eventsService';
@@ -30,6 +30,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [pastOpen, setPastOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
+  const [biasFilter, setBiasFilter] = useState(null); // null = All, Set of 'left'/'center'/'right'
+  const [hideStateMedia, setHideStateMedia] = useState(false);
   const contentRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
@@ -68,17 +70,51 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return () => clearInterval(interval);
   }, []);
 
-  // Reset visible count on tab change
+  // Reset visible count and filters on tab change
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
     setPastOpen(false);
+    setBiasFilter(null);
+    setHideStateMedia(false);
   }, [activeTab]);
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [biasFilter, hideStateMedia]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
   }, []);
+
+  // Filter events by source bias and state media
+  const filterEvents = useCallback((events) => {
+    if (!biasFilter && !hideStateMedia) return events;
+    const result = [];
+    for (const event of events) {
+      const filtered = (event.articles || []).filter(a => {
+        const source = a.source || '';
+        // State media filter
+        if (hideStateMedia && getStateMediaLabel(source)) return false;
+        // Bias filter
+        if (biasFilter) {
+          const bias = getSourceBias(source);
+          let group;
+          if (bias === 'L' || bias === 'LC') group = 'left';
+          else if (bias === 'RC' || bias === 'R') group = 'right';
+          else group = 'center';
+          if (!biasFilter.has(group)) return false;
+        }
+        return true;
+      });
+      if (filtered.length > 0) {
+        result.push({ ...event, articles: filtered, sourceCount: filtered.length });
+      }
+    }
+    return result;
+  }, [biasFilter, hideStateMedia]);
 
   const handleCountryClick = useCallback((countryName) => {
     if (onCountryClick) onCountryClick(countryName);
@@ -292,21 +328,71 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
     }
 
+    const filteredEvents = filterEvents(DAILY_EVENTS);
+    const isFiltered = biasFilter !== null || hideStateMedia;
+
     // Stable Top Stories: persisted for 2 hours, require 2+ sources
-    const topEvents = getStableTopStories(DAILY_EVENTS);
+    const topEvents = getStableTopStories(filteredEvents);
     const topIds = new Set(topEvents.map(e => e.id));
     // Latest Updates: everything NOT in Top Stories, paginated
-    const remaining = DAILY_EVENTS.filter(e => !topIds.has(e.id));
+    const remaining = filteredEvents.filter(e => !topIds.has(e.id));
     const restEvents = remaining.slice(0, visibleCount);
+
+    const pillStyle = (active) => ({
+      padding: '3px 10px', borderRadius: '10px', fontSize: '8px', fontWeight: 600,
+      cursor: 'pointer', border: 'none', letterSpacing: '0.3px', transition: 'all 0.15s',
+      background: active ? 'rgba(6,182,212,0.2)' : 'rgba(55,65,81,0.3)',
+      color: active ? '#06b6d4' : '#6b7280',
+    });
+
+    const toggleBias = (group) => {
+      if (!biasFilter) {
+        // Going from "All" → select just this group
+        setBiasFilter(new Set([group]));
+      } else if (biasFilter.has(group)) {
+        const next = new Set(biasFilter);
+        next.delete(group);
+        setBiasFilter(next.size === 0 ? null : next);
+      } else {
+        const next = new Set(biasFilter);
+        next.add(group);
+        // If all 3 selected, revert to null (All)
+        if (next.size === 3) setBiasFilter(null);
+        else setBiasFilter(next);
+      }
+    };
 
     return (
       <>
+        {/* Source Filter Bar */}
+        <div style={{ padding: '6px 10px 8px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center', marginBottom: '5px' }}>
+            <button onClick={() => setBiasFilter(null)} style={pillStyle(!biasFilter)}>All</button>
+            <button onClick={() => toggleBias('left')} style={pillStyle(biasFilter?.has('left'))}>Left</button>
+            <button onClick={() => toggleBias('center')} style={pillStyle(biasFilter?.has('center'))}>Center</button>
+            <button onClick={() => toggleBias('right')} style={pillStyle(biasFilter?.has('right'))}>Right</button>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+            <button
+              onClick={() => setHideStateMedia(!hideStateMedia)}
+              style={pillStyle(hideStateMedia)}
+            >
+              {hideStateMedia ? 'State Media Hidden' : 'All Sources'}
+            </button>
+            {isFiltered && (
+              <span style={{ fontSize: '8px', color: '#6b7280' }}>
+                {filteredEvents.length} of {DAILY_EVENTS.length} events
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Top Stories */}
         {topEvents.length > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
-              {DAILY_EVENTS.some(e => e.summaryLoading) && (
+              {filteredEvents.some(e => e.summaryLoading) && (
                 <span style={{ fontSize: '8px', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <span style={{ display: 'inline-block', width: '6px', height: '6px', border: '1.5px solid #1f2937', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   AI summaries loading
@@ -320,7 +406,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         {/* Latest Updates */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(59,130,246,0.1)', borderLeft: '3px solid #3b82f6', margin: '14px 0 10px 0' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>LATEST UPDATES</span>
-          <span style={{ fontSize: '9px', color: '#6b7280' }}>({DAILY_EVENTS.length} events from {DAILY_BRIEFING.length} articles)</span>
+          <span style={{ fontSize: '9px', color: '#6b7280' }}>({filteredEvents.length} events from {DAILY_BRIEFING.length} articles)</span>
         </div>
         {restEvents.map(event => renderEventCard(event, false))}
 
