@@ -312,23 +312,51 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
     setSearchLoading(false);
   };
 
+  // Compute period-aware percentage from chart data (first→last close)
+  const computeChartPct = (cd) => {
+    if (!cd || !cd.closes || cd.closes.length < 2) return null;
+    const first = cd.closes[0];
+    const last = cd.closes[cd.closes.length - 1];
+    if (!first) return null;
+    return ((last - first) / first) * 100;
+  };
+
   // Chart header info
   let chartSymbol = '', chartPrice = '', chartChange = '', chartPositive = true, chartName = '';
   if (showingSearch && searchResult) {
     chartSymbol = searchResult.symbol;
     chartPrice = searchResult.price;
-    chartChange = searchResult.change;
-    chartPositive = searchResult.positive;
     chartName = searchResult.name;
+    if (rangeKey === '1D') {
+      chartChange = searchResult.change;
+      chartPositive = searchResult.positive;
+    } else {
+      const pct = computeChartPct(chartData);
+      if (pct !== null) {
+        chartPositive = pct >= 0;
+        chartChange = (chartPositive ? '+' : '') + pct.toFixed(2) + '%';
+      } else {
+        chartChange = searchResult.change;
+        chartPositive = searchResult.positive;
+      }
+    }
   } else if (chartData) {
     chartSymbol = chartData.symbol;
     chartPrice = formatStockPrice(chartData.price);
-    const idx = data.indices[selectedIdx];
-    if (idx && !idx.noData) {
-      chartChange = idx.change;
-      chartPositive = idx.positive;
-    }
     chartName = chartData.shortName || '';
+    if (rangeKey === '1D') {
+      const idx = data.indices[selectedIdx];
+      if (idx && !idx.noData) {
+        chartChange = idx.change;
+        chartPositive = idx.positive;
+      }
+    } else {
+      const pct = computeChartPct(chartData);
+      if (pct !== null) {
+        chartPositive = pct >= 0;
+        chartChange = (chartPositive ? '+' : '') + pct.toFixed(2) + '%';
+      }
+    }
   } else if (data.indices[selectedIdx] && !data.indices[selectedIdx].noData) {
     const idx = data.indices[selectedIdx];
     chartSymbol = marketConfig?.symbols[selectedIdx]?.name || idx.name;
