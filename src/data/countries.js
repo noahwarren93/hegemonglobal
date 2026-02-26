@@ -481,11 +481,11 @@ export const COUNTRIES = {
     ]
   },
 
-  'Cuba': { lat: 21.52, lng: -77.78, flag: '🇨🇺', risk: 'severe', region: 'Caribbean', pop: '11M', gdp: '$107B', leader: 'Díaz-Canel', title: 'Economic Crisis',
+  'Cuba': { lat: 21.52, lng: -77.78, flag: '🇨🇺', risk: 'extreme', region: 'Caribbean', pop: '11M', gdp: '$107B', leader: 'Díaz-Canel', title: 'Escalating Crisis & US Tensions',
     analysis: {
-      what: 'Cuba faces its worst economic crisis since the 1990s "Special Period." Food and medicine shortages are severe. Power blackouts are frequent. Inflation has surged. Mass protests in 2021 were suppressed with hundreds jailed. Migration to the US has surged to record levels. The government blames US sanctions while critics cite mismanagement.',
-      why: 'Cuba\'s crisis drives record migration to the US, a major political issue. The country\'s trajectory affects Latin American left politics. US-Cuba relations remain frozen. The island\'s location gives it strategic significance.',
-      next: 'The regime appears stable despite the crisis, but emigration provides a safety valve. Watch for: economic conditions, migration flows, any political opening, and US policy changes. Significant reform seems unlikely under current leadership.'
+      what: 'Cuba faces a deepening crisis on multiple fronts. The US has declared regime change as a stated goal. An armed speedboat infiltration was intercepted by Cuban coast guard with 4 killed. Rolling blackouts cripple the island as the power grid repeatedly collapses. Public services are disintegrating. Food and medicine shortages are severe. Mass emigration continues at record levels.',
+      why: 'Escalating US-Cuba tensions with stated regime change goals risk destabilizing the Caribbean. Armed infiltration attempts signal a dangerous new phase. The humanitarian crisis drives record migration to the US, a major political flashpoint. Cuba\'s trajectory affects Latin American geopolitics and US adversary alignments.',
+      next: 'Watch for: further armed provocations or infiltration attempts, US escalation of sanctions or covert action, regime stability under mounting pressure, humanitarian deterioration, and migration surges. The combination of external pressure and internal collapse makes this situation highly volatile.'
     },
     news: [
       { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Power grid collapses again leaving millions without electricity', url: '#' },

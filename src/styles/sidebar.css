@@ -141,7 +141,6 @@
     .section-title:first-child { margin-top: 0; }
 
     body.banner-active .watchlist { top: 116px; }
-    body.banner-active .watchlist-pill { top: 116px; }
 
     .newsletter-header { background: linear-gradient(135deg, #0d1117 0%, #1a1a2e 100%); border: 1px solid #1f2937; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
 
