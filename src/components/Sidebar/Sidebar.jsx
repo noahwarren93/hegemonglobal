@@ -28,10 +28,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [horizonFilter, setHorizonFilter] = useState(null);
   const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
-  const upcomingRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
   // Inline onclick handlers in dangerouslySetInnerHTML need this on window.
@@ -73,18 +71,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setHorizonFilter(null);
   }, [activeTab]);
   /* eslint-enable react-hooks/set-state-in-effect */
-
-  // Auto-scroll Horizon tab to UPCOMING divider on open
-  useEffect(() => {
-    if (activeTab === 'horizon' && upcomingRef.current) {
-      setTimeout(() => {
-        upcomingRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
-      }, 50);
-    }
-  }, [activeTab]);
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
@@ -429,45 +417,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const renderHorizonTab = () => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    const todayLabel = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
 
-    // Convert DAILY_EVENTS to horizon-style cards
-    const dailyCatMap = { CONFLICT: 'military', CRISIS: 'military', SECURITY: 'military', ECONOMY: 'economic', TECH: 'economic', DIPLOMACY: 'summit', CLIMATE: 'summit', POLITICS: 'election', WORLD: 'summit' };
-    const liveEvents = DAILY_EVENTS.map(event => {
-      let name = event.headline;
-      const dashIdx = name.lastIndexOf(' - ');
-      if (dashIdx > 0 && dashIdx > name.length - 40) name = name.substring(0, dashIdx).trim();
+    const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
 
-      const countryKey = event._primaryCountry
-        ? Object.keys(COUNTRIES).find(k => k.toLowerCase() === event._primaryCountry.toLowerCase())
-        : null;
-      const countryData = countryKey ? COUNTRIES[countryKey] : null;
-      const location = countryData ? `${countryKey}${countryData.region ? ', ' + countryData.region : ''}` : 'Global';
-
-      let description = '';
-      if (event.summary && !event.summaryLoading) {
-        const text = event.summary.replace(/\*\*/g, '');
-        const sentences = text.match(/[^.!?]*[.!?]/g);
-        if (sentences) {
-          description = sentences.slice(0, 2).join(' ').trim();
-          if (description.length > 150) description = description.substring(0, 147).replace(/\s+\S*$/, '') + '...';
-        }
-      }
-
-      return { date: todayStr, name, location, category: dailyCatMap[event.category] || 'summit', description, _sourceCount: event.sourceCount || 0 };
-    }).sort((a, b) => b._sourceCount - a._sourceCount);
-
-    const upcoming = HORIZON_EVENTS.filter(e => e.date > todayStr).sort((a, b) => a.date.localeCompare(b.date));
-    const horizonToday = HORIZON_EVENTS.filter(e => e.date === todayStr);
-    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => a.date.localeCompare(b.date));
-
-    // Apply category filter
-    const filterFn = (e) => !horizonFilter || e.category === horizonFilter;
-    const filteredPast = past.filter(filterFn);
-    const filteredToday = [...horizonToday, ...liveEvents].filter(filterFn);
-    const filteredUpcoming = upcoming.filter(filterFn);
-
-    const renderEvent = (e, isPast) => {
+    const renderEvent = (e) => {
       const d = new Date(e.date + 'T12:00:00');
       const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
       const day = d.getDate();
@@ -482,10 +435,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       else if (diffDays > 1 && diffDays <= 7) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>{diffDays} Days</span>;
       else if (diffDays > 7 && diffDays <= 30) { const w = Math.ceil(diffDays / 7); countdown = <span style={{ color: '#6b7280', fontSize: '8px' }}>{w} Week{w === 1 ? '' : 's'}</span>; }
       else if (diffDays > 30) { const mo = Math.ceil(diffDays / 30); countdown = <span style={{ color: '#4b5563', fontSize: '8px' }}>{mo} Month{mo === 1 ? '' : 's'}</span>; }
-      else if (isPast) { const abs = Math.abs(diffDays); countdown = <span style={{ color: '#374151', fontSize: '8px' }}>{abs} Day{abs === 1 ? '' : 's'} Ago</span>; }
 
       return (
-        <div key={e.date + e.name} style={{ display: 'flex', gap: '10px', padding: '10px 8px', borderBottom: '1px solid #111827', opacity: isPast ? 0.5 : 1 }}>
+        <div key={e.date + e.name} style={{ display: 'flex', gap: '10px', padding: '10px 8px', borderBottom: '1px solid #111827' }}>
           <div style={{ minWidth: '42px', textAlign: 'center' }}>
             <div style={{ fontSize: '9px', fontWeight: 700, color, letterSpacing: '0.5px' }}>{month}</div>
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#e5e7eb', lineHeight: 1.1 }}>{day}</div>
@@ -500,23 +452,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       );
     };
 
-    // Group past by month (oldest first)
-    const groupedPast = [];
-    let currentMonth = '';
-    filteredPast.forEach(e => {
-      const d = new Date(e.date + 'T12:00:00');
-      const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-      if (monthYear !== currentMonth) {
-        currentMonth = monthYear;
-        groupedPast.push({ type: 'header', label: monthYear.toUpperCase() });
-      }
-      groupedPast.push({ type: 'event', event: e });
-    });
-
     // Group upcoming by month
     const groupedUpcoming = [];
-    currentMonth = '';
-    filteredUpcoming.forEach(e => {
+    let currentMonth = '';
+    upcoming.forEach(e => {
       const d = new Date(e.date + 'T12:00:00');
       const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
       if (monthYear !== currentMonth) {
@@ -528,55 +467,20 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* Category filter pills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '8px 12px 10px', borderBottom: '1px solid #1f2937', marginBottom: '4px' }}>
-          {Object.entries(CAT_COLORS).map(([cat, color]) => {
-            const isActive = horizonFilter === cat;
-            return (
-              <span
-                key={cat}
-                onClick={() => setHorizonFilter(isActive ? null : cat)}
-                style={{
-                  fontSize: '8px', color: isActive ? color : '#6b7280',
-                  display: 'flex', alignItems: 'center', gap: '3px',
-                  cursor: 'pointer', padding: '2px 6px', borderRadius: '4px',
-                  border: `1px solid ${isActive ? color : 'transparent'}`,
-                  background: isActive ? `${color}20` : 'transparent',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </span>
-            );
-          })}
+        {/* Header */}
+        <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%)', borderLeft: '3px solid #06b6d4', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>LOOKING AHEAD</div>
+          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{upcoming.length} upcoming events tracked</div>
         </div>
 
-        {/* Past events grouped by month (dimmed) */}
-        {groupedPast.map((item, i) => {
-          if (item.type === 'header') {
-            return (
-              <div key={'past-' + item.label} style={{ fontSize: '9px', fontWeight: 700, color: '#9ca3af', letterSpacing: '1px', padding: '10px 8px 4px', borderTop: i > 0 ? '1px solid #1f2937' : 'none', marginTop: i > 0 ? '4px' : 0, opacity: 0.5 }}>
-                {item.label}
-              </div>
-            );
-          }
-          return renderEvent(item.event, true);
-        })}
-
-        {/* TODAY section */}
-        {filteredToday.length > 0 && (
-          <>
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#22c55e', letterSpacing: '1px', padding: '10px 8px 4px', borderTop: groupedPast.length > 0 ? '1px solid #1f2937' : 'none', marginTop: groupedPast.length > 0 ? '4px' : 0 }}>
-              TODAY {'\u2014'} {todayLabel}
-            </div>
-            {filteredToday.map(e => renderEvent(e, false))}
-          </>
-        )}
-
-        {/* UPCOMING divider — auto-scroll target */}
-        <div ref={upcomingRef} style={{ borderTop: '2px solid #06b6d4', margin: '14px 0 4px', textAlign: 'center', position: 'relative' }}>
-          <span style={{ fontSize: '9px', fontWeight: 700, color: '#06b6d4', position: 'relative', top: '-7px', background: '#0a0a12', padding: '0 10px', letterSpacing: '2px' }}>UPCOMING</span>
+        {/* Category legend */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '0 8px 10px', borderBottom: '1px solid #1f2937', marginBottom: '4px' }}>
+          {Object.entries(CAT_COLORS).map(([cat, color]) => (
+            <span key={cat} style={{ fontSize: '8px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </span>
+          ))}
         </div>
 
         {/* Upcoming events grouped by month */}
@@ -588,14 +492,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
               </div>
             );
           }
-          return renderEvent(item.event, false);
+          return renderEvent(item.event);
         })}
-
-        {groupedUpcoming.length === 0 && (
-          <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
-            No upcoming events{horizonFilter ? ` for "${horizonFilter}"` : ''}.
-          </div>
-        )}
       </>
     );
   };
