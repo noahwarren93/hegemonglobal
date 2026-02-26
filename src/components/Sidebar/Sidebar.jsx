@@ -27,10 +27,11 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [activeTab, setActiveTab] = useState('events');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
-  const [pastOpen, setPastOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [horizonFilter, setHorizonFilter] = useState(null);
   const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
+  const upcomingRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
   // Inline onclick handlers in dangerouslySetInnerHTML need this on window.
@@ -72,9 +73,18 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setPastOpen(false);
+    setHorizonFilter(null);
   }, [activeTab]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Auto-scroll Horizon tab to UPCOMING divider on open
+  useEffect(() => {
+    if (activeTab === 'horizon' && upcomingRef.current) {
+      setTimeout(() => {
+        upcomingRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }, 50);
+    }
+  }, [activeTab]);
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
@@ -96,29 +106,6 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (cat === 'DIPLOMACY') return '#8b5cf6';
     if (cat === 'POLITICS') return '#3b82f6';
     return '#374151';
-  };
-
-  const findCountryKey = (primaryCountry) => {
-    if (!primaryCountry) return null;
-    const lower = primaryCountry.toLowerCase();
-    return Object.keys(COUNTRIES).find(k => k.toLowerCase() === lower) || null;
-  };
-
-  const getTimelineSummary = (event) => {
-    if (event.summaryLoading || !event.summary) return null;
-    const text = event.summary;
-    const whatMatch = text.match(/\*\*What happened:\*\*\s*(.*?)(?:\s*\*\*Why it matters:|$)/s);
-    const whyMatch = text.match(/\*\*Why it matters:\*\*\s*(.*?)$/s);
-    let summary = '';
-    if (whatMatch) summary = whatMatch[1].trim();
-    if (whyMatch) summary += (summary ? ' ' : '') + whyMatch[1].trim();
-    if (!summary) {
-      const sentences = text.match(/[^.!?]*[.!?]/g);
-      summary = sentences ? sentences.slice(0, 2).join(' ').trim() : '';
-    }
-    if (!summary) return null;
-    if (summary.length > 200) summary = summary.substring(0, 197).replace(/\s+\S*$/, '') + '...';
-    return summary;
   };
 
   const getCardPreview = (event) => {
@@ -439,104 +426,46 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  const renderRecentHistory = () => {
-    const sorted = [...DAILY_EVENTS].sort((a, b) => (b.sourceCount || 0) - (a.sourceCount || 0)).slice(0, 15);
-
-    return (
-      <div style={{ position: 'relative', paddingLeft: '16px' }}>
-        {/* Vertical timeline line */}
-        <div style={{ position: 'absolute', left: '6px', top: '0', bottom: '0', width: '2px', background: '#1f2937' }} />
-
-        {sorted.map((event, idx) => {
-          let displayHeadline = event.headline;
-          const dashIdx = displayHeadline.lastIndexOf(' - ');
-          if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
-            displayHeadline = displayHeadline.substring(0, dashIdx).trim();
-          }
-
-          const summary = getTimelineSummary(event);
-          const countryKey = findCountryKey(event._primaryCountry);
-          const countryData = countryKey ? COUNTRIES[countryKey] : null;
-          const dotColor = catBorderColor(event.category);
-
-          return (
-            <div
-              key={event.id}
-              onClick={() => setSelectedEvent(event)}
-              style={{
-                position: 'relative',
-                padding: '8px 8px 10px',
-                marginLeft: idx % 2 === 1 ? '6px' : '0',
-                borderBottom: '1px solid #111827',
-                cursor: 'pointer',
-                borderRadius: '4px',
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(31,41,55,0.4)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-            >
-              {/* Timeline dot */}
-              <div style={{
-                position: 'absolute', left: '-13px', top: '12px',
-                width: '8px', height: '8px', borderRadius: '50%',
-                background: dotColor, border: '2px solid #0a0a12',
-              }} />
-
-              {/* Time */}
-              {event.time && (
-                <div style={{ fontSize: '9px', color: '#06b6d4', marginBottom: '2px' }}>{event.time}</div>
-              )}
-
-              {/* Headline */}
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.35, marginBottom: '3px' }}>
-                {displayHeadline}
-              </div>
-
-              {/* AI summary */}
-              {summary && (
-                <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.5, marginBottom: '4px' }}>
-                  {summary}
-                </div>
-              )}
-
-              {/* Tags row */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                {/* Country pill */}
-                {countryData && (
-                  <span style={{
-                    fontSize: '8px', color: '#9ca3af', background: '#1f293766',
-                    padding: '1px 5px', borderRadius: '3px',
-                  }}>
-                    {countryData.flag} {countryKey}
-                  </span>
-                )}
-
-                {/* Category tag */}
-                <span className={`card-cat ${event.category}`}>{event.category}</span>
-
-                {/* Region tag */}
-                {countryData && countryData.region && (
-                  <span style={{
-                    fontSize: '8px', color: '#6b7280', background: '#111827',
-                    padding: '1px 5px', borderRadius: '3px',
-                  }}>
-                    {countryData.region}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   const renderHorizonTab = () => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
+    const todayLabel = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
 
-    const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
-    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
+    // Convert DAILY_EVENTS to horizon-style cards
+    const dailyCatMap = { CONFLICT: 'military', CRISIS: 'military', SECURITY: 'military', ECONOMY: 'economic', TECH: 'economic', DIPLOMACY: 'summit', CLIMATE: 'summit', POLITICS: 'election', WORLD: 'summit' };
+    const liveEvents = DAILY_EVENTS.map(event => {
+      let name = event.headline;
+      const dashIdx = name.lastIndexOf(' - ');
+      if (dashIdx > 0 && dashIdx > name.length - 40) name = name.substring(0, dashIdx).trim();
+
+      const countryKey = event._primaryCountry
+        ? Object.keys(COUNTRIES).find(k => k.toLowerCase() === event._primaryCountry.toLowerCase())
+        : null;
+      const countryData = countryKey ? COUNTRIES[countryKey] : null;
+      const location = countryData ? `${countryKey}${countryData.region ? ', ' + countryData.region : ''}` : 'Global';
+
+      let description = '';
+      if (event.summary && !event.summaryLoading) {
+        const text = event.summary.replace(/\*\*/g, '');
+        const sentences = text.match(/[^.!?]*[.!?]/g);
+        if (sentences) {
+          description = sentences.slice(0, 2).join(' ').trim();
+          if (description.length > 150) description = description.substring(0, 147).replace(/\s+\S*$/, '') + '...';
+        }
+      }
+
+      return { date: todayStr, name, location, category: dailyCatMap[event.category] || 'summit', description, _sourceCount: event.sourceCount || 0 };
+    }).sort((a, b) => b._sourceCount - a._sourceCount);
+
+    const upcoming = HORIZON_EVENTS.filter(e => e.date > todayStr).sort((a, b) => a.date.localeCompare(b.date));
+    const horizonToday = HORIZON_EVENTS.filter(e => e.date === todayStr);
+    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Apply category filter
+    const filterFn = (e) => !horizonFilter || e.category === horizonFilter;
+    const filteredPast = past.filter(filterFn);
+    const filteredToday = [...horizonToday, ...liveEvents].filter(filterFn);
+    const filteredUpcoming = upcoming.filter(filterFn);
 
     const renderEvent = (e, isPast) => {
       const d = new Date(e.date + 'T12:00:00');
@@ -565,16 +494,29 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3, marginBottom: '3px' }}>{e.name}</div>
             <div style={{ fontSize: '9px', color: '#9ca3af', marginBottom: '3px' }}>{e.location}</div>
-            <div style={{ fontSize: '9px', color: '#6b7280', lineHeight: 1.5 }}>{e.description}</div>
+            {e.description && <div style={{ fontSize: '9px', color: '#6b7280', lineHeight: 1.5 }}>{e.description}</div>}
           </div>
         </div>
       );
     };
 
+    // Group past by month (oldest first)
+    const groupedPast = [];
+    let currentMonth = '';
+    filteredPast.forEach(e => {
+      const d = new Date(e.date + 'T12:00:00');
+      const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      if (monthYear !== currentMonth) {
+        currentMonth = monthYear;
+        groupedPast.push({ type: 'header', label: monthYear.toUpperCase() });
+      }
+      groupedPast.push({ type: 'event', event: e });
+    });
+
     // Group upcoming by month
     const groupedUpcoming = [];
-    let currentMonth = '';
-    upcoming.forEach(e => {
+    currentMonth = '';
+    filteredUpcoming.forEach(e => {
       const d = new Date(e.date + 'T12:00:00');
       const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
       if (monthYear !== currentMonth) {
@@ -586,38 +528,55 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* RECENT HISTORY section — live events timeline */}
-        {DAILY_EVENTS.length > 0 && (
-          <>
-            <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(139,92,246,0.12) 0%,transparent 100%)', borderLeft: '3px solid #8b5cf6', marginBottom: '10px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#8b5cf6', letterSpacing: '1px' }}>
-                <span role="img" aria-label="clock">&#128336;</span> RECENT HISTORY
-              </div>
-              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>Today&apos;s top {Math.min(DAILY_EVENTS.length, 15)} events by coverage</div>
-            </div>
-            {renderRecentHistory()}
+        {/* Category filter pills */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '8px 12px 10px', borderBottom: '1px solid #1f2937', marginBottom: '4px' }}>
+          {Object.entries(CAT_COLORS).map(([cat, color]) => {
+            const isActive = horizonFilter === cat;
+            return (
+              <span
+                key={cat}
+                onClick={() => setHorizonFilter(isActive ? null : cat)}
+                style={{
+                  fontSize: '8px', color: isActive ? color : '#6b7280',
+                  display: 'flex', alignItems: 'center', gap: '3px',
+                  cursor: 'pointer', padding: '2px 6px', borderRadius: '4px',
+                  border: `1px solid ${isActive ? color : 'transparent'}`,
+                  background: isActive ? `${color}20` : 'transparent',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </span>
+            );
+          })}
+        </div>
 
-            {/* Decorative divider */}
-            <div style={{ borderTop: '1px solid #1f2937', margin: '14px 0', textAlign: 'center' }}>
-              <span style={{ fontSize: '9px', color: '#374151', position: 'relative', top: '-7px', background: '#0a0a12', padding: '0 8px' }}>&#9662; &#9662; &#9662;</span>
+        {/* Past events grouped by month (dimmed) */}
+        {groupedPast.map((item, i) => {
+          if (item.type === 'header') {
+            return (
+              <div key={'past-' + item.label} style={{ fontSize: '9px', fontWeight: 700, color: '#9ca3af', letterSpacing: '1px', padding: '10px 8px 4px', borderTop: i > 0 ? '1px solid #1f2937' : 'none', marginTop: i > 0 ? '4px' : 0, opacity: 0.5 }}>
+                {item.label}
+              </div>
+            );
+          }
+          return renderEvent(item.event, true);
+        })}
+
+        {/* TODAY section */}
+        {filteredToday.length > 0 && (
+          <>
+            <div style={{ fontSize: '9px', fontWeight: 700, color: '#22c55e', letterSpacing: '1px', padding: '10px 8px 4px', borderTop: groupedPast.length > 0 ? '1px solid #1f2937' : 'none', marginTop: groupedPast.length > 0 ? '4px' : 0 }}>
+              TODAY {'\u2014'} {todayLabel}
             </div>
+            {filteredToday.map(e => renderEvent(e, false))}
           </>
         )}
 
-        {/* LOOKING AHEAD section */}
-        <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%)', borderLeft: '3px solid #06b6d4', marginBottom: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>LOOKING AHEAD</div>
-          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{upcoming.length} upcoming events tracked</div>
-        </div>
-
-        {/* Category legend */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '0 8px 10px', borderBottom: '1px solid #1f2937', marginBottom: '4px' }}>
-          {Object.entries(CAT_COLORS).map(([cat, color]) => (
-            <span key={cat} style={{ fontSize: '8px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block' }} />
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </span>
-          ))}
+        {/* UPCOMING divider — auto-scroll target */}
+        <div ref={upcomingRef} style={{ borderTop: '2px solid #06b6d4', margin: '14px 0 4px', textAlign: 'center', position: 'relative' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#06b6d4', position: 'relative', top: '-7px', background: '#0a0a12', padding: '0 10px', letterSpacing: '2px' }}>UPCOMING</span>
         </div>
 
         {/* Upcoming events grouped by month */}
@@ -632,23 +591,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           return renderEvent(item.event, false);
         })}
 
-        {/* Past events collapsible */}
-        {past.length > 0 && (
-          <div style={{ marginTop: '12px', borderTop: '1px solid #1f2937', paddingTop: '10px' }}>
-            <div
-              onClick={() => setPastOpen(!pastOpen)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', cursor: 'pointer', background: '#0d0d14', borderRadius: '6px' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#131320'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#0d0d14'; }}
-            >
-              <span style={{ fontSize: '9px', fontWeight: 600, color: '#6b7280', letterSpacing: '0.5px' }}>PAST EVENTS ({past.length})</span>
-              <span style={{ color: '#6b7280', fontSize: '10px', transition: 'transform 0.3s', transform: pastOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>&#9660;</span>
-            </div>
-            {pastOpen && (
-              <div>
-                {past.map(e => renderEvent(e, true))}
-              </div>
-            )}
+        {groupedUpcoming.length === 0 && (
+          <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
+            No upcoming events{horizonFilter ? ` for "${horizonFilter}"` : ''}.
           </div>
         )}
       </>
