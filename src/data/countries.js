@@ -1392,16 +1392,14 @@ export const RECENT_ELECTIONS = [
 // UPCOMING ELECTIONS DATA
 export const ELECTIONS = [
   { flag: '🇻🇳', country: 'Vietnam', date: 'Mar 2026', type: 'Legislative Elections', stakes: 'Communist Party to affirm control. Economic reform direction at stake.' },
-  { flag: '🇦🇺', country: 'Australia', date: 'May 2026', type: 'Federal Election', stakes: 'Labor seeks second term. Cost of living and housing key issues.' },
   { flag: '🇨🇴', country: 'Colombia', date: 'May 2026', type: 'Presidential Election', stakes: 'Petro barred from re-election. Test of Latin America\'s left turn.' },
   { flag: '🇱🇧', country: 'Lebanon', date: 'May 2026', type: 'Parliamentary Election', stakes: 'First test for new government. Hezbollah\'s role in question post-Gaza war.' },
-  { flag: '🇮🇱', country: 'Israel', date: 'Oct 2026', type: 'General Election', stakes: 'Netanyahu coalition faces pressure. Could trigger early if budget fails.' },
-  { flag: '🇭🇺', country: 'Hungary', date: 'Oct 2026', type: 'Parliamentary Election', stakes: 'Orban faces toughest challenge from Tisza Party. EU relations at stake.' },
+  { flag: '🇮🇱', country: 'Israel', date: 'Jun–Oct 2026', type: 'General Election', stakes: 'Legally due Oct 27 but widely expected earlier. Budget deadline may dissolve Knesset by summer.' },
+  { flag: '🇭🇺', country: 'Hungary', date: 'Apr 2026', type: 'Parliamentary Election', stakes: 'Orban faces toughest challenge from Tisza Party. EU relations at stake.' },
   { flag: '🇧🇦', country: 'Bosnia', date: 'Oct 2026', type: 'General Elections', stakes: 'Ethnic tensions persist. Serb separatism and EU path in balance.' },
   { flag: '🇧🇷', country: 'Brazil', date: 'Oct 2026', type: 'General Elections', stakes: 'Lula vs Bolsonaro family rematch. Democracy and Amazon at stake.' },
-  { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. All 435 House seats and 35 Senate seats.' },
+  { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. All 435 House seats and 33 Senate seats.' },
   { flag: '🇫🇷', country: 'France', date: 'Apr 2027', type: 'Presidential Election', stakes: 'Macron term-limited. Le Pen favored amid political fragmentation.' },
-  { flag: '🇰🇷', country: 'South Korea', date: 'Mar 2027', type: 'Presidential Election', stakes: 'Political crisis aftermath. Conservative vs progressive showdown.' }
 ];
 
 // FORECASTS DATA
