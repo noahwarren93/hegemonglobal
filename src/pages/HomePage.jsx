@@ -198,7 +198,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries }) {
+function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, collapsed, onToggle }) {
   const watchlistCountries = useMemo(() => {
     return Object.entries(COUNTRIES)
       .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
@@ -207,6 +207,15 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
         return tierDiff !== 0 ? tierDiff : a[0].localeCompare(b[0]);
       });
   }, []);
+
+  if (collapsed) {
+    return (
+      <button className="watchlist-pill" onClick={onToggle}>
+        <span style={{ fontSize: '13px' }}>&#9888;&#65039;</span>
+        {watchlistCountries.length} Critical
+      </button>
+    );
+  }
 
   return (
     <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible' }}>
@@ -308,6 +317,11 @@ export default function HomePage() {
   // --- Auto-rotate ---
   const [autoRotate, setAutoRotate] = useState(true);
 
+  // --- Watchlist collapse (responsive) ---
+  const [watchlistCollapsed, setWatchlistCollapsed] = useState(() => {
+    return window.matchMedia('(max-width: 1200px)').matches;
+  });
+
   // --- Date display ---
   const [currentDate, setCurrentDate] = useState('');
 
@@ -387,6 +401,14 @@ export default function HomePage() {
     };
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Responsive: collapse watchlist at 1200px
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 1200px)');
+    const handler = (e) => setWatchlistCollapsed(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   // ============================================================
   // Sync compare mode to globe meshes (matching original addCountryToCompare/removeCountryFromCompare)
@@ -613,6 +635,8 @@ export default function HomePage() {
             compareMode={compareMode}
             onToggleCompare={handleToggleCompare}
             compareCountries={compareCountries}
+            collapsed={watchlistCollapsed}
+            onToggle={() => setWatchlistCollapsed(prev => !prev)}
           />
 
           {/* Risk Legend */}

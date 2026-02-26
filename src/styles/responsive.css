@@ -1,5 +1,61 @@
 /* Responsive Styles - Hegemon Global */
 
+    /* === 1400px: Minor shrink — compact watchlist + stats === */
+    @media (max-width: 1400px) {
+      .watchlist { width: 180px; }
+      .stats { left: 210px; }
+      .stat-popup { left: 210px; }
+      .stat-card { padding: 8px 10px; min-width: 60px; }
+    }
+
+    /* === 1200px: Watchlist collapses to pill, sidebar narrows === */
+    @media (max-width: 1200px) {
+      .sidebar { width: 300px; }
+      .header { right: 300px; }
+      .header-right { right: 320px; }
+      .globe-tools { right: 320px; }
+      .search-overlay { right: 320px; }
+      .stats { left: 16px; }
+      .stat-popup { left: 16px; }
+
+      .watchlist-pill {
+        position: absolute;
+        top: 80px;
+        left: 16px;
+        z-index: 10;
+        background: rgba(10,10,15,0.95);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #1f2937;
+        color: #ef4444;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: border-color 0.15s;
+      }
+      .watchlist-pill:hover { border-color: #ef4444; }
+    }
+
+    /* === 900px: Further compaction === */
+    @media (max-width: 900px) {
+      .sidebar { width: 280px; }
+      .header { right: 280px; }
+      .header-right { right: 300px; }
+      .globe-tools { right: 300px; }
+      .search-overlay { right: 300px; }
+      .legend { display: none; }
+      .stats { gap: 4px; }
+      .stat-card { padding: 6px 8px; min-width: 55px; }
+      .stat-value { font-size: 16px; }
+      .stat-label { font-size: 6px; }
+    }
+
     @media (max-width: 768px) {
       .app { flex-direction: column; }
       .globe-container { height: 52vh; width: 100%; }
@@ -9,6 +65,7 @@
       .logo { font-size: 20px; }
       .logo-sub { font-size: 9px; }
       .watchlist { display: none; }
+      .watchlist-pill { display: none; }
       .legend { bottom: auto; top: 70px; left: 10px; padding: 8px; }
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
