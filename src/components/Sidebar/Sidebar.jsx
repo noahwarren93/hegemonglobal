@@ -98,6 +98,29 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return '#374151';
   };
 
+  const findCountryKey = (primaryCountry) => {
+    if (!primaryCountry) return null;
+    const lower = primaryCountry.toLowerCase();
+    return Object.keys(COUNTRIES).find(k => k.toLowerCase() === lower) || null;
+  };
+
+  const getTimelineSummary = (event) => {
+    if (event.summaryLoading || !event.summary) return null;
+    const text = event.summary;
+    const whatMatch = text.match(/\*\*What happened:\*\*\s*(.*?)(?:\s*\*\*Why it matters:|$)/s);
+    const whyMatch = text.match(/\*\*Why it matters:\*\*\s*(.*?)$/s);
+    let summary = '';
+    if (whatMatch) summary = whatMatch[1].trim();
+    if (whyMatch) summary += (summary ? ' ' : '') + whyMatch[1].trim();
+    if (!summary) {
+      const sentences = text.match(/[^.!?]*[.!?]/g);
+      summary = sentences ? sentences.slice(0, 2).join(' ').trim() : '';
+    }
+    if (!summary) return null;
+    if (summary.length > 200) summary = summary.substring(0, 197).replace(/\s+\S*$/, '') + '...';
+    return summary;
+  };
+
   const getCardPreview = (event) => {
     if (event.summaryLoading) return null;
     if (!event.summary) return null;
@@ -416,6 +439,98 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
+  const renderRecentHistory = () => {
+    const sorted = [...DAILY_EVENTS].sort((a, b) => (b.sourceCount || 0) - (a.sourceCount || 0)).slice(0, 15);
+
+    return (
+      <div style={{ position: 'relative', paddingLeft: '16px' }}>
+        {/* Vertical timeline line */}
+        <div style={{ position: 'absolute', left: '6px', top: '0', bottom: '0', width: '2px', background: '#1f2937' }} />
+
+        {sorted.map((event, idx) => {
+          let displayHeadline = event.headline;
+          const dashIdx = displayHeadline.lastIndexOf(' - ');
+          if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
+            displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+          }
+
+          const summary = getTimelineSummary(event);
+          const countryKey = findCountryKey(event._primaryCountry);
+          const countryData = countryKey ? COUNTRIES[countryKey] : null;
+          const dotColor = catBorderColor(event.category);
+
+          return (
+            <div
+              key={event.id}
+              onClick={() => setSelectedEvent(event)}
+              style={{
+                position: 'relative',
+                padding: '8px 8px 10px',
+                marginLeft: idx % 2 === 1 ? '6px' : '0',
+                borderBottom: '1px solid #111827',
+                cursor: 'pointer',
+                borderRadius: '4px',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(31,41,55,0.4)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              {/* Timeline dot */}
+              <div style={{
+                position: 'absolute', left: '-13px', top: '12px',
+                width: '8px', height: '8px', borderRadius: '50%',
+                background: dotColor, border: '2px solid #0a0a12',
+              }} />
+
+              {/* Time */}
+              {event.time && (
+                <div style={{ fontSize: '9px', color: '#06b6d4', marginBottom: '2px' }}>{event.time}</div>
+              )}
+
+              {/* Headline */}
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.35, marginBottom: '3px' }}>
+                {displayHeadline}
+              </div>
+
+              {/* AI summary */}
+              {summary && (
+                <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.5, marginBottom: '4px' }}>
+                  {summary}
+                </div>
+              )}
+
+              {/* Tags row */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                {/* Country pill */}
+                {countryData && (
+                  <span style={{
+                    fontSize: '8px', color: '#9ca3af', background: '#1f293766',
+                    padding: '1px 5px', borderRadius: '3px',
+                  }}>
+                    {countryData.flag} {countryKey}
+                  </span>
+                )}
+
+                {/* Category tag */}
+                <span className={`card-cat ${event.category}`}>{event.category}</span>
+
+                {/* Region tag */}
+                {countryData && countryData.region && (
+                  <span style={{
+                    fontSize: '8px', color: '#6b7280', background: '#111827',
+                    padding: '1px 5px', borderRadius: '3px',
+                  }}>
+                    {countryData.region}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderHorizonTab = () => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -471,9 +586,27 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* Header */}
+        {/* RECENT HISTORY section — live events timeline */}
+        {DAILY_EVENTS.length > 0 && (
+          <>
+            <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(139,92,246,0.12) 0%,transparent 100%)', borderLeft: '3px solid #8b5cf6', marginBottom: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#8b5cf6', letterSpacing: '1px' }}>
+                <span role="img" aria-label="clock">&#128336;</span> RECENT HISTORY
+              </div>
+              <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>Today&apos;s top {Math.min(DAILY_EVENTS.length, 15)} events by coverage</div>
+            </div>
+            {renderRecentHistory()}
+
+            {/* Decorative divider */}
+            <div style={{ borderTop: '1px solid #1f2937', margin: '14px 0', textAlign: 'center' }}>
+              <span style={{ fontSize: '9px', color: '#374151', position: 'relative', top: '-7px', background: '#0a0a12', padding: '0 8px' }}>&#9662; &#9662; &#9662;</span>
+            </div>
+          </>
+        )}
+
+        {/* LOOKING AHEAD section */}
         <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%)', borderLeft: '3px solid #06b6d4', marginBottom: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>GEOPOLITICAL HORIZON</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>LOOKING AHEAD</div>
           <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{upcoming.length} upcoming events tracked</div>
         </div>
 
