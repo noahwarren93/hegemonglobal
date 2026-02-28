@@ -183,13 +183,6 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const getStableTopStories = useCallback((events) => {
     const PRIORITY = [
       {
-        countries: ['palestine'],
-        keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'],
-        boost: ['board of peace', 'reconstruction', 'peace', 'ceasefire', 'pledges', 'billion', 'aid'],
-        penalize: ['hamas leader', 'interim', 'vote', 'elect'],
-        fallback: 'Board of Peace Convenes, Raises $7 Billion for Gaza',
-      },
-      {
         countries: ['ukraine', 'russia'],
         keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'],
         boost: ['war', 'peace talks', 'frontline', 'offensive', 'ceasefire', 'troops', 'missile'],
