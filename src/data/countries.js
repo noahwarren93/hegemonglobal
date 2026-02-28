@@ -69,16 +69,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Fragile Ceasefire',
+  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Houthi Retaliation — Red Sea Crisis',
     analysis: {
-      what: 'Yemen\'s Houthi movement halted Red Sea shipping attacks after the Gaza ceasefire took effect in October 2025—no incidents recorded since September 2025. The US and Houthis agreed to a bilateral ceasefire on May 6, 2025, after the US struck 1,000+ Houthi targets. However, in late January 2026, Houthis threatened new Red Sea attacks as the USS Abraham Lincoln carrier group headed toward the Middle East amid Iran tensions. The underlying civil war continues with 21 million needing humanitarian aid.',
-      why: 'Houthi attacks have disrupted 12% of global trade passing through the Red Sea, forcing ships to reroute around Africa. As the Iran-US confrontation intensifies, Houthis could open a major front in any wider conflict. Yemen is a proxy battleground between Iran and Saudi Arabia/US. The conflict destabilizes the Arabian Peninsula and threatens global energy infrastructure.',
-      next: 'Yemen is now inextricable from the Iran nuclear crisis. If US-Iran talks fail and military strikes occur, Houthis would likely escalate attacks on shipping and potentially target US military assets. Watch for: Red Sea shipping disruptions, Iran negotiations impact, US military responses, and humanitarian conditions.'
+      what: 'The US and Israel launched joint strikes on Iran on February 28, 2026, triggering near-certain Houthi retaliation. The Houthis are Iran\'s most aggressive proxy force and had previously disrupted 12% of global trade through Red Sea shipping attacks. The US-Houthi ceasefire from May 2025 is effectively void. Houthi leaders have repeatedly vowed to escalate if Iran is attacked. The movement retains anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
+      why: 'Houthi attacks on Red Sea shipping forced the largest rerouting of global trade since the Suez Crisis, adding weeks to transit times and billions in costs. Renewed attacks would spike global shipping insurance, oil prices, and supply chain disruptions. The US has two carrier strike groups in the region that could become Houthi targets. Yemen is the most likely front for immediate Iranian proxy escalation alongside Hezbollah in Lebanon.',
+      next: 'Houthi attacks on Red Sea shipping and US naval assets are expected within hours. Watch for: anti-ship missile launches in the Bab el-Mandeb strait, drone attacks on commercial vessels, ballistic missile strikes toward Israel, and US preemptive strikes on Houthi positions. Global shipping disruption and oil price spikes are near-certain consequences.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Houthis threaten escalation if Iran attacked', url: '#' },
-      { source: 'AP', bias: 'center', time: '4h ago', headline: 'US intensifies airstrikes on Houthi positions', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '7h ago', headline: 'Red Sea shipping disruptions continue', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '30m ago', headline: 'Houthis vow massive retaliation after US-Israeli strikes on Iran', url: '#' },
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Red Sea shipping halted as Houthi attacks expected', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2h ago', headline: 'US carrier groups brace for Houthi missile attacks', url: '#' }
     ]
   },
 
@@ -200,16 +200,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'extreme', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Post-Ceasefire Recovery',
+  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'catastrophic', region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Hezbollah Proxy Retaliation Expected',
     analysis: {
-      what: 'Lebanon elected Joseph Aoun as president in January 2025, ending a two-year vacancy. An Israel-Hezbollah ceasefire took effect in November 2024 after devastating Israeli military operations that killed Hezbollah\'s top leadership including Hassan Nasrallah. Hezbollah was significantly weakened but refuses full disarmament until Israel complies with ceasefire terms. The Lebanese army has begun first phases of Hezbollah disarmament. The economy remains in collapse—the currency lost 98% of value, banks froze deposits, and essential services barely function.',
-      why: 'Hezbollah\'s weakening has created a rare window for Lebanese state-building. But the ceasefire has been extensively violated—Israel committed 11,000+ violations. Lebanon\'s recovery depends on institutional reform, Hezbollah\'s diminished role, and international support. The banking crisis remains unresolved.',
-      next: 'President Aoun faces the challenge of rebuilding state authority while managing Hezbollah disarmament. Watch for: ceasefire compliance, Hezbollah\'s political future, economic reform, and international reconstruction aid. The window for genuine reform may be narrow.'
+      what: 'The US and Israel launched joint military strikes on Iran on February 28, 2026, making Hezbollah retaliation from Lebanon virtually certain. Despite being significantly weakened after Israel killed its top leadership including Nasrallah in 2024, Hezbollah retains substantial rocket and missile arsenals capable of striking deep into Israel. The Israel-Hezbollah ceasefire is effectively dead. The Lebanese army cannot prevent Hezbollah from acting on Iranian orders. Civilians across southern Lebanon and northern Israel face imminent danger.',
+      why: 'Lebanon is the most likely front for Iranian proxy retaliation against Israel. Hezbollah is Iran\'s most capable proxy force and has historically responded to attacks on Iran with rocket barrages on Israeli cities. Even in its weakened state, Hezbollah possesses precision-guided munitions that can hit Tel Aviv. Any Israeli counter-strikes on Lebanon would devastate a country already in economic collapse. The entire civilian population is at risk.',
+      next: 'Hezbollah rocket and missile attacks on northern Israel are expected within hours to days. Watch for: rocket barrages from southern Lebanon, Israeli preemptive strikes on Hezbollah positions, civilian displacement on both sides of the border, and whether Hezbollah launches precision-guided munitions at Israeli strategic targets. A full-scale Israel-Lebanon war is now a near-term possibility.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Lebanese army advances Hezbollah disarmament plan', url: '#' },
-      { source: 'AP', bias: 'center', time: '4h ago', headline: 'President Aoun pushes economic reform agenda', url: '#' },
-      { source: 'FT', bias: 'center', time: '7h ago', headline: 'Israel ceasefire violations strain fragile peace', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '30m ago', headline: 'Hezbollah signals retaliation after US-Israeli strikes on Iran', url: '#' },
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Lebanon braces for war as Iran-Israel conflict erupts', url: '#' },
+      { source: 'Times of Israel', bias: 'center-right', time: '2h ago', headline: 'IDF reinforces northern border amid Hezbollah threat', url: '#' }
     ]
   },
 

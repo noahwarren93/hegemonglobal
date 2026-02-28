@@ -179,16 +179,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: EXACTLY 4, fixed order: Iran > Gaza > Ukraine > Sudan
+  // Top Stories: up to 4, fixed order — Iran handled by BREAKING, so skip it here
   const getStableTopStories = useCallback((events) => {
     const PRIORITY = [
-      {
-        countries: ['iran'],
-        keywords: ['iran', 'iranian', 'tehran', 'hormuz', 'irgc', 'ayatollah'],
-        boost: ['war', 'strike', 'military', 'nuclear', 'carrier', 'attack', 'confrontation', 'troops', 'deploy'],
-        penalize: ['oil price', 'crude', 'barrel', 'opec', 'brent'],
-        fallback: 'Will the US Go to War With Iran?',
-      },
       {
         countries: ['palestine'],
         keywords: ['gaza', 'palestine', 'palestinian', 'rafah', 'board of peace', 'west bank'],
@@ -201,6 +194,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'],
         boost: ['war', 'peace talks', 'frontline', 'offensive', 'ceasefire', 'troops', 'missile'],
         penalize: ['recruitment', 'kenya'],
+        fallback: null,
+      },
+      {
+        countries: ['lebanon'],
+        keywords: ['lebanon', 'lebanese', 'beirut', 'hezbollah'],
+        boost: ['hezbollah', 'retaliation', 'rocket', 'missile', 'strike', 'attack', 'war', 'iran'],
+        penalize: ['reform', 'bank', 'currency'],
         fallback: null,
       },
       {

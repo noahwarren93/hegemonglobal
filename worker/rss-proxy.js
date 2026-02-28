@@ -894,7 +894,7 @@ function clusterArticles(articles) {
   const allClusters = [];
 
   // Step 3a: Non-stoplist countries
-  for (const [country, indices] of countryGroups.entries()) {
+  for (const [, indices] of countryGroups.entries()) {
     if (indices.length <= HARD_CAP) {
       allClusters.push(indices);
     } else {
@@ -904,7 +904,7 @@ function clusterArticles(articles) {
   }
 
   // Step 3b: Stoplist countries
-  for (const [country, indices] of stoplistGroups.entries()) {
+  for (const [, indices] of stoplistGroups.entries()) {
     const subs = subClusterByTopic(annotated, indices);
     for (const sub of subs) allClusters.push(sub);
   }
@@ -1057,7 +1057,7 @@ function mergeByCountry(events) {
     }
   }
 
-  for (const [country, indices] of countryMap.entries()) {
+  for (const [, indices] of countryMap.entries()) {
     if (indices.length <= 1) continue;
     indices.sort((a, b) => events[b]._score - events[a]._score);
     const base = events[indices[0]];
@@ -1125,7 +1125,7 @@ async function fetchSingleFeed(feedUrl, sourceName) {
         pubDate: item.pubDate
       };
     });
-  } catch (err) {
+  } catch {
     clearTimeout(timeout);
     return [];
   }
@@ -1183,7 +1183,7 @@ function processArticles(allArticles) {
     if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
 
     // Non-English filter
-    const nonAscii = (title.match(/[^\x00-\x7F]/g) || []).length;
+    const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
     if (title.length > 10 && nonAscii / title.length > 0.15) continue;
     if (/\b(de|del|los|las|por|para|avec|dans|und|der|die|dari|dan|yang|pada)\b/i.test(title) &&
         !/\b(de facto|del rio|de gaulle)\b/i.test(title)) {
@@ -1774,7 +1774,7 @@ Return ONLY the JSON array, no other text.`;
               shortName: meta.shortName || '',
               longName: meta.longName || '',
               exchangeName: meta.fullExchangeName || meta.exchangeName || '',
-              sparkline: closes.length > 0 ? closes : [prevClose || price, price],
+              sparkline: closes.length > 0 ? closes : [chartPrevClose || price, price],
               timestamps: timestamps.length > 0 ? timestamps : []
             };
           } catch (e) {
@@ -1806,7 +1806,7 @@ Return ONLY the JSON array, no other text.`;
   // Fetches RSS feeds, clusters articles, generates AI summaries,
   // stores everything in KV for instant client access via GET /events
   // ============================================================
-  async scheduled(event, env, ctx) {
+  async scheduled(event, env) {
     try {
       console.log('[Cron] Starting event generation...');
       const startTime = Date.now();
