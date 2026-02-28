@@ -135,16 +135,16 @@ export const COUNTRIES = {
   },
 
   // ==================== EXTREME ====================
-  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'extreme', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Post-War Tensions',
+  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'State of Emergency — Strikes on Iran',
     analysis: {
-      what: 'Israel\'s military operations in Gaza following Hamas\'s October 7, 2023 attack resulted in ceasefires in January and October 2025, with Phase 2 negotiations ongoing. Hezbollah was significantly weakened after Israel killed its top leadership including Nasrallah, with a ceasefire in November 2024. However, Israel has been accused of 11,000+ ceasefire violations in Lebanon and extensive violations in Gaza. Netanyahu\'s far-right coalition continues pushing controversial policies including West Bank settlement expansion. The economy is recovering from the strain of mobilizing 300,000 reservists.',
-      why: 'Israel is the US\'s closest Middle East ally, receiving $3.8 billion annually in military aid. The post-war period will define the region for decades. Gaza governance remains unresolved. International criticism and ICC warrant requests have increased Israel\'s diplomatic isolation. Israeli technology remains globally integrated.',
-      next: 'Post-war Gaza governance is the critical unresolved question. Watch for: ceasefire compliance, Iran nuclear confrontation, Netanyahu coalition stability, ICC proceedings, and US policy. The long-term trajectory depends on whether a political solution emerges or conflict resumes.'
+      what: 'Israel launched a "preemptive attack" on Tehran on February 28, 2026, in coordination with the United States. Israel has declared a state of emergency with sirens blaring and citizens told to shelter in place. Iranian retaliation via ballistic missiles and proxy forces is expected imminently. Hezbollah in Lebanon, despite being weakened, retains rocket capability and may open a northern front. The IDF is on full alert across all borders. This is the most significant Israeli military operation since the 2023-2024 Gaza war.',
+      why: 'Israel has entered active military conflict with Iran — a nation with ballistic missile capability that can reach Israeli cities. Iranian retaliation could come via direct missile strikes, Hezbollah rockets from Lebanon, Houthi attacks from Yemen, and Iraqi militia strikes on US bases that host Israeli intelligence assets. Israel\'s Iron Dome and Arrow systems will be tested at scale. The state of emergency affects the entire civilian population. Economic disruption will be severe.',
+      next: 'Iranian retaliation is the immediate concern — likely a combination of ballistic missiles targeting Israeli military installations and cities, plus proxy activation on multiple fronts. Watch for: Iranian missile launches, Hezbollah rocket barrages from Lebanon, Houthi attacks on Israeli-linked shipping, civilian casualties, and whether the conflict escalates beyond the initial exchange. Israel\'s air defense capacity will be critical.'
     },
     news: [
-      { source: 'Times of Israel', bias: 'center-right', time: '1h ago', headline: 'Phase 2 ceasefire negotiations continue', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Lebanon ceasefire holds despite violations', url: '#' },
-      { source: 'Haaretz', bias: 'center-left', time: '6h ago', headline: 'Coalition pushes settlement expansion plans', url: '#' }
+      { source: 'Times of Israel', bias: 'center-right', time: '20m ago', headline: 'Israel declares state of emergency after launching strikes on Iran', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '30m ago', headline: 'IDF confirms "preemptive attack" on Tehran', url: '#' },
+      { source: 'Haaretz', bias: 'center-left', time: '1h ago', headline: 'Sirens across Israel — citizens told to shelter', url: '#' }
     ]
   },
 
@@ -161,16 +161,16 @@ export const COUNTRIES = {
     ]
   },
 
-  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'extreme', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Nuclear Crisis / US Military Confrontation',
+  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'catastrophic', region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Ali Khamenei', title: 'Under US-Israeli Military Attack',
     analysis: {
-      what: 'Massive US military buildup in the Middle East — two aircraft carrier strike groups, 13+ warships, fighter jets, and B-2 bombers deployed. Trump issued Iran a 10-15 day ultimatum to accept a nuclear deal or face "bad things." Iran responded that US bases across the region are "legitimate targets" and conducted live-fire naval drills in the Strait of Hormuz. Iran is repairing and fortifying nuclear sites damaged by previous sabotage, enriching uranium to 60% purity with enough material for multiple bombs. Iran\'s proxy network — Hezbollah in Lebanon, Houthis in Yemen, Hamas in Gaza, Iraqi Shia militias — remains capable of striking US and Israeli assets across the region. Tensions at highest point since the 2020 Soleimani assassination.',
-      why: 'The Strait of Hormuz carries 20-30% of global oil transit — any conflict spikes energy prices worldwide. Iran is a nuclear threshold state; strikes on nuclear facilities could paradoxically accelerate weapons development. Regional escalation could draw in Israel, Saudi Arabia, and Gulf states. US-Israel coordination on potential strikes is intensifying. This is the closest the US and Iran have come to direct military confrontation. Iranian proxies can open multiple fronts simultaneously — Red Sea shipping (Houthis), northern Israel (Hezbollah), Iraq (Shia militias), potentially closing the Strait itself.',
-      next: 'Four scenarios: (1) US/Israeli limited strikes on nuclear facilities with contained Iranian retaliation, (2) last-minute diplomatic deal under extreme pressure, (3) continued posturing and gradual de-escalation, or (4) full-scale regional war if strikes trigger coordinated proxy retaliation across multiple fronts. Key variables: Trump\'s willingness to authorize strikes, Iran\'s calculation on negotiating vs. fighting, Israel\'s independent military action, and oil market reactions. Watch for IAEA inspection access, carrier positioning, and back-channel diplomacy through Oman.'
+      what: 'The United States and Israel launched coordinated military strikes on Tehran and Iranian nuclear facilities on February 28, 2026. US officials describe it as "not a small strike." Israel declared a state of emergency and launched what it calls a "preemptive attack" on Iran. Iran\'s air defenses are engaged and retaliation is expected. The strikes target nuclear enrichment sites and military infrastructure. Iran had been enriching uranium to 60% purity with enough material for multiple bombs. Iran\'s proxy network — Hezbollah, Houthis, Hamas, Iraqi Shia militias — is expected to activate across the region.',
+      why: 'Iran is now under direct military attack by the United States and Israel — the most significant military confrontation in the Middle East since the 2003 Iraq invasion. The Strait of Hormuz carries 20-30% of global oil transit and Iran has threatened to close it in retaliation. Strikes on nuclear facilities risk radioactive contamination and could paradoxically accelerate weapons development. Iranian proxies can open multiple fronts simultaneously — Red Sea shipping (Houthis), northern Israel (Hezbollah), Iraq (Shia militias). Global energy markets face severe disruption. This is a potential trigger for a wider regional war.',
+      next: 'Iran will almost certainly retaliate — the question is scale and targets. Scenarios: (1) targeted missile strikes on US bases in Iraq/Syria and Israeli military targets, (2) Houthi escalation closing Red Sea shipping, (3) Hezbollah rocket barrages on northern Israel, (4) attempted closure of the Strait of Hormuz, or (5) all of the above simultaneously. Watch for: Iranian missile launches, proxy activation across the region, oil price spikes, Strait of Hormuz shipping disruptions, and whether the conflict escalates into a full regional war.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'US deploys second carrier strike group to Middle East', url: '#' },
-      { source: 'AP', bias: 'center', time: '3h ago', headline: 'Iran conducts live-fire drills in Strait of Hormuz', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '5h ago', headline: 'Trump gives Iran ultimatum on nuclear deal', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '30m ago', headline: 'US and Israeli strikes hit Tehran — "not a small strike"', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Iran vows retaliation as strikes target nuclear sites', url: '#' },
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Global oil prices surge as Middle East war erupts', url: '#' }
     ]
   },
 
@@ -506,17 +506,17 @@ export const COUNTRIES = {
   },
 
   // STORMY COUNTRIES
-  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'stormy', region: 'North America', pop: '335M', gdp: '$30.6T', leader: 'Donald Trump', title: 'Assertive Foreign Policy',
+  'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'severe', region: 'North America', pop: '335M', gdp: '$30.6T', leader: 'Donald Trump', title: 'Active Military Strikes on Iran',
     analysis: {
-      what: 'Trump\'s second term has reshaped US foreign policy with aggressive unilateral action: the capture of Venezuelan President Maduro in January 2026, an Iran nuclear ultimatum with massive military buildup, and brokering Ukraine-Russia peace talks in Geneva. Domestically, mass deportations and federal spending cuts have been polarizing. Trade wars have escalated with tariffs on allies and adversaries alike. The economy shows resilience but tariff uncertainty rattles markets.',
-      why: 'As the world\'s largest economy (25% of global GDP), dominant military power, and linchpin of the Western alliance, American decisions reverberate globally. Trump\'s transactional approach to alliances has unsettled traditional partners. US-brokered Ukraine talks represent the most significant peace effort since the war began. The Iran confrontation could trigger a regional war.',
-      next: 'The 2026 midterm elections will determine Congressional control. Watch for: Iran nuclear standoff, Ukraine peace negotiations, Venezuela stability, tariff impacts on global trade, and whether Trump\'s aggressive foreign policy yields lasting results or new conflicts.'
+      what: 'The United States launched military strikes on Iran on February 28, 2026, in coordination with Israel. US officials describe it as "not a small strike," targeting Iranian nuclear facilities and military infrastructure. This marks the first direct US military attack on Iranian territory. US forces across the Middle East — two carrier strike groups, 13+ warships, fighter jets, and B-2 bombers — are engaged. US bases in Iraq, Syria, and the Gulf are on high alert for Iranian retaliation. Domestically, Trump\'s second term continues with trade wars, mass deportations, and federal spending cuts.',
+      why: 'The US has entered direct military conflict with Iran — a threshold not crossed in over four decades of hostility. US military bases across the Middle East are now targets for Iranian retaliation via ballistic missiles and proxy forces (Iraqi Shia militias, Houthis). Global energy markets face severe disruption if the Strait of Hormuz is threatened. The economic impact of a wider Middle East war would be felt globally. Congressional authorization questions will dominate domestic debate.',
+      next: 'Iranian retaliation against US bases in the region is expected. Watch for: attacks on US forces in Iraq and Syria, Strait of Hormuz disruptions affecting global oil supply, Congressional response on war authorization, domestic political fallout, global market reactions, and whether the strikes achieve their stated objectives or trigger a wider regional war.'
     },
     news: [
-      { source: 'AP', bias: 'center', time: '1h ago', headline: 'Geneva talks on Ukraine show incremental progress', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'Iran ultimatum deadline approaches amid military buildup', url: '#' },
-      { source: 'WSJ', bias: 'center-right', time: '5h ago', headline: 'Tariff uncertainty rattles global markets', url: '#' },
-      { source: 'NYT', bias: 'center-left', time: '7h ago', headline: 'Federal spending cuts face legal challenges', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '30m ago', headline: 'US strikes Iran alongside Israel — "not a small strike"', url: '#' },
+      { source: 'AP', bias: 'center', time: '1h ago', headline: 'US forces on high alert across Middle East', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '1h ago', headline: 'Pentagon confirms strikes on Iranian nuclear facilities', url: '#' },
+      { source: 'WSJ', bias: 'center-right', time: '2h ago', headline: 'Oil prices spike as US-Iran conflict erupts', url: '#' }
     ]
   },
 
