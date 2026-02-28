@@ -1,4 +1,4 @@
-import{r as i,j as e,n as r}from"./index-uSMGbEZ0.js";const d=`<h2>OUR MISSION</h2>
+import{r as i,j as e,n as r}from"./index-Bthk-MAX.js";const d=`<h2>OUR MISSION</h2>
 <p>Geopolitical intelligence shouldn't be as complicated as it is. Hegemon Global delivers real-time global risk monitoring to anyone who wants to understand what's happening in the world and why it matters. This tool is useful for analysts and policymakers, journalists, and the everyday person.</p>
 
 <h2>WHAT WE DO</h2>
