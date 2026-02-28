@@ -282,6 +282,57 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return top.slice(0, 4);
   }, []);
 
+  const renderBreakingCard = (event) => {
+    let displayHeadline = event.headline;
+    const dashIdx = displayHeadline.lastIndexOf(' - ');
+    if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
+      displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+    }
+    const preview = getCardPreview(event);
+
+    return (
+      <div
+        key={event.id}
+        className="card"
+        onClick={() => setSelectedEvent(event)}
+        style={{
+          cursor: 'pointer',
+          borderLeft: '3px solid #ef4444',
+          background: 'linear-gradient(135deg, rgba(127,29,29,0.3) 0%, rgba(17,24,39,0.95) 100%)',
+          animation: 'breakingPulse 2s ease-in-out infinite',
+        }}
+      >
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              fontSize: '8px', fontWeight: 800, color: '#fff', background: '#dc2626',
+              padding: '2px 6px', borderRadius: '3px', letterSpacing: '1px', animation: 'breakingBlink 1s step-end infinite'
+            }}>BREAKING</span>
+            <span className={`card-cat ${event.category}`}>{event.category}</span>
+            {event.sourceCount > 1 && (
+              <span style={{
+                fontSize: '7px', fontWeight: 700, color: '#06b6d4',
+                background: 'rgba(6,182,212,0.15)', padding: '2px 5px',
+                borderRadius: '3px', letterSpacing: '0.3px'
+              }}>
+                {event.sourceCount} sources
+              </span>
+            )}
+          </div>
+          <span className="card-time">{event.time || 'Just now'}</span>
+        </div>
+        <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
+          {displayHeadline}
+        </div>
+        {preview && (
+          <div style={{ fontSize: '10px', color: '#d1d5db', marginTop: '3px', lineHeight: 1.5 }}>
+            {preview}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderEventsTab = () => {
     if (DAILY_EVENTS.length === 0) {
       if (DAILY_BRIEFING.length === 0) {
@@ -290,15 +341,29 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
     }
 
+    // Breaking events pinned at top
+    const breakingEvents = DAILY_EVENTS.filter(e => e.breaking);
+    const nonBreaking = DAILY_EVENTS.filter(e => !e.breaking);
+
     // Stable Top Stories: persisted for 2 hours, require 2+ sources
-    const topEvents = getStableTopStories(DAILY_EVENTS);
+    const topEvents = getStableTopStories(nonBreaking);
     const topIds = new Set(topEvents.map(e => e.id));
-    // Latest Updates: everything NOT in Top Stories, paginated
-    const remaining = DAILY_EVENTS.filter(e => !topIds.has(e.id));
+    // Latest Updates: everything NOT in Top Stories or Breaking, paginated
+    const remaining = nonBreaking.filter(e => !topIds.has(e.id));
     const restEvents = remaining.slice(0, visibleCount);
 
     return (
       <>
+        {/* Breaking Events */}
+        {breakingEvents.length > 0 && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px', animation: 'breakingBlink 1s step-end infinite' }}>BREAKING NEWS</span>
+            </div>
+            {breakingEvents.map(event => renderBreakingCard(event))}
+          </>
+        )}
+
         {/* Top Stories */}
         {topEvents.length > 0 && (
           <>

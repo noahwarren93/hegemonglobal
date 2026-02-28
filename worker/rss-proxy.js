@@ -1417,6 +1417,23 @@ export default {
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
+
+        // Prepend breaking events from KV if any exist
+        let breakingRaw;
+        try { breakingRaw = await env.HEGEMON_CACHE.get('breaking_events'); } catch { /* miss */ }
+        if (breakingRaw) {
+          const parsed = JSON.parse(data);
+          const breaking = JSON.parse(breakingRaw);
+          if (Array.isArray(breaking) && breaking.length > 0) {
+            const breakingEvents = breaking.map(b => ({ ...b, breaking: true }));
+            parsed.events = [...breakingEvents, ...parsed.events];
+          }
+          return new Response(JSON.stringify(parsed), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'max-age=30' }
+          });
+        }
+
         return new Response(data, {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'max-age=60' }
@@ -1425,6 +1442,39 @@ export default {
         console.error('Events endpoint error:', err);
         return new Response(
           JSON.stringify({ error: 'Failed to read events' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /breaking — set or clear pinned breaking events
+    // Body: { events: [...] } to set, or { clear: true } to remove
+    // ============================================================
+    if (url.pathname === '/breaking' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        if (body.clear) {
+          await env.HEGEMON_CACHE.delete('breaking_events');
+          return new Response(
+            JSON.stringify({ status: 'cleared' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        if (body.events && Array.isArray(body.events)) {
+          await env.HEGEMON_CACHE.put('breaking_events', JSON.stringify(body.events), { expirationTtl: 86400 });
+          return new Response(
+            JSON.stringify({ status: 'set', count: body.events.length }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: 'Provide { events: [...] } or { clear: true }' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -1752,7 +1802,7 @@ Return ONLY the JSON array, no other text.`;
   },
 
   // ============================================================
-  // Cron Handler — runs every 10 minutes
+  // Cron Handler — runs every 5 minutes
   // Fetches RSS feeds, clusters articles, generates AI summaries,
   // stores everything in KV for instant client access via GET /events
   // ============================================================

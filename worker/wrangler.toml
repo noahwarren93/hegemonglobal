@@ -7,4 +7,4 @@ binding = "HEGEMON_CACHE"
 id = "cd9ecdf3837a4eaeb5f99e6d317f1911"
 
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["*/5 * * * *"]
