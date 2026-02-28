@@ -232,7 +232,7 @@ const NEWS_APIS = {
   }
 };
 
-export const NEWS_REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes
+export const NEWS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes — matches Worker cron
 const apiFailures = {};
 
 // ============================================================
@@ -909,7 +909,7 @@ async function fetchPreGeneratedEvents() {
     const minutesAgo = data.lastUpdated
       ? Math.round((Date.now() - data.lastUpdated) / 60000)
       : null;
-    // Reject stale data (older than 6 hours — cron runs every 10m but may be delayed)
+    // Reject stale data (older than 6 hours — cron runs every 5m but may be delayed)
     if (minutesAgo !== null && minutesAgo > 360) {
       console.warn('[Hegemon] Pre-generated data too stale, falling back');
       return false;
