@@ -115,6 +115,8 @@ export default function EventModal({ event, isOpen, onClose }) {
           ) : null}
 
           {/* Sources */}
+          {event.articles && event.articles.length > 0 && (
+          <>
           <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '10px' }}>
             Sources ({event.articles.length})
           </div>
@@ -146,6 +148,8 @@ export default function EventModal({ event, isOpen, onClose }) {
               </div>
             );
           })}
+          </>
+          )}
         </div>
       </div>
     </div>
