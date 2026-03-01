@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { STOCKS_DETAIL, MARKET_CONFIG } from '../../data/stocksData';
+import CountryFlag from '../CountryFlag';
 import { getMarketStatus, fetchChartData, formatStockPrice } from '../../services/stocksService';
 
 const TIME_RANGES = [
@@ -370,7 +371,7 @@ export default function StocksModal({ country, stocksData, lastUpdated, isOpen, 
       <div className="modal">
         {/* Header */}
         <div className="modal-header">
-          <span className="modal-flag">{data.flag}</span>
+          <span className="modal-flag"><CountryFlag flag={data.flag} /></span>
           <div className="modal-titles">
             <div className="modal-title">{country} Markets</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: status.isOpen ? '#22c55e' : '#9ca3af', marginTop: '2px' }}>

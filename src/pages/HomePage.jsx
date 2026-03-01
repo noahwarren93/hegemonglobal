@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { COUNTRIES } from '../data/countries';
 import { RISK_COLORS } from '../utils/riskColors';
+import CountryFlag from '../components/CountryFlag';
 import { fetchLiveNews, initializeRiskState, computeStats, NEWS_REFRESH_INTERVAL, COUNTRY_DEMONYMS, loadNewsFromLocalStorage } from '../services/apiService';
 import { loadStockData } from '../services/stocksService';
 
@@ -76,7 +77,7 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
             className="search-overlay-item"
             onClick={() => { onSelect(name); onClose(); }}
           >
-            <span>{c.flag} {name}</span>
+            <span><CountryFlag flag={c.flag} /> {name}</span>
             <span style={{ fontSize: '9px', color: RISK_COLORS[c.risk]?.hex || '#888' }}>
               {c.risk.toUpperCase()}
             </span>
@@ -181,7 +182,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
           className="stat-popup-item"
           onClick={() => { onCountryClick(name); onClose(); }}
         >
-          <span>{c.flag} {name}</span>
+          <span><CountryFlag flag={c.flag} /> {name}</span>
           <span
             className={`wl-risk risk-${c.risk}`}
             style={{ fontSize: '8px', padding: '2px 5px', borderRadius: '3px', fontWeight: 600, textTransform: 'uppercase' }}
@@ -214,7 +215,7 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
       <div style={{ maxHeight: 220, overflowY: 'auto' }}>
         {watchlistCountries.map(([name, c]) => (
           <div key={name} className="watchlist-item" onClick={() => onCountryClick(name)}>
-            <span className="wl-country">{c.flag} {name}</span>
+            <span className="wl-country"><CountryFlag flag={c.flag} /> {name}</span>
             <span className={`wl-risk risk-${c.risk}`} style={{ color: '#fff' }}>{c.risk.toUpperCase()}</span>
           </div>
         ))}
@@ -306,7 +307,7 @@ export default function HomePage() {
   const [splashFading, setSplashFading] = useState(false);
 
   // --- Auto-rotate ---
-  const [autoRotate, setAutoRotate] = useState(true);
+  const [autoRotate, setAutoRotate] = useState(false);
 
   // --- Date display ---
   const [currentDate, setCurrentDate] = useState('');

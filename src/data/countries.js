@@ -134,7 +134,7 @@ export const COUNTRIES = {
     ]
   },
 
-  'Somaliland': { lat: 9.56, lng: 44.06, flag: '🏴', risk: 'stormy', region: 'Africa', pop: '4.5M', gdp: '$2.5B', leader: 'Muse Bihi Abdi', title: 'Self-Declared Republic',
+  'Somaliland': { lat: 9.56, lng: 44.06, flag: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='6.67' fill='%23009639'/%3E%3Crect y='6.67' width='30' height='6.67' fill='%23fff'/%3E%3Crect y='13.33' width='30' height='6.67' fill='%23CE1126'/%3E%3Cpolygon points='15,7 15.68,9.07 17.85,9.07 16.09,10.36 16.76,12.43 15,11.15 13.24,12.43 13.91,10.36 12.15,9.07 14.32,9.07' fill='%23000'/%3E%3C/svg%3E", risk: 'stormy', region: 'Africa', pop: '4.5M', gdp: '$2.5B', leader: 'Muse Bihi Abdi', title: 'Self-Declared Republic',
     analysis: {
       what: 'Somaliland declared independence from Somalia in 1991 and has operated as a de facto state ever since, with its own government, military, currency, and elections. Despite functioning democratic institutions and relative stability compared to southern Somalia, it lacks broad international recognition. Israel recognized Somaliland in 2025 as part of a strategic port access agreement. Ethiopia signed a memorandum of understanding for Red Sea access via Somaliland\'s Berbera port, angering Somalia.',
       why: 'Somaliland\'s strategic location on the Gulf of Aden makes its Berbera port valuable for military and commercial interests. Recognition by Israel and the Ethiopia port deal signal growing geopolitical relevance. Its stability contrasts sharply with Somalia\'s ongoing insurgency, raising questions about whether continued non-recognition serves regional interests.',

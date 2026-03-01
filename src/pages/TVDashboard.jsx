@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { COUNTRIES, FORECASTS, DAILY_BRIEFING, DAILY_BRIEFING_FALLBACK } from '../data/countries';
 import { RISK_COLORS } from '../utils/riskColors';
+import CountryFlag from '../components/CountryFlag';
 
 // ============================================================
 // Static Data for TV Display
@@ -194,7 +195,7 @@ function GlobeScreen({ globeRef }) {
             <div className="globe-stat-title">Critical Watchlist</div>
             {watchlist.map(([name, c]) => (
               <div key={name} className="globe-risk-row">
-                <span style={{ fontSize: 14 }}>{c.flag}</span>
+                <span style={{ fontSize: 14 }}><CountryFlag flag={c.flag} /></span>
                 <div className="globe-risk-name">{name}</div>
                 <div style={{ fontSize: 9, color: RISK_COLORS[c.risk]?.hex, fontWeight: 700, textTransform: 'uppercase' }}>{c.risk}</div>
               </div>
@@ -291,7 +292,7 @@ function HotspotsScreen() {
             <div className="risk-tier-countries">
               {countries.slice(0, 10).map(c => (
                 <div key={c.name} className="risk-country-chip" style={{ borderColor: (RISK_COLORS[c.risk]?.hex || '#3b82f6') + '66' }}>
-                  <span className="flag">{c.flag}</span>
+                  <span className="flag"><CountryFlag flag={c.flag} /></span>
                   {c.name}
                   <span style={{ fontSize: 8, color: RISK_COLORS[c.risk]?.hex, fontWeight: 700 }}>{c.risk.toUpperCase()}</span>
                 </div>
@@ -332,7 +333,7 @@ function RiskScreen() {
             <div className="risk-tier-countries">
               {tiers[risk].map(c => (
                 <div key={c.name} className="risk-country-chip">
-                  <span className="flag">{c.flag}</span>{c.name}
+                  <span className="flag"><CountryFlag flag={c.flag} /></span>{c.name}
                 </div>
               ))}
             </div>
@@ -351,7 +352,7 @@ function MarketsScreen() {
         {STOCKS_DATA.map((s, i) => (
           <div key={i} className="market-card">
             <div className="market-card-header">
-              <span className="market-flag">{s.flag}</span>
+              <span className="market-flag"><CountryFlag flag={s.flag} /></span>
               <div>
                 <div className="market-country">{s.country}</div>
                 <div className="market-sentiment">{s.sentiment}</div>

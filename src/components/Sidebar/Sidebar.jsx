@@ -9,6 +9,7 @@ import { scoreHeadlineNeutrality } from '../../services/eventsService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
+import CountryFlag from '../CountryFlag';
 
 const TABS = [
   { id: 'events', label: 'Events' },
@@ -426,7 +427,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           {RECENT_ELECTIONS.map((e, i) => (
             <div key={i} className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => handleCountryClick(e.country)}>
               <div className="election-header">
-                <span className="election-flag">{e.flag}</span>
+                <span className="election-flag"><CountryFlag flag={e.flag} /></span>
                 <span className="election-country">{e.country}</span>
                 <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
               </div>
@@ -442,7 +443,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         {ELECTIONS.map((e, i) => (
           <div key={i} className="election-card" style={{ borderLeft: '3px solid #f97316' }} onClick={() => handleCountryClick(e.country)}>
             <div className="election-header">
-              <span className="election-flag">{e.flag}</span>
+              <span className="election-flag"><CountryFlag flag={e.flag} /></span>
               <span className="election-country">{e.country}</span>
               <span className="election-date">{e.date}</span>
             </div>

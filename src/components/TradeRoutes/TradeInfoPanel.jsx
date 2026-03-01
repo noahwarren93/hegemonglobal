@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { COUNTRIES } from '../../data/countries';
 import { COUNTRY_TRADE_PROFILES } from '../../data/tradeData';
 import { TRADE_ROUTES } from './TradeRoutes';
+import CountryFlag from '../CountryFlag';
 
 export default function TradeInfoPanel({ country, isOpen, onClose }) {
   // Close on Escape
@@ -32,7 +33,7 @@ export default function TradeInfoPanel({ country, isOpen, onClose }) {
   return (
     <div className="trade-info-panel active">
       <div className="trade-info-header">
-        <div className="trade-info-title">{flag} {country} Trade</div>
+        <div className="trade-info-title"><CountryFlag flag={flag} /> {country} Trade</div>
         <button className="trade-info-close" onClick={onClose}>&times;</button>
       </div>
 
@@ -58,7 +59,7 @@ export default function TradeInfoPanel({ country, isOpen, onClose }) {
               const statusColor = r.status === 'healthy' ? '#22c55e' : r.status === 'sanctioned' ? '#ef4444' : '#f59e0b';
               return (
                 <div key={i} className="trade-partner-row">
-                  <span className="trade-partner-name">{pFlag} {partner}</span>
+                  <span className="trade-partner-name"><CountryFlag flag={pFlag} /> {partner}</span>
                   <span className="trade-partner-vol">${r.volume}B</span>
                   <span className="trade-partner-status" style={{ color: statusColor }}>
                     {r.status.toUpperCase()}
@@ -71,7 +72,7 @@ export default function TradeInfoPanel({ country, isOpen, onClose }) {
               const pFlag = COUNTRIES[partner] ? COUNTRIES[partner].flag : '';
               return (
                 <div key={i} className="trade-partner-row">
-                  <span className="trade-partner-name">{pFlag} {partner}</span>
+                  <span className="trade-partner-name"><CountryFlag flag={pFlag} /> {partner}</span>
                   <span className="trade-partner-status" style={{ color: '#22c55e', fontSize: '8px' }}>
                     PARTNER
                   </span>

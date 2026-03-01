@@ -2,6 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { useRef, useEffect } from 'react';
+import CountryFlag from '../CountryFlag';
 
 export function positionTooltip(el, cx, cy) {
   const offset = 15;
@@ -42,7 +43,7 @@ export default function Tooltip({ data, mousePos }) {
       {data && (
         <>
           <div className="tooltip-name">
-            {data.flag} {data.name}{' '}
+            <CountryFlag flag={data.flag} /> {data.name}{' '}
             <span className={`tooltip-risk risk-${data.risk}`}>
               {data.risk.toUpperCase()}
             </span>

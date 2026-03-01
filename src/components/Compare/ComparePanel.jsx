@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { COUNTRIES } from '../../data/countries';
 import { COMPARE_DATA } from '../../data/compareData';
 import { COUNTRY_DEMONYMS } from '../../services/apiService';
+import CountryFlag from '../CountryFlag';
 
 const COMPARE_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7'];
 
@@ -189,7 +190,7 @@ export default function ComparePanel({ isActive, countries, onClose, onAddCountr
                 className="compare-search-item"
                 onClick={() => handleSelectCountry(name)}
               >
-                {c.flag} {name}
+                <CountryFlag flag={c.flag} /> {name}
               </div>
             ))
           ) : searchQuery ? (
@@ -213,7 +214,7 @@ export default function ComparePanel({ isActive, countries, onClose, onAddCountr
                 border: '1px solid ' + COMPARE_COLORS[i]
               }}
             >
-              {c ? c.flag : ''} {name}
+              <CountryFlag flag={c ? c.flag : ''} /> {name}
               <button onClick={() => onRemoveCountry(name)}>&times;</button>
             </div>
           );

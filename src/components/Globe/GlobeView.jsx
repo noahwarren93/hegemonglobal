@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { COUNTRIES } from '../../data/countries';
 import { RISK_COLORS, CONFLICT_ZONES, addConflictZones, animateConflictZones } from '../../utils/riskColors';
 import Tooltip from './Tooltip';
+import { flagToHTML } from '../CountryFlag';
 
 // ============================================================
 // Exported helpers (pure functions, no component state needed)
@@ -114,7 +115,7 @@ const BORDER_DATA = {
 // ============================================================
 
 const DEFAULT_CAMERA_Z = 2.8;
-const DEFAULT_GLOBE_ROTATION = { x: 0, y: 2.34 };
+const DEFAULT_GLOBE_ROTATION = { x: 0.35, y: 2.27 };
 
 // ============================================================
 // GlobeView Component
@@ -285,6 +286,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     });
 
     const globe = new THREE.Mesh(earthGeom, earthMat);
+    globe.rotation.x = DEFAULT_GLOBE_ROTATION.x;
     globe.rotation.y = DEFAULT_GLOBE_ROTATION.y;
     scene.add(globe);
     globeRef.current = globe;
@@ -703,8 +705,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     window.showTradeRouteTooltip = (route, x, y) => {
       const tt = tradeTooltipRef.current;
       if (!tt) return;
-      const fromFlag = COUNTRIES[route.from] ? COUNTRIES[route.from].flag : '';
-      const toFlag = COUNTRIES[route.to] ? COUNTRIES[route.to].flag : '';
+      const fromFlag = flagToHTML(COUNTRIES[route.from] ? COUNTRIES[route.from].flag : '');
+      const toFlag = flagToHTML(COUNTRIES[route.to] ? COUNTRIES[route.to].flag : '');
       const statusColor = route.status === 'healthy' ? '#22c55e' : route.status === 'sanctioned' ? '#ef4444' : '#f59e0b';
       tt.innerHTML =
         '<div style="font-size:12px;font-weight:700;margin-bottom:6px;">' + fromFlag + ' ' + route.from + ' ↔ ' + toFlag + ' ' + route.to + '</div>' +

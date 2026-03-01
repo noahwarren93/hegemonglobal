@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA } from '../../data/countries';
 import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
+import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
 export default function CountryModal({ countryName, isOpen, onClose }) {
@@ -67,7 +68,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       <div className="modal">
         {/* Header */}
         <div className="modal-header">
-          <span className="modal-flag">{country.flag}</span>
+          <span className="modal-flag"><CountryFlag flag={country.flag} /></span>
           <div className="modal-titles">
             <div className="modal-title">
               <span>{countryName}</span>

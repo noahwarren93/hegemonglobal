@@ -1,6 +1,7 @@
 // StocksTab.jsx - Compact stock market sidebar tab
 
 import { getMarketStatus } from '../../services/stocksService';
+import CountryFlag from '../CountryFlag';
 
 export default function StocksTab({ onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating }) {
   if (!stocksData) {
@@ -43,7 +44,7 @@ export default function StocksTab({ onOpenStocksModal, stocksData, stocksLastUpd
           >
             {/* Country header with market status */}
             <div className="stocks-country-header">
-              <span className="stocks-country-flag">{market.flag}</span>
+              <span className="stocks-country-flag"><CountryFlag flag={market.flag} /></span>
               <span className="stocks-country-name" style={{ flex: 1 }}>{market.country}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '8px', color: status.isOpen ? '#22c55e' : '#6b7280' }}>
                 <span style={{
