@@ -115,7 +115,7 @@ const BORDER_DATA = {
 // ============================================================
 
 const DEFAULT_CAMERA_Z = 2.8;
-const DEFAULT_GLOBE_ROTATION = { x: 0.35, y: 2.27 };
+const DEFAULT_GLOBE_ROTATION = { x: 0.35, y: -2.27 };
 
 // ============================================================
 // GlobeView Component
