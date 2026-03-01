@@ -930,7 +930,9 @@ async function fetchPreGeneratedEvents() {
     for (const event of data.events) {
       DAILY_EVENTS.push({
         ...event,
-        time: timeAgo(event.pubDate),
+        headline: event.headline || event.title || 'Breaking News',
+        category: event.category || 'CONFLICT',
+        time: event.time || timeAgo(event.pubDate),
         summaryLoading: false,
         summaryError: !event.summary,
         articles: (event.articles || []).map(a => ({

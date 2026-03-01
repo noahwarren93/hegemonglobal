@@ -121,7 +121,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderEventCard = (event, isTopStory) => {
     // Clean up headline for display — keep it SHORT
-    let displayHeadline = event.headline;
+    let displayHeadline = event.headline || event.title || '';
     const dashIdx = displayHeadline.lastIndexOf(' - ');
     if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
       displayHeadline = displayHeadline.substring(0, dashIdx).trim();
@@ -276,7 +276,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, []);
 
   const renderBreakingCard = (event) => {
-    let displayHeadline = event.headline;
+    let displayHeadline = event.headline || event.title || 'Breaking News';
     const dashIdx = displayHeadline.lastIndexOf(' - ');
     if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
       displayHeadline = displayHeadline.substring(0, dashIdx).trim();
