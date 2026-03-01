@@ -283,8 +283,6 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return top.slice(0, 4);
   }, []);
 
-  const [breakingExpanded, setBreakingExpanded] = useState(false);
-
   const WAR_TIMELINE = [
     { time: 'Latest', text: 'IRGC threatens "most intense offensive operation" targeting Israel and US bases' },
     { time: '1h ago', text: 'Iran launches retaliatory strikes on Saudi Arabia, UAE, Qatar, Bahrain, Kuwait' },
@@ -303,78 +301,45 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Expect: sustained Iranian missile salvos against Gulf states, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia ground attacks on US positions. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
 
-  const renderBreakingBanner = () => {
-    const previewTimeline = breakingExpanded ? WAR_TIMELINE : WAR_TIMELINE.slice(0, 3);
+  const openBreakingModal = () => {
+    const syntheticEvent = {
+      id: 'breaking-iran-war',
+      headline: 'US and Israel at War with Iran',
+      category: 'CONFLICT',
+      breaking: true,
+      time: 'Feb 28, 2026',
+      warIntel: WAR_INTEL,
+      warTimeline: WAR_TIMELINE,
+      articles: [],
+    };
+    setSelectedEvent(syntheticEvent);
+  };
+
+  const renderBreakingCard = () => {
+    const preview = 'US and Israel launched coordinated strikes on Iran in operations "Epic Fury" and "Roaring Lion." Khamenei confirmed killed. IRGC retaliating across the Gulf.';
 
     return (
       <div
-        key="breaking-war-banner"
-        onClick={() => setBreakingExpanded(prev => !prev)}
-        style={{
-          cursor: 'pointer',
-          borderLeft: '3px solid #dc2626',
-          background: 'linear-gradient(135deg, rgba(127,29,29,0.25) 0%, rgba(17,24,39,0.95) 100%)',
-          padding: '12px',
-          marginBottom: '10px',
-          borderRadius: '6px',
-        }}
+        key="breaking-war-card"
+        className="card"
+        onClick={openBreakingModal}
+        style={{ cursor: 'pointer', borderLeft: '3px solid #dc2626' }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div className="card-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{
               fontSize: '8px', fontWeight: 800, color: '#fff', background: '#dc2626',
               padding: '2px 6px', borderRadius: '3px', letterSpacing: '1px'
             }}>BREAKING</span>
-            <span style={{ fontSize: '8px', fontWeight: 700, color: '#06b6d4', background: 'rgba(6,182,212,0.15)', padding: '2px 5px', borderRadius: '3px' }}>LIVE UPDATES</span>
+            <span className="card-cat CONFLICT">CONFLICT</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '9px', color: '#6b7280' }}>Feb 28, 2026</span>
-            <span style={{ fontSize: '10px', color: '#6b7280', transform: breakingExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>{'\u25BC'}</span>
-          </div>
+          <span className="card-time">Feb 28, 2026</span>
         </div>
-
-        {/* Main Headline */}
-        <div style={{ fontSize: '15px', fontWeight: 800, color: '#fca5a5', lineHeight: 1.3, marginBottom: breakingExpanded ? '14px' : '10px', letterSpacing: '0.3px' }}>
+        <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
           US and Israel at War with Iran
         </div>
-
-        {/* Expanded: Intelligence Summary first */}
-        {breakingExpanded && (
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '10px', textTransform: 'uppercase' }}>Intelligence Summary</div>
-
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', letterSpacing: '0.3px' }}>WHAT HAPPENED: </span>
-              <span style={{ fontSize: '10px', color: '#d1d5db', lineHeight: 1.6 }}>{WAR_INTEL.what}</span>
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', letterSpacing: '0.3px' }}>WHY IT MATTERS: </span>
-              <span style={{ fontSize: '10px', color: '#d1d5db', lineHeight: 1.6 }}>{WAR_INTEL.why}</span>
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', letterSpacing: '0.3px' }}>OUTLOOK: </span>
-              <span style={{ fontSize: '10px', color: '#d1d5db', lineHeight: 1.6 }}>{WAR_INTEL.outlook}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Timeline */}
-        <div style={{ borderTop: breakingExpanded ? '1px solid #1f293766' : 'none', paddingTop: breakingExpanded ? '10px' : 0 }}>
-          {breakingExpanded && (
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '10px', textTransform: 'uppercase' }}>Live Timeline</div>
-          )}
-          <div style={{ borderLeft: '2px solid #dc262666', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {previewTimeline.map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '8px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '38px', flexShrink: 0, paddingTop: '1px' }}>{item.time}</span>
-                <span style={{ fontSize: '10px', color: i === 0 ? '#fca5a5' : '#d1d5db', lineHeight: 1.4 }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-          {!breakingExpanded && (
-            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '8px', textAlign: 'center' }}>Tap to expand full briefing</div>
-          )}
+        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
+          {preview}
         </div>
       </div>
     );
@@ -401,13 +366,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* Breaking News Banner */}
+        {/* Breaking News */}
         {breakingEvents.length > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
             </div>
-            {renderBreakingBanner()}
+            {renderBreakingCard()}
           </>
         )}
 

@@ -65,7 +65,8 @@ export default function EventModal({ event, isOpen, onClose }) {
 
   if (!isOpen || !event) return null;
 
-  const borderColor = CAT_BORDER[event.category] || '#374151';
+  const isBreaking = !!event.breaking;
+  const borderColor = isBreaking ? '#dc2626' : (CAT_BORDER[event.category] || '#374151');
   const { headline: displayHeadline } = cleanHeadline(event.headline, '');
 
   return (
@@ -75,6 +76,12 @@ export default function EventModal({ event, isOpen, onClose }) {
         <div className="modal-header" style={{ padding: '16px 20px', borderLeft: `3px solid ${borderColor}` }}>
           <div className="modal-titles" style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              {isBreaking && (
+                <span style={{
+                  fontSize: '8px', fontWeight: 800, color: '#fff', background: '#dc2626',
+                  padding: '2px 6px', borderRadius: '3px', letterSpacing: '1px'
+                }}>BREAKING</span>
+              )}
               <span className={`card-cat ${event.category}`}>{event.category}</span>
               {event.sourceCount > 1 && (
                 <span style={{
@@ -87,7 +94,7 @@ export default function EventModal({ event, isOpen, onClose }) {
               )}
               <span style={{ fontSize: '9px', color: '#6b7280', marginLeft: 'auto' }}>{event.time}</span>
             </div>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: '#e5e7eb', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: isBreaking ? '#fca5a5' : '#e5e7eb', lineHeight: 1.4 }}>
               {displayHeadline}
             </div>
           </div>
@@ -96,8 +103,43 @@ export default function EventModal({ event, isOpen, onClose }) {
 
         {/* Body */}
         <div className="modal-body" style={{ padding: '16px 20px' }}>
-          {/* AI Summary */}
-          {event.summaryLoading ? (
+          {/* Breaking event: Intelligence Summary + Timeline */}
+          {isBreaking && event.warIntel && (
+            <>
+              <div style={{ padding: '12px 14px', background: '#0d0d14', borderRadius: '8px', borderLeft: '2px solid rgba(6,182,212,0.3)', marginBottom: '16px' }}>
+                <div style={{ fontSize: '9px', color: '#06b6d4', fontWeight: 600, letterSpacing: '0.5px', marginBottom: '10px', textTransform: 'uppercase' }}>Intelligence Summary</div>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>What happened: </span>
+                  <span style={{ fontSize: '12px', color: '#d1d5db', lineHeight: 1.7 }}>{event.warIntel.what}</span>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Why it matters: </span>
+                  <span style={{ fontSize: '12px', color: '#d1d5db', lineHeight: 1.7 }}>{event.warIntel.why}</span>
+                </div>
+                <div>
+                  <span style={{ fontWeight: 700, color: '#06b6d4', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Outlook: </span>
+                  <span style={{ fontSize: '12px', color: '#d1d5db', lineHeight: 1.7 }}>{event.warIntel.outlook}</span>
+                </div>
+              </div>
+
+              {event.warTimeline && event.warTimeline.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '10px' }}>Live Timeline</div>
+                  <div style={{ borderLeft: '2px solid #dc262666', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {event.warTimeline.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <span style={{ fontSize: '9px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '42px', flexShrink: 0, paddingTop: '1px' }}>{item.time}</span>
+                        <span style={{ fontSize: '11px', color: i === 0 ? '#fca5a5' : '#d1d5db', lineHeight: 1.5 }}>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Normal event: AI Summary */}
+          {!isBreaking && event.summaryLoading ? (
             <div style={{ padding: '12px 14px', background: '#0d0d14', borderRadius: '8px', borderLeft: '2px solid rgba(6,182,212,0.3)', marginBottom: '16px' }}>
               <div style={{ fontSize: '9px', color: '#06b6d4', fontWeight: 600, letterSpacing: '0.5px', marginBottom: '6px', textTransform: 'uppercase' }}>Intelligence Summary</div>
               <div style={{ fontSize: '10px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -105,7 +147,7 @@ export default function EventModal({ event, isOpen, onClose }) {
                 Generating AI summary...
               </div>
             </div>
-          ) : event.summary ? (
+          ) : !isBreaking && event.summary ? (
             <div style={{ padding: '12px 14px', background: '#0d0d14', borderRadius: '8px', borderLeft: '2px solid rgba(6,182,212,0.3)', marginBottom: '16px' }}>
               <div style={{ fontSize: '9px', color: '#06b6d4', fontWeight: 600, letterSpacing: '0.5px', marginBottom: '6px', textTransform: 'uppercase' }}>Intelligence Summary</div>
               <div style={{ fontSize: '12px', color: '#d1d5db', lineHeight: 1.7 }}>
