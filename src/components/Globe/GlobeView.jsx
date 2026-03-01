@@ -114,7 +114,7 @@ const BORDER_DATA = {
 // ============================================================
 
 const DEFAULT_CAMERA_Z = 2.8;
-const DEFAULT_GLOBE_ROTATION = { x: 0, y: 0 };
+const DEFAULT_GLOBE_ROTATION = { x: 0, y: 2.34 };
 
 // ============================================================
 // GlobeView Component
@@ -138,7 +138,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const isDraggingRef = useRef(false);
   const prevMouseRef = useRef({ x: 0, y: 0 });
   const clickStartRef = useRef({ x: 0, y: 0 });
-  const autoRotateRef = useRef(true);
+  const autoRotateRef = useRef(false);
   const touchStartRef = useRef({ x: 0, y: 0 });
   const isPinchingRef = useRef(false);
   const lastPinchDistRef = useRef(0);
@@ -285,6 +285,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     });
 
     const globe = new THREE.Mesh(earthGeom, earthMat);
+    globe.rotation.y = DEFAULT_GLOBE_ROTATION.y;
     scene.add(globe);
     globeRef.current = globe;
 

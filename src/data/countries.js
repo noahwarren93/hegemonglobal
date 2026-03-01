@@ -134,6 +134,18 @@ export const COUNTRIES = {
     ]
   },
 
+  'Somaliland': { lat: 9.56, lng: 44.06, flag: '🏴', risk: 'stormy', region: 'Africa', pop: '4.5M', gdp: '$2.5B', leader: 'Muse Bihi Abdi', title: 'Self-Declared Republic',
+    analysis: {
+      what: 'Somaliland declared independence from Somalia in 1991 and has operated as a de facto state ever since, with its own government, military, currency, and elections. Despite functioning democratic institutions and relative stability compared to southern Somalia, it lacks broad international recognition. Israel recognized Somaliland in 2025 as part of a strategic port access agreement. Ethiopia signed a memorandum of understanding for Red Sea access via Somaliland\'s Berbera port, angering Somalia.',
+      why: 'Somaliland\'s strategic location on the Gulf of Aden makes its Berbera port valuable for military and commercial interests. Recognition by Israel and the Ethiopia port deal signal growing geopolitical relevance. Its stability contrasts sharply with Somalia\'s ongoing insurgency, raising questions about whether continued non-recognition serves regional interests.',
+      next: 'Watch for: broader international recognition momentum following Israel\'s move, Ethiopia port deal implementation, Somalia\'s response, and whether Somaliland\'s democratic model can sustain itself without formal statehood. The AU and UN remain reluctant to redraw colonial borders.'
+    },
+    news: [
+      { source: 'BBC', bias: 'center-left', time: '4h ago', headline: 'Somaliland seeks broader recognition after Israel deal', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '8h ago', headline: 'Ethiopia-Somaliland port agreement advances', url: '#' }
+    ]
+  },
+
   // ==================== EXTREME ====================
   'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'State of Emergency — Strikes on Iran',
     analysis: {
@@ -1023,6 +1035,18 @@ export const COUNTRIES = {
     ]
   },
 
+  'Western Sahara': { lat: 24.22, lng: -12.89, flag: '🇪🇭', risk: 'stormy', region: 'North Africa', pop: '600K', gdp: '$1B', leader: 'Disputed (Morocco administers / SADR president Brahim Ghali)', title: 'Disputed Territory',
+    analysis: {
+      what: 'Western Sahara is a non-self-governing territory claimed by both Morocco, which controls most of the land, and the Polisario Front\'s Sahrawi Arab Democratic Republic (SADR). Morocco built a 2,700km sand berm dividing the territory. The US recognized Moroccan sovereignty in 2020, and France followed in 2024. The UN mission MINURSO monitors the ceasefire but has no human rights mandate. The Polisario ended its 1991 ceasefire in 2020 after Morocco moved into the Guerguerat buffer zone.',
+      why: 'Western Sahara is the last major decolonization issue in Africa. Its phosphate reserves and Atlantic fisheries are economically significant. The dispute has frozen Algeria-Morocco relations and blocked regional integration. The question of self-determination versus territorial integrity has broader implications for international law.',
+      next: 'Watch for: continued momentum of international recognition of Moroccan sovereignty, Polisario military activity along the berm, Algeria\'s response to shifting diplomacy, and whether the UN can revive a political process. The conflict appears to be tilting decisively in Morocco\'s favor.'
+    },
+    news: [
+      { source: 'Reuters', bias: 'center', time: '3h ago', headline: 'More European states lean toward Morocco sovereignty', url: '#' },
+      { source: 'AP', bias: 'center', time: '7h ago', headline: 'MINURSO mandate renewal debates continue', url: '#' }
+    ]
+  },
+
   'Senegal': { lat: 14.50, lng: -14.45, flag: '🇸🇳', risk: 'cloudy', region: 'Africa', pop: '18M', gdp: '$28B', leader: 'Bassirou Faye', title: 'Democratic Transition',
     analysis: {
       what: 'Senegal achieved a remarkable democratic transition when opposition candidate Bassirou Faye won the presidency after his predecessor\'s attempt to delay elections failed. The new government promises anti-corruption reforms. Oil and gas production is beginning. The country remains West Africa\'s most stable democracy.',
@@ -1306,7 +1330,7 @@ export const COUNTRIES = {
   'Montenegro': { lat: 42.44, lng: 19.26, flag: '🇲🇪', risk: 'cloudy', region: 'Europe', pop: '620K', gdp: '$7B', leader: 'Milatović', title: 'NATO Member', analysis: { what: 'Montenegro joined NATO in 2017 and seeks EU membership. Russian influence and investment has been significant.', why: 'NATO membership despite Russian pressure was notable. EU frontrunner in Western Balkans.', next: 'Advancing EU accession while managing influences.' }, news: [{ source: 'Vijesti', bias: 'center', time: '5h ago', headline: 'EU accession talks progress', url: '#' }] },
   'Kosovo': { lat: 42.57, lng: 20.90, flag: '🇽🇰', risk: 'stormy', region: 'Europe', pop: '1.8M', gdp: '$10B', leader: 'Osmani', title: 'Disputed Territory', analysis: { what: 'Kosovo declared independence from Serbia in 2008 but is not universally recognized. Tensions with Serbia remain high.', why: 'Serbia-Kosovo tensions risk regional instability. Recognition dispute affects international participation.', next: 'Normalizing Serbia relations remains key.' }, news: [{ source: 'Prishtina Insight', bias: 'center', time: '4h ago', headline: 'EU-mediated talks with Serbia resume', url: '#' }] },
   'Bosnia and Herzegovina': { lat: 43.92, lng: 17.68, flag: '🇧🇦', risk: 'stormy', region: 'Europe', pop: '3.2M', gdp: '$28B', leader: 'Bećirović', title: 'Complex State', analysis: { what: 'Bosnia\'s Dayton Agreement structure creates dysfunction. Republika Srpska leader Dodik threatens secession.', why: 'Secession threats risk renewed conflict. EU path blocked by political dysfunction.', next: 'Preventing further fragmentation.' }, news: [{ source: 'Klix', bias: 'center', time: '5h ago', headline: 'Political tensions remain high', url: '#' }] },
-  'Cyprus': { lat: 35.17, lng: 33.36, flag: '🇨🇾', risk: 'cloudy', region: 'Europe', pop: '1.3M', gdp: '$32B', leader: 'Christodoulides', title: 'Divided Island', analysis: { what: 'Cyprus remains divided between Greek south and Turkish-occupied north. Reunification talks have repeatedly failed.', why: 'Division affects EU-Turkey relations. Gas discoveries in eastern Mediterranean raise stakes.', next: 'Reunification prospects remain dim.' }, news: [{ source: 'Cyprus Mail', bias: 'center', time: '6h ago', headline: 'Reunification talks show no progress', url: '#' }] },
+  'Cyprus': { lat: 35.17, lng: 33.36, flag: '🇨🇾', risk: 'cloudy', region: 'Europe', pop: '1.3M', gdp: '$32B', leader: 'Christodoulides', title: 'Divided Island', analysis: { what: 'Cyprus remains divided between Greek south and Turkish-occupied north. Reunification talks have repeatedly failed. During the 2026 US-Israeli strikes on Iran, Iranian retaliatory missiles landed in and near Cypriot territory, raising alarm about the island\'s proximity to Middle Eastern conflict zones.', why: 'Division affects EU-Turkey relations. Gas discoveries in eastern Mediterranean raise stakes.', next: 'Reunification prospects remain dim.' }, news: [{ source: 'Cyprus Mail', bias: 'center', time: '6h ago', headline: 'Reunification talks show no progress', url: '#' }] },
   'Bulgaria': { lat: 42.73, lng: 25.49, flag: '🇧🇬', risk: 'cloudy', region: 'Europe', pop: '6.5M', gdp: '$100B', leader: 'Zhelezkov', title: 'EU Member', analysis: { what: 'Bulgaria has faced repeated political instability with multiple elections. Corruption remains endemic.', why: 'Poorest EU member struggles with rule of law. Russian influence historically significant.', next: 'Achieving political stability.' }, news: [{ source: 'Novinite', bias: 'center', time: '5h ago', headline: 'Political negotiations continue', url: '#' }] },
   'Slovakia': { lat: 48.67, lng: 19.70, flag: '🇸🇰', risk: 'cloudy', region: 'Europe', pop: '5.4M', gdp: '$133B', leader: 'Fico', title: 'EU Dissent', analysis: { what: 'PM Fico returned to power with pro-Russian rhetoric and opposition to Ukraine aid. Assassination attempt in 2024 shocked the country.', why: 'Breaking EU consensus on Ukraine matters. Rule of law concerns affect EU relations.', next: 'Watching democratic trajectory.' }, news: [{ source: 'SME', bias: 'center', time: '4h ago', headline: 'Government faces EU criticism', url: '#' }] },
   'Cameroon': { lat: 5.95, lng: 10.15, flag: '🇨🇲', risk: 'severe', region: 'Africa', pop: '28M', gdp: '$46B', leader: 'Biya', title: 'Anglophone Crisis', analysis: { what: 'President Biya has ruled since 1982. Anglophone regions face violent separatist conflict.', why: 'Anglophone crisis has killed thousands and displaced millions. Biya\'s age creates succession uncertainty.', next: 'Succession planning is overdue.' }, news: [{ source: 'Journal du Cameroun', bias: 'center', time: '5h ago', headline: 'Anglophone crisis continues', url: '#' }] },
@@ -1471,7 +1495,7 @@ export const NEWSLETTER_REGIONS = {
   'Europe': ['Ukraine', 'Russia', 'Belarus', 'Moldova', 'Poland', 'Romania', 'Hungary', 'Balkans', 'UK', 'Britain', 'France', 'Germany', 'Italy', 'Spain', 'NATO', 'EU', 'European', 'Serbia', 'Kosovo', 'Greece', 'Turkey', 'Ankara', 'Istanbul', 'Sweden', 'Finland', 'Norway', 'Denmark', 'Greenland', 'Arctic', 'Netherlands', 'Belgium', 'Austria', 'Switzerland', 'Czech', 'Slovakia', 'Croatia', 'Bulgaria', 'Portugal', 'Ireland'],
   'Asia': ['China', 'Taiwan', 'Japan', 'Korea', 'North Korea', 'South Korea', 'Hong Kong', 'Myanmar', 'Thailand', 'Vietnam', 'Philippines', 'Indonesia', 'Malaysia', 'Singapore', 'Cambodia', 'Laos', 'India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Afghanistan', 'Kabul', 'Delhi', 'Mumbai', 'Beijing', 'Tokyo', 'Seoul', 'Pyongyang', 'Manila', 'Jakarta', 'Bangkok'],
   'Middle East': ['Israel', 'Palestine', 'Gaza', 'Iran', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'UAE', 'Qatar', 'Jordan', 'Egypt', 'Houthi', 'Hezbollah', 'Tehran', 'Baghdad', 'Damascus', 'Beirut', 'Riyadh', 'Dubai', 'Oman', 'Bahrain', 'Kuwait'],
-  'Africa': ['Sudan', 'Somalia', 'Ethiopia', 'DRC', 'Congo', 'Nigeria', 'Kenya', 'South Africa', 'Mali', 'Niger', 'Burkina', 'Sahel', 'Libya', 'Algeria', 'Morocco', 'Tunisia', 'Mozambique', 'Rwanda', 'Uganda', 'Tanzania', 'Ghana', 'Senegal', 'Cameroon', 'Zimbabwe', 'Eritrea'],
+  'Africa': ['Sudan', 'Somalia', 'Somaliland', 'Ethiopia', 'DRC', 'Congo', 'Nigeria', 'Kenya', 'South Africa', 'Mali', 'Niger', 'Burkina', 'Sahel', 'Libya', 'Algeria', 'Morocco', 'Western Sahara', 'Tunisia', 'Mozambique', 'Rwanda', 'Uganda', 'Tanzania', 'Ghana', 'Senegal', 'Cameroon', 'Zimbabwe', 'Eritrea'],
   'Americas': ['United States', 'US', 'Brazil', 'Mexico', 'Venezuela', 'Colombia', 'Argentina', 'Haiti', 'Cuba', 'Canada', 'Chile', 'Peru', 'Ecuador', 'Bolivia', 'Panama', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Dominican', 'Puerto Rico', 'Washington', 'Congress', 'White House']
 };
 
@@ -2796,6 +2820,7 @@ export const COUNTRY_DEMONYMS = {
     'Mongolia': ['mongolian', 'ulaanbaatar'],
     'Montenegro': ['montenegrin', 'podgorica'],
     'Morocco': ['moroccan', 'rabat', 'casablanca'],
+    'Western Sahara': ['sahrawi', 'polisario', 'laayoune', 'tifariti', 'minurso', 'sadr'],
     'Mozambique': ['mozambican', 'maputo'],
     'Myanmar': ['burmese', 'myanmar', 'yangon', 'junta'],
     'Namibia': ['namibian', 'windhoek'],
@@ -2840,6 +2865,7 @@ export const COUNTRY_DEMONYMS = {
     'Slovenia': ['slovenian', 'ljubljana'],
     'Solomon Islands': ['solomon islander', 'honiara'],
     'Somalia': ['somali', 'mogadishu'],
+    'Somaliland': ['somalilander', 'hargeisa', 'somaliland'],
     'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town'],
     'South Korea': ['south korean', 'seoul', 'korean'],
     'South Sudan': ['south sudanese', 'juba'],
