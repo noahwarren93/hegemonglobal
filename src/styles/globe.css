@@ -2,6 +2,8 @@
 
     .globe-container { flex: 1; position: relative; }
 
+    .mobile-feature-btns { display: none; }
+
     #globe { width: 100%; height: 100%; touch-action: none; }
 
     /* Globe controls moved to trade-routes.css (.globe-tools, .globe-tool-btn) */
