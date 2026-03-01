@@ -179,8 +179,16 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: up to 4, fixed order — Iran handled by BREAKING, so skip it here
+  // Top Stories: up to 4, fixed order — Iran war covered by BREAKING banner
   const getStableTopStories = useCallback((events) => {
+    // Filter out Iran/Gulf war events — those belong in the breaking banner
+    const IRAN_WAR_KEYWORDS = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi'];
+    const isIranWar = (e) => {
+      const text = ((e.headline || '') + ' ' + (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+      return IRAN_WAR_KEYWORDS.some(kw => text.includes(kw));
+    };
+    const filtered = events.filter(e => !isIranWar(e));
+
     const PRIORITY = [
       {
         countries: ['ukraine', 'russia'],
@@ -190,10 +198,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         fallback: null,
       },
       {
-        countries: ['lebanon'],
-        keywords: ['lebanon', 'lebanese', 'beirut', 'hezbollah'],
-        boost: ['hezbollah', 'retaliation', 'rocket', 'missile', 'strike', 'attack', 'war', 'iran'],
-        penalize: ['reform', 'bank', 'currency'],
+        countries: ['pakistan', 'afghanistan'],
+        keywords: ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'islamabad', 'kabul'],
+        boost: ['taliban', 'killed', 'strike', 'offensive', 'military', 'border', 'operation'],
+        penalize: ['cricket', 'flood'],
         fallback: null,
       },
       {
@@ -246,7 +254,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     };
 
     // Sort by source count descending
-    const sorted = [...events].sort((a, b) => b.sourceCount - a.sourceCount);
+    const sorted = [...filtered].sort((a, b) => b.sourceCount - a.sourceCount);
     const top = [];
     const usedIds = new Set();
 
@@ -275,51 +283,66 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return top.slice(0, 4);
   }, []);
 
-  const renderBreakingCard = (event) => {
-    let displayHeadline = event.headline || event.title || 'Breaking News';
-    const dashIdx = displayHeadline.lastIndexOf(' - ');
-    if (dashIdx > 0 && dashIdx > displayHeadline.length - 40) {
-      displayHeadline = displayHeadline.substring(0, dashIdx).trim();
-    }
-    const preview = getCardPreview(event);
+  const WAR_TIMELINE = [
+    { time: 'Latest', text: 'IRGC threatens "most intense offensive operation" targeting Israel and US bases' },
+    { time: '1h ago', text: 'Iran launches retaliatory strikes on Saudi Arabia, UAE, Qatar, Bahrain, Kuwait' },
+    { time: '2h ago', text: 'Khamenei confirmed killed in Israeli strike on Tehran compound \u2014 40+ senior officials also killed' },
+    { time: '2h ago', text: 'Jordan intercepts 49 Iranian drones and ballistic missiles' },
+    { time: '3h ago', text: 'Iran retaliates with hundreds of missiles and drones' },
+    { time: '4h ago', text: 'Strikes hit 24 of 31 Iranian provinces \u2014 200+ killed' },
+    { time: '4h ago', text: 'Israel declares state of emergency, sirens across the country' },
+    { time: '5h ago', text: 'Operation "Epic Fury" (US) and "Roaring Lion" (Israel) launched at 9:45 AM Iran time' },
+    { time: '6h ago', text: 'Trump announces strikes aimed at regime change in 8-minute video' },
+  ];
+
+  const renderBreakingBanner = (breakingEvents) => {
+    const event = breakingEvents[0];
+    const summary = event ? (event.summary || '') : '';
 
     return (
       <div
-        key={event.id}
-        className="card"
-        onClick={() => setSelectedEvent(event)}
+        key="breaking-war-banner"
         style={{
-          cursor: 'pointer',
           borderLeft: '3px solid #ef4444',
-          background: 'linear-gradient(135deg, rgba(127,29,29,0.3) 0%, rgba(17,24,39,0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(127,29,29,0.35) 0%, rgba(17,24,39,0.95) 100%)',
           animation: 'breakingPulse 2s ease-in-out infinite',
+          padding: '12px',
+          marginBottom: '10px',
+          borderRadius: '6px',
         }}
       >
-        <div className="card-header">
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{
               fontSize: '8px', fontWeight: 800, color: '#fff', background: '#dc2626',
               padding: '2px 6px', borderRadius: '3px', letterSpacing: '1px', animation: 'breakingBlink 1s step-end infinite'
             }}>BREAKING</span>
-            <span className={`card-cat ${event.category}`}>{event.category}</span>
-            {event.sourceCount > 1 && (
-              <span style={{
-                fontSize: '7px', fontWeight: 700, color: '#06b6d4',
-                background: 'rgba(6,182,212,0.15)', padding: '2px 5px',
-                borderRadius: '3px', letterSpacing: '0.3px'
-              }}>
-                {event.sourceCount} sources
-              </span>
-            )}
+            <span style={{ fontSize: '8px', fontWeight: 700, color: '#06b6d4', background: 'rgba(6,182,212,0.15)', padding: '2px 5px', borderRadius: '3px' }}>LIVE UPDATES</span>
           </div>
-          <span className="card-time">{event.time || 'Just now'}</span>
+          <span style={{ fontSize: '9px', color: '#6b7280' }}>Feb 28, 2026</span>
         </div>
-        <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
-          {displayHeadline}
+
+        {/* Main Headline */}
+        <div style={{ fontSize: '15px', fontWeight: 800, color: '#fca5a5', lineHeight: 1.3, marginBottom: '12px', letterSpacing: '0.3px' }}>
+          US and Israel at War with Iran
         </div>
-        {preview && (
-          <div style={{ fontSize: '10px', color: '#d1d5db', marginTop: '3px', lineHeight: 1.5 }}>
-            {preview}
+
+        {/* Timeline */}
+        <div style={{ borderLeft: '2px solid #dc262666', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+          {WAR_TIMELINE.map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '8px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '38px', flexShrink: 0, paddingTop: '1px' }}>{item.time}</span>
+              <span style={{ fontSize: '10px', color: i === 0 ? '#fca5a5' : '#d1d5db', lineHeight: 1.4 }}>{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Intelligence Summary */}
+        {summary && (
+          <div style={{ borderTop: '1px solid #1f293766', paddingTop: '8px' }}>
+            <div style={{ fontSize: '8px', fontWeight: 700, color: '#6b7280', letterSpacing: '1px', marginBottom: '4px' }}>INTELLIGENCE SUMMARY</div>
+            <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.5 }}>{summary}</div>
           </div>
         )}
       </div>
@@ -347,13 +370,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* Breaking Events */}
+        {/* Breaking News Banner */}
         {breakingEvents.length > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px', animation: 'breakingBlink 1s step-end infinite' }}>BREAKING NEWS</span>
             </div>
-            {breakingEvents.map(event => renderBreakingCard(event))}
+            {renderBreakingBanner(breakingEvents)}
           </>
         )}
 
