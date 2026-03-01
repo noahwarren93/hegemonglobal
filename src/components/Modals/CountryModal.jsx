@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA } from '../../data/countries';
-import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity } from '../../utils/riskColors';
+import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity, timeAgo } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
@@ -143,7 +143,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                           </span>
                         )}
                       </span>
-                      <span className="news-time">{n.time}</span>
+                      <span className="news-time">{timeAgo(n.time)}</span>
                     </div>
                     <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
                     <div className="news-headline">{displayHeadline}</div>

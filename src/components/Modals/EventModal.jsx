@@ -1,7 +1,7 @@
 // EventModal.jsx - Event detail modal with AI summary and source list
 
 import { useEffect } from 'react';
-import { renderBiasTag, getStateMediaLabel } from '../../utils/riskColors';
+import { renderBiasTag, getStateMediaLabel, timeAgo } from '../../utils/riskColors';
 
 const CAT_BORDER = {
   CONFLICT: '#ef4444', CRISIS: '#f97316', SECURITY: '#eab308',
@@ -128,7 +128,7 @@ export default function EventModal({ event, isOpen, onClose }) {
                   <div style={{ borderLeft: '2px solid #dc262666', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {event.warTimeline.map((item, i) => (
                       <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: '9px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '42px', flexShrink: 0, paddingTop: '1px' }}>{item.time}</span>
+                        <span style={{ fontSize: '9px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '52px', flexShrink: 0, paddingTop: '1px' }}>{timeAgo(item.time)}</span>
                         <span style={{ fontSize: '11px', color: i === 0 ? '#fca5a5' : '#d1d5db', lineHeight: 1.5 }}>{item.text}</span>
                       </div>
                     ))}

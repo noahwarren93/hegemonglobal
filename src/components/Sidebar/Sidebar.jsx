@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
-import { RISK_COLORS } from '../../utils/riskColors';
+import { RISK_COLORS, timeAgo } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated } from '../../services/apiService';
 import { scoreHeadlineNeutrality } from '../../services/eventsService';
@@ -285,19 +285,24 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, []);
 
   const WAR_TIMELINE = [
-    { time: 'Latest', text: 'IRGC threatens "most intense offensive operation" targeting Israel and US bases' },
-    { time: '1h ago', text: 'Iran launches retaliatory strikes on Saudi Arabia, UAE, Qatar, Bahrain, Kuwait' },
-    { time: '2h ago', text: 'Khamenei confirmed killed in Israeli strike on Tehran compound \u2014 40+ senior officials also killed' },
-    { time: '2h ago', text: 'Jordan intercepts 49 Iranian drones and ballistic missiles' },
-    { time: '3h ago', text: 'Iran retaliates with hundreds of missiles and drones' },
-    { time: '4h ago', text: 'Strikes hit 24 of 31 Iranian provinces \u2014 200+ killed' },
-    { time: '4h ago', text: 'Israel declares state of emergency, sirens across the country' },
-    { time: '5h ago', text: 'Operation "Epic Fury" (US) and "Roaring Lion" (Israel) launched at 9:45 AM Iran time' },
-    { time: '6h ago', text: 'Trump announces strikes aimed at regime change in 8-minute video' },
+    { time: '2026-03-01T02:00:00Z', text: 'IRGC launches fresh missile salvos \u2014 ongoing operations across multiple fronts' },
+    { time: '2026-02-28T20:00:00Z', text: 'Pezeshkian surfaces in broadcast: calls US-Israeli strikes "war against Muslims," urges Islamic world to act' },
+    { time: '2026-02-28T18:00:00Z', text: 'Iranian missiles reach Mediterranean \u2014 strikes reported near Cyprus, EU calls emergency session' },
+    { time: '2026-02-28T16:00:00Z', text: 'New Iranian missile salvos hit Riyadh \u2014 Saudi air defenses intercept majority but fires reported' },
+    { time: '2026-02-28T14:00:00Z', text: 'IDF confirms Israeli casualties from Iranian retaliatory strikes \u2014 Iron Dome overwhelmed in south' },
+    { time: '2026-02-28T12:15:00Z', text: 'IRGC threatens "most intense offensive operation" targeting Israel and US bases' },
+    { time: '2026-02-28T11:15:00Z', text: 'Iran launches retaliatory strikes on Saudi Arabia, UAE, Qatar, Bahrain, Kuwait' },
+    { time: '2026-02-28T10:15:00Z', text: 'Khamenei confirmed killed in Israeli strike on Tehran compound \u2014 40+ senior officials also killed' },
+    { time: '2026-02-28T10:00:00Z', text: 'Jordan intercepts 49 Iranian drones and ballistic missiles' },
+    { time: '2026-02-28T09:15:00Z', text: 'Iran retaliates with hundreds of missiles and drones' },
+    { time: '2026-02-28T08:15:00Z', text: 'Strikes hit 24 of 31 Iranian provinces \u2014 200+ killed' },
+    { time: '2026-02-28T08:00:00Z', text: 'Israel declares state of emergency, sirens across the country' },
+    { time: '2026-02-28T06:15:00Z', text: 'Operation "Epic Fury" (US) and "Roaring Lion" (Israel) launched at 9:45 AM Iran time' },
+    { time: '2026-02-28T00:00:00Z', text: 'Trump announces strikes aimed at regime change in 8-minute video' },
   ];
 
   const WAR_INTEL = {
-    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. Over 200 people have been killed. President Pezeshkian\'s status is unconfirmed. The IRGC has assumed emergency command and launched retaliatory missile and drone strikes across the Gulf, hitting targets near US bases in Saudi Arabia, UAE, Qatar, Bahrain, Kuwait, and Iraq. Jordan intercepted 49 Iranian drones and missiles.',
+    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. Over 200 people have been killed. President Pezeshkian surfaced in a broadcast calling the strikes a "war against Muslims" and urging the Islamic world to act. The IRGC has assumed emergency command and launched sustained retaliatory missile and drone strikes across the Gulf and beyond, hitting targets near US bases in Saudi Arabia, UAE, Qatar, Bahrain, Kuwait, and Iraq. New missile salvos struck Riyadh and Iranian missiles reached the Mediterranean near Cyprus. Israel confirmed casualties after Iron Dome was overwhelmed in the south. Jordan intercepted 49 Iranian drones and missiles.',
     why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center with every incentive to escalate. The Strait of Hormuz carries 20-30% of global oil transit and faces imminent closure risk. Iranian proxies \u2014 Hezbollah, Houthis, Iraqi Shia militias \u2014 are activating simultaneously. Oil has surged past $130/barrel. Global markets are in freefall. Six Gulf states are under direct Iranian fire.',
     outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Expect: sustained Iranian missile salvos against Gulf states, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia ground attacks on US positions. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
@@ -308,7 +313,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       headline: 'US and Israel at War with Iran',
       category: 'CONFLICT',
       breaking: true,
-      time: 'Feb 28, 2026',
+      time: timeAgo('2026-02-28T06:15:00Z'),
       warIntel: WAR_INTEL,
       warTimeline: WAR_TIMELINE,
       articles: [],
@@ -334,7 +339,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             }}>BREAKING</span>
             <span className="card-cat CONFLICT">CONFLICT</span>
           </div>
-          <span className="card-time">Feb 28, 2026</span>
+          <span className="card-time">{timeAgo('2026-02-28T06:15:00Z')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
           US and Israel at War with Iran
