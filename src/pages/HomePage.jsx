@@ -11,6 +11,8 @@ import GlobeView from '../components/Globe/GlobeView';
 import Sidebar from '../components/Sidebar/Sidebar';
 import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
+import MilitaryInfoPanel from '../components/Military/MilitaryInfoPanel';
+import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
 
 const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
 const TOSModal = lazy(() => import('../components/Modals/TOSModal'));
@@ -199,7 +201,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries }) {
+function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, militaryMode, onToggleMilitary }) {
   const watchlistCountries = useMemo(() => {
     return Object.entries(COUNTRIES)
       .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
@@ -231,6 +233,10 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
           {compareMode && compareCountries.length === 0 && (
             <div className="compare-hint">Click countries on the globe to compare</div>
           )}
+        </button>
+        <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={onToggleMilitary}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
+          Military
         </button>
       </div>
     </div>
@@ -285,6 +291,11 @@ export default function HomePage() {
   const [tradeInfoCountry, setTradeInfoCountry] = useState(null);
   const [tradeInfoOpen, setTradeInfoOpen] = useState(false);
 
+  // --- Military overlay ---
+  const [militaryMode, setMilitaryMode] = useState(false);
+  const [militaryInfoOpen, setMilitaryInfoOpen] = useState(false);
+  const [selectedInstallation, setSelectedInstallation] = useState(null);
+
   // --- Search ---
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -314,6 +325,9 @@ export default function HomePage() {
 
   // --- Trade routes hook ---
   const { showTradeRoutes, hideTradeRoutes, handleTradeClick, highlightedCountryRef } = useTradeRoutes();
+
+  // --- Military overlay hook ---
+  const { showMilitary, hideMilitary } = useMilitaryOverlay();
 
   // ============================================================
   // Initialize on mount
@@ -423,6 +437,17 @@ export default function HomePage() {
     }
   }, [compareMode, compareCountries, COMPARE_COLORS]);
 
+  // Country dot hiding is handled directly in MilitaryOverlay.js showMilitary/hideMilitary
+
+  // Register military click callback on window
+  useEffect(() => {
+    window._onMilitaryClick = (installation) => {
+      setSelectedInstallation(installation);
+      setMilitaryInfoOpen(true);
+    };
+    return () => { delete window._onMilitaryClick; };
+  }, []);
+
   // ============================================================
   // Handlers
   // ============================================================
@@ -430,6 +455,9 @@ export default function HomePage() {
   // Country click from globe or sidebar
   const handleCountryClick = useCallback((countryName) => {
     if (!countryName || !COUNTRIES[countryName]) return;
+
+    // Military mode: block all country interactions
+    if (militaryMode) return;
 
     // Compare mode: toggle or add to comparison (matching original addCountryToCompare)
     if (compareMode) {
@@ -465,7 +493,7 @@ export default function HomePage() {
     // Default: open country modal
     setSelectedCountry(countryName);
     setModalOpen(true);
-  }, [compareMode, tradeRoutesActive, handleTradeClick]);
+  }, [compareMode, tradeRoutesActive, militaryMode, handleTradeClick]);
 
   // Open modal by type
   // Open stocks detail modal
@@ -480,16 +508,22 @@ export default function HomePage() {
     setTradeRoutesActive(newState);
     window.tradeRoutesActive = newState;
     if (newState) {
-      // Deactivate compare mode
+      // Deactivate compare mode and military mode
       setCompareMode(false);
       setCompareCountries([]);
+      if (militaryMode) {
+        setMilitaryMode(false);
+        hideMilitary();
+        setMilitaryInfoOpen(false);
+        setSelectedInstallation(null);
+      }
       showTradeRoutes();
     } else {
       hideTradeRoutes();
       setTradeInfoCountry(null);
       setTradeInfoOpen(false);
     }
-  }, [tradeRoutesActive, showTradeRoutes, hideTradeRoutes]);
+  }, [tradeRoutesActive, militaryMode, showTradeRoutes, hideTradeRoutes, hideMilitary]);
 
   // Toggle compare mode
   const handleToggleCompare = useCallback(() => {
@@ -499,7 +533,7 @@ export default function HomePage() {
         setCompareCountries([]);
         return false;
       }
-      // Turning on — deactivate trade routes
+      // Turning on — deactivate trade routes and military
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
@@ -507,9 +541,74 @@ export default function HomePage() {
         setTradeInfoCountry(null);
         setTradeInfoOpen(false);
       }
+      if (militaryMode) {
+        setMilitaryMode(false);
+        hideMilitary();
+        setMilitaryInfoOpen(false);
+        setSelectedInstallation(null);
+      }
       return true;
     });
-  }, [tradeRoutesActive, hideTradeRoutes]);
+  }, [tradeRoutesActive, militaryMode, hideTradeRoutes, hideMilitary]);
+
+  // Toggle military overlay
+  const handleToggleMilitary = useCallback(() => {
+    const newState = !militaryMode;
+    setMilitaryMode(newState);
+    if (newState) {
+      // Deactivate trade routes and compare mode
+      if (tradeRoutesActive) {
+        setTradeRoutesActive(false);
+        window.tradeRoutesActive = false;
+        hideTradeRoutes();
+        setTradeInfoCountry(null);
+        setTradeInfoOpen(false);
+      }
+      if (compareMode) {
+        setCompareMode(false);
+        setCompareCountries([]);
+      }
+      showMilitary();
+    } else {
+      hideMilitary();
+      setMilitaryInfoOpen(false);
+      setSelectedInstallation(null);
+    }
+  }, [militaryMode, tradeRoutesActive, compareMode, showMilitary, hideMilitary, hideTradeRoutes]);
+
+  // Fly globe to a lat/lng and open military info panel
+  const handleMilitaryBaseSelect = useCallback((installation) => {
+    // Fly the globe to the installation
+    const globe = window._globeView?.globe;
+    const camera = window._globeView?.camera;
+    if (globe && camera) {
+      const targetRotX = installation.lat * Math.PI / 180;
+      const targetRotY = -(installation.lng * Math.PI / 180) - Math.PI / 2;
+      const startRotX = globe.rotation.x;
+      const startRotY = globe.rotation.y;
+      const startZ = camera.position.z;
+      const targetZ = 2.2;
+      const startTime = Date.now();
+      const duration = 800;
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+      function animate() {
+        const elapsed = Date.now() - startTime;
+        const t = Math.min(1, elapsed / duration);
+        const e = easeOut(t);
+        globe.rotation.x = startRotX + (targetRotX - startRotX) * e;
+        let diffY = targetRotY - startRotY;
+        while (diffY > Math.PI) diffY -= 2 * Math.PI;
+        while (diffY < -Math.PI) diffY += 2 * Math.PI;
+        globe.rotation.y = startRotY + diffY * e;
+        camera.position.z = startZ + (targetZ - startZ) * e;
+        if (t < 1) requestAnimationFrame(animate);
+      }
+      animate();
+    }
+    // Open info panel
+    setSelectedInstallation(installation);
+    setMilitaryInfoOpen(true);
+  }, []);
 
   // Compare panel handlers
   const handleAddCompareCountry = useCallback((name) => {
@@ -545,6 +644,7 @@ export default function HomePage() {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
+        if (militaryInfoOpen) { setMilitaryInfoOpen(false); setSelectedInstallation(null); return; }
         if (statPopupOpen) { setStatPopupOpen(false); return; }
         if (stocksModalOpen) { setStocksModalOpen(false); return; }
         if (modalOpen) { setModalOpen(false); return; }
@@ -559,7 +659,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -614,6 +714,8 @@ export default function HomePage() {
             compareMode={compareMode}
             onToggleCompare={handleToggleCompare}
             compareCountries={compareCountries}
+            militaryMode={militaryMode}
+            onToggleMilitary={handleToggleMilitary}
           />
 
           {/* Risk Legend */}
@@ -631,6 +733,10 @@ export default function HomePage() {
               {compareMode && compareCountries.length === 0 && (
                 <div className="compare-hint">Tap countries to compare</div>
               )}
+            </button>
+            <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={handleToggleMilitary}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
+              Military
             </button>
           </div>
 
@@ -690,6 +796,13 @@ export default function HomePage() {
             }}
           />
 
+          {/* Military Info Panel */}
+          <MilitaryInfoPanel
+            installation={selectedInstallation}
+            isOpen={militaryInfoOpen}
+            onClose={() => { setMilitaryInfoOpen(false); setSelectedInstallation(null); }}
+          />
+
           {/* Stat Popup */}
           <StatPopup
             type={statPopupType}
@@ -715,6 +828,8 @@ export default function HomePage() {
           stocksData={stocksData}
           stocksLastUpdated={stocksLastUpdated}
           stocksUpdating={stocksUpdating}
+          militaryMode={militaryMode}
+          onMilitaryBaseSelect={handleMilitaryBaseSelect}
         />
       </div>
 

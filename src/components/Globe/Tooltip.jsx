@@ -44,14 +44,16 @@ export default function Tooltip({ data, mousePos }) {
         <>
           <div className="tooltip-name">
             <CountryFlag flag={data.flag} /> {data.name}{' '}
-            <span className={`tooltip-risk risk-${data.risk}`}>
-              {data.risk.toUpperCase()}
-            </span>
+            {data.risk && (
+              <span className={`tooltip-risk risk-${data.risk}`}>
+                {data.risk.toUpperCase()}
+              </span>
+            )}
           </div>
           <div className="tooltip-region">
-            {data.region} • {data.title || ''}
+            {data.region} {data.title ? `• ${data.title}` : ''}
           </div>
-          <div className="tooltip-hint">Click for details</div>
+          <div className="tooltip-hint">{data.military ? 'Click for intel' : 'Click for details'}</div>
         </>
       )}
     </div>

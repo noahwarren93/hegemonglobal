@@ -371,8 +371,10 @@ export function timeAgo(dateString) {
 
   if (diffMins < 60) return diffMins + 'm ago';
   if (diffHours < 48) return diffHours + 'h ago';
-  if (diffDays < 7) return diffDays + ' days ago';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffDays < 30) return diffDays + ' days ago';
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return diffMonths === 1 ? '1 month ago' : diffMonths + ' months ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export const COUNTRY_TRENDS = {

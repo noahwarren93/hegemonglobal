@@ -383,6 +383,20 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
+      // 0) Military mode — only military markers are interactive
+      if (window.militaryMode) {
+        if (window.militaryMeshes && window.militaryMeshes.length > 0) {
+          const milHits = raycaster.intersectObjects(window.militaryMeshes);
+          if (milHits.length > 0 && milHits[0].object.userData.militaryBase) {
+            if (typeof window._onMilitaryClick === 'function') {
+              window._onMilitaryClick(milHits[0].object.userData.militaryBase);
+            }
+            return 'military';
+          }
+        }
+        return null; // Block all country dot clicks in military mode
+      }
+
       // 1) Direct marker hit — always wins
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
@@ -422,6 +436,40 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouseRef.current, camera);
+
+      // Check military marker hover when military mode is active
+      if (window.militaryMode && window.militaryMeshes && window.militaryMeshes.length > 0) {
+        const milHits = raycaster.intersectObjects(window.militaryMeshes);
+        if (milHits.length > 0 && milHits[0].object.userData.militaryBase) {
+          const hitMesh = milHits[0].object;
+          const base = hitMesh.userData.militaryBase;
+
+          // Hover enlarge: scale up hovered marker, restore previous
+          if (window._hoveredMilMesh && window._hoveredMilMesh !== hitMesh) {
+            window._hoveredMilMesh.scale.set(1, 1, 1);
+          }
+          hitMesh.scale.set(1.8, 1.8, 1.8);
+          window._hoveredMilMesh = hitMesh;
+
+          setTooltipData({
+            name: base.name,
+            flag: base.flag,
+            risk: null,
+            region: base.branch,
+            title: base.type === 'carrier' ? base.location : base.country,
+            military: true,
+          });
+          setMousePos({ x: event.clientX, y: event.clientY });
+          renderer.domElement.style.cursor = 'pointer';
+          return;
+        }
+        // No military marker hit — restore any previously hovered marker
+        if (window._hoveredMilMesh) {
+          window._hoveredMilMesh.scale.set(1, 1, 1);
+          window._hoveredMilMesh = null;
+        }
+      }
+
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
 
       // Check trade route line hover when trade routes are active
