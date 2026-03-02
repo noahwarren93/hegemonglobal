@@ -887,6 +887,34 @@ export async function fetchCountryNews(countryName) {
   return emptyResult;
 }
 
+// Lightweight country extraction for Worker events (Worker strips _primaryCountry)
+function quickPrimaryCountry(headline) {
+  const h = (headline || '').toLowerCase();
+  if (/\bukrain|kyiv|zelensky|donbas/.test(h)) return 'ukraine';
+  if (/\bpalestine|gaza|hamas|west bank/.test(h)) return 'palestine';
+  if (/\bisrael|\bidf\b|netanyahu|tel aviv/.test(h)) return 'israel';
+  if (/\biran|tehran|irgc|khamenei|pezeshkian/.test(h)) return 'iran';
+  if (/\brussia|moscow|kremlin|putin/.test(h)) return 'russia';
+  if (/\bpakistan|islamabad/.test(h)) return 'pakistan';
+  if (/\bafghan|kabul|taliban/.test(h)) return 'afghanistan';
+  if (/\bsudan|khartoum|darfur|el.fasher/.test(h)) return 'sudan';
+  if (/\bsyria|damascus/.test(h)) return 'syria';
+  if (/\byemen|houthi|sanaa/.test(h)) return 'yemen';
+  if (/\blebanon|beirut|hezbollah/.test(h)) return 'lebanon';
+  if (/\biraq|baghdad/.test(h)) return 'iraq';
+  if (/\bchina|beijing/.test(h)) return 'china';
+  if (/\btaiwan|taipei/.test(h)) return 'taiwan';
+  if (/\bnorth korea|pyongyang/.test(h)) return 'north korea';
+  if (/\bmyanmar|burma/.test(h)) return 'myanmar';
+  if (/\bhaiti/.test(h)) return 'haiti';
+  if (/\bcongo|\bdrc\b|goma/.test(h)) return 'drc';
+  if (/\bnigeria/.test(h)) return 'nigeria';
+  if (/\bethiopia/.test(h)) return 'ethiopia';
+  if (/\bsomalia/.test(h)) return 'somalia';
+  if (/\bvenezuela/.test(h)) return 'venezuela';
+  return null;
+}
+
 // ============================================================
 // Fetch Pre-Generated Events from Worker (instant, no client-side processing)
 // ============================================================
@@ -928,9 +956,11 @@ async function fetchPreGeneratedEvents() {
     // Populate DAILY_EVENTS
     DAILY_EVENTS.length = 0;
     for (const event of data.events) {
+      const hl = event.headline || event.title || 'Breaking News';
       DAILY_EVENTS.push({
         ...event,
-        headline: event.headline || event.title || 'Breaking News',
+        headline: hl,
+        _primaryCountry: event._primaryCountry || quickPrimaryCountry(hl),
         category: event.category || 'CONFLICT',
         time: event.time || timeAgo(event.pubDate),
         summaryLoading: false,
@@ -947,6 +977,12 @@ async function fetchPreGeneratedEvents() {
 
     notifyEventsUpdated();
     saveNewsToLocalStorage();
+
+    // Trigger client-side summary fetching for events missing summaries
+    const missingSummaries = DAILY_EVENTS.filter(e => !e.summary).length;
+    if (missingSummaries > 0) {
+      setTimeout(() => fetchEventSummaries(), 1500);
+    }
 
     return true;
   } catch (err) {

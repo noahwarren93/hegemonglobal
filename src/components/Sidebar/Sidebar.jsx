@@ -260,14 +260,28 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const usedIds = new Set();
 
     for (const req of PRIORITY) {
-      // Primary country match
+      // Primary country match (from _primaryCountry field)
       let match = sorted.find(e => !usedIds.has(e.id) &&
         req.countries.includes(e._primaryCountry));
 
-      // Fallback: keyword search
+      // Fallback: headline keyword match with score threshold
+      // Only match on HEADLINE text (not all article text) to avoid false positives
+      // e.g. "Belgian tanker seizes Russian ship" should NOT match Ukraine/Russia topic
       if (!match) {
-        match = sorted.find(e => !usedIds.has(e.id) &&
-          req.keywords.some(kw => getEventText(e).includes(kw)));
+        let bestCandidate = null;
+        let bestScore = -Infinity;
+        for (const e of sorted) {
+          if (usedIds.has(e.id)) continue;
+          const hl = (e.headline || '').toLowerCase();
+          if (!req.keywords.some(kw => hl.includes(kw))) continue;
+          // Require at least one boost keyword in headline or article text
+          const fullText = getEventText(e);
+          const hasBoost = req.boost.some(bw => fullText.includes(bw));
+          if (!hasBoost) continue;
+          const score = scoreHeadline(e.headline, req, null);
+          if (score > bestScore) { bestScore = score; bestCandidate = e; }
+        }
+        if (bestCandidate) match = bestCandidate;
       }
 
       if (match) {
@@ -352,34 +366,25 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderEventsTab = () => {
-    if (DAILY_EVENTS.length === 0) {
-      if (DAILY_BRIEFING.length === 0) {
-        return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Loading events...</div>;
-      }
-      return <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>Clustering articles into events...</div>;
-    }
-
-    // Breaking events pinned at top
-    const breakingEvents = DAILY_EVENTS.filter(e => e.breaking);
     const nonBreaking = DAILY_EVENTS.filter(e => !e.breaking);
-
-    // Stable Top Stories: persisted for 2 hours, require 2+ sources
-    const topEvents = getStableTopStories(nonBreaking);
+    const topEvents = DAILY_EVENTS.length > 0 ? getStableTopStories(nonBreaking) : [];
     const topIds = new Set(topEvents.map(e => e.id));
-    // Latest Updates: everything NOT in Top Stories or Breaking, paginated
     const remaining = nonBreaking.filter(e => !topIds.has(e.id));
     const restEvents = remaining.slice(0, visibleCount);
 
     return (
       <>
-        {/* Breaking News */}
-        {breakingEvents.length > 0 && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
-            </div>
-            {renderBreakingCard()}
-          </>
+        {/* Breaking News — ALWAYS pinned, never removed by auto-refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
+        </div>
+        {renderBreakingCard()}
+
+        {/* Loading state — show after breaking card */}
+        {DAILY_EVENTS.length === 0 && (
+          <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
+            {DAILY_BRIEFING.length === 0 ? 'Loading events...' : 'Clustering articles into events...'}
+          </div>
         )}
 
         {/* Top Stories */}
