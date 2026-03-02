@@ -715,7 +715,10 @@ const FACTUAL_BOOST_TERMS = [
   'humanitarian', 'refugee', 'evacuation', 'summit', 'treaty',
   'agreement', 'coup', 'protest', 'enters day', 'fighting',
   'battle', 'airstrike', 'bombing', 'sanctions', 'escalation',
-  'incursion', 'blockade', 'convoy', 'artillery', 'ground operation'
+  'incursion', 'blockade', 'convoy', 'artillery', 'ground operation',
+  'bombardment', 'retaliat', 'intercept', 'shot down', 'oil field',
+  'refinery', 'ras tanura', 'strait of hormuz', 'carrier group',
+  'destroyed', 'struck', 'damage report', 'death toll'
 ];
 
 const OPINION_PENALIZE_TERMS = [
@@ -724,7 +727,11 @@ const OPINION_PENALIZE_TERMS = [
   'condemns', 'warns', 'threatens', 'claims', 'denies',
   'demands', 'challenges', 'mocks', 'praises', 'thanks',
   'reveals', 'opinion', 'editorial', 'analysis', 'commentary',
-  'vows', 'hints', 'suggests', 'believes'
+  'vows', 'hints', 'suggests', 'believes',
+  // Business reaction noise — deprioritize as representative headlines
+  'surcharge', 'shipping cost', 'shares fell', 'shares rose',
+  'stock price', 'market react', 'insurance premium', 'freight rate',
+  'firms shocked', 'economic fallout', 'supply chain'
 ];
 
 function scoreHeadlineQuality(title) {

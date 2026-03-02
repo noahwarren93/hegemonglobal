@@ -247,12 +247,27 @@ function getSourceRank(source) {
 const TIER1_KEYWORDS = [
   'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
   'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
-  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive'
+  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive',
+  'strike', 'strikes', 'struck', 'bombardment', 'shelling', 'casualties',
+  'killed', 'destroyed', 'retaliat', 'intercept', 'shot down', 'ground offensive',
+  'naval operation', 'carrier group', 'oil field', 'refinery attack', 'ras tanura'
 ];
 const TIER2_KEYWORDS = [
   'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
   'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
-  'reconstruction', 'occupation'
+  'reconstruction', 'occupation', 'diplomatic', 'condemn', 'strait of hormuz',
+  'nuclear site', 'deployment', 'mobiliz', 'evacuati'
+];
+
+// Business reaction articles that mention war keywords but are economic noise
+const BUSINESS_NOISE_KEYWORDS = [
+  'surcharge', 'shipping cost', 'shipping rate', 'insurance premium',
+  'stock market react', 'shares fell', 'shares rose', 'stock price',
+  'earnings impact', 'supply chain', 'freight rate', 'oil price impact',
+  'market tumbl', 'market rally', 'investor', 'wall street', 'dow jones',
+  'nasdaq', 's&p 500', 'trading session', 'market volatil', 'hedge fund',
+  'commodity pric', 'futures contract', 'barrel of oil', 'price per barrel',
+  'firms shocked', 'business impact', 'economic fallout', 'trade deficit'
 ];
 
 function getEventTier(event) {
@@ -265,10 +280,21 @@ function getEventTier(event) {
 
 function scoreEvent(event) {
   const tier = getEventTier(event);
-  const tierScore = (4 - tier) * 5;
-  const sourceScore = Math.min(event.sourceCount, 40) * 3;
-  const importanceScore = event.importance === 'high' ? 5 : 0;
-  return tierScore + sourceScore + importanceScore;
+  // T1 = 45pts, T2 = 30pts, T3 = 15pts — tier dominates over source count
+  const tierScore = (4 - tier) * 15;
+  // Cap source influence at 60pts (20 sources * 3) — prevents source-heavy noise outranking T1
+  const sourceScore = Math.min(event.sourceCount, 20) * 3;
+  const importanceScore = event.importance === 'high' ? 10 : 0;
+
+  // Penalize business reaction articles
+  const text = ((event.headline || '') + ' ' +
+    (event.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+  let noisePenalty = 0;
+  for (const kw of BUSINESS_NOISE_KEYWORDS) {
+    if (text.includes(kw)) { noisePenalty = -30; break; }
+  }
+
+  return tierScore + sourceScore + importanceScore + noisePenalty;
 }
 
 // ============================================================

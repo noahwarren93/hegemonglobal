@@ -370,8 +370,8 @@ export function timeAgo(dateString) {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 60) return diffMins + 'm ago';
-  if (diffHours < 48) return diffHours + 'h ago';
-  if (diffDays < 30) return diffDays + ' days ago';
+  if (diffHours < 24) return diffHours + 'h ago';
+  if (diffDays < 30) return diffDays === 1 ? '1 day ago' : diffDays + ' days ago';
   const diffMonths = Math.floor(diffDays / 30);
   if (diffMonths < 12) return diffMonths === 1 ? '1 month ago' : diffMonths + ' months ago';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

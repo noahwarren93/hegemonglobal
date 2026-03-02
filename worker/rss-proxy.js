@@ -779,6 +779,11 @@ const PERIPHERAL_PATTERNS = [
   'consular', 'embassy closes', 'flights suspended', 'airlines cancel',
   'tourists stranded', 'expats urged', 'stock falls', 'stock drops',
   'shares drop', 'market reacts', 'oil prices', 'gas prices',
+  // Business reaction noise
+  'surcharge', 'shipping cost', 'shipping rate', 'insurance premium',
+  'freight rate', 'firms shocked', 'economic fallout', 'supply chain',
+  'market tumbl', 'market rally', 'investor', 'trading session',
+  'futures contract', 'price per barrel', 'business impact',
 ];
 
 // Core event headline keywords — boosted when picking the main headline
@@ -790,6 +795,9 @@ const CORE_EVENT_KEYWORDS = [
   'siege', 'hostage', 'genocide', 'ethnic cleansing', 'occupation',
   'demands', 'threatens', 'threat', 'warns', 'ultimatum', 'rejects',
   'defies', 'refuses', 'confronts', 'deploys', 'launches', 'fires',
+  'struck', 'destroyed', 'casualties', 'killed', 'bombardment', 'shelling',
+  'retaliat', 'intercept', 'shot down', 'oil field', 'refinery',
+  'ras tanura', 'strait of hormuz', 'damage report', 'death toll',
 ];
 
 function scoreHeadlineNeutrality(headline, source) {
@@ -824,12 +832,26 @@ function scoreHeadlineNeutrality(headline, source) {
 const TIER1_KEYWORDS = [
   'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
   'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
-  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive'
+  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive',
+  'strike', 'strikes', 'struck', 'bombardment', 'shelling', 'casualties',
+  'killed', 'destroyed', 'retaliat', 'intercept', 'shot down', 'ground offensive',
+  'naval operation', 'carrier group', 'oil field', 'refinery attack', 'ras tanura'
 ];
 const TIER2_KEYWORDS = [
   'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
   'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
-  'reconstruction', 'occupation'
+  'reconstruction', 'occupation', 'diplomatic', 'condemn', 'strait of hormuz',
+  'nuclear site', 'deployment', 'mobiliz', 'evacuati'
+];
+
+const BUSINESS_NOISE_KEYWORDS = [
+  'surcharge', 'shipping cost', 'shipping rate', 'insurance premium',
+  'stock market react', 'shares fell', 'shares rose', 'stock price',
+  'earnings impact', 'supply chain', 'freight rate', 'oil price impact',
+  'market tumbl', 'market rally', 'investor', 'wall street', 'dow jones',
+  'nasdaq', 's&p 500', 'trading session', 'market volatil', 'hedge fund',
+  'commodity pric', 'futures contract', 'barrel of oil', 'price per barrel',
+  'firms shocked', 'business impact', 'economic fallout', 'trade deficit'
 ];
 
 function getEventTier(event) {
@@ -842,10 +864,18 @@ function getEventTier(event) {
 
 function scoreEvent(event) {
   const tier = getEventTier(event);
-  const tierScore = (4 - tier) * 5;
-  const sourceScore = Math.min(event.sourceCount, 40) * 3;
-  const importanceScore = event.importance === 'high' ? 5 : 0;
-  return tierScore + sourceScore + importanceScore;
+  const tierScore = (4 - tier) * 15;
+  const sourceScore = Math.min(event.sourceCount, 20) * 3;
+  const importanceScore = event.importance === 'high' ? 10 : 0;
+
+  const text = ((event.headline || '') + ' ' +
+    (event.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+  let noisePenalty = 0;
+  for (const kw of BUSINESS_NOISE_KEYWORDS) {
+    if (text.includes(kw)) { noisePenalty = -30; break; }
+  }
+
+  return tierScore + sourceScore + importanceScore + noisePenalty;
 }
 
 // ============================================================
