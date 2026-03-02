@@ -185,7 +185,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // Top Stories: up to 4, fixed order — Iran war covered by BREAKING banner
   const getStableTopStories = useCallback((events) => {
     // Filter out Iran/Gulf war events — those belong in the breaking banner
-    const IRAN_WAR_KEYWORDS = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi'];
+    const IRAN_WAR_KEYWORDS = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi', 'ras tanura', 'pezeshkian', 'beirut'];
     const isIranWar = (e) => {
       const text = ((e.headline || '') + ' ' + (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
       return IRAN_WAR_KEYWORDS.some(kw => text.includes(kw));
@@ -302,6 +302,18 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Base timeline — hardcoded foundational events. Auto-merged with live RSS below.
   const WAR_TIMELINE_BASE = [
+    // March 2 \u2014 Day 3 of war
+    { time: '2026-03-02T12:00:00Z', text: 'France unveils updated nuclear doctrine \u2014 offers Gulf states defense umbrella against Iranian ballistic missiles' },
+    { time: '2026-03-02T11:00:00Z', text: 'EU holds emergency session on Mediterranean missile incidents \u2014 debates invoking mutual defense clause' },
+    { time: '2026-03-02T10:00:00Z', text: 'Oil prices surge past $140/barrel on Strait of Hormuz fears \u2014 Brent crude hits highest level since 2008' },
+    { time: '2026-03-02T09:00:00Z', text: 'US deploys additional carrier strike group and B-2 bombers to Persian Gulf' },
+    { time: '2026-03-02T08:00:00Z', text: 'IRGC threatens further strikes on Gulf oil infrastructure \u2014 "all energy facilities in range"' },
+    { time: '2026-03-02T07:30:00Z', text: 'Dubai International Airport diverts all inbound flights amid regional escalation' },
+    { time: '2026-03-02T07:00:00Z', text: 'Israeli strikes reported across Beirut and southern Lebanon targeting Hezbollah command nodes' },
+    { time: '2026-03-02T06:00:00Z', text: 'Hezbollah launches massive rocket barrage into northern Israel \u2014 hundreds of projectiles cross border' },
+    { time: '2026-03-02T05:15:00Z', text: 'Saudi defense ministry says air defenses repelled Iranian drones targeting Ras Tanura' },
+    { time: '2026-03-02T04:30:00Z', text: 'Iran strikes Ras Tanura oil refinery in Saudi Arabia \u2014 first direct hit on Saudi oil infrastructure, 550,000 bpd facility' },
+    // March 1 \u2014 Day 2 of war
     { time: '2026-03-01T10:00:00Z', text: 'Iranian death toll surpasses 400 \u2014 hospitals in Tehran and Isfahan overwhelmed, morgues at capacity' },
     { time: '2026-03-01T08:00:00Z', text: '8 Israeli soldiers confirmed killed in IRGC retaliatory missile strikes on military installations in Negev' },
     { time: '2026-03-01T06:00:00Z', text: 'Heavy explosions rock Riyadh \u2014 second Iranian missile wave targets Saudi capital, fires reported near oil facilities' },
@@ -323,7 +335,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   ];
 
   // Auto-merge live Iran war articles from RSS feeds into the timeline
-  const IRAN_WAR_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'hormuz', 'epic fury', 'roaring lion', 'pezeshkian'];
+  const IRAN_WAR_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'hormuz', 'epic fury', 'roaring lion', 'pezeshkian', 'hezbollah', 'ras tanura', 'beirut', 'houthi'];
+  const TIMELINE_EXCLUDE = ['gaza ceasefire', 'ceasefire gains', 'aid workers', 'humanitarian corridor'];
   const WAR_TIMELINE = useMemo(() => {
     const merged = [...WAR_TIMELINE_BASE];
     const baseTexts = WAR_TIMELINE_BASE.map(b => b.text.toLowerCase());
@@ -332,6 +345,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       if (event.breaking) continue;
       const hl = (event.headline || '').toLowerCase();
       if (!IRAN_WAR_KW.some(kw => hl.includes(kw))) continue;
+
+      // Exclude peripheral stories that match keywords but aren't core war developments
+      if (TIMELINE_EXCLUDE.some(ex => hl.includes(ex))) continue;
 
       // Deduplicate — skip if 3+ significant words overlap with any base entry
       const words = hl.split(/\s+/).filter(w => w.length > 3);
@@ -349,9 +365,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const WAR_INTEL = {
-    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. The Iranian death toll has surpassed 400. President Pezeshkian surfaced alive in a broadcast calling the strikes a "war against Muslims" and urging the Islamic world to act. The IRGC has assumed emergency command and launched sustained retaliatory strikes: 8 Israeli soldiers killed in strikes on Negev bases, two missile waves struck Riyadh with fires near Saudi oil facilities, and Iranian missiles reached the Mediterranean near Cyprus. The Strait of Hormuz is partially blocked by IRGC fast-attack boats. Oil has surged past $142/barrel. Jordan intercepted 49 Iranian drones and missiles.',
-    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center with every incentive to escalate. The Strait of Hormuz carries 20-30% of global oil transit and faces imminent closure risk. Iranian proxies \u2014 Hezbollah, Houthis, Iraqi Shia militias \u2014 are activating simultaneously. Oil has surged past $130/barrel. Global markets are in freefall. Six Gulf states are under direct Iranian fire.',
-    outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Expect: sustained Iranian missile salvos against Gulf states, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia ground attacks on US positions. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
+    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. The Iranian death toll has surpassed 400. On Day 3 (March 2), Iran struck the Ras Tanura oil refinery in Saudi Arabia \u2014 the first direct hit on Saudi oil infrastructure. Hezbollah launched a massive rocket barrage into northern Israel, triggering Israeli strikes across Beirut and southern Lebanon. Dubai International Airport diverted all flights. The IRGC threatened to target all Gulf energy facilities. The US deployed additional carrier assets and B-2 bombers. Oil surged past $140/barrel. The EU held an emergency session on Mediterranean missile incidents, and France unveiled an updated nuclear doctrine offering Gulf states a defense umbrella.',
+    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center with every incentive to escalate. The Strait of Hormuz carries 20-30% of global oil transit and faces imminent closure risk. Iranian proxies \u2014 Hezbollah, Houthis, Iraqi Shia militias \u2014 are all activated and engaged. The Ras Tanura strike demonstrates Iran\'s willingness to target critical Gulf energy infrastructure. Oil has surged past $140/barrel. Global markets are in freefall. Six Gulf states are under direct Iranian fire.',
+    outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Active fronts: sustained Iranian missile salvos against Gulf oil infrastructure, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia attacks on US positions. France\'s nuclear doctrine offer signals NATO may be drawn in. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
 
   const openBreakingModal = () => {
@@ -369,7 +385,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderBreakingCard = () => {
-    const preview = 'Khamenei killed, 400+ dead in Iran. 8 Israeli soldiers killed in IRGC retaliation. Strait of Hormuz partially blocked. Oil at $142. Full regional war underway.';
+    const preview = 'Iran strikes Ras Tanura refinery. Hezbollah rocket barrage on Israel. Beirut under Israeli strikes. Dubai airport diverts flights. Oil past $140. France offers Gulf nuclear umbrella. Full regional war \u2014 Day 3.';
 
     return (
       <div
