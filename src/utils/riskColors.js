@@ -357,12 +357,12 @@ export function formatSourceName(sourceId) {
 export function timeAgo(dateString) {
   if (!dateString) return 'Recent';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Recent';
+  if (isNaN(date.getTime())) return dateString; // Already relative string — pass through
 
   const now = new Date();
   const diffMs = now - date;
 
-  // Handle future dates or very recent
+  if (diffMs < 0) return 'Just now'; // Future dates
   if (diffMs < 60000) return 'Just now';
 
   const diffMins = Math.floor(diffMs / 60000);
@@ -370,9 +370,7 @@ export function timeAgo(dateString) {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 60) return diffMins + 'm ago';
-  if (diffHours < 6) return diffHours + 'h ago';
-  if (diffHours < 24) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
+  if (diffHours < 48) return diffHours + 'h ago';
   if (diffDays < 7) return diffDays + ' days ago';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

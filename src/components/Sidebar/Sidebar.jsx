@@ -1,6 +1,6 @@
 // Sidebar.jsx - Main sidebar with 6 tabs
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
 import { RISK_COLORS, timeAgo } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
@@ -29,7 +29,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [, setEventsVersion] = useState(0); // force re-render when summaries arrive
+  const [eventsVersion, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
@@ -298,7 +298,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return top.slice(0, 4);
   }, []);
 
-  const WAR_TIMELINE = [
+  // Base timeline — hardcoded foundational events. Auto-merged with live RSS below.
+  const WAR_TIMELINE_BASE = [
+    { time: '2026-03-01T10:00:00Z', text: 'Iranian death toll surpasses 400 \u2014 hospitals in Tehran and Isfahan overwhelmed, morgues at capacity' },
+    { time: '2026-03-01T08:00:00Z', text: '8 Israeli soldiers confirmed killed in IRGC retaliatory missile strikes on military installations in Negev' },
+    { time: '2026-03-01T06:00:00Z', text: 'Heavy explosions rock Riyadh \u2014 second Iranian missile wave targets Saudi capital, fires reported near oil facilities' },
+    { time: '2026-03-01T04:00:00Z', text: 'Strait of Hormuz partially blocked \u2014 IRGC fast-attack boats harass commercial shipping, oil hits $142/barrel' },
     { time: '2026-03-01T02:00:00Z', text: 'IRGC launches fresh missile salvos \u2014 ongoing operations across multiple fronts' },
     { time: '2026-02-28T20:00:00Z', text: 'Pezeshkian surfaces in broadcast: calls US-Israeli strikes "war against Muslims," urges Islamic world to act' },
     { time: '2026-02-28T18:00:00Z', text: 'Iranian missiles reach Mediterranean \u2014 strikes reported near Cyprus, EU calls emergency session' },
@@ -315,8 +320,34 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     { time: '2026-02-28T00:00:00Z', text: 'Trump announces strikes aimed at regime change in 8-minute video' },
   ];
 
+  // Auto-merge live Iran war articles from RSS feeds into the timeline
+  const IRAN_WAR_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'hormuz', 'epic fury', 'roaring lion', 'pezeshkian'];
+  const WAR_TIMELINE = useMemo(() => {
+    const merged = [...WAR_TIMELINE_BASE];
+    const baseTexts = WAR_TIMELINE_BASE.map(b => b.text.toLowerCase());
+
+    for (const event of DAILY_EVENTS) {
+      if (event.breaking) continue;
+      const hl = (event.headline || '').toLowerCase();
+      if (!IRAN_WAR_KW.some(kw => hl.includes(kw))) continue;
+
+      // Deduplicate — skip if 3+ significant words overlap with any base entry
+      const words = hl.split(/\s+/).filter(w => w.length > 3);
+      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
+      if (isDupe) continue;
+
+      merged.push({
+        time: event.pubDate || new Date().toISOString(),
+        text: event.headline,
+        live: true,
+      });
+    }
+
+    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+  }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const WAR_INTEL = {
-    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. Over 200 people have been killed. President Pezeshkian surfaced in a broadcast calling the strikes a "war against Muslims" and urging the Islamic world to act. The IRGC has assumed emergency command and launched sustained retaliatory missile and drone strikes across the Gulf and beyond, hitting targets near US bases in Saudi Arabia, UAE, Qatar, Bahrain, Kuwait, and Iraq. New missile salvos struck Riyadh and Iranian missiles reached the Mediterranean near Cyprus. Israel confirmed casualties after Iron Dome was overwhelmed in the south. Jordan intercepted 49 Iranian drones and missiles.',
+    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. The Iranian death toll has surpassed 400. President Pezeshkian surfaced alive in a broadcast calling the strikes a "war against Muslims" and urging the Islamic world to act. The IRGC has assumed emergency command and launched sustained retaliatory strikes: 8 Israeli soldiers killed in strikes on Negev bases, two missile waves struck Riyadh with fires near Saudi oil facilities, and Iranian missiles reached the Mediterranean near Cyprus. The Strait of Hormuz is partially blocked by IRGC fast-attack boats. Oil has surged past $142/barrel. Jordan intercepted 49 Iranian drones and missiles.',
     why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center with every incentive to escalate. The Strait of Hormuz carries 20-30% of global oil transit and faces imminent closure risk. Iranian proxies \u2014 Hezbollah, Houthis, Iraqi Shia militias \u2014 are activating simultaneously. Oil has surged past $130/barrel. Global markets are in freefall. Six Gulf states are under direct Iranian fire.',
     outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Expect: sustained Iranian missile salvos against Gulf states, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia ground attacks on US positions. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
@@ -336,7 +367,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderBreakingCard = () => {
-    const preview = 'US and Israel launched coordinated strikes on Iran in operations "Epic Fury" and "Roaring Lion." Khamenei confirmed killed. IRGC retaliating across the Gulf.';
+    const preview = 'Khamenei killed, 400+ dead in Iran. 8 Israeli soldiers killed in IRGC retaliation. Strait of Hormuz partially blocked. Oil at $142. Full regional war underway.';
 
     return (
       <div
