@@ -241,7 +241,7 @@ const apiFailures = {};
 
 const NEWS_LS_KEY = 'hegemon_news_cache';
 const EVENTS_LS_KEY = 'hegemon_events_cache';
-const NEWS_LS_TTL = 24 * 60 * 60 * 1000; // 24 hours — always show cached data on load
+const NEWS_LS_TTL = 30 * 60 * 1000; // 30 minutes — refresh frequently during active crisis coverage
 
 function saveNewsToLocalStorage() {
   try {

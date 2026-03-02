@@ -28,7 +28,7 @@ function getCorsHeaders(request) {
 // ============================================================
 
 const SUMMARY_CACHE = new Map();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes — keep summaries fresh during active coverage
 
 function hashTitles(articles) {
   const titles = (articles || [])
@@ -70,7 +70,7 @@ async function setCacheApi(key, data) {
   try {
     const cache = caches.default;
     const resp = new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=3600' }
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=1800' }
     });
     await cache.put(new Request(CACHE_URL_PREFIX + key), resp);
   } catch { /* best effort */ }
@@ -1095,7 +1095,7 @@ async function fetchSingleFeed(feedUrl, sourceName) {
         'Accept': 'application/rss+xml, application/xml, text/xml, */*'
       },
       signal: controller.signal,
-      cf: { cacheTtl: 300 }
+      cf: { cacheTtl: 60 }
     });
     clearTimeout(timeout);
     if (!response.ok) return [];
@@ -1696,7 +1696,7 @@ Return ONLY the JSON array, no other text.`;
             'User-Agent': 'Hegemon-RSS-Proxy/1.0',
             'Accept': 'application/rss+xml, application/xml, text/xml, */*'
           },
-          cf: { cacheTtl: 300 }
+          cf: { cacheTtl: 60 }
         });
         if (!feedResponse.ok) {
           return new Response(
