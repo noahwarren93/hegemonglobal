@@ -12,6 +12,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
 import MilitaryInfoPanel from '../components/Military/MilitaryInfoPanel';
+import MilitaryBasesPanel from '../components/Military/MilitaryBasesPanel';
 import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
 
 const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
@@ -293,6 +294,7 @@ export default function HomePage() {
 
   // --- Military overlay ---
   const [militaryMode, setMilitaryMode] = useState(false);
+  const [militaryPanelOpen, setMilitaryPanelOpen] = useState(false);
   const [militaryInfoOpen, setMilitaryInfoOpen] = useState(false);
   const [selectedInstallation, setSelectedInstallation] = useState(null);
 
@@ -543,6 +545,7 @@ export default function HomePage() {
       }
       if (militaryMode) {
         setMilitaryMode(false);
+        setMilitaryPanelOpen(false);
         hideMilitary();
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
@@ -569,8 +572,10 @@ export default function HomePage() {
         setCompareCountries([]);
       }
       showMilitary();
+      setMilitaryPanelOpen(true);
     } else {
       hideMilitary();
+      setMilitaryPanelOpen(false);
       setMilitaryInfoOpen(false);
       setSelectedInstallation(null);
     }
@@ -796,7 +801,14 @@ export default function HomePage() {
             }}
           />
 
-          {/* Military Info Panel */}
+          {/* Military Bases List Panel */}
+          <MilitaryBasesPanel
+            isOpen={militaryMode && militaryPanelOpen}
+            onClose={() => setMilitaryPanelOpen(false)}
+            onBaseSelect={handleMilitaryBaseSelect}
+          />
+
+          {/* Military Info Panel (individual base detail) */}
           <MilitaryInfoPanel
             installation={selectedInstallation}
             isOpen={militaryInfoOpen}
@@ -828,8 +840,6 @@ export default function HomePage() {
           stocksData={stocksData}
           stocksLastUpdated={stocksLastUpdated}
           stocksUpdating={stocksUpdating}
-          militaryMode={militaryMode}
-          onMilitaryBaseSelect={handleMilitaryBaseSelect}
         />
       </div>
 

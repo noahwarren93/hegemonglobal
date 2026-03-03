@@ -15,6 +15,7 @@
       .header-right { right: 320px; }
       .globe-tools { right: 320px; }
       .search-overlay { right: 320px; }
+      .mil-bases-panel { width: 260px; max-height: 450px; }
       .watchlist { width: 160px; padding: 10px; }
       .watchlist-title { font-size: 8px; margin-bottom: 8px; }
       .watchlist-item { font-size: 9px; }
@@ -84,6 +85,9 @@
 
       /* Military info panel on mobile */
       .military-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
+
+      /* Military bases list panel on mobile */
+      .mil-bases-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
       /* Compare panel mobile - compact when 1 country, full when 2+ */
       /* z-index: 200 ensures it sits above all globe elements */

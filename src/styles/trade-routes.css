@@ -107,3 +107,18 @@
     .mil-section-title { font-size: 8px; font-weight: 700; color: #6b7280; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
 
     .mil-section-text { font-size: 10px; color: #9ca3af; line-height: 1.6; }
+
+    /* Military Bases List Panel (independent left-side panel) */
+    .mil-bases-panel { position: absolute; top: 80px; left: 16px; z-index: 30; width: 300px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 550px; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
+
+    .mil-bases-panel.active { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }
+
+    .mil-bases-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #1f2937; }
+
+    .mil-bases-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 20px; padding: 4px; }
+
+    .mil-bases-body { overflow-y: auto; max-height: 490px; }
+
+    .mil-bases-body::-webkit-scrollbar { width: 4px; }
+
+    .mil-bases-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }

@@ -10,7 +10,7 @@ import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
 import CountryFlag from '../CountryFlag';
-import { MILITARY_BASES, CARRIER_GROUPS, COUNTRY_COLORS } from '../../data/militaryBases';
+
 
 const TABS = [
   { id: 'events', label: 'Events' },
@@ -25,13 +25,12 @@ const ITEMS_PER_PAGE = 15;
 
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
-export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating, militaryMode, onMilitaryBaseSelect }) {
+export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating }) {
   const [activeTab, setActiveTab] = useState('events');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventsVersion, setEventsVersion] = useState(0); // force re-render when summaries arrive
-  const [expandedMilSections, setExpandedMilSections] = useState({});
   const contentRef = useRef(null);
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
@@ -639,136 +638,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return <StocksTab onOpenStocksModal={onOpenStocksModal} stocksData={stocksData} stocksLastUpdated={stocksLastUpdated} stocksUpdating={stocksUpdating} />;
   };
 
-  const renderMilitaryTab = () => {
-    // Group bases by OPERATING country (base.country field)
-    const countryGroups = {};
-    for (const base of MILITARY_BASES) {
-      const country = base.country;
-      if (!countryGroups[country]) countryGroups[country] = [];
-      countryGroups[country].push(base);
-    }
-
-    // Ordered section list — user-specified priority
-    const SECTION_ORDER = [
-      'United States', 'Russia', 'China', 'United Kingdom', 'France', 'Turkey',
-      'Israel', 'Iran', 'India', 'Germany', 'Japan', 'South Korea', 'Australia', 'NATO',
-    ];
-    const orderedSections = [];
-    const seen = new Set();
-    for (const s of SECTION_ORDER) {
-      if (countryGroups[s]) { orderedSections.push(s); seen.add(s); }
-    }
-    Object.keys(countryGroups).sort().forEach(s => {
-      if (!seen.has(s)) orderedSections.push(s);
-    });
-
-    const toggleSection = (section) => {
-      setExpandedMilSections(prev => ({ ...prev, [section]: !prev[section] }));
-    };
-
-    return (
-      <>
-        <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg, rgba(59,130,246,0.15) 0%, transparent 100%)', borderLeft: '3px solid #3b82f6', marginBottom: '6px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>MILITARY INSTALLATIONS</div>
-          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{MILITARY_BASES.length} bases + {CARRIER_GROUPS.length} carrier groups worldwide</div>
-        </div>
-
-        {orderedSections.map(section => {
-          const bases = countryGroups[section];
-          const isExpanded = !!expandedMilSections[section];
-          const sectionFlag = bases[0]?.flag || '';
-          const sectionColor = COUNTRY_COLORS[section] || '#6b7280';
-
-          return (
-            <div key={section}>
-              {/* Collapsible header */}
-              <div
-                onClick={() => toggleSection(section)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
-                  borderBottom: '1px solid #1f2937', background: isExpanded ? 'rgba(59,130,246,0.06)' : 'rgba(17,24,39,0.3)',
-                  cursor: 'pointer', transition: 'background 0.15s', userSelect: 'none',
-                }}
-              >
-                <span style={{ fontSize: '13px' }}>{sectionFlag}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: sectionColor, letterSpacing: '0.5px', flex: 1 }}>{section}</span>
-                <span style={{ fontSize: '8px', color: '#6b7280' }}>{bases.length}</span>
-                <span style={{ fontSize: '9px', color: '#6b7280', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                  &#9660;
-                </span>
-              </div>
-
-              {/* Expanded base list */}
-              {isExpanded && bases.map(base => (
-                <div
-                  key={base.id}
-                  onClick={() => onMilitaryBaseSelect(base)}
-                  style={{
-                    padding: '7px 12px 7px 22px', borderBottom: '1px solid #111827',
-                    cursor: 'pointer', transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{base.name}</div>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '8px', color: '#9ca3af' }}>{base.location}</span>
-                    <span style={{ fontSize: '7px', color: sectionColor, background: `${sectionColor}20`, padding: '1px 4px', borderRadius: '3px' }}>{base.branch}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-
-        {/* Carrier Strike Groups */}
-        <div
-          onClick={() => toggleSection('__carriers__')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 12px',
-            borderBottom: '1px solid #1f2937', borderTop: '2px solid #1f2937',
-            background: expandedMilSections['__carriers__'] ? 'rgba(6,182,212,0.06)' : 'rgba(17,24,39,0.3)',
-            cursor: 'pointer', userSelect: 'none',
-          }}
-        >
-          <span style={{ fontSize: '11px' }}>&#9875;</span>
-          <span style={{ fontSize: '10px', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.5px', flex: 1 }}>CARRIER STRIKE GROUPS</span>
-          <span style={{ fontSize: '8px', color: '#6b7280' }}>{CARRIER_GROUPS.length}</span>
-          <span style={{ fontSize: '9px', color: '#6b7280', transition: 'transform 0.2s', transform: expandedMilSections['__carriers__'] ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-            &#9660;
-          </span>
-        </div>
-        {expandedMilSections['__carriers__'] && CARRIER_GROUPS.map(carrier => {
-          const color = COUNTRY_COLORS[carrier.country] || '#6b7280';
-          return (
-            <div
-              key={carrier.id}
-              onClick={() => onMilitaryBaseSelect(carrier)}
-              style={{
-                padding: '7px 12px 7px 22px', borderBottom: '1px solid #111827',
-                cursor: 'pointer', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ fontSize: '10px' }}>{carrier.flag}</span>
-                <span style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{carrier.name}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '2px', paddingLeft: '15px' }}>
-                <span style={{ fontSize: '8px', color: '#9ca3af' }}>{carrier.location}</span>
-                <span style={{ fontSize: '7px', color, background: `${color}20`, padding: '1px 4px', borderRadius: '3px' }}>{carrier.branch}</span>
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'events': return militaryMode ? renderMilitaryTab() : renderEventsTab();
+      case 'events': return renderEventsTab();
       case 'newsletter': return renderBriefTab();
       case 'elections': return renderElectionsTab();
       case 'forecast': return renderForecastTab();
@@ -824,7 +696,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Content */}
         <div className="sidebar-content" ref={contentRef}>
           {renderTabContent()}
         </div>
