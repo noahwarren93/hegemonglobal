@@ -79,35 +79,6 @@
 
     /* Compare instruction styles moved to compare.css */
 
-    /* Military Info Panel */
-    .military-info-panel { position: absolute; top: 80px; left: 16px; z-index: 25; width: 320px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 550px; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
-
-    .military-info-panel.active { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }
-
-    .military-info-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 14px; border-bottom: 1px solid #1f2937; }
-
-    .military-info-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 20px; padding: 4px; flex-shrink: 0; }
-
-    .military-info-body { padding: 10px 14px; overflow-y: auto; max-height: 460px; }
-
-    .military-info-body::-webkit-scrollbar { width: 4px; }
-
-    .military-info-body::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
-
-    .mil-facts-row { display: flex; gap: 6px; margin-bottom: 12px; }
-
-    .mil-fact { flex: 1; background: #0d0d14; border-radius: 6px; padding: 6px 8px; text-align: center; }
-
-    .mil-fact-label { font-size: 7px; color: #6b7280; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-
-    .mil-fact-value { font-size: 9px; color: #e5e7eb; font-weight: 600; }
-
-    .mil-section { margin-bottom: 10px; }
-
-    .mil-section-title { font-size: 8px; font-weight: 700; color: #6b7280; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
-
-    .mil-section-text { font-size: 10px; color: #9ca3af; line-height: 1.6; }
-
     /* Military Bases List Panel (independent left-side panel) */
     .mil-bases-panel { position: absolute; top: 80px; left: 16px; z-index: 30; width: 300px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 550px; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
 

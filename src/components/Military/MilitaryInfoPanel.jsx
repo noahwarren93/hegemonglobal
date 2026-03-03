@@ -1,4 +1,4 @@
-// MilitaryInfoPanel.jsx — Detail panel for military installations and carrier groups
+// MilitaryInfoPanel.jsx — Centered modal for military installation / carrier group details
 
 import { useEffect } from 'react';
 import { COUNTRY_COLORS } from '../../data/militaryBases';
@@ -20,71 +20,84 @@ export default function MilitaryInfoPanel({ installation, isOpen, onClose }) {
   const isCarrier = installation.type === 'carrier';
 
   return (
-    <div className="military-info-panel active">
-      <div className="military-info-header" style={{ borderLeft: `3px solid ${accentColor}` }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '14px' }}>{installation.flag}</span>
-            <span style={{
-              fontSize: '7px', fontWeight: 700, color: accentColor,
-              background: `${accentColor}22`, padding: '2px 6px',
-              borderRadius: '3px', letterSpacing: '0.5px', textTransform: 'uppercase',
-            }}>
-              {isCarrier ? 'CARRIER STRIKE GROUP' : installation.branch}
-            </span>
+    <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal" style={{ maxWidth: '520px' }}>
+        {/* Header */}
+        <div className="modal-header" style={{ borderLeft: `3px solid ${accentColor}` }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '24px' }}>{installation.flag}</span>
+              <span style={{
+                fontSize: '8px', fontWeight: 700, color: accentColor,
+                background: `${accentColor}22`, padding: '2px 8px',
+                borderRadius: '3px', letterSpacing: '0.5px', textTransform: 'uppercase',
+              }}>
+                {isCarrier ? 'CARRIER STRIKE GROUP' : installation.branch}
+              </span>
+            </div>
+            <div className="modal-title" style={{ fontSize: '16px' }}>
+              {installation.name}
+            </div>
+            <div className="modal-subtitle">
+              {isCarrier ? installation.location : `${installation.location} ${installation.hostNation ? `(${installation.hostNation})` : ''}`}
+            </div>
           </div>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#e5e7eb', lineHeight: 1.3 }}>
-            {installation.name}
-          </div>
-          <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: '2px' }}>
-            {isCarrier ? installation.location : `${installation.location} ${installation.hostNation ? `(${installation.hostNation})` : ''}`}
-          </div>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
-        <button className="military-info-close" onClick={onClose}>&times;</button>
-      </div>
 
-      <div className="military-info-body">
-        {/* Quick Facts */}
-        <div className="mil-facts-row">
-          <div className="mil-fact">
-            <div className="mil-fact-label">Branch</div>
-            <div className="mil-fact-value">{installation.branch}</div>
+        {/* Body */}
+        <div className="modal-body">
+          {/* Quick Facts */}
+          <div className="facts-grid" style={{ marginBottom: '16px' }}>
+            <div className="fact">
+              <div className="fact-label">Branch</div>
+              <div className="fact-value">{installation.branch}</div>
+            </div>
+            <div className="fact">
+              <div className="fact-label">Personnel</div>
+              <div className="fact-value">{installation.personnel || 'Classified'}</div>
+            </div>
+            <div className="fact">
+              <div className="fact-label">Operator</div>
+              <div className="fact-value">{installation.flag} {installation.country}</div>
+            </div>
+            {installation.hostNation && installation.hostNation !== installation.country && (
+              <div className="fact">
+                <div className="fact-label">Host Nation</div>
+                <div className="fact-value">{installation.hostNation}</div>
+              </div>
+            )}
           </div>
-          <div className="mil-fact">
-            <div className="mil-fact-label">Personnel</div>
-            <div className="mil-fact-value">{installation.personnel || 'Classified'}</div>
+
+          {/* History */}
+          <div className="analysis-block">
+            <div className="analysis-header">
+              <div className="analysis-num n2">1</div>
+              <div className="analysis-title">History</div>
+            </div>
+            <div className="analysis-text">{installation.history}</div>
           </div>
-          <div className="mil-fact">
-            <div className="mil-fact-label">Operator</div>
-            <div className="mil-fact-value">{installation.flag} {installation.country}</div>
+
+          {/* Strategic Significance */}
+          <div className="analysis-block">
+            <div className="analysis-header">
+              <div className="analysis-num n1">2</div>
+              <div className="analysis-title">Strategic Significance</div>
+            </div>
+            <div className="analysis-text">{installation.significance}</div>
           </div>
-          {installation.hostNation && installation.hostNation !== installation.country && (
-            <div className="mil-fact">
-              <div className="mil-fact-label">Host Nation</div>
-              <div className="mil-fact-value">{installation.hostNation}</div>
+
+          {/* Iran War Role */}
+          {installation.iranWarRole && (
+            <div className="analysis-block" style={{ borderLeftColor: '#ef4444', background: 'rgba(239,68,68,0.06)' }}>
+              <div className="analysis-header">
+                <div className="analysis-num" style={{ background: '#7f1d1d', color: '#fca5a5' }}>!</div>
+                <div className="analysis-title" style={{ color: '#ef4444' }}>Current Role — Iran War</div>
+              </div>
+              <div className="analysis-text" style={{ color: '#fca5a5' }}>{installation.iranWarRole}</div>
             </div>
           )}
         </div>
-
-        {/* History */}
-        <div className="mil-section">
-          <div className="mil-section-title">History</div>
-          <div className="mil-section-text">{installation.history}</div>
-        </div>
-
-        {/* Strategic Significance */}
-        <div className="mil-section">
-          <div className="mil-section-title">Strategic Significance</div>
-          <div className="mil-section-text">{installation.significance}</div>
-        </div>
-
-        {/* Iran War Role */}
-        {installation.iranWarRole && (
-          <div className="mil-section" style={{ background: 'rgba(239,68,68,0.06)', borderRadius: '6px', padding: '8px 10px', border: '1px solid rgba(239,68,68,0.15)' }}>
-            <div className="mil-section-title" style={{ color: '#ef4444' }}>Current Role — Iran War</div>
-            <div className="mil-section-text" style={{ color: '#fca5a5' }}>{installation.iranWarRole}</div>
-          </div>
-        )}
       </div>
     </div>
   );

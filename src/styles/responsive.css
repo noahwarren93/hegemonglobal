@@ -83,9 +83,6 @@
       /* Trade info panel on mobile */
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
-      /* Military info panel on mobile */
-      .military-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
-
       /* Military bases list panel on mobile */
       .mil-bases-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
