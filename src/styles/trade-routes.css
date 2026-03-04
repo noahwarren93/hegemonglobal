@@ -80,7 +80,7 @@
     /* Compare instruction styles moved to compare.css */
 
     /* Military Bases List Panel (independent left-side panel) */
-    .mil-bases-panel { position: absolute; top: 80px; left: 16px; z-index: 30; width: 300px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 550px; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
+    .mil-bases-panel { position: absolute; top: 80px; left: 16px; z-index: 30; width: 300px; background: rgba(10,10,15,0.98); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 10px; border: 1px solid #1f2937; max-height: 550px; overflow: hidden; display: flex; flex-direction: column; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none; }
 
     .mil-bases-panel.active { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }
 
@@ -88,7 +88,7 @@
 
     .mil-bases-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 20px; padding: 4px; }
 
-    .mil-bases-body { overflow-y: auto; max-height: 490px; }
+    .mil-bases-body { flex: 1; overflow-y: auto; }
 
     .mil-bases-body::-webkit-scrollbar { width: 4px; }
 

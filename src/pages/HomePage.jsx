@@ -838,7 +838,7 @@ export default function HomePage() {
           {/* Military Bases List Panel */}
           <MilitaryBasesPanel
             isOpen={militaryMode && militaryPanelOpen}
-            onClose={() => setMilitaryPanelOpen(false)}
+            onClose={handleToggleMilitary}
             onBaseSelect={handleMilitaryBaseSelect}
           />
 
