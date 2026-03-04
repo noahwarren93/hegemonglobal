@@ -42,7 +42,7 @@ export const COUNTRIES = {
     ]
   },
 
-  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Humanitarian Crisis', 'Armed Conflict'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
+  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Humanitarian Crisis', 'Armed Conflict', 'Terrorism/Insurgency'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
     analysis: {
       what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 72,000 Palestinians and displaced 1.9 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,193+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas under Israeli occupation while 700,000+ settlers expand into Palestinian territory. Post-war Gaza governance remains unresolved.',
       why: 'The Gaza war and ceasefire process have reshaped Middle East geopolitics. Hezbollah was significantly weakened by Israel\'s military operations. The humanitarian catastrophe has inflamed global opinion and strained US relations with allies. Palestinian statehood recognition has gained momentum internationally. The ceasefire\'s fragility threatens a return to full-scale conflict.',
