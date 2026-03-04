@@ -30,6 +30,19 @@ export const COUNTRIES = {
   },
 
   'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', tags: ['Armed Conflict', 'Sanctions/Isolation', 'Authoritarian Crackdown'], region: 'Eastern Europe', pop: '144M', gdp: '$2.54T', leader: 'Vladimir Putin', title: 'War & Negotiations',
+    casualties: {
+      total: '~1.2M',
+      label: 'Russian military casualties since Feb 2022',
+      lastUpdated: 'Jan 2026',
+      source: 'CSIS Report',
+      contested: true,
+      sources: [
+        { name: 'CSIS (Western estimate)', figure: '~1.2M total', note: '275,000-325,000 killed, rest wounded/missing — unprecedented since WWII' },
+        { name: 'Ukrainian General Staff', figure: '1M+ losses', note: 'Claims higher figures — includes equipment losses' },
+        { name: 'Mediazona/BBC (verified)', figure: '80,000+ confirmed dead', note: 'Independently verified by name — known to be significant undercount' },
+        { name: 'Russian MoD (official)', figure: '~6,000 (2022)', note: 'Last published figure — widely considered a massive undercount' }
+      ]
+    },
     analysis: {
       what: 'Russia continues its war in Ukraine while engaging in trilateral peace negotiations with the US and Ukraine. Geneva talks in February 2026 showed progress on military tracks but Russia demands Ukrainian withdrawal from Donbas as a precondition—a non-starter for Kyiv. The country faces unprecedented Western sanctions—over 16,000 measures—but has adapted through shadow fleet oil sales and trade rerouting via China and India. The war economy consumes 40% of the budget. Military casualties are estimated at 300,000+ killed and wounded. Domestically, Putin has consolidated total authoritarian control.',
       why: 'Russia possesses the world\'s largest nuclear arsenal and a permanent UN Security Council seat. The invasion has shattered the post-Cold War European security order. Russia\'s partnership with China, Iran, and North Korea forms a growing axis challenging Western hegemony. The peace negotiations represent the first serious diplomatic opening since the war began.',
@@ -44,7 +57,7 @@ export const COUNTRIES = {
 
   'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Humanitarian Crisis', 'Armed Conflict', 'Terrorism/Insurgency'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
     analysis: {
-      what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 72,000 Palestinians and displaced 1.9 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,193+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas under Israeli occupation while 700,000+ settlers expand into Palestinian territory. Post-war Gaza governance remains unresolved.',
+      what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 72,000 Palestinians and displaced 1.9 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,193+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas in Israeli-controlled territory while 700,000+ settlers expand into disputed land. Post-war Gaza governance remains unresolved.',
       why: 'The Gaza war and ceasefire process have reshaped Middle East geopolitics. Hezbollah was significantly weakened by Israel\'s military operations. The humanitarian catastrophe has inflamed global opinion and strained US relations with allies. Palestinian statehood recognition has gained momentum internationally. The ceasefire\'s fragility threatens a return to full-scale conflict.',
       next: 'Phase 2 negotiations will determine long-term outcomes. Watch for: ceasefire compliance, Gaza reconstruction and governance, humanitarian access, West Bank settler violence, and international recognition moves. The fundamental question of Palestinian statehood remains the core unresolved issue of Middle East politics.'
     },
@@ -84,15 +97,16 @@ export const COUNTRIES = {
 
   'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', tags: ['Civil War', 'Military Junta', 'Humanitarian Crisis'], region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil War Stalemate',
     casualties: {
-      total: '6,000+',
-      label: 'Verified civilian deaths since 2021 coup',
-      lastUpdated: 'Dec 2024',
-      source: 'UN OHCHR',
+      total: '6,000–75,000+',
+      label: 'Killed since 2021 coup',
+      lastUpdated: 'Early 2026',
+      source: 'Multiple estimates',
       contested: true,
       sources: [
-        { name: 'AAPP (verified civilians)', figure: '5,665+', note: 'Assistance Association for Political Prisoners — 2,500 more pending' },
-        { name: 'UN OHCHR', figure: '6,000+', note: 'Civilian deaths as of Dec 2024' },
-        { name: 'UN (total estimate)', figure: '~75,000+', note: 'All causes including combatants — 5.2M displaced' }
+        { name: 'AAPP (verified civilians)', figure: '5,665+', note: 'Independently verified political prisoner deaths — 2,500 more pending confirmation' },
+        { name: 'UN OHCHR', figure: '6,000+', note: 'Verified civilian deaths as of Dec 2024 — acknowledged undercount' },
+        { name: 'PRIO (research institute)', figure: '6,337+', note: 'Civilian deaths in first 20 months — does not cover 2024-2026' },
+        { name: 'UN (total estimate)', figure: '~75,000+', note: 'All conflict-related deaths including combatants — 5.2M displaced' }
       ]
     },
     analysis: {
@@ -109,11 +123,17 @@ export const COUNTRIES = {
 
   'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', tags: ['Armed Conflict', 'Humanitarian Crisis', 'Sectarian Violence'], region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Houthi Retaliation Imminent — Red Sea Crisis',
     casualties: {
-      total: '377,000+',
-      label: 'Killed since 2015 (all causes)',
-      lastUpdated: 'UN est. 2022',
-      source: 'United Nations',
-      contested: false
+      total: '150,000–377,000+',
+      label: 'Killed since 2015',
+      lastUpdated: 'Early 2026',
+      source: 'Multiple estimates',
+      contested: true,
+      sources: [
+        { name: 'UN (all causes, 2022)', figure: '377,000+', note: '~150,000 direct combat deaths, ~227,000 from hunger, disease, lack of healthcare' },
+        { name: 'ACLED (direct violence)', figure: '90,000+', note: 'Documented conflict fatalities through 2019 — incomplete for later years' },
+        { name: 'US strikes on Houthis (2025)', figure: '650+ Houthi killed', note: 'Operation Rough Rider — 238 civilians killed per Yemen Data Project' },
+        { name: 'UN projection', figure: '1.3M by 2030', note: 'If conflict continues — 70% projected to be children under 5' }
+      ]
     },
     analysis: {
       what: 'The US-Houthi ceasefire from May 2025 is effectively void after US-Israeli strikes on Iran on February 28, 2026. Houthi leader Abdulmalik al-Houthi condemned the strikes as "a blatant, criminal, and barbaric act" and expressed "complete solidarity" with Iran. A million-person solidarity march took place in Sanaa on March 1. Anonymous officials indicated the group would "soon begin attacks" on Israel and international shipping, though as of March 3 no major retaliatory strikes have been launched. The Houthis retain anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
