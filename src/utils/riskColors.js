@@ -417,7 +417,7 @@ export const COUNTRY_TRENDS = {
 export const COUNTRY_INDICATORS = {
   'Ukraine': [{ text: 'Conflict', dir: 'up' }, { text: 'Aid Flow', dir: 'stable' }, { text: 'Diplomacy', dir: 'down' }],
   'Russia': [{ text: 'Sanctions', dir: 'up' }, { text: 'Economy', dir: 'down' }, { text: 'Military', dir: 'stable' }],
-  'Palestine': [{ text: 'Humanitarian', dir: 'up' }, { text: 'Occupation', dir: 'up' }, { text: 'Ceasefire', dir: 'stable' }],
+  'Palestine': [{ text: 'Humanitarian', dir: 'up' }, { text: 'Territorial Dispute', dir: 'up' }, { text: 'Ceasefire', dir: 'stable' }],
   'Israel': [{ text: 'Security', dir: 'up' }, { text: 'Politics', dir: 'down' }, { text: 'Regional', dir: 'up' }],
   'Sudan': [{ text: 'Violence', dir: 'up' }, { text: 'Famine', dir: 'up' }, { text: 'Displacement', dir: 'up' }],
   'Myanmar': [{ text: 'Resistance', dir: 'up' }, { text: 'Junta Control', dir: 'down' }, { text: 'Refugees', dir: 'up' }],
