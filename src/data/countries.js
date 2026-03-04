@@ -42,19 +42,7 @@ export const COUNTRIES = {
     ]
   },
 
-  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Occupation', 'Humanitarian Crisis', 'Armed Conflict'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
-    casualties: {
-      total: '72,097+',
-      label: 'Killed in Gaza since Oct 2023',
-      lastUpdated: 'March 2026',
-      source: 'Gaza Health Ministry',
-      contested: true,
-      sources: [
-        { name: 'Gaza Health Ministry', figure: '72,097+', note: 'Direct count — acknowledged undercount due to collapsed infrastructure' },
-        { name: 'The Lancet (peer-reviewed)', figure: '~97,000+', note: 'Survey-based estimate — suggests 35% undercount in official figures' },
-        { name: 'UN OCHA', figure: '72,000+', note: 'Cites ministry figures — notes likely significant undercount' }
-      ]
-    },
+  'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Humanitarian Crisis', 'Armed Conflict'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
     analysis: {
       what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 72,000 Palestinians and displaced 1.9 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,193+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas under Israeli occupation while 700,000+ settlers expand into Palestinian territory. Post-war Gaza governance remains unresolved.',
       why: 'The Gaza war and ceasefire process have reshaped Middle East geopolitics. Hezbollah was significantly weakened by Israel\'s military operations. The humanitarian catastrophe has inflamed global opinion and strained US relations with allies. Palestinian statehood recognition has gained momentum internationally. The ceasefire\'s fragility threatens a return to full-scale conflict.',
@@ -204,7 +192,14 @@ export const COUNTRIES = {
   },
 
   // ==================== EXTREME ====================
-  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute', 'Occupation'], region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Active War — Multi-Front Conflict',
+  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute'], region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Active War — Multi-Front Conflict',
+    casualties: {
+      total: '11+',
+      label: 'Killed in Iranian strikes since Feb 28',
+      lastUpdated: 'March 2026',
+      source: 'Israeli government',
+      contested: false
+    },
     analysis: {
       what: 'Israel launched "Operation Roaring Lion" on February 28, 2026 — coordinated strikes with the US on Iran targeting nuclear sites, IRGC command centers, and leadership compounds. The operation killed Supreme Leader Khamenei. Iran retaliated with "Operation True Promise IV," launching ballistic missiles at Israeli territory, killing at least 11 people. Hezbollah opened a second front on March 2, firing missiles and drone swarms at an IDF base near Haifa. Israel\'s Defense Minister authorized a ground invasion of Lebanon in response. Israeli strikes on Beirut killed 52+ people. The state of emergency remains in effect with Arrow and Iron Dome systems actively intercepting incoming missiles on multiple fronts.',
       why: 'Israel is now fighting an active multi-front war — direct conflict with Iran, renewed hostilities with Hezbollah in Lebanon, and potential Houthi escalation from Yemen. This is the most significant Israeli military engagement since the 1973 Yom Kippur War in terms of state-level adversaries. Air defense systems are being tested at unprecedented scale. Economic disruption is severe with the entire civilian population under shelter orders. The conflict risks drawing in Iraqi militias and further destabilizing the region.',
