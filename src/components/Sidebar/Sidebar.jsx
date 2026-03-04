@@ -313,8 +313,24 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Base timeline — hardcoded foundational events. Auto-merged with live RSS below.
   const WAR_TIMELINE_BASE = [
-    // March 3-4 \u2014 Days 4-5 of war
-    { time: '2026-03-04T06:00:00Z', text: 'US-Israel achieve air superiority over Tehran \u2014 2,000+ strikes conducted since Feb 28' },
+    // March 5 \u2014 Day 6 of war
+    { time: '2026-03-05T14:00:00Z', text: 'Houthis announce resumption of Red Sea shipping attacks \u2014 first since Nov 2024 pause' },
+    { time: '2026-03-05T12:00:00Z', text: 'CIA reportedly arming Kurdish forces along Iraq-Iran border to spark internal uprising' },
+    { time: '2026-03-05T10:00:00Z', text: 'France deploys aircraft carrier Charles de Gaulle to eastern Mediterranean' },
+    { time: '2026-03-05T08:00:00Z', text: 'Three-day funeral ceremony for Khamenei begins at Tehran\'s Imam Khomeini prayer ground' },
+    { time: '2026-03-05T06:00:00Z', text: 'Iranian death toll surpasses 800+ \u2014 Red Crescent overwhelmed, mass burials in multiple provinces' },
+    // March 4 \u2014 Day 5 of war
+    { time: '2026-03-04T20:00:00Z', text: 'IRGC announces ground forces entering battlefield operations \u2014 230 drones engaged' },
+    { time: '2026-03-04T18:00:00Z', text: 'US Senate votes on War Powers Resolution \u2014 fails along party lines, Trump veto expected regardless' },
+    { time: '2026-03-04T16:00:00Z', text: 'IRGC launches 17th wave of Operation True Promise IV \u2014 40+ missiles at US base in Bahrain' },
+    { time: '2026-03-04T14:00:00Z', text: 'IDF ground incursion into southern Lebanon \u2014 described as "forward defence" against Hezbollah' },
+    { time: '2026-03-04T12:00:00Z', text: 'French Rafale fighters shoot down Iranian drones over UAE \u2014 two French bases sustain damage' },
+    { time: '2026-03-04T10:00:00Z', text: 'Iranian drone strikes US Consulate parking lot in Dubai \u2014 fire erupts, all personnel accounted for' },
+    { time: '2026-03-04T08:00:00Z', text: 'Iranian attack on UAE Fujairah Oil Industry Zone \u2014 drone intercepted, shrapnel starts fire' },
+    { time: '2026-03-04T06:00:00Z', text: 'US-Israel achieve air superiority over Tehran \u2014 2,500+ strikes conducted since Feb 28' },
+    { time: '2026-03-04T04:00:00Z', text: 'Israel strikes Assembly of Experts building in Qom and hotel near Beirut' },
+    { time: '2026-03-04T02:00:00Z', text: 'IRGC launches 16th wave of Operation True Promise IV \u2014 missiles and drones at US/Israeli targets' },
+    // March 3 \u2014 Day 4 of war
     { time: '2026-03-03T18:00:00Z', text: 'Rubio warns "hardest hits yet to come" \u2014 US escalation in scope and intensity' },
     { time: '2026-03-03T16:00:00Z', text: 'Trump says war could last 4-5 weeks \u2014 offers US insurance for Gulf shipping and tanker escorts' },
     { time: '2026-03-03T14:00:00Z', text: 'Satellite imagery confirms Natanz Nuclear Facility damage \u2014 IAEA says no radiological release' },
@@ -389,9 +405,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const WAR_INTEL = {
-    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 2,000 strikes have hit targets across 24 of 31 Iranian provinces. Supreme Leader Khamenei was killed along with 40+ senior officials. The Iranian death toll has surpassed 787 (Al Jazeera tracker) with some estimates exceeding 1,190 (HRANA). A strike on a girls\' school in Minab killed 148+ students. An interim leadership council (Pezeshkian, Mohseni-Ejei, Arafi) has assumed power. Iran retaliated across 9 countries \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 11+. Six US service members have been killed including 4 soldiers in a Kuwait drone attack. The IRGC declared the Strait of Hormuz closed on March 2. The IDF destroyed the Natanz nuclear facility and a covert nuclear site "Minzadehei." Israel struck Beirut and Tehran simultaneously on March 3, hitting the IRIB broadcasting complex and Golestan Palace (UNESCO site). US-Israel have achieved air superiority over Tehran.',
-    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center. The Strait of Hormuz is effectively closed with tanker traffic at near zero \u2014 20% of global oil transit is blocked. Brent crude has spiked to $84/barrel with analysts warning of $120-200 if sustained. Iranian proxies are activated: Hezbollah resumed hostilities from Lebanon (first since Nov 2024), Iraqi Shia militias launched 23+ drone strikes on US positions, and Houthis are preparing retaliatory strikes. Iran attacked targets across 8+ Arab states including the US embassy in Riyadh. Six US service members are dead. France has offered a nuclear defense umbrella to Gulf states.',
-    outlook: 'Full regional war is the baseline scenario. Trump says the war could last 4-5 weeks. Rubio warns "hardest hits yet to come." Active fronts: sustained Iranian missile salvos against Gulf oil infrastructure, Hezbollah rocket barrages from Lebanon (31 killed, 149 wounded in Israeli retaliatory strikes), Houthi retaliation imminent in the Red Sea, Strait of Hormuz blockade enforced, and Iraqi militia attacks on US positions. A dual blockade of Hormuz and the Red Sea would be unprecedented. Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Iran\'s interim leadership council signals mixed diplomatic signals \u2014 FM Araghchi open to de-escalation while security chief Larijani rejects negotiations. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
+    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 2,500 strikes have hit targets across 24 of 31 Iranian provinces. Supreme Leader Khamenei was killed along with 40+ senior officials. The Iranian death toll has surpassed 800 (Red Crescent) with some estimates exceeding 1,190 (HRANA). A strike on a girls\' school in Minab killed 165 students and staff. An interim leadership council (Pezeshkian, Mohseni-Ejei, Arafi) has assumed power. Iran retaliated across 9 countries with 17 waves of Operation True Promise IV \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 11+. Six US service members have been killed. The IRGC declared the Strait of Hormuz closed. The IDF destroyed the Natanz nuclear facility and a covert nuclear site "Minzadehei." France has actively engaged, shooting down Iranian drones over the UAE with Rafale fighters. An Iranian drone struck the US Consulate in Dubai. The IDF launched a ground incursion into southern Lebanon. The IRGC announced ground forces entering battlefield operations with 230 drones engaged.',
+    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center. The Strait of Hormuz is effectively closed with tanker traffic at near zero \u2014 20% of global oil transit is blocked. Brent crude has spiked to $84/barrel with analysts warning of $100-200 if sustained. The conflict has expanded to 9+ countries with France now actively shooting down Iranian drones. Iranian proxies are activated: Hezbollah resumed hostilities from Lebanon (50+ killed in Israeli retaliatory strikes), the IDF launched a ground incursion into southern Lebanon, Iraqi Shia militias declared war on US positions, and Houthis announced resumption of Red Sea attacks. The US Consulate in Dubai was struck by an Iranian drone. The CIA is reportedly arming Kurdish forces along the Iraq-Iran border. The US Senate War Powers Resolution failed.',
+    outlook: 'Full regional war is the baseline scenario. Trump says the war could last 4-5 weeks. Active fronts: IRGC has launched 17+ waves of retaliatory strikes against Gulf infrastructure, IDF ground forces operating in southern Lebanon, Houthis preparing Red Sea shipping attacks (dual Hormuz + Red Sea blockade would be unprecedented), Iraqi Shia militias attacking US bases in Erbil and Kuwait, and the CIA arming Kurdish insurgents along the Iraq-Iran border. France has deployed the aircraft carrier Charles de Gaulle to the Mediterranean. Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Iran\'s interim leadership signals mixed diplomatic intentions \u2014 FM Araghchi open to de-escalation while security chief Larijani rejects negotiations. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
 
   const openBreakingModal = () => {
@@ -409,7 +425,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderBreakingCard = () => {
-    const preview = '2,000+ strikes on Iran. 787+ killed. Natanz nuclear site destroyed. Beit Shemesh missile kills 9. 6 US troops dead. Strait of Hormuz closed. Hezbollah attacks from Lebanon. Air superiority over Tehran \u2014 Day 5.';
+    const preview = '2,500+ strikes on Iran. 800+ killed. Natanz destroyed. US Consulate in Dubai hit. IDF ground incursion in Lebanon. France shooting down Iranian drones. Hormuz closed. Houthis resume Red Sea attacks \u2014 Day 6.';
 
     return (
       <div
@@ -433,7 +449,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            IRAN: 787+ killed
+            IRAN: 800+ killed
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
             ISRAEL: 11 killed
@@ -723,7 +739,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
           <div style={{ fontSize: '10px', color: '#6b7280' }}>
             {newsTimestamp ? (
-              <><span style={{ color: '#22c55e' }}>&#9679;</span> {newsTimestamp}</>
+              <>{newsTimestamp}</>
             ) : (
               'Loading live news...'
             )}
