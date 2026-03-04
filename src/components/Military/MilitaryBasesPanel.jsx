@@ -54,8 +54,8 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
     <div className="mil-bases-panel active">
       <div className="mil-bases-header">
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#3b82f6' }}>Military Installations</div>
-          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{MILITARY_BASES.length} bases + {CARRIER_GROUPS.length} carrier groups</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6' }}>Military Installations</div>
+          <div style={{ fontSize: '8px', color: '#6b7280', marginTop: '2px' }}>{MILITARY_BASES.length} bases + {CARRIER_GROUPS.length} carrier groups</div>
         </div>
         <button className="mil-bases-close" onClick={onClose}>&times;</button>
       </div>
@@ -72,20 +72,20 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
               <div
                 onClick={() => toggleSection(section)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
+                  display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px',
                   borderBottom: '1px solid #1f2937', background: isExpanded ? 'rgba(59,130,246,0.06)' : 'rgba(17,24,39,0.3)',
                   cursor: 'pointer', transition: 'background 0.15s', userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '13px' }}>{sectionFlag}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: sectionColor, letterSpacing: '0.5px', flex: 1 }}>{section}</span>
-                <span style={{ fontSize: '8px', color: '#6b7280' }}>{bases.length}</span>
+                <span style={{ fontSize: '11px' }}>{sectionFlag}</span>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: sectionColor, letterSpacing: '0.3px', flex: 1 }}>{section}</span>
+                <span style={{ fontSize: '7px', color: '#6b7280' }}>{bases.length}</span>
                 {NUCLEAR_WARHEADS[section] && (
-                  <span style={{ fontSize: '8px', color: '#fbbf24', marginLeft: '2px' }}>
+                  <span style={{ fontSize: '7px', color: '#fbbf24', marginLeft: '1px' }}>
                     {'\u2622'} {NUCLEAR_WARHEADS[section]}
                   </span>
                 )}
-                <span style={{ fontSize: '9px', color: '#6b7280', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                <span style={{ fontSize: '8px', color: '#6b7280', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                   &#9660;
                 </span>
               </div>
@@ -95,16 +95,16 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
                   key={base.id}
                   onClick={() => onBaseSelect(base)}
                   style={{
-                    padding: '7px 12px 7px 22px', borderBottom: '1px solid #111827',
+                    padding: '5px 10px 5px 18px', borderBottom: '1px solid #111827',
                     cursor: 'pointer', transition: 'background 0.15s',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{base.name}</div>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '8px', color: '#9ca3af' }}>{base.location}</span>
-                    <span style={{ fontSize: '7px', color: sectionColor, background: `${sectionColor}20`, padding: '1px 4px', borderRadius: '3px' }}>{base.branch}</span>
+                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{base.name}</div>
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+                    <span style={{ fontSize: '7px', color: '#9ca3af' }}>{base.location}</span>
+                    <span style={{ fontSize: '6.5px', color: sectionColor, background: `${sectionColor}20`, padding: '1px 3px', borderRadius: '3px' }}>{base.branch}</span>
                   </div>
                 </div>
               ))}
@@ -116,15 +116,15 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
         <div
           onClick={() => toggleSection('__carriers__')}
           style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 12px',
+            display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 10px',
             borderBottom: '1px solid #1f2937', borderTop: '2px solid #1f2937',
             background: expandedSections['__carriers__'] ? 'rgba(6,182,212,0.06)' : 'rgba(17,24,39,0.3)',
             cursor: 'pointer', userSelect: 'none',
           }}
         >
-          <span style={{ fontSize: '11px' }}>&#9875;</span>
-          <span style={{ fontSize: '10px', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.5px', flex: 1 }}>CARRIER STRIKE GROUPS</span>
-          <span style={{ fontSize: '8px', color: '#6b7280' }}>{CARRIER_GROUPS.length}</span>
+          <span style={{ fontSize: '10px' }}>&#9875;</span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.3px', flex: 1 }}>CARRIER STRIKE GROUPS</span>
+          <span style={{ fontSize: '7px', color: '#6b7280' }}>{CARRIER_GROUPS.length}</span>
           <span style={{ fontSize: '9px', color: '#6b7280', transition: 'transform 0.2s', transform: expandedSections['__carriers__'] ? 'rotate(180deg)' : 'rotate(0deg)' }}>
             &#9660;
           </span>
@@ -136,19 +136,19 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
               key={carrier.id}
               onClick={() => onBaseSelect(carrier)}
               style={{
-                padding: '7px 12px 7px 22px', borderBottom: '1px solid #111827',
+                padding: '5px 10px 5px 18px', borderBottom: '1px solid #111827',
                 cursor: 'pointer', transition: 'background 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.08)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ fontSize: '10px' }}>{carrier.flag}</span>
-                <span style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{carrier.name}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '9px' }}>{carrier.flag}</span>
+                <span style={{ fontSize: '9px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3 }}>{carrier.name}</span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '2px', paddingLeft: '15px' }}>
-                <span style={{ fontSize: '8px', color: '#9ca3af' }}>{carrier.location}</span>
-                <span style={{ fontSize: '7px', color, background: `${color}20`, padding: '1px 4px', borderRadius: '3px' }}>{carrier.branch}</span>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '2px', paddingLeft: '13px' }}>
+                <span style={{ fontSize: '7px', color: '#9ca3af' }}>{carrier.location}</span>
+                <span style={{ fontSize: '6.5px', color, background: `${color}20`, padding: '1px 3px', borderRadius: '3px' }}>{carrier.branch}</span>
               </div>
             </div>
           );
