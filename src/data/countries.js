@@ -30,6 +30,7 @@ export const COUNTRIES = {
   },
 
   'Russia': { lat: 61.52, lng: 105.32, flag: '🇷🇺', risk: 'catastrophic', tags: ['Armed Conflict', 'Sanctions/Isolation', 'Authoritarian Crackdown'], region: 'Eastern Europe', pop: '144M', gdp: '$2.54T', leader: 'Vladimir Putin', title: 'War & Negotiations',
+    nuclear: { warheads: '~5,580', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~1,710 strategic deployed' },
     casualties: {
       total: '~1.2M',
       label: 'Russian military casualties since Feb 2022',
@@ -136,7 +137,7 @@ export const COUNTRIES = {
       ]
     },
     analysis: {
-      what: 'The US-Houthi ceasefire from May 2025 is effectively void after US-Israeli strikes on Iran on February 28, 2026. Houthi leader Abdulmalik al-Houthi condemned the strikes as "a blatant, criminal, and barbaric act" and expressed "complete solidarity" with Iran. A million-person solidarity march took place in Sanaa on March 1. Anonymous officials indicated the group would "soon begin attacks" on Israel and international shipping, though as of March 3 no major retaliatory strikes have been launched. The Houthis retain anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
+      what: 'The US-Houthi ceasefire from May 2025 is effectively void after US-Israeli strikes on Iran on February 28, 2026. Houthi leader Abdulmalik al-Houthi condemned the strikes as "a blatant, criminal, and barbaric act targeting the Muslim Iranian people." A million-person solidarity march took place in Sanaa on March 1. AP reported (citing two senior Houthi officials) that Houthis are planning to resume attacks on Israel and Red Sea shipping, though as of March 4 no major retaliatory strikes have been launched — described as "a frightening silence" as the group prepares. The Houthis retain anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
       why: 'Previous Houthi attacks on Red Sea shipping forced the largest rerouting of global trade since the Suez Crisis, adding weeks to transit times and billions in costs. Renewed attacks would compound the Strait of Hormuz closure, creating a dual chokepoint crisis — the Red Sea and the Persian Gulf blocked simultaneously. Maritime insurers have already cancelled war risk cover in the Gulf. Oil prices have spiked 6-10% and would surge further with active Houthi operations. The US has two carrier strike groups in the region that could become targets.',
       next: 'Houthi attacks are expected imminently but have not yet materialized, suggesting possible restraint or preparation for a coordinated salvo. Watch for: anti-ship missile launches in the Bab el-Mandeb strait, drone attacks on commercial vessels, ballistic missile strikes toward Israel, and US preemptive strikes on Houthi positions. A dual blockade of Hormuz and the Red Sea would be unprecedented and catastrophic for global energy markets.'
     },
@@ -213,6 +214,7 @@ export const COUNTRIES = {
 
   // ==================== EXTREME ====================
   'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute'], region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Active War — Multi-Front Conflict',
+    nuclear: { warheads: '~90', status: 'Undeclared (estimated)', source: 'SIPRI/FAS 2025', deployed: 'Policy of deliberate ambiguity — never confirmed' },
     casualties: {
       total: '11+',
       label: 'Killed in Iranian strikes since Feb 28',
@@ -221,14 +223,14 @@ export const COUNTRIES = {
       contested: false
     },
     analysis: {
-      what: 'Israel launched "Operation Roaring Lion" on February 28, 2026 — coordinated strikes with the US on Iran targeting nuclear sites, IRGC command centers, and leadership compounds. The operation killed Supreme Leader Khamenei. Iran retaliated with "Operation True Promise IV," launching ballistic missiles at Israeli territory, killing at least 11 people. Hezbollah opened a second front on March 2, firing missiles and drone swarms at an IDF base near Haifa. Israel\'s Defense Minister authorized a ground invasion of Lebanon in response. Israeli strikes on Beirut killed 52+ people. The state of emergency remains in effect with Arrow and Iron Dome systems actively intercepting incoming missiles on multiple fronts.',
-      why: 'Israel is now fighting an active multi-front war — direct conflict with Iran, renewed hostilities with Hezbollah in Lebanon, and potential Houthi escalation from Yemen. This is the most significant Israeli military engagement since the 1973 Yom Kippur War in terms of state-level adversaries. Air defense systems are being tested at unprecedented scale. Economic disruption is severe with the entire civilian population under shelter orders. The conflict risks drawing in Iraqi militias and further destabilizing the region.',
-      next: 'The ground invasion of Lebanon is the immediate escalation risk. Watch for: scale and duration of Iranian missile salvos, Hezbollah precision-guided munitions targeting Tel Aviv, IDF operations in southern Lebanon, Houthi missile launches toward Eilat, and whether the conflict remains limited or spirals into a full regional war. Trump indicated the war could last 4-5 weeks.'
+      what: 'Israel launched "Operation Roaring Lion" on February 28, 2026 — coordinated strikes with the US on Iran targeting nuclear sites, IRGC command centers, and leadership compounds. The operation killed Supreme Leader Khamenei and destroyed the Natanz nuclear facility and covert site "Minzadehei." Iran retaliated with "Operation True Promise IV" — a ballistic missile hit a synagogue shelter in Beit Shemesh on March 1, killing 9 including 3 siblings (ages 13-16). Total Israeli deaths stand at 11+. Hezbollah resumed hostilities on March 1 (first since Nov 2024 ceasefire). Israel struck Beirut and Tehran simultaneously on March 3, killing 31 and wounding 149 in Lebanon. The IDF is mobilizing tens of thousands of reservists near the Lebanese border. US-Israel have achieved air superiority over Tehran after 2,000+ strikes.',
+      why: 'Israel is now fighting an active multi-front war — direct conflict with Iran, renewed hostilities with Hezbollah in Lebanon, and potential Houthi escalation from Yemen. This is the most significant Israeli military engagement since the 1973 Yom Kippur War. The Beit Shemesh strike killing 3 children has galvanized domestic support for the war. Air defense systems are tested at unprecedented scale — Iron Dome was overwhelmed in the south. The IDF claims to have set back Iran\'s nuclear program by years. Economic disruption is severe with the civilian population under shelter orders.',
+      next: 'Israeli ground incursion into southern Lebanon appears imminent with tens of thousands of reservists mobilized. Watch for: further Iranian ballistic missile salvos, Hezbollah precision-guided munitions targeting Tel Aviv, IDF ground operations in Lebanon, Houthi missile launches toward Eilat, and dual Hormuz/Red Sea blockade impact on Israeli imports. Trump indicated the war could last 4-5 weeks. Rubio warns "hardest hits yet to come."'
     },
     news: [
-      { source: 'Times of Israel', bias: 'center-right', time: '2026-03-03T09:00:00Z', headline: 'Defense Minister authorizes ground invasion of Lebanon', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-03-02T15:00:00Z', headline: 'Hezbollah drone swarm hits IDF base near Haifa — 11 killed in Iranian missile strikes', url: '#' },
-      { source: 'Haaretz', bias: 'center-left', time: '2026-03-02T12:00:00Z', headline: 'Israeli strikes on Beirut kill 52 as multi-front war intensifies', url: '#' },
+      { source: 'Times of Israel', bias: 'center-right', time: '2026-03-03T14:00:00Z', headline: 'IDF claims destruction of Natanz and covert nuclear site "Minzadehei"', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-03T10:00:00Z', headline: 'Israel strikes Beirut and Tehran simultaneously — IRIB complex and Golestan Palace hit', url: '#' },
+      { source: 'Haaretz', bias: 'center-left', time: '2026-03-01T12:00:00Z', headline: 'Iranian missile hits Beit Shemesh synagogue shelter — 9 killed including 3 children', url: '#' },
       { source: 'AP', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'IDF confirms "Operation Roaring Lion" — strikes across Iran', url: '#' }
     ]
   },
@@ -255,25 +257,26 @@ export const COUNTRIES = {
       contested: true,
       sources: [
         { name: 'HRANA (human rights org)', figure: '1,190+', note: 'Comprehensive report — 4,475 injured' },
-        { name: 'Al Jazeera tracker', figure: '787+', note: 'Live tracker as of March 2' },
+        { name: 'Al Jazeera tracker', figure: '787+', note: 'Live tracker as of March 3' },
         { name: 'Iranian Red Crescent', figure: '555+', note: 'Official government figure — likely undercount' },
         { name: 'Hengaw (Kurdish rights org)', figure: '1,500+', note: 'Estimates 200 civilian, 1,300 military' }
       ]
     },
     analysis: {
-      what: 'Supreme Leader Ayatollah Ali Khamenei was confirmed killed in US-Israeli strikes on February 28, 2026, along with his daughter, son-in-law, and grandchild. His wife died from injuries on March 2. The joint operation — codenamed "Operation Epic Fury" (US) and "Roaring Lion" (Israel) — struck over 500 locations across 153 cities in 24 of Iran\'s 31 provinces. Over 1,190 people have been killed and 4,475 injured. An Interim Leadership Council has assumed Khamenei\'s functions per Article 111 of the constitution. Iran launched "Operation True Promise IV" in retaliation — missile and drone strikes hitting US bases across the Gulf, killing 6 US service members. The IRGC declared the Strait of Hormuz closed on March 2, with tanker traffic dropping to near zero.',
-      why: 'The assassination of Iran\'s Supreme Leader is the most consequential targeted killing since Osama bin Laden. Khamenei held absolute authority over Iran\'s military, nuclear program, and proxy network for 35 years. His death creates a succession crisis during active war. The Strait of Hormuz closure threatens 20 million barrels/day of oil transit — Brent crude spiked to $82/barrel with analysts warning of $120-200 if sustained. Iranian proxies have activated across the region: Hezbollah attacked Israel from Lebanon on March 2, Iraqi Shia militias launched 23+ drone strikes on US assets in Erbil, and Houthis threatened to resume Red Sea attacks.',
-      next: 'The conflict is escalating across multiple fronts. Trump stated the war could last 4-5 weeks. Secretary Rubio announced strikes would increase in scope and intensity. Watch for: Strait of Hormuz enforcement attempts, Interim Leadership Council consolidation, further Iranian missile salvos, Hezbollah activation from Lebanon, Houthi Red Sea attacks, Iraqi militia escalation, oil price trajectory, and whether diplomatic channels can prevent full regional war. IAEA confirmed damage to Natanz entrance buildings but no radiological release.'
+      what: 'Supreme Leader Ayatollah Ali Khamenei was confirmed killed in US-Israeli strikes on February 28, 2026, along with 40+ senior officials. Over 2,000 strikes have hit targets across 24 of 31 provinces since Feb 28. The death toll has surpassed 787 (Al Jazeera) with HRANA estimating 1,190+ killed and 4,475 injured. A strike on a girls\' school in Minab killed 148+ students. An Interim Leadership Council (Pezeshkian, Mohseni-Ejei, Ayatollah Arafi) has assumed power per Article 111. Iran launched "Operation True Promise IV" — retaliatory strikes across 9 countries including a ballistic missile that hit a synagogue shelter in Beit Shemesh, Israel, killing 9 including 3 children. 6 US service members have been killed. The IRGC declared the Strait of Hormuz closed on March 2. On March 3, the IDF destroyed the Natanz nuclear facility and a covert nuclear site "Minzadehei." US-Israel have achieved air superiority over Tehran.',
+      why: 'The assassination of Iran\'s Supreme Leader is the most consequential targeted killing since Osama bin Laden. Khamenei held absolute authority over Iran\'s military, nuclear program, and proxy network for 35 years. His death creates a succession crisis during active war. The Strait of Hormuz is effectively closed with tanker traffic at near zero — Brent crude spiked to $84/barrel with analysts warning of $120-200 if sustained. Iranian proxies have activated: Hezbollah resumed hostilities from Lebanon (first since Nov 2024 ceasefire), Iraqi Shia militias launched 23+ drone strikes on US assets, and Houthis are preparing retaliatory strikes. Iran attacked targets across 8+ Arab states including the US embassy in Riyadh.',
+      next: 'The conflict is escalating across multiple fronts. Trump stated the war could last 4-5 weeks. Rubio warns "hardest hits yet to come." Watch for: Strait of Hormuz enforcement, Interim Leadership Council consolidation and Supreme Leader succession (Assembly of Experts convening), further Iranian missile salvos, Hezbollah escalation from Lebanon, Houthi Red Sea attacks, Iraqi militia strikes, and dual Hormuz/Red Sea blockade scenario. IAEA confirmed Natanz damage but no radiological release. FM Araghchi signals openness to de-escalation while security chief Larijani rejects negotiations.'
     },
     news: [
-      { source: 'CNN', bias: 'center-left', time: '2026-03-03T10:00:00Z', headline: 'Day 3: US-Israeli strikes hit 153 cities as Iran retaliates across Gulf', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-03-02T14:00:00Z', headline: 'IRGC declares Strait of Hormuz closed — tanker traffic halts', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '2026-03-02T11:00:00Z', headline: 'Interim Leadership Council assumes power after Khamenei confirmed dead', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-03-01T09:00:00Z', headline: 'Iran launches Operation True Promise IV — 6 US service members killed', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '2026-03-04T06:00:00Z', headline: 'Day 5: US-Israel achieve air superiority over Tehran — 2,000+ strikes since Feb 28', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2026-03-03T16:00:00Z', headline: 'Iranian death toll rises to 787+ — girls\' school strike in Minab kills 148+', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-03T14:00:00Z', headline: 'Satellite imagery confirms Natanz nuclear facility damage — IAEA reports no radiological release', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-03T08:00:00Z', headline: 'Interim leadership council formed — Assembly of Experts to select new Supreme Leader', url: '#' }
     ]
   },
 
   'North Korea': { lat: 40.34, lng: 127.51, flag: '🇰🇵', risk: 'extreme', tags: ['Nuclear Threat', 'Sanctions/Isolation', 'Authoritarian Crackdown'], region: 'East Asia', pop: '26M', gdp: '$18B', leader: 'Kim Jong Un', title: 'Nuclear Threats',
+    nuclear: { warheads: '~50', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Unknown — delivery systems tested' },
     analysis: {
       what: 'North Korea conducted two missile tests in January 2026—ballistic missiles on Jan 4 and the advanced 600mm MLRS on Jan 27. Kim Jong Un oversaw hypersonic missile tests, citing "geopolitical crisis." The nuclear arsenal is estimated at 50+ warheads and growing. Kim Jong Un has declared South Korea a "hostile state" and abandoned reunification as a goal. Military cooperation with Russia has deepened, with North Korea providing ammunition for the Ukraine war in exchange for qualitative military modernization. North Korea is maintaining a non-antagonistic stance toward the US to keep the door open for a Trump summit, suppressing major provocations until after the April 2026 Trump-Xi summit. The population faces chronic food insecurity under strict totalitarian control.',
       why: 'North Korea\'s nuclear weapons threaten South Korea, Japan, and potentially the US. Proliferation risk is high—Pyongyang has sold missile technology to Iran and others. Military miscalculation could trigger catastrophic war on the Korean Peninsula. The regime\'s brutality makes it among the world\'s worst human rights situations. US troops and alliance commitments in the region are directly affected.',
@@ -301,15 +304,15 @@ export const COUNTRIES = {
 
   'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'catastrophic', tags: ['Armed Conflict', 'Political Instability', 'Sectarian Violence'], region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Under Attack — Israel Ground Invasion Authorized',
     analysis: {
-      what: 'Hezbollah launched missiles and a drone swarm at an IDF base near Haifa on March 2, 2026 — its first cross-border attack since late 2024, retaliating for the killing of Khamenei. Israel responded with naval attacks and airstrikes on Beirut and southern Lebanon, killing 52+ people and wounding 149+. Israel\'s Defense Minister has authorized a ground invasion of Lebanon. Tens of thousands have been displaced from southern Lebanon and Beirut\'s southern suburbs. In a dramatic move, Lebanese PM Nawaf Salam banned Hezbollah military and intelligence activities — one of the harshest government stances ever against the group.',
-      why: 'Lebanon has been dragged into the Iran-Israel war despite being a country already in economic collapse. Hezbollah, though a shadow of its former strength after 2024 losses, still possesses precision-guided munitions capable of striking Tel Aviv. An Israeli ground invasion would devastate southern Lebanon for the third time in two decades. The PM\'s ban on Hezbollah military activities signals a historic internal political shift but is largely unenforceable. The entire civilian population is caught between Hezbollah\'s Iranian obligations and Israeli military power.',
-      next: 'An Israeli ground incursion into southern Lebanon appears imminent. Watch for: IDF troop movements across the border, Hezbollah precision-guided missile launches at Israeli cities, civilian displacement scale, whether Lebanese army forces engage or stand aside, and international ceasefire pressure. The conflict could quickly escalate to a full-scale replay of the 2006 war but with a far weaker Hezbollah and far more desperate circumstances.'
+      what: 'Hezbollah resumed hostilities on March 1, 2026, launching rockets at northern Israel — its first cross-border attack since the November 2024 ceasefire. Secretary-General Naim Qassem declared Hezbollah would "not leave the field of honor and resistance" after Khamenei\'s killing. Israel struck Beirut and southern Lebanon, killing 31 and wounding 149. On March 3, Israel struck Beirut and Tehran simultaneously, hitting targets across southern Beirut. Israel is mobilizing tens of thousands of reservists near the Lebanese border. Lebanese PM Nawaf Salam convened an emergency cabinet and demanded Hezbollah surrender weapons and cease all militia military activity — one of the harshest government stances ever against the group. An Israeli ground incursion into southern Lebanon is reported underway.',
+      why: 'Lebanon has been dragged into the Iran-Israel war despite being a country already in economic collapse. Hezbollah, though "a shadow of the force it once was" after 2024 degradation (CNN analysis), still possesses precision-guided munitions capable of striking Tel Aviv. An Israeli ground invasion would devastate southern Lebanon for the third time in two decades. The PM\'s ban on Hezbollah military activities signals a historic internal political shift — asserting that "decisions on war and peace rest exclusively with the state" — but is largely unenforceable. The civilian population is caught between Hezbollah\'s Iranian obligations and Israeli military power.',
+      next: 'An Israeli ground incursion into southern Lebanon is underway or imminent with tens of thousands of reservists mobilized. Watch for: IDF troop movements across the border, Hezbollah precision-guided missile launches at Israeli cities, civilian displacement scale, whether Lebanese army forces engage or stand aside, and international ceasefire pressure. The government\'s demand for Hezbollah disarmament could fracture Lebanese politics if Hezbollah refuses.'
     },
     news: [
-      { source: 'CNN', bias: 'center-left', time: '2026-03-03T08:00:00Z', headline: 'Israel authorizes ground invasion of Lebanon as Hezbollah attacks Haifa', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-03-02T16:00:00Z', headline: 'Israeli strikes on Beirut kill 52 — PM Salam bans Hezbollah military activities', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '2026-03-02T13:00:00Z', headline: 'Hezbollah drone swarm targets IDF base near Haifa in first strike since 2024', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-03-02T10:00:00Z', headline: 'Tens of thousands flee southern Lebanon as conflict reignites', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '2026-03-03T10:00:00Z', headline: 'Israel strikes Beirut and Tehran simultaneously — Hezbollah "a shadow of its former strength"', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-02T16:00:00Z', headline: 'Israeli strikes on Lebanon kill 31, wound 149 — PM Salam demands Hezbollah disarmament', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2026-03-01T13:00:00Z', headline: 'Hezbollah resumes attacks on northern Israel — first since Nov 2024 ceasefire', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-02T10:00:00Z', headline: 'Israel mobilizes tens of thousands of reservists near Lebanese border', url: '#' }
     ]
   },
 
@@ -354,6 +357,7 @@ export const COUNTRIES = {
 
   // ==================== SEVERE ====================
   'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'severe', tags: ['Authoritarian Crackdown', 'Territorial Dispute'], region: 'East Asia', pop: '1.4B', gdp: '$19.4T', leader: 'Xi Jinping', title: 'Economic Slowdown',
+    nuclear: { warheads: '~500', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~24 ICBMs on alert — rapid expansion underway' },
     analysis: {
       what: 'China faces its most serious economic challenges in decades. The property sector—30% of GDP—is in crisis with major developers defaulting. Youth unemployment exceeded 20% before data publication stopped. Consumer confidence has collapsed. Deflation concerns have emerged. Local government debt is dangerous. Xi Jinping has consolidated unprecedented power while cracking down on tech giants and civil society. US-China tensions have intensified with semiconductor export controls.',
       why: 'As the world\'s second-largest economy and largest trading nation, China\'s slowdown ripples globally. A hard landing could trigger global recession. Geopolitically, China\'s tech ambitions and military modernization pose the primary strategic challenge to US hegemony. Taiwan remains the most dangerous flashpoint. China\'s support for Russia and growing influence in the Global South reshape the international order.',
@@ -381,6 +385,7 @@ export const COUNTRIES = {
   },
 
   'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'severe', tags: ['Terrorism/Insurgency', 'Political Instability'], region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Economic & Political Crisis',
+    nuclear: { warheads: '~170', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Estimated 170 warheads — tactical & strategic' },
     analysis: {
       what: 'Pakistan faces severe economic crisis with inflation above 30%, IMF bailouts, and depleted foreign reserves. Former PM Imran Khan was jailed on multiple charges his supporters call politically motivated. The military remains the ultimate power broker, engineering Khan\'s removal and subsequent elections. Terrorism has resurged with TTP attacks from Afghanistan. Climate disasters (2022 floods killed 1,700) add to challenges.',
       why: 'Pakistan is a nuclear-armed state of 230 million—instability has global implications. Taliban-controlled Afghanistan enables cross-border terrorism. Pakistan\'s relations with India remain tense. Its economic crisis affects regional trade. The military\'s political role undermines democratic consolidation.',
@@ -607,6 +612,7 @@ export const COUNTRIES = {
 
   // STORMY COUNTRIES
   'United States': { lat: 37.09, lng: -95.71, flag: '🇺🇸', risk: 'severe', tags: ['Political Instability'], region: 'North America', pop: '335M', gdp: '$30.6T', leader: 'Donald Trump', title: 'Active Military Strikes on Iran & Extreme Political Polarization',
+    nuclear: { warheads: '~5,044', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~1,670 strategic deployed' },
     analysis: {
       what: 'The United States launched military strikes on Iran on February 28, 2026, in coordination with Israel, targeting Iranian nuclear facilities and military infrastructure — the first direct US attack on Iranian territory. US forces across the Middle East — two carrier strike groups, 13+ warships, fighter jets, and B-2 bombers — are actively engaged. US bases in Iraq, Syria, and the Gulf are on high alert for Iranian retaliation. Domestically, the United States is experiencing arguably its most significant political turmoil since the 1960s. Extreme polarization, institutional stress, and deep partisan divisions are affecting governance, foreign policy coherence, and public trust in institutions. Political polarization has reached levels where basic democratic processes — election certification, peaceful transfers of power, judicial independence — face sustained pressure. Civil unrest, protest movements, and political violence risks have intensified.',
       why: 'The US is simultaneously waging a major foreign war and experiencing profound domestic institutional stress — a combination not seen since Vietnam. As the world\'s most powerful country, US internal instability has outsized global consequences: allies question American reliability, adversaries probe for openings, and the dollar-denominated financial system depends on institutional continuity. The Iran strikes have added wartime pressures — energy price shocks, military overstretch, war authorization disputes — on top of existing fractures. Economic uncertainty is elevated: trade wars have disrupted supply chains, federal spending cuts are rippling through the economy, consumer confidence has eroded, and a Middle East war threatens sustained energy price inflation. The erosion of institutional checks and balances — the independence of the judiciary, the civil service, law enforcement, and regulatory agencies — represents a structural risk to the stability of the world\'s largest economy and most powerful military.',
@@ -621,6 +627,7 @@ export const COUNTRIES = {
   },
 
   'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'stormy', tags: [], region: 'Western Europe', pop: '68M', gdp: '$3.4T', leader: 'Emmanuel Macron', title: 'Political Fragmentation',
+    nuclear: { warheads: '~290', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~280 operational — submarine & air-launched' },
     analysis: {
       what: 'France faces severe political instability. The 2024 snap elections produced a hung parliament, and France has cycled through multiple PMs—François Bayrou fell in September 2025 over the budget, and Sébastien Lecornu was appointed, briefly resigned, and was re-appointed in October 2025. Macron\'s centrist coalition is weakened with both the far-right (Le Pen) and far-left (Mélenchon) gaining ground. The economy struggles with high debt and sluggish growth.',
       why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. The political paralysis hampers EU decision-making. France has committed troops to a potential Ukraine ceasefire monitoring force. Far-right gains would significantly impact EU and NATO.',
@@ -673,6 +680,7 @@ export const COUNTRIES = {
   },
 
   'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'stormy', tags: ['Sectarian Violence'], region: 'South Asia', pop: '1.4B', gdp: '$4.13T', leader: 'Narendra Modi', title: 'Rising Power',
+    nuclear: { warheads: '~172', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Estimated 172 warheads — triad capability' },
     analysis: {
       what: 'India is the world\'s fastest-growing major economy and most populous country. PM Modi won a third term but with reduced majority, requiring coalition partners. Hindu nationalism has risen, with concerns about Muslim minority treatment. Relations with China remain tense after border clashes. India is courted by both the US and Russia.',
       why: 'India is a crucial swing state in great power competition—both the US and China seek its partnership. Its massive market and young population offer economic potential. It\'s a nuclear power and major military force. Indian diaspora is globally influential.',
@@ -858,6 +866,7 @@ export const COUNTRIES = {
 
   // ==================== CLOUDY COUNTRIES ====================
   'United Kingdom': { lat: 55.38, lng: -3.44, flag: '🇬🇧', risk: 'cloudy', tags: [], region: 'Western Europe', pop: '67M', gdp: '$3.1T', leader: 'Keir Starmer', title: 'Post-Brexit Adjustment',
+    nuclear: { warheads: '~225', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~120 operational — Trident submarine-based only' },
     analysis: {
       what: 'Labour\'s Keir Starmer won a landslide election in 2024, ending 14 years of Conservative rule. He inherits an economy still adjusting to Brexit with sluggish growth, strained public services, and high debt. Relations with Europe are being reset, though not rejoining the EU. Immigration policy and small boat crossings remain contentious.',
       why: 'The UK is Europe\'s second-largest economy and a permanent UN Security Council member. Its global financial center status continues despite Brexit. The "special relationship" with the US remains important. The UK is a key NATO contributor.',

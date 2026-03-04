@@ -108,6 +108,22 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </div>
           )}
 
+          {/* Nuclear Arsenal */}
+          {country.nuclear && (
+            <div className="nuclear-section">
+              <div className="nuclear-header">
+                <span className="nuclear-icon">{'\u2622\uFE0F'}</span>
+                <span className="nuclear-count">{country.nuclear.warheads}</span>
+                <span className="nuclear-label">Nuclear Warheads</span>
+              </div>
+              <div className="nuclear-details">
+                <span className="nuclear-status">{country.nuclear.status}</span>
+                <span className="nuclear-deployed">{country.nuclear.deployed}</span>
+                <span className="nuclear-source">Source: {country.nuclear.source}</span>
+              </div>
+            </div>
+          )}
+
           {/* Casualty Estimates */}
           {country.casualties && (
             <div className="casualties-section">

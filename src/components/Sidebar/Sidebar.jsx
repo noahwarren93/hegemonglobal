@@ -301,22 +301,35 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Base timeline — hardcoded foundational events. Auto-merged with live RSS below.
   const WAR_TIMELINE_BASE = [
+    // March 3-4 \u2014 Days 4-5 of war
+    { time: '2026-03-04T06:00:00Z', text: 'US-Israel achieve air superiority over Tehran \u2014 2,000+ strikes conducted since Feb 28' },
+    { time: '2026-03-03T18:00:00Z', text: 'Rubio warns "hardest hits yet to come" \u2014 US escalation in scope and intensity' },
+    { time: '2026-03-03T16:00:00Z', text: 'Trump says war could last 4-5 weeks \u2014 offers US insurance for Gulf shipping and tanker escorts' },
+    { time: '2026-03-03T14:00:00Z', text: 'Satellite imagery confirms Natanz Nuclear Facility damage \u2014 IAEA says no radiological release' },
+    { time: '2026-03-03T12:00:00Z', text: 'IDF claims destruction of covert nuclear weapons site "Minzadehei" near Tehran' },
+    { time: '2026-03-03T10:00:00Z', text: 'Israel strikes Beirut and Tehran simultaneously \u2014 hits IRIB broadcasting complex and Golestan Palace' },
+    { time: '2026-03-03T08:00:00Z', text: 'Iran\'s interim leadership council formed: Pezeshkian, Mohseni-Ejei, Ayatollah Arafi' },
+    { time: '2026-03-03T06:00:00Z', text: '4 US soldiers killed in drone attack in Kuwait \u2014 total 6 US service members killed' },
+    { time: '2026-03-03T04:00:00Z', text: 'Iranian death toll rises to 787+ \u2014 strike on girls\' school in Minab kills 148+' },
     // March 2 \u2014 Day 3 of war
+    { time: '2026-03-02T16:00:00Z', text: 'Lebanese PM Salam demands Hezbollah surrender weapons \u2014 bans all militia military activity' },
+    { time: '2026-03-02T14:00:00Z', text: 'Hezbollah Secretary-General Qassem declares "duty of confronting the aggression"' },
     { time: '2026-03-02T12:00:00Z', text: 'France unveils updated nuclear doctrine \u2014 offers Gulf states defense umbrella against Iranian ballistic missiles' },
-    { time: '2026-03-02T11:00:00Z', text: 'EU holds emergency session on Mediterranean missile incidents \u2014 debates invoking mutual defense clause' },
-    { time: '2026-03-02T10:00:00Z', text: 'Oil prices surge past $140/barrel on Strait of Hormuz fears \u2014 Brent crude hits highest level since 2008' },
+    { time: '2026-03-02T11:00:00Z', text: 'IRGC officially declares Strait of Hormuz closed \u2014 threatens to "set ships ablaze"' },
+    { time: '2026-03-02T10:00:00Z', text: 'Oil prices surge past $84/barrel \u2014 analysts warn of $120-200 if Hormuz closure sustained' },
     { time: '2026-03-02T09:00:00Z', text: 'US deploys additional carrier strike group and B-2 bombers to Persian Gulf' },
-    { time: '2026-03-02T08:00:00Z', text: 'IRGC threatens further strikes on Gulf oil infrastructure \u2014 "all energy facilities in range"' },
+    { time: '2026-03-02T08:00:00Z', text: 'Iran attacks targets across 8+ Arab states including US embassy in Riyadh' },
     { time: '2026-03-02T07:30:00Z', text: 'Dubai International Airport diverts all inbound flights amid regional escalation' },
-    { time: '2026-03-02T07:00:00Z', text: 'Israeli strikes reported across Beirut and southern Lebanon targeting Hezbollah command nodes' },
-    { time: '2026-03-02T06:00:00Z', text: 'Hezbollah launches massive rocket barrage into northern Israel \u2014 hundreds of projectiles cross border' },
+    { time: '2026-03-02T07:00:00Z', text: 'Israeli strikes on Beirut and southern Lebanon \u2014 31 killed, 149 wounded' },
+    { time: '2026-03-02T06:00:00Z', text: 'Hezbollah launches rocket barrage into northern Israel \u2014 first attack since Nov 2024 ceasefire' },
     { time: '2026-03-02T05:15:00Z', text: 'Saudi defense ministry says air defenses repelled Iranian drones targeting Ras Tanura' },
-    { time: '2026-03-02T04:30:00Z', text: 'Iran strikes Ras Tanura oil refinery in Saudi Arabia \u2014 first direct hit on Saudi oil infrastructure, 550,000 bpd facility' },
+    { time: '2026-03-02T04:30:00Z', text: 'Iran strikes Ras Tanura oil refinery in Saudi Arabia \u2014 first direct hit on Saudi oil infrastructure' },
     // March 1 \u2014 Day 2 of war
-    { time: '2026-03-01T10:00:00Z', text: 'Iranian death toll surpasses 400 \u2014 hospitals in Tehran and Isfahan overwhelmed, morgues at capacity' },
-    { time: '2026-03-01T08:00:00Z', text: '8 Israeli soldiers confirmed killed in IRGC retaliatory missile strikes on military installations in Negev' },
-    { time: '2026-03-01T06:00:00Z', text: 'Heavy explosions rock Riyadh \u2014 second Iranian missile wave targets Saudi capital, fires reported near oil facilities' },
-    { time: '2026-03-01T04:00:00Z', text: 'Strait of Hormuz partially blocked \u2014 IRGC fast-attack boats harass commercial shipping, oil hits $142/barrel' },
+    { time: '2026-03-01T12:00:00Z', text: 'Iranian ballistic missile hits synagogue shelter in Beit Shemesh \u2014 9 killed including 3 children' },
+    { time: '2026-03-01T10:00:00Z', text: 'Iranian death toll surpasses 555 \u2014 hospitals in Tehran and Isfahan overwhelmed, morgues at capacity' },
+    { time: '2026-03-01T08:00:00Z', text: 'IRGC begins electronic warfare in Strait of Hormuz \u2014 tanker traffic drops 70%' },
+    { time: '2026-03-01T06:00:00Z', text: 'Heavy explosions rock Riyadh \u2014 second Iranian missile wave targets Saudi capital' },
+    { time: '2026-03-01T04:00:00Z', text: '150+ ships anchored outside Strait of Hormuz to avoid combat zone' },
     { time: '2026-03-01T02:00:00Z', text: 'IRGC launches fresh missile salvos \u2014 ongoing operations across multiple fronts' },
     { time: '2026-02-28T20:00:00Z', text: 'Pezeshkian surfaces in broadcast: calls US-Israeli strikes "war against Muslims," urges Islamic world to act' },
     { time: '2026-02-28T18:00:00Z', text: 'Iranian missiles reach Mediterranean \u2014 strikes reported near Cyprus, EU calls emergency session' },
@@ -364,9 +377,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const WAR_INTEL = {
-    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Strikes hit 24 of 31 Iranian provinces targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Supreme Leader Ayatollah Ali Khamenei was confirmed killed along with 40+ senior officials. The Iranian death toll has surpassed 400. On Day 3 (March 2), Iran struck the Ras Tanura oil refinery in Saudi Arabia \u2014 the first direct hit on Saudi oil infrastructure. Hezbollah launched a massive rocket barrage into northern Israel, triggering Israeli strikes across Beirut and southern Lebanon. Dubai International Airport diverted all flights. The IRGC threatened to target all Gulf energy facilities. The US deployed additional carrier assets and B-2 bombers. Oil surged past $140/barrel. The EU held an emergency session on Mediterranean missile incidents, and France unveiled an updated nuclear doctrine offering Gulf states a defense umbrella.',
-    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center with every incentive to escalate. The Strait of Hormuz carries 20-30% of global oil transit and faces imminent closure risk. Iranian proxies \u2014 Hezbollah, Houthis, Iraqi Shia militias \u2014 are all activated and engaged. The Ras Tanura strike demonstrates Iran\'s willingness to target critical Gulf energy infrastructure. Oil has surged past $140/barrel. Global markets are in freefall. Six Gulf states are under direct Iranian fire.',
-    outlook: 'Full regional war is the baseline scenario with no off-ramp in sight. The IRGC will escalate, not negotiate. Active fronts: sustained Iranian missile salvos against Gulf oil infrastructure, Hezbollah rocket barrages on Israel from Lebanon, Houthi closure of Red Sea shipping, attempted Strait of Hormuz blockade, and Iraqi militia attacks on US positions. France\'s nuclear doctrine offer signals NATO may be drawn in. Iran\'s nuclear program is set back but the political incentive to rebuild is now absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
+    what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 2,000 strikes have hit targets across 24 of 31 Iranian provinces. Supreme Leader Khamenei was killed along with 40+ senior officials. The Iranian death toll has surpassed 787 (Al Jazeera tracker) with some estimates exceeding 1,190 (HRANA). A strike on a girls\' school in Minab killed 148+ students. An interim leadership council (Pezeshkian, Mohseni-Ejei, Arafi) has assumed power. Iran retaliated across 9 countries \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 11+. Six US service members have been killed including 4 soldiers in a Kuwait drone attack. The IRGC declared the Strait of Hormuz closed on March 2. The IDF destroyed the Natanz nuclear facility and a covert nuclear site "Minzadehei." Israel struck Beirut and Tehran simultaneously on March 3, hitting the IRIB broadcasting complex and Golestan Palace (UNESCO site). US-Israel have achieved air superiority over Tehran.',
+    why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years, creating a succession crisis during active war. The IRGC is now the de facto power center. The Strait of Hormuz is effectively closed with tanker traffic at near zero \u2014 20% of global oil transit is blocked. Brent crude has spiked to $84/barrel with analysts warning of $120-200 if sustained. Iranian proxies are activated: Hezbollah resumed hostilities from Lebanon (first since Nov 2024), Iraqi Shia militias launched 23+ drone strikes on US positions, and Houthis are preparing retaliatory strikes. Iran attacked targets across 8+ Arab states including the US embassy in Riyadh. Six US service members are dead. France has offered a nuclear defense umbrella to Gulf states.',
+    outlook: 'Full regional war is the baseline scenario. Trump says the war could last 4-5 weeks. Rubio warns "hardest hits yet to come." Active fronts: sustained Iranian missile salvos against Gulf oil infrastructure, Hezbollah rocket barrages from Lebanon (31 killed, 149 wounded in Israeli retaliatory strikes), Houthi retaliation imminent in the Red Sea, Strait of Hormuz blockade enforced, and Iraqi militia attacks on US positions. A dual blockade of Hormuz and the Red Sea would be unprecedented. Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Iran\'s interim leadership council signals mixed diplomatic signals \u2014 FM Araghchi open to de-escalation while security chief Larijani rejects negotiations. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
   };
 
   const openBreakingModal = () => {
@@ -384,7 +397,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderBreakingCard = () => {
-    const preview = 'Iran strikes Ras Tanura refinery. Hezbollah rocket barrage on Israel. Beirut under Israeli strikes. Dubai airport diverts flights. Oil past $140. France offers Gulf nuclear umbrella. Full regional war \u2014 Day 3.';
+    const preview = '2,000+ strikes on Iran. 787+ killed. Natanz nuclear site destroyed. Beit Shemesh missile kills 9. 6 US troops dead. Strait of Hormuz closed. Hezbollah attacks from Lebanon. Air superiority over Tehran \u2014 Day 5.';
 
     return (
       <div
@@ -405,6 +418,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
           US and Israel at War with Iran
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            IRAN: 787+ killed
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            ISRAEL: 11 killed
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            US: 6 killed
+          </span>
         </div>
         <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
           {preview}
