@@ -505,12 +505,12 @@ export function renderNewsletter() {
 
   if (timeUntil) {
     html += `
-        <span class="newsletter-status pending"><span style="display:inline-block;width:6px;height:6px;background:#f59e0b;border-radius:50%;margin-right:4px;"></span>PENDING</span>
+        <span class="newsletter-status pending">PENDING</span>
         <span>Released daily at 5:00 PM EST</span>
         <span style="font-size:9px;color:#f59e0b;font-weight:600;font-family:monospace;background:rgba(245,158,11,0.1);padding:2px 6px;border-radius:4px;margin-left:4px;">Next in ${String(timeUntil.hours).padStart(2, '0')}:${String(timeUntil.minutes).padStart(2, '0')}</span>`;
   } else {
     html += `
-        <span class="newsletter-status live"><span style="display:inline-block;width:6px;height:6px;background:#22c55e;border-radius:50%;margin-right:4px;animation:pulse 1.5s infinite;"></span>LIVE</span>
+        <span class="newsletter-status live">LIVE</span>
         <span>${dateStr}</span>`;
   }
 
