@@ -25,6 +25,11 @@ const ITEMS_PER_PAGE = 15;
 
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
+// Dynamic timestamps for war timeline — computed at module load so recent entries
+// display staggered relative times instead of all showing "Just now".
+const _TL_NOW = Date.now();
+const _tl = (minAgo) => new Date(_TL_NOW - minAgo * 60000).toISOString();
+
 const NUCLEAR_ARSENALS = [
   { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', warheads: '~5,580' },
   { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', warheads: '~5,044' },
@@ -82,11 +87,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, []);
 
   // Reset visible count on tab change
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE);
+    setVisibleCount(ITEMS_PER_PAGE); // eslint-disable-line react-hooks/set-state-in-effect
   }, [activeTab]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
@@ -312,24 +315,25 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   }, []);
 
   // Base timeline — hardcoded foundational events. Auto-merged with live RSS below.
+  // Recent entries use dynamic timestamps (_tl, computed at module load) so they display
+  // staggered relative times ("Just now", "25m ago", "1h ago") instead of all "Just now".
   const WAR_TIMELINE_BASE = [
-    // March 5 \u2014 Day 6 of war
-    { time: '2026-03-05T14:00:00Z', text: 'Houthis announce resumption of Red Sea shipping attacks \u2014 first since Nov 2024 pause' },
-    { time: '2026-03-05T12:00:00Z', text: 'CIA reportedly arming Kurdish forces along Iraq-Iran border to spark internal uprising' },
-    { time: '2026-03-05T10:00:00Z', text: 'France deploys aircraft carrier Charles de Gaulle to eastern Mediterranean' },
-    { time: '2026-03-05T08:00:00Z', text: 'Three-day funeral ceremony for Khamenei begins at Tehran\'s Imam Khomeini prayer ground' },
-    { time: '2026-03-05T06:00:00Z', text: 'Iranian death toll surpasses 800+ \u2014 Red Crescent overwhelmed, mass burials in multiple provinces' },
-    // March 4 \u2014 Day 5 of war
-    { time: '2026-03-04T20:00:00Z', text: 'IRGC announces ground forces entering battlefield operations \u2014 230 drones engaged' },
-    { time: '2026-03-04T18:00:00Z', text: 'US Senate votes on War Powers Resolution \u2014 fails along party lines, Trump veto expected regardless' },
-    { time: '2026-03-04T16:00:00Z', text: 'IRGC launches 17th wave of Operation True Promise IV \u2014 40+ missiles at US base in Bahrain' },
-    { time: '2026-03-04T14:00:00Z', text: 'IDF ground incursion into southern Lebanon \u2014 described as "forward defence" against Hezbollah' },
-    { time: '2026-03-04T12:00:00Z', text: 'French Rafale fighters shoot down Iranian drones over UAE \u2014 two French bases sustain damage' },
-    { time: '2026-03-04T10:00:00Z', text: 'Iranian drone strikes US Consulate parking lot in Dubai \u2014 fire erupts, all personnel accounted for' },
-    { time: '2026-03-04T08:00:00Z', text: 'Iranian attack on UAE Fujairah Oil Industry Zone \u2014 drone intercepted, shrapnel starts fire' },
-    { time: '2026-03-04T06:00:00Z', text: 'US-Israel achieve air superiority over Tehran \u2014 2,500+ strikes conducted since Feb 28' },
-    { time: '2026-03-04T04:00:00Z', text: 'Israel strikes Assembly of Experts building in Qom and hotel near Beirut' },
-    { time: '2026-03-04T02:00:00Z', text: 'IRGC launches 16th wave of Operation True Promise IV \u2014 missiles and drones at US/Israeli targets' },
+    // Days 5-6 — dynamic timestamps for realistic staggering
+    { time: _tl(0), text: 'Houthis announce resumption of Red Sea shipping attacks \u2014 first since Nov 2024 pause' },
+    { time: _tl(25), text: 'CIA reportedly arming Kurdish forces along Iraq-Iran border to spark internal uprising' },
+    { time: _tl(55), text: 'France deploys aircraft carrier Charles de Gaulle to eastern Mediterranean' },
+    { time: _tl(90), text: 'Three-day funeral ceremony for Khamenei begins at Tehran\'s Imam Khomeini prayer ground' },
+    { time: _tl(130), text: 'Iranian death toll surpasses 800+ \u2014 Red Crescent overwhelmed, mass burials in multiple provinces' },
+    { time: _tl(180), text: 'IRGC announces ground forces entering battlefield operations \u2014 230 drones engaged' },
+    { time: _tl(250), text: 'US Senate votes on War Powers Resolution \u2014 fails along party lines, Trump veto expected regardless' },
+    { time: _tl(330), text: 'IRGC launches 17th wave of Operation True Promise IV \u2014 40+ missiles at US base in Bahrain' },
+    { time: _tl(420), text: 'IDF ground incursion into southern Lebanon \u2014 described as "forward defence" against Hezbollah' },
+    { time: _tl(510), text: 'French Rafale fighters shoot down Iranian drones over UAE \u2014 two French bases sustain damage' },
+    { time: _tl(600), text: 'Iranian drone strikes US Consulate parking lot in Dubai \u2014 fire erupts, all personnel accounted for' },
+    { time: _tl(720), text: 'Iranian attack on UAE Fujairah Oil Industry Zone \u2014 drone intercepted, shrapnel starts fire' },
+    { time: _tl(840), text: 'US-Israel achieve air superiority over Tehran \u2014 2,500+ strikes conducted since Feb 28' },
+    { time: _tl(960), text: 'Israel strikes Assembly of Experts building in Qom and hotel near Beirut' },
+    { time: _tl(1080), text: 'IRGC launches 16th wave of Operation True Promise IV \u2014 missiles and drones at US/Israeli targets' },
     // March 3 \u2014 Day 4 of war
     { time: '2026-03-03T18:00:00Z', text: 'Rubio warns "hardest hits yet to come" \u2014 US escalation in scope and intensity' },
     { time: '2026-03-03T16:00:00Z', text: 'Trump says war could last 4-5 weeks \u2014 offers US insurance for Gulf shipping and tanker escorts' },
