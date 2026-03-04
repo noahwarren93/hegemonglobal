@@ -33,6 +33,7 @@
       .search-overlay { right: 300px; }
       .watchlist { width: 145px; }
       .legend { display: none; }
+      .nuclear-arsenals-box { display: none; }
       .stats { left: 175px; gap: 4px; }
       .stat-popup { left: 175px; }
       .stat-card { padding: 6px 8px; min-width: 55px; }
@@ -83,8 +84,11 @@
       /* Trade info panel on mobile */
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
-      /* Military bases list panel on mobile */
-      .mil-bases-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
+      /* Military bases list panel on mobile — overlay sidebar area, keep globe visible */
+      .mil-bases-panel { position: fixed; left: 0; top: auto; bottom: 0; width: 100%; max-height: 48vh; border-radius: 0; z-index: 50; }
+
+      /* Nuclear arsenals box hidden on mobile (inline badges in mil panel instead) */
+      .nuclear-arsenals-box { display: none; }
 
       /* Compare panel mobile - compact when 1 country, full when 2+ */
       /* z-index: 200 ensures it sits above all globe elements */

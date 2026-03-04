@@ -274,6 +274,37 @@ function RiskLegend() {
 }
 
 // ============================================================
+// Nuclear Arsenals Box (desktop, replaces legend in military mode)
+// ============================================================
+
+const NUCLEAR_ARSENALS = [
+  { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', warheads: '~5,580' },
+  { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', warheads: '~5,044' },
+  { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', warheads: '~500' },
+  { country: 'France', flag: '\u{1F1EB}\u{1F1F7}', warheads: '~290' },
+  { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', warheads: '~225' },
+  { country: 'India', flag: '\u{1F1EE}\u{1F1F3}', warheads: '~172' },
+  { country: 'Pakistan', flag: '\u{1F1F5}\u{1F1F0}', warheads: '~170' },
+  { country: 'Israel', flag: '\u{1F1EE}\u{1F1F1}', warheads: '~90*' },
+  { country: 'North Korea', flag: '\u{1F1F0}\u{1F1F5}', warheads: '~50' },
+];
+
+function NuclearArsenalsBox() {
+  return (
+    <div className="nuclear-arsenals-box">
+      <div className="nuclear-arsenals-title">{'\u2622'} NUCLEAR ARSENALS</div>
+      {NUCLEAR_ARSENALS.map(n => (
+        <div key={n.country} className="nuclear-arsenals-row">
+          <span>{n.flag}</span>
+          <span>{n.country}</span>
+          <span className="nuclear-arsenals-count">{n.warheads}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
 // HomePage Component
 // ============================================================
 
@@ -723,8 +754,8 @@ export default function HomePage() {
             onToggleMilitary={handleToggleMilitary}
           />
 
-          {/* Risk Legend */}
-          <RiskLegend />
+          {/* Risk Legend / Nuclear Arsenals (swap in military mode) */}
+          {militaryMode ? <NuclearArsenalsBox /> : <RiskLegend />}
 
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">

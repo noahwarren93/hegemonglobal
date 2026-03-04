@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import { MILITARY_BASES, CARRIER_GROUPS, COUNTRY_COLORS } from '../../data/militaryBases';
 
+const NUCLEAR_WARHEADS = {
+  'Russia': '5,580', 'United States': '5,044', 'China': '500',
+  'France': '290', 'United Kingdom': '225', 'India': '172',
+  'Pakistan': '170', 'Israel': '90', 'North Korea': '50',
+};
+
 export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
   const [expandedSections, setExpandedSections] = useState({});
 
@@ -74,6 +80,11 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
                 <span style={{ fontSize: '13px' }}>{sectionFlag}</span>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: sectionColor, letterSpacing: '0.5px', flex: 1 }}>{section}</span>
                 <span style={{ fontSize: '8px', color: '#6b7280' }}>{bases.length}</span>
+                {NUCLEAR_WARHEADS[section] && (
+                  <span style={{ fontSize: '8px', color: '#fbbf24', marginLeft: '2px' }}>
+                    {'\u2622'} {NUCLEAR_WARHEADS[section]}
+                  </span>
+                )}
                 <span style={{ fontSize: '9px', color: '#6b7280', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                   &#9660;
                 </span>
