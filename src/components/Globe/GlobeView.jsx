@@ -143,6 +143,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const touchStartRef = useRef({ x: 0, y: 0 });
   const isPinchingRef = useRef(false);
   const lastPinchDistRef = useRef(0);
+  const velocityRef = useRef({ x: 0, y: 0 });
 
   // Reset view animation ref
   const resetAnimRef = useRef(null);
@@ -580,6 +581,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // ---- Mouse drag rotation ----
     function handleMouseDown(e) {
       isDraggingRef.current = true;
+      velocityRef.current = { x: 0, y: 0 };
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
       clickStartRef.current = { x: e.clientX, y: e.clientY };
     }
@@ -588,9 +590,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     }
     function handleDocMouseMove(e) {
       if (!isDraggingRef.current || !globe) return;
-      globe.rotation.y += (e.clientX - prevMouseRef.current.x) * 0.005;
-      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
-        globe.rotation.x + (e.clientY - prevMouseRef.current.y) * 0.005));
+      const dx = (e.clientX - prevMouseRef.current.x) * 0.005;
+      const dy = (e.clientY - prevMouseRef.current.y) * 0.005;
+      globe.rotation.y += dx;
+      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + dy));
+      velocityRef.current = { x: dy, y: dx };
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
     }
 
@@ -598,6 +602,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     function handleTouchStart(e) {
       if (e.touches.length === 1) {
         isDraggingRef.current = true;
+        velocityRef.current = { x: 0, y: 0 };
         touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
@@ -625,9 +630,11 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       // Single finger drag
       if (!isDraggingRef.current || e.touches.length !== 1) return;
       const touch = e.touches[0];
-      globe.rotation.y += (touch.clientX - prevMouseRef.current.x) * 0.005;
-      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
-        globe.rotation.x + (touch.clientY - prevMouseRef.current.y) * 0.005));
+      const dx = (touch.clientX - prevMouseRef.current.x) * 0.005;
+      const dy = (touch.clientY - prevMouseRef.current.y) * 0.005;
+      globe.rotation.y += dx;
+      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + dy));
+      velocityRef.current = { x: dy, y: dx };
       prevMouseRef.current = { x: touch.clientX, y: touch.clientY };
     }
 
@@ -677,8 +684,24 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (isMobile && now - lastFrameTime < frameInterval) return;
       lastFrameTime = now;
 
-      if (!isDraggingRef.current && autoRotateRef.current && globe) {
-        globe.rotation.y += isMobile ? 0.0005 : 0.0008;
+      if (!isDraggingRef.current && globe) {
+        const v = velocityRef.current;
+        const speed = Math.abs(v.x) + Math.abs(v.y);
+        if (speed > 0.0001) {
+          // Apply momentum
+          globe.rotation.y += v.y;
+          globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + v.x));
+          // Friction decay
+          v.x *= 0.95;
+          v.y *= 0.95;
+        } else {
+          v.x = 0;
+          v.y = 0;
+          // Auto-rotate only after momentum has stopped
+          if (autoRotateRef.current) {
+            globe.rotation.y += isMobile ? 0.0005 : 0.0008;
+          }
+        }
       }
       animateConflictZones();
       renderer.render(scene, camera);
