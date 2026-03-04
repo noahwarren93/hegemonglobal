@@ -98,6 +98,10 @@
       .modal-header { padding: 12px; }
       .modal-title { font-size: 16px; }
       .modal-body { padding: 12px; }
+      .country-tag { font-size: 7px; padding: 1px 4px; }
+      .research-link { padding: 6px 8px; }
+      .research-name { font-size: 10px; }
+      .research-desc { font-size: 9px; }
       .breaking-banner { padding: 6px 10px; }
       .breaking-text { font-size: 10px; }
       .tos-close { min-width: 44px; min-height: 44px; padding: 10px; font-size: 22px; }

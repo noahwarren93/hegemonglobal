@@ -1,7 +1,7 @@
 // CountryModal.jsx - Country detail modal with analysis, sanctions, trend chart, news
 
 import { useState, useEffect } from 'react';
-import { COUNTRIES, SANCTIONS_DATA } from '../../data/countries';
+import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
 import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity, timeAgo } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
@@ -43,6 +43,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   if (!isOpen || !country || !countryName) return null;
 
   const sanctions = SANCTIONS_DATA[countryName];
+  const researchSources = getResearchSources(countryName);
 
   // Build facts grid (original order: Region, Population, GDP, Leader)
   const facts = [];
@@ -75,6 +76,16 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
               <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff' }}>
                 {country.risk.toUpperCase()}
               </span>
+              {country.tags && country.tags.length > 0 && (
+                <div className="country-tags">
+                  {country.tags.map((tag, i) => (
+                    <span key={i} className="country-tag"
+                      style={{ background: TAG_COLORS[tag]?.bg, color: TAG_COLORS[tag]?.text }}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="modal-subtitle">{country.title || country.region}</div>
           </div>
@@ -246,6 +257,22 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
               </div>
             </div>
           </div>
+
+          {/* Further Research */}
+          {researchSources.length > 0 && (
+            <div className="research-section">
+              <div className="section-title">Further Research</div>
+              {researchSources.map((src, i) => (
+                <a key={i} className="research-link" href={src.url} target="_blank" rel="noopener noreferrer">
+                  <div>
+                    <div className="research-name">{src.name}</div>
+                    <div className="research-desc">{src.description}</div>
+                  </div>
+                  <span className="research-arrow">&#8599;</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
