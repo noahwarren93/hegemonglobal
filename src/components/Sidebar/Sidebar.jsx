@@ -702,6 +702,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
                 </div>
               ))}
             </div>
+            <div style={{ fontSize: '7px', color: '#4b5563', textAlign: 'center', marginTop: '4px' }}>Data as of March 2026</div>
           </div>
         )}
 

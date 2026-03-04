@@ -153,6 +153,10 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
             </div>
           );
         })}
+
+        <div style={{ padding: '6px 10px', fontSize: '7px', color: '#4b5563', textAlign: 'center', borderTop: '1px solid #1f2937' }}>
+          Data as of March 2026
+        </div>
       </div>
     </div>
   );
