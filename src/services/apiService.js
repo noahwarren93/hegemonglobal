@@ -1380,6 +1380,11 @@ function applyCachedSummaries() {
 }
 
 const SUMMARY_TIMEOUT_MS = 10000; // 10-second timeout on /summarize
+const SUMMARY_THROTTLE_MS = 30 * 60 * 1000; // Only request summaries from API once per 30 min
+let _lastSummaryApiCall = 0;
+const _summaryAttempted = new Set(); // Track event hashes already sent to API this session
+const MAX_SESSION_SUMMARY_CALLS = 20; // Hard cap on API calls per session
+let _sessionSummaryCalls = 0;
 
 export async function fetchEventSummaries() {
   if (!DAILY_EVENTS || DAILY_EVENTS.length === 0) return;
@@ -1396,10 +1401,13 @@ export async function fetchEventSummaries() {
     if (key && cache[key]) {
       event.summary = cache[key].summary;
       event.summaryLoading = false;
-    } else {
+    } else if (key && !_summaryAttempted.has(key)) {
+      // Only request if we haven't already tried this exact event hash
       event.summaryLoading = true;
       if (i < 4) uncachedTop.push(event);
       else uncachedRest.push(event);
+    } else {
+      event.summaryLoading = false;
     }
   }
 
@@ -1407,8 +1415,20 @@ export async function fetchEventSummaries() {
 
   if (uncachedTop.length === 0 && uncachedRest.length === 0) return;
 
+  // Throttle: skip API calls if we called recently (cached summaries were still applied above)
+  const now = Date.now();
+  if (now - _lastSummaryApiCall < SUMMARY_THROTTLE_MS) return;
+  if (_sessionSummaryCalls >= MAX_SESSION_SUMMARY_CALLS) return;
+  _lastSummaryApiCall = now;
+
   // Helper: fetch a batch of summaries with 10s timeout
   async function fetchSummaryBatch(batch, batchNum) {
+    // Mark all events in this batch as attempted (prevents re-requesting on next cycle)
+    for (const event of batch) {
+      const key = eventSummaryKey(event);
+      if (key) _summaryAttempted.add(key);
+    }
+    _sessionSummaryCalls++;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), SUMMARY_TIMEOUT_MS);
     try {

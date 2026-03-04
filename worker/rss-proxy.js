@@ -28,7 +28,7 @@ function getCorsHeaders(request) {
 // ============================================================
 
 const SUMMARY_CACHE = new Map();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes — keep summaries fresh during active coverage
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour — balance freshness with API cost
 
 function hashTitles(articles) {
   const titles = (articles || [])
@@ -70,7 +70,7 @@ async function setCacheApi(key, data) {
   try {
     const cache = caches.default;
     const resp = new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=1800' }
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=3600' }
     });
     await cache.put(new Request(CACHE_URL_PREFIX + key), resp);
   } catch { /* best effort */ }
