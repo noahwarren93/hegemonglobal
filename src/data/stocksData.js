@@ -1,6 +1,7 @@
 // stocksData.js - Market configuration, trading hours, and static data
 
 export const MARKET_HOURS = {
+  'Global Commodities': { tz: 'America/New_York', open: '06:00', close: '17:00' },
   'United States': { tz: 'America/New_York', open: '09:30', close: '16:00' },
   'China': { tz: 'Asia/Shanghai', open: '09:30', close: '15:00' },
   'Japan': { tz: 'Asia/Tokyo', open: '09:00', close: '15:00' },
@@ -20,10 +21,14 @@ export const MARKET_HOURS = {
 };
 
 export const MARKET_CONFIG = [
+  { country: 'Global Commodities', flag: '\u{1F6E2}\u{FE0F}', symbols: [
+    { name: 'Brent Crude', sym: 'BZ=F', pre: '$' },
+  ]},
   { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', symbols: [
     { name: 'Dow Jones', sym: '^DJI' },
     { name: 'S&P 500', sym: '^GSPC' },
     { name: 'NASDAQ', sym: '^IXIC' },
+    { name: 'WTI Crude', sym: 'CL=F', pre: '$' },
     { name: 'Gold', sym: 'GC=F', pre: '$' },
     { name: 'Silver', sym: 'SI=F', pre: '$' },
     { name: 'Bitcoin', sym: 'BTC-USD', pre: '$' }
@@ -85,6 +90,9 @@ export const MARKET_CONFIG = [
 // Static fallback prices sourced from market closes on Feb 12, 2026
 // These are used ONLY when all live API calls fail
 export const STATIC_FALLBACK_DATA = {
+  // --- Global Commodities (Mar 2 close: oil surged on Hormuz closure) ---
+  'BZ=F': { price: 84.12, changePct: 5.83, sparkline: [79.50, 79.80, 80.20, 80.90, 81.40, 82.00, 82.60, 83.10, 83.50, 83.80, 84.00, 84.12] },
+  'CL=F': { price: 80.47, changePct: 5.21, sparkline: [76.50, 76.80, 77.20, 77.80, 78.30, 78.90, 79.30, 79.70, 80.00, 80.20, 80.35, 80.47] },
   // --- United States (Feb 12 close: broad sell-off, AI disruption fears) ---
   '^DJI': { price: 49452, changePct: -1.34, sparkline: [50120, 50050, 49950, 49850, 49750, 49680, 49600, 49550, 49500, 49480, 49460, 49452] },
   '^GSPC': { price: 6833, changePct: -1.57, sparkline: [6940, 6920, 6900, 6880, 6870, 6860, 6850, 6845, 6840, 6838, 6835, 6833] },
@@ -132,6 +140,10 @@ export const STATIC_FALLBACK_DATA = {
 };
 
 export const STOCKS_DETAIL = {
+  'Global Commodities': {
+    whyMatters: 'Crude oil is the world\'s most strategically important commodity. Brent crude is the global benchmark used to price roughly 80% of international oil trades. Oil prices directly affect inflation, transportation costs, and geopolitical stability across every economy.',
+    outlook: 'Key factors: OPEC+ production decisions, Strait of Hormuz transit security, US shale output, Chinese demand recovery, and the US-Iran conflict\'s impact on Middle Eastern supply routes. Any sustained disruption to the Strait of Hormuz could push prices above $120/barrel.'
+  },
   'United States': {
     whyMatters: 'US markets remain the global benchmark. Movements in the S&P 500 and Dow Jones ripple through every major market worldwide. The Federal Reserve\'s monetary policy decisions directly affect global capital flows and currency valuations.',
     outlook: 'Key events to watch: Fed rate decisions and forward guidance, CPI and jobs data releases, quarterly earnings from mega-cap tech companies, and escalating trade policy tensions that could trigger supply chain disruptions.'
