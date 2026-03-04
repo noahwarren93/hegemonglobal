@@ -757,9 +757,6 @@ export default function HomePage() {
           {/* Risk Legend (always visible on desktop) */}
           <RiskLegend />
 
-          {/* Nuclear Arsenals Box (top-right, military mode only) */}
-          {militaryMode && <NuclearArsenalsBox />}
-
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">
             <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={handleToggleTradeRoutes}>
@@ -874,6 +871,7 @@ export default function HomePage() {
           stocksData={stocksData}
           stocksLastUpdated={stocksLastUpdated}
           stocksUpdating={stocksUpdating}
+          militaryMode={militaryMode}
         />
       </div>
 

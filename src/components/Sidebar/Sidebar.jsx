@@ -25,7 +25,19 @@ const ITEMS_PER_PAGE = 15;
 
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
-export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating }) {
+const NUCLEAR_ARSENALS = [
+  { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', warheads: '~5,580' },
+  { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', warheads: '~5,044' },
+  { country: 'China', flag: '\u{1F1E8}\u{1F1F3}', warheads: '~500' },
+  { country: 'France', flag: '\u{1F1EB}\u{1F1F7}', warheads: '~290' },
+  { country: 'United Kingdom', flag: '\u{1F1EC}\u{1F1E7}', warheads: '~225' },
+  { country: 'India', flag: '\u{1F1EE}\u{1F1F3}', warheads: '~172' },
+  { country: 'Pakistan', flag: '\u{1F1F5}\u{1F1F0}', warheads: '~170' },
+  { country: 'Israel', flag: '\u{1F1EE}\u{1F1F1}', warheads: '~90*' },
+  { country: 'North Korea', flag: '\u{1F1F0}\u{1F1F5}', warheads: '~50' },
+];
+
+export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating, militaryMode }) {
   const [activeTab, setActiveTab] = useState('events');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
@@ -677,6 +689,22 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   return (
     <>
       <div className="sidebar">
+        {/* Nuclear Arsenals (military mode only, above tabs) */}
+        {militaryMode && (
+          <div className="nuclear-arsenals-box">
+            <div className="nuclear-arsenals-title">{'\u2622'} NUCLEAR ARSENALS</div>
+            <div className="nuclear-arsenals-grid">
+              {NUCLEAR_ARSENALS.map(n => (
+                <div key={n.country} className="nuclear-arsenals-row">
+                  <span>{n.flag}</span>
+                  <span>{n.country}</span>
+                  <span className="nuclear-arsenals-count">{n.warheads}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="tabs">
           {TABS.map(tab => (
