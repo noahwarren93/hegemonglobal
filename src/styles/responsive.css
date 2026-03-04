@@ -85,7 +85,8 @@
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
 
       /* Military bases list panel on mobile — overlay sidebar area, keep globe visible */
-      .mil-bases-panel { position: fixed; left: 0; top: auto; bottom: 0; width: 100%; max-height: 48vh; border-radius: 0; z-index: 50; }
+      .mil-bases-panel { position: fixed; left: 0; top: auto; bottom: 0; width: 100%; max-height: 48vh; border-radius: 0; z-index: 50; display: flex; flex-direction: column; overflow: hidden; }
+      .mil-bases-body { flex: 1; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
       /* Nuclear arsenals box hidden on mobile (inline badges in mil panel instead) */
       .nuclear-arsenals-box { display: none; }

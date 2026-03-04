@@ -754,8 +754,11 @@ export default function HomePage() {
             onToggleMilitary={handleToggleMilitary}
           />
 
-          {/* Risk Legend / Nuclear Arsenals (swap in military mode) */}
-          {militaryMode ? <NuclearArsenalsBox /> : <RiskLegend />}
+          {/* Risk Legend (always visible on desktop) */}
+          <RiskLegend />
+
+          {/* Nuclear Arsenals Box (top-right, military mode only) */}
+          {militaryMode && <NuclearArsenalsBox />}
 
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">

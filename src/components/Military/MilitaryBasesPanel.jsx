@@ -35,7 +35,7 @@ export default function MilitaryBasesPanel({ isOpen, onClose, onBaseSelect }) {
   // Ordered section list — priority countries first
   const SECTION_ORDER = [
     'United States', 'Russia', 'China', 'United Kingdom', 'France', 'Turkey',
-    'Israel', 'Iran', 'India', 'Germany', 'Japan', 'South Korea', 'Australia', 'NATO',
+    'Israel', 'Iran', 'India', 'Pakistan', 'North Korea', 'Germany', 'Japan', 'South Korea', 'Australia', 'NATO',
   ];
   const orderedSections = [];
   const seen = new Set();
