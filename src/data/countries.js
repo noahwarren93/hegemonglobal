@@ -3,6 +3,19 @@
 export const COUNTRIES = {
   // ==================== CATASTROPHIC ====================
   'Ukraine': { lat: 48.38, lng: 31.17, flag: '🇺🇦', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute'], region: 'Eastern Europe', pop: '39.5M', gdp: '$191B', leader: 'Volodymyr Zelenskyy', title: 'War & Peace Talks',
+    casualties: {
+      total: '~1.8M',
+      label: 'Combined casualties since Feb 2022',
+      lastUpdated: 'Jan 2026',
+      source: 'CSIS Report',
+      contested: true,
+      sources: [
+        { name: 'CSIS (combined estimate)', figure: '~1.8M total casualties', note: 'Killed + wounded + missing, both sides combined' },
+        { name: 'Russia (CSIS est.)', figure: '~1.2M casualties', note: '275,000-325,000 killed — rest wounded/missing' },
+        { name: 'Ukraine (CSIS est.)', figure: '~500-600K casualties', note: '100,000-140,000 killed — rest wounded/missing' },
+        { name: 'UN OHCHR (civilians)', figure: '13,883 civilian deaths', note: 'Verified through Dec 2025 — real number likely higher' }
+      ]
+    },
     analysis: {
       what: 'Russia\'s full-scale invasion, launched in February 2022, continues into its fourth year as the largest military conflict in Europe since WWII. Both sides have suffered hundreds of thousands of casualties. Ukraine has lost approximately 13% of its territory. Active peace negotiations are now underway—Geneva talks in February 2026 ended without a deal—deep divisions persist on territorial questions. A multi-tiered ceasefire plan was proposed with Western support, and France and the UK have pledged to install military hubs in Ukraine. US-Russia talks in Abu Dhabi re-established military dialogue. However, territorial disputes remain the core sticking point, with Russia demanding full control of Donetsk and Luhansk.',
       why: 'This conflict has fundamentally reshaped European security architecture and revitalized NATO. The outcome will define the international order for decades: whether territorial conquest through military force remains viable. Peace negotiations are the most significant diplomatic development since the war began, driven by Trump administration pressure and battlefield exhaustion on both sides.',
@@ -30,6 +43,18 @@ export const COUNTRIES = {
   },
 
   'Palestine': { lat: 30.5, lng: 35.2, flag: '🇵🇸', risk: 'catastrophic', tags: ['Occupation', 'Humanitarian Crisis', 'Armed Conflict'], region: 'Middle East', pop: '5.3M', gdp: '$20B', leader: 'Mahmoud Abbas (PA) / Hamas (Gaza)', title: 'Post-Ceasefire Crisis',
+    casualties: {
+      total: '72,097+',
+      label: 'Killed in Gaza since Oct 2023',
+      lastUpdated: 'March 2026',
+      source: 'Gaza Health Ministry',
+      contested: true,
+      sources: [
+        { name: 'Gaza Health Ministry', figure: '72,097+', note: 'Direct count — acknowledged undercount due to collapsed infrastructure' },
+        { name: 'The Lancet (peer-reviewed)', figure: '~97,000+', note: 'Survey-based estimate — suggests 35% undercount in official figures' },
+        { name: 'UN OCHA', figure: '72,000+', note: 'Cites ministry figures — notes likely significant undercount' }
+      ]
+    },
     analysis: {
       what: 'A ceasefire was reached in January 2025 after Israel\'s military campaign in Gaza killed over 72,000 Palestinians and displaced 1.9 million. A second ceasefire took effect October 2025, with Phase 2 beginning January 2026. However, violations are extensive—1,193+ Israeli violations documented since October, with nearly 500 Palestinians killed despite the ceasefire. Only 43% of allocated aid trucks are entering Gaza. The last Israeli hostage body was recovered in January 2026. In the West Bank, the PA governs limited areas under Israeli occupation while 700,000+ settlers expand into Palestinian territory. Post-war Gaza governance remains unresolved.',
       why: 'The Gaza war and ceasefire process have reshaped Middle East geopolitics. Hezbollah was significantly weakened by Israel\'s military operations. The humanitarian catastrophe has inflamed global opinion and strained US relations with allies. Palestinian statehood recognition has gained momentum internationally. The ceasefire\'s fragility threatens a return to full-scale conflict.',
@@ -44,6 +69,19 @@ export const COUNTRIES = {
   },
 
   'Sudan': { lat: 12.86, lng: 30.22, flag: '🇸🇩', risk: 'catastrophic', tags: ['Civil War', 'Humanitarian Crisis'], region: 'Africa', pop: '46M', gdp: '$34B', leader: 'Disputed', title: 'Civil War',
+    casualties: {
+      total: '61,000–150,000+',
+      label: 'Killed since Apr 2023',
+      lastUpdated: 'Early 2026',
+      source: 'Multiple estimates',
+      contested: true,
+      sources: [
+        { name: 'ACLED (documented)', figure: '28,700+', note: 'Verified fatalities through Nov 2024 — acknowledged undercount' },
+        { name: 'Academic study (capture-recapture)', figure: '~62,000+', note: '26,000+ in Khartoum State alone through Jun 2024' },
+        { name: 'US Special Envoy', figure: '~150,000+', note: 'Estimate cited May 2024 — includes indirect deaths' },
+        { name: 'Displacement', figure: '15M displaced', note: 'World\'s largest displacement crisis — 11.6M internal, 4M cross-border' }
+      ]
+    },
     analysis: {
       what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Hemedti. Fighting has devastated Khartoum and spread across the country, particularly in Darfur where the RSF has captured all five state capitals including El Fasher. An estimated 150,000-400,000 people have been killed and 13.6 million displaced—the world\'s largest displacement crisis. Mass killings, sexual violence, and ethnic cleansing have been documented. Famine conditions are spreading with hospitals non-functional.',
       why: 'Sudan\'s collapse threatens to destabilize the entire Horn of Africa and Sahel region. The RSF has links to Wagner Group/Russia and receives UAE support, while SAF has Egyptian and Iranian backing—making this a proxy battlefield. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The humanitarian catastrophe rivals Yemen and Gaza in severity but receives far less attention.',
@@ -57,6 +95,18 @@ export const COUNTRIES = {
   },
 
   'Myanmar': { lat: 21.92, lng: 95.96, flag: '🇲🇲', risk: 'catastrophic', tags: ['Civil War', 'Military Junta', 'Humanitarian Crisis'], region: 'Southeast Asia', pop: '54M', gdp: '$65B', leader: 'Military Junta', title: 'Civil War Stalemate',
+    casualties: {
+      total: '6,000+',
+      label: 'Verified civilian deaths since 2021 coup',
+      lastUpdated: 'Dec 2024',
+      source: 'UN OHCHR',
+      contested: true,
+      sources: [
+        { name: 'AAPP (verified civilians)', figure: '5,665+', note: 'Assistance Association for Political Prisoners — 2,500 more pending' },
+        { name: 'UN OHCHR', figure: '6,000+', note: 'Civilian deaths as of Dec 2024' },
+        { name: 'UN (total estimate)', figure: '~75,000+', note: 'All causes including combatants — 5.2M displaced' }
+      ]
+    },
     analysis: {
       what: 'Myanmar\'s civil war following the 2021 military coup has reached a volatile stalemate. The military junta controls only ~21% of Myanmar\'s territory, with resistance forces holding ~42% and continue advancing toward the Bamar heartland. The military held sham elections from December 2025 to January 2026 in only 263 of 330 townships, widely boycotted and marked by intense violence. The March 2025 earthquake (magnitude 7.7) killed 5,000+ and compounded the crisis. Over 5.2 million people are displaced. The junta has responded with airstrikes on civilians, village burnings, and mass executions. The economy has collapsed.',
       why: 'Myanmar\'s instability creates refugee flows into Thailand, Bangladesh, and India. The country is a major corridor for drug trafficking. China has significant interests and influence over ethnic armies. The resistance lacks unified political leadership, and public exhaustion is growing. International attention has waned except from China. The conflict economy dominates.',
@@ -69,16 +119,23 @@ export const COUNTRIES = {
     ]
   },
 
-  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', tags: ['Armed Conflict', 'Humanitarian Crisis', 'Sectarian Violence'], region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Houthi Retaliation — Red Sea Crisis',
+  'Yemen': { lat: 15.55, lng: 48.52, flag: '🇾🇪', risk: 'catastrophic', tags: ['Armed Conflict', 'Humanitarian Crisis', 'Sectarian Violence'], region: 'Middle East', pop: '33M', gdp: '$21B', leader: 'Disputed', title: 'Houthi Retaliation Imminent — Red Sea Crisis',
+    casualties: {
+      total: '377,000+',
+      label: 'Killed since 2015 (all causes)',
+      lastUpdated: 'UN est. 2022',
+      source: 'United Nations',
+      contested: false
+    },
     analysis: {
-      what: 'The US and Israel launched joint strikes on Iran on February 28, 2026, triggering near-certain Houthi retaliation. The Houthis are Iran\'s most aggressive proxy force and had previously disrupted 12% of global trade through Red Sea shipping attacks. The US-Houthi ceasefire from May 2025 is effectively void. Houthi leaders have repeatedly vowed to escalate if Iran is attacked. The movement retains anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
-      why: 'Houthi attacks on Red Sea shipping forced the largest rerouting of global trade since the Suez Crisis, adding weeks to transit times and billions in costs. Renewed attacks would spike global shipping insurance, oil prices, and supply chain disruptions. The US has two carrier strike groups in the region that could become Houthi targets. Yemen is the most likely front for immediate Iranian proxy escalation alongside Hezbollah in Lebanon.',
-      next: 'Houthi attacks on Red Sea shipping and US naval assets are expected within hours. Watch for: anti-ship missile launches in the Bab el-Mandeb strait, drone attacks on commercial vessels, ballistic missile strikes toward Israel, and US preemptive strikes on Houthi positions. Global shipping disruption and oil price spikes are near-certain consequences.'
+      what: 'The US-Houthi ceasefire from May 2025 is effectively void after US-Israeli strikes on Iran on February 28, 2026. Houthi leader Abdulmalik al-Houthi condemned the strikes as "a blatant, criminal, and barbaric act" and expressed "complete solidarity" with Iran. A million-person solidarity march took place in Sanaa on March 1. Anonymous officials indicated the group would "soon begin attacks" on Israel and international shipping, though as of March 3 no major retaliatory strikes have been launched. The Houthis retain anti-ship missiles, drones, and ballistic missiles capable of striking US naval assets and commercial shipping.',
+      why: 'Previous Houthi attacks on Red Sea shipping forced the largest rerouting of global trade since the Suez Crisis, adding weeks to transit times and billions in costs. Renewed attacks would compound the Strait of Hormuz closure, creating a dual chokepoint crisis — the Red Sea and the Persian Gulf blocked simultaneously. Maritime insurers have already cancelled war risk cover in the Gulf. Oil prices have spiked 6-10% and would surge further with active Houthi operations. The US has two carrier strike groups in the region that could become targets.',
+      next: 'Houthi attacks are expected imminently but have not yet materialized, suggesting possible restraint or preparation for a coordinated salvo. Watch for: anti-ship missile launches in the Bab el-Mandeb strait, drone attacks on commercial vessels, ballistic missile strikes toward Israel, and US preemptive strikes on Houthi positions. A dual blockade of Hormuz and the Red Sea would be unprecedented and catastrophic for global energy markets.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'Houthis vow massive retaliation after US-Israeli strikes on Iran', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-02-28T11:15:00Z', headline: 'Red Sea shipping halted as Houthi attacks expected', url: '#' },
-      { source: 'Al Jazeera', bias: 'left', time: '2026-02-28T10:15:00Z', headline: 'US carrier groups brace for Houthi missile attacks', url: '#' }
+      { source: 'Reuters', bias: 'center', time: '2026-03-03T07:00:00Z', headline: 'Houthis prepare retaliatory strikes — Red Sea shipping at standstill', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-01T14:00:00Z', headline: 'Million-person march in Sanaa — Houthi leader vows solidarity with Iran', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2026-03-01T10:00:00Z', headline: 'US carrier groups on high alert as Houthi retaliation expected', url: '#' }
     ]
   },
 
@@ -147,16 +204,17 @@ export const COUNTRIES = {
   },
 
   // ==================== EXTREME ====================
-  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute', 'Occupation'], region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'State of Emergency — Strikes on Iran',
+  'Israel': { lat: 31.5, lng: 34.9, flag: '🇮🇱', risk: 'catastrophic', tags: ['Armed Conflict', 'Territorial Dispute', 'Occupation'], region: 'Middle East', pop: '9.5M', gdp: '$525B', leader: 'Benjamin Netanyahu', title: 'Active War — Multi-Front Conflict',
     analysis: {
-      what: 'Israel launched a "preemptive attack" on Tehran on February 28, 2026, in coordination with the United States. Israel has declared a state of emergency with sirens blaring and citizens told to shelter in place. Iranian retaliation via ballistic missiles and proxy forces is expected imminently. Hezbollah in Lebanon, despite being weakened, retains rocket capability and may open a northern front. The IDF is on full alert across all borders. This is the most significant Israeli military operation since the 2023-2024 Gaza war.',
-      why: 'Israel has entered active military conflict with Iran — a nation with ballistic missile capability that can reach Israeli cities. Iranian retaliation could come via direct missile strikes, Hezbollah rockets from Lebanon, Houthi attacks from Yemen, and Iraqi militia strikes on US bases that host Israeli intelligence assets. Israel\'s Iron Dome and Arrow systems will be tested at scale. The state of emergency affects the entire civilian population. Economic disruption will be severe.',
-      next: 'Iranian retaliation is the immediate concern — likely a combination of ballistic missiles targeting Israeli military installations and cities, plus proxy activation on multiple fronts. Watch for: Iranian missile launches, Hezbollah rocket barrages from Lebanon, Houthi attacks on Israeli-linked shipping, civilian casualties, and whether the conflict escalates beyond the initial exchange. Israel\'s air defense capacity will be critical.'
+      what: 'Israel launched "Operation Roaring Lion" on February 28, 2026 — coordinated strikes with the US on Iran targeting nuclear sites, IRGC command centers, and leadership compounds. The operation killed Supreme Leader Khamenei. Iran retaliated with "Operation True Promise IV," launching ballistic missiles at Israeli territory, killing at least 11 people. Hezbollah opened a second front on March 2, firing missiles and drone swarms at an IDF base near Haifa. Israel\'s Defense Minister authorized a ground invasion of Lebanon in response. Israeli strikes on Beirut killed 52+ people. The state of emergency remains in effect with Arrow and Iron Dome systems actively intercepting incoming missiles on multiple fronts.',
+      why: 'Israel is now fighting an active multi-front war — direct conflict with Iran, renewed hostilities with Hezbollah in Lebanon, and potential Houthi escalation from Yemen. This is the most significant Israeli military engagement since the 1973 Yom Kippur War in terms of state-level adversaries. Air defense systems are being tested at unprecedented scale. Economic disruption is severe with the entire civilian population under shelter orders. The conflict risks drawing in Iraqi militias and further destabilizing the region.',
+      next: 'The ground invasion of Lebanon is the immediate escalation risk. Watch for: scale and duration of Iranian missile salvos, Hezbollah precision-guided munitions targeting Tel Aviv, IDF operations in southern Lebanon, Houthi missile launches toward Eilat, and whether the conflict remains limited or spirals into a full regional war. Trump indicated the war could last 4-5 weeks.'
     },
     news: [
-      { source: 'Times of Israel', bias: 'center-right', time: '2026-02-28T11:55:00Z', headline: 'Israel declares state of emergency after launching strikes on Iran', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'IDF confirms "preemptive attack" on Tehran', url: '#' },
-      { source: 'Haaretz', bias: 'center-left', time: '2026-02-28T11:15:00Z', headline: 'Sirens across Israel — citizens told to shelter', url: '#' }
+      { source: 'Times of Israel', bias: 'center-right', time: '2026-03-03T09:00:00Z', headline: 'Defense Minister authorizes ground invasion of Lebanon', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-02T15:00:00Z', headline: 'Hezbollah drone swarm hits IDF base near Haifa — 11 killed in Iranian missile strikes', url: '#' },
+      { source: 'Haaretz', bias: 'center-left', time: '2026-03-02T12:00:00Z', headline: 'Israeli strikes on Beirut kill 52 as multi-front war intensifies', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'IDF confirms "Operation Roaring Lion" — strikes across Iran', url: '#' }
     ]
   },
 
@@ -173,16 +231,30 @@ export const COUNTRIES = {
     ]
   },
 
-  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'catastrophic', tags: ['Armed Conflict', 'Sanctions/Isolation', 'Nuclear Threat'], region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Vacant (Khamenei killed Feb 28)', title: 'Supreme Leader Killed — Nation Under Attack',
+  'Iran': { lat: 32.43, lng: 53.69, flag: '🇮🇷', risk: 'catastrophic', tags: ['Armed Conflict', 'Sanctions/Isolation', 'Nuclear Threat'], region: 'Middle East', pop: '87M', gdp: '$388B', leader: 'Interim Leadership Council', title: 'Active War — Multi-Front Conflict',
+    casualties: {
+      total: '1,190+',
+      label: 'Killed since Feb 28 strikes',
+      lastUpdated: 'March 2026',
+      source: 'HRANA',
+      contested: true,
+      sources: [
+        { name: 'HRANA (human rights org)', figure: '1,190+', note: 'Comprehensive report — 4,475 injured' },
+        { name: 'Al Jazeera tracker', figure: '787+', note: 'Live tracker as of March 2' },
+        { name: 'Iranian Red Crescent', figure: '555+', note: 'Official government figure — likely undercount' },
+        { name: 'Hengaw (Kurdish rights org)', figure: '1,500+', note: 'Estimates 200 civilian, 1,300 military' }
+      ]
+    },
     analysis: {
-      what: 'Supreme Leader Ayatollah Ali Khamenei was confirmed killed in US-Israeli strikes on February 28, 2026. The joint operation — codenamed "Operation Epic Fury" (US) and "Roaring Lion" (Israel) — struck 24 of Iran\'s 31 provinces, targeting nuclear enrichment sites, IRGC command centers, air defenses, and leadership compounds. Over 200 people have been killed. President Masoud Pezeshkian\'s status is unconfirmed. The IRGC has assumed emergency command and is threatening massive retaliation across the region. Iran has already launched retaliatory missile and drone strikes against US bases and allied states across the Gulf.',
-      why: 'The assassination of Iran\'s Supreme Leader is the most consequential targeted killing since Osama bin Laden. Khamenei held absolute authority over Iran\'s military, nuclear program, and proxy network for 35 years. His death creates a succession crisis at the worst possible moment — while Iran is under active military attack. The IRGC, now the de facto power center, has every incentive to escalate rather than negotiate. The Strait of Hormuz carries 20-30% of global oil transit. Iranian proxies — Hezbollah, Houthis, Hamas remnants, Iraqi Shia militias — are activating simultaneously across the region.',
-      next: 'Iran\'s retaliation is already underway — missile and drone strikes have hit targets across the Gulf. The IRGC faces an existential choice: escalate toward total war or seek survival through negotiation. Watch for: IRGC leadership succession announcements, Strait of Hormuz closure attempts, further missile salvos against US bases and Gulf states, Hezbollah activation from Lebanon, Houthi escalation in the Red Sea, and whether Pezeshkian emerges alive to provide civilian governance. The risk of full regional war is now at maximum.'
+      what: 'Supreme Leader Ayatollah Ali Khamenei was confirmed killed in US-Israeli strikes on February 28, 2026, along with his daughter, son-in-law, and grandchild. His wife died from injuries on March 2. The joint operation — codenamed "Operation Epic Fury" (US) and "Roaring Lion" (Israel) — struck over 500 locations across 153 cities in 24 of Iran\'s 31 provinces. Over 1,190 people have been killed and 4,475 injured. An Interim Leadership Council has assumed Khamenei\'s functions per Article 111 of the constitution. Iran launched "Operation True Promise IV" in retaliation — missile and drone strikes hitting US bases across the Gulf, killing 6 US service members. The IRGC declared the Strait of Hormuz closed on March 2, with tanker traffic dropping to near zero.',
+      why: 'The assassination of Iran\'s Supreme Leader is the most consequential targeted killing since Osama bin Laden. Khamenei held absolute authority over Iran\'s military, nuclear program, and proxy network for 35 years. His death creates a succession crisis during active war. The Strait of Hormuz closure threatens 20 million barrels/day of oil transit — Brent crude spiked to $82/barrel with analysts warning of $120-200 if sustained. Iranian proxies have activated across the region: Hezbollah attacked Israel from Lebanon on March 2, Iraqi Shia militias launched 23+ drone strikes on US assets in Erbil, and Houthis threatened to resume Red Sea attacks.',
+      next: 'The conflict is escalating across multiple fronts. Trump stated the war could last 4-5 weeks. Secretary Rubio announced strikes would increase in scope and intensity. Watch for: Strait of Hormuz enforcement attempts, Interim Leadership Council consolidation, further Iranian missile salvos, Hezbollah activation from Lebanon, Houthi Red Sea attacks, Iraqi militia escalation, oil price trajectory, and whether diplomatic channels can prevent full regional war. IAEA confirmed damage to Natanz entrance buildings but no radiological release.'
     },
     news: [
-      { source: 'CNN', bias: 'center-left', time: '2026-02-28T12:00:00Z', headline: 'Khamenei confirmed killed in US-Israeli strikes on Tehran', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'IRGC assumes emergency command, vows "annihilating" retaliation', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-02-28T11:30:00Z', headline: 'Iran launches retaliatory strikes across Gulf — 200+ killed in US-Israeli operation', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '2026-03-03T10:00:00Z', headline: 'Day 3: US-Israeli strikes hit 153 cities as Iran retaliates across Gulf', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-02T14:00:00Z', headline: 'IRGC declares Strait of Hormuz closed — tanker traffic halts', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2026-03-02T11:00:00Z', headline: 'Interim Leadership Council assumes power after Khamenei confirmed dead', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-01T09:00:00Z', headline: 'Iran launches Operation True Promise IV — 6 US service members killed', url: '#' }
     ]
   },
 
@@ -212,16 +284,17 @@ export const COUNTRIES = {
     ]
   },
 
-  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'catastrophic', tags: ['Armed Conflict', 'Political Instability', 'Sectarian Violence'], region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Hezbollah Proxy Retaliation Expected',
+  'Lebanon': { lat: 33.85, lng: 35.86, flag: '🇱🇧', risk: 'catastrophic', tags: ['Armed Conflict', 'Political Instability', 'Sectarian Violence'], region: 'Middle East', pop: '5.5M', gdp: '$22B', leader: 'Joseph Aoun', title: 'Under Attack — Israel Ground Invasion Authorized',
     analysis: {
-      what: 'The US and Israel launched joint military strikes on Iran on February 28, 2026, making Hezbollah retaliation from Lebanon virtually certain. Despite being significantly weakened after Israel killed its top leadership including Nasrallah in 2024, Hezbollah retains substantial rocket and missile arsenals capable of striking deep into Israel. The Israel-Hezbollah ceasefire is effectively dead. The Lebanese army cannot prevent Hezbollah from acting on Iranian orders. Civilians across southern Lebanon and northern Israel face imminent danger.',
-      why: 'Lebanon is the most likely front for Iranian proxy retaliation against Israel. Hezbollah is Iran\'s most capable proxy force and has historically responded to attacks on Iran with rocket barrages on Israeli cities. Even in its weakened state, Hezbollah possesses precision-guided munitions that can hit Tel Aviv. Any Israeli counter-strikes on Lebanon would devastate a country already in economic collapse. The entire civilian population is at risk.',
-      next: 'Hezbollah rocket and missile attacks on northern Israel are expected within hours to days. Watch for: rocket barrages from southern Lebanon, Israeli preemptive strikes on Hezbollah positions, civilian displacement on both sides of the border, and whether Hezbollah launches precision-guided munitions at Israeli strategic targets. A full-scale Israel-Lebanon war is now a near-term possibility.'
+      what: 'Hezbollah launched missiles and a drone swarm at an IDF base near Haifa on March 2, 2026 — its first cross-border attack since late 2024, retaliating for the killing of Khamenei. Israel responded with naval attacks and airstrikes on Beirut and southern Lebanon, killing 52+ people and wounding 149+. Israel\'s Defense Minister has authorized a ground invasion of Lebanon. Tens of thousands have been displaced from southern Lebanon and Beirut\'s southern suburbs. In a dramatic move, Lebanese PM Nawaf Salam banned Hezbollah military and intelligence activities — one of the harshest government stances ever against the group.',
+      why: 'Lebanon has been dragged into the Iran-Israel war despite being a country already in economic collapse. Hezbollah, though a shadow of its former strength after 2024 losses, still possesses precision-guided munitions capable of striking Tel Aviv. An Israeli ground invasion would devastate southern Lebanon for the third time in two decades. The PM\'s ban on Hezbollah military activities signals a historic internal political shift but is largely unenforceable. The entire civilian population is caught between Hezbollah\'s Iranian obligations and Israeli military power.',
+      next: 'An Israeli ground incursion into southern Lebanon appears imminent. Watch for: IDF troop movements across the border, Hezbollah precision-guided missile launches at Israeli cities, civilian displacement scale, whether Lebanese army forces engage or stand aside, and international ceasefire pressure. The conflict could quickly escalate to a full-scale replay of the 2006 war but with a far weaker Hezbollah and far more desperate circumstances.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T11:45:00Z', headline: 'Hezbollah signals retaliation after US-Israeli strikes on Iran', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-02-28T11:15:00Z', headline: 'Lebanon braces for war as Iran-Israel conflict erupts', url: '#' },
-      { source: 'Times of Israel', bias: 'center-right', time: '2026-02-28T10:15:00Z', headline: 'IDF reinforces northern border amid Hezbollah threat', url: '#' }
+      { source: 'CNN', bias: 'center-left', time: '2026-03-03T08:00:00Z', headline: 'Israel authorizes ground invasion of Lebanon as Hezbollah attacks Haifa', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-02T16:00:00Z', headline: 'Israeli strikes on Beirut kill 52 — PM Salam bans Hezbollah military activities', url: '#' },
+      { source: 'Al Jazeera', bias: 'left', time: '2026-03-02T13:00:00Z', headline: 'Hezbollah drone swarm targets IDF base near Haifa in first strike since 2024', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-02T10:00:00Z', headline: 'Tens of thousands flee southern Lebanon as conflict reignites', url: '#' }
     ]
   },
 

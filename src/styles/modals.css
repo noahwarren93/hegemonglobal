@@ -186,6 +186,40 @@
 
     .tos-body a { color: #06b6d4; text-decoration: none; }
 
+    .casualties-section { background: #0d0d14; border: 1px solid #1f293755; border-radius: 8px; padding: 10px 12px; margin-top: 12px; border-left: 3px solid #dc2626; }
+
+    .casualties-header { display: flex; flex-direction: column; gap: 4px; }
+
+    .casualties-figure { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .casualties-label { font-size: 9px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .casualties-total { font-size: 16px; font-weight: 700; color: #fca5a5; }
+
+    .casualties-contested { background: #78350f; color: #fcd34d; border: none; font-size: 8px; padding: 2px 6px; border-radius: 3px; font-weight: 600; letter-spacing: 0.3px; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+
+    .casualties-contested:hover { background: #92400e; }
+
+    .casualties-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .casualties-scope { font-size: 10px; color: #9ca3af; }
+
+    .casualties-source { font-size: 9px; color: #6b7280; }
+
+    .casualties-updated { font-size: 9px; color: #4b5563; font-style: italic; }
+
+    .casualties-sources { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+    .casualties-source-item { background: #111827; border: 1px solid #1f293755; border-radius: 5px; padding: 6px 8px; }
+
+    .casualties-source-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+    .casualties-source-name { font-size: 10px; font-weight: 600; color: #d1d5db; }
+
+    .casualties-source-figure { font-size: 11px; font-weight: 700; color: #fca5a5; white-space: nowrap; }
+
+    .casualties-source-note { font-size: 9px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+
     .research-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #1f2937; }
 
     .research-link { display: flex; align-items: center; justify-content: space-between; background: #0d0d14; border: 1px solid #1f293755; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; text-decoration: none; transition: background 0.15s, border-color 0.15s; }

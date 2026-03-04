@@ -102,6 +102,10 @@
       .research-link { padding: 6px 8px; }
       .research-name { font-size: 10px; }
       .research-desc { font-size: 9px; }
+      .casualties-total { font-size: 14px; }
+      .casualties-section { padding: 8px 10px; }
+      .casualties-source-name { font-size: 9px; }
+      .casualties-source-figure { font-size: 10px; }
       .breaking-banner { padding: 6px 10px; }
       .breaking-text { font-size: 10px; }
       .tos-close { min-width: 44px; min-height: 44px; padding: 10px; font-size: 22px; }

@@ -10,6 +10,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [sanctionsOpen, setSanctionsOpen] = useState(false);
+  const [casualtiesExpanded, setCasualtiesExpanded] = useState(false);
 
   const country = countryName ? COUNTRIES[countryName] : null;
 
@@ -20,6 +21,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       setNews([]);
       setNewsLoading(true);
       setSanctionsOpen(false);
+      setCasualtiesExpanded(false);
       fetchCountryNews(countryName).then(articles => {
         setNews(articles || []);
         setNewsLoading(false);
@@ -103,6 +105,43 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                   <div className="fact-value">{fact.value}</div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Casualty Estimates */}
+          {country.casualties && (
+            <div className="casualties-section">
+              <div className="casualties-header">
+                <div className="casualties-figure">
+                  <span className="casualties-label">Est. Casualties:</span>
+                  <span className="casualties-total">{country.casualties.total}</span>
+                  {country.casualties.contested && (
+                    <button className="casualties-contested" onClick={() => setCasualtiesExpanded(!casualtiesExpanded)}>
+                      Contested {casualtiesExpanded ? '▴' : '▾'}
+                    </button>
+                  )}
+                </div>
+                <div className="casualties-meta">
+                  <span className="casualties-scope">{country.casualties.label}</span>
+                  {!country.casualties.contested && (
+                    <span className="casualties-source">Source: {country.casualties.source}</span>
+                  )}
+                  <span className="casualties-updated">Last updated: {country.casualties.lastUpdated}</span>
+                </div>
+              </div>
+              {country.casualties.contested && casualtiesExpanded && country.casualties.sources && (
+                <div className="casualties-sources">
+                  {country.casualties.sources.map((src, i) => (
+                    <div key={i} className="casualties-source-item">
+                      <div className="casualties-source-header">
+                        <span className="casualties-source-name">{src.name}</span>
+                        <span className="casualties-source-figure">{src.figure}</span>
+                      </div>
+                      <div className="casualties-source-note">{src.note}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
