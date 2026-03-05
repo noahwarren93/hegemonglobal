@@ -43,9 +43,6 @@
 
     @media (max-width: 768px) {
       .app { flex-direction: column; }
-      .app.globe-fullscreen { flex-direction: column; }
-      .app.globe-fullscreen .globe-container { height: 100vh; }
-      .app.globe-fullscreen .watchlist { display: none; }
       .globe-container { height: 52vh; width: 100%; }
       .sidebar { width: 100%; height: 48vh; border-left: none; border-top: 1px solid #1f2937; }
       .header { right: 0; padding: 14px 12px 10px; }

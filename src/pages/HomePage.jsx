@@ -353,9 +353,6 @@ export default function HomePage() {
   // --- Auto-rotate ---
   const [autoRotate, setAutoRotate] = useState(false);
 
-  // --- Fullscreen globe ---
-  const [globeFullscreen, setGlobeFullscreen] = useState(false);
-
   // --- Date display ---
   const [currentDate, setCurrentDate] = useState('');
 
@@ -670,13 +667,6 @@ export default function HomePage() {
     setCompareCountries([]);
   }, []);
 
-  // Toggle fullscreen globe
-  const handleToggleFullscreen = useCallback(() => {
-    setGlobeFullscreen(prev => !prev);
-    // Trigger resize so Three.js recalculates viewport
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
-  }, []);
-
   // Toggle auto-rotate
   const handleToggleRotate = useCallback(() => {
     if (window._globeView && window._globeView.toggleRotation) {
@@ -689,7 +679,6 @@ export default function HomePage() {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
-        if (globeFullscreen) { setGlobeFullscreen(false); return; }
         if (searchOpen) { setSearchOpen(false); return; }
         if (militaryInfoOpen) { setMilitaryInfoOpen(false); setSelectedInstallation(null); return; }
         if (statPopupOpen) { setStatPopupOpen(false); return; }
@@ -706,7 +695,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [globeFullscreen, searchOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -725,7 +714,7 @@ export default function HomePage() {
           </div>
         </div>
       )}
-      <div className={`app${globeFullscreen ? ' globe-fullscreen' : ''}`}>
+      <div className="app">
         {/* ===== Globe Area (left) ===== */}
         <div className="globe-container">
           {/* Globe */}
@@ -789,21 +778,6 @@ export default function HomePage() {
 
           {/* Globe Tools (bottom-right) */}
           <div className="globe-tools">
-            <button
-              className={`globe-tool-btn${globeFullscreen ? ' active' : ''}`}
-              onClick={handleToggleFullscreen}
-              title={globeFullscreen ? 'Exit Fullscreen (Esc)' : 'Fullscreen Globe'}
-            >
-              {globeFullscreen ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-                </svg>
-              ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18-5h-3a2 2 0 0 0-2 2v3m0 8v3a2 2 0 0 0 2 2h3M3 16v3a2 2 0 0 0 2 2h3"/>
-                </svg>
-              )}
-            </button>
             <button
               className="globe-tool-btn"
               onClick={() => setTosOpen(true)}

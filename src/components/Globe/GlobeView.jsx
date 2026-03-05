@@ -620,7 +620,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (isPinchingRef.current && lastPinchDistRef.current > 0) {
           const delta = (lastPinchDistRef.current - dist) * 0.01;
-          camera.position.z = Math.max(0.8, Math.min(5.0, camera.position.z + delta));
+          camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
         }
         isPinchingRef.current = true;
         lastPinchDistRef.current = dist;
@@ -655,7 +655,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       e.preventDefault();
       if (!camera) return;
       const delta = e.deltaY * 0.002;
-      camera.position.z = Math.max(0.8, Math.min(5.0, camera.position.z + delta));
+      camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
     }
 
     // ---- Attach event listeners ----
@@ -703,13 +703,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           }
         }
       }
-      // Scale risk dots based on zoom level
-      const zoomScale = camera.position.z / DEFAULT_CAMERA_Z;
-      const meshes = countryMeshesRef.current;
-      for (let i = 0; i < meshes.length; i++) {
-        meshes[i].scale.setScalar(zoomScale);
-      }
-
       animateConflictZones();
       renderer.render(scene, camera);
     }
