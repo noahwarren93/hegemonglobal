@@ -59,3 +59,12 @@
     .breaking-text { font-size: 12px; font-weight: 600; color: #fff; }
 
     .breaking-close { background: none; border: none; color: #fca5a5; cursor: pointer; font-size: 18px; margin-left: auto; }
+
+    /* Fullscreen globe mode */
+    .app.globe-fullscreen > .sidebar { display: none; }
+    .app.globe-fullscreen .globe-container { width: 100%; height: 100vh; }
+    .app.globe-fullscreen .header { right: 0; }
+    .app.globe-fullscreen .header-right { right: 20px; }
+    .app.globe-fullscreen .globe-tools { right: 16px; }
+    .app.globe-fullscreen .search-overlay { right: 16px; }
+    .app.globe-fullscreen .watchlist { display: block; }
