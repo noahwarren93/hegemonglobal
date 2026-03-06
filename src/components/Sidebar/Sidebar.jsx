@@ -198,36 +198,243 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: up to 4, fixed order — Iran war covered by BREAKING banner
+  // ============================================================
+  // Pakistan-Afghanistan War Data
+  // ============================================================
+  const PAK_AFG_TIMELINE_BASE = [
+    // March 5 — Day 8
+    { time: '2026-03-05T14:00:00Z', text: 'UNOCHA publishes first situation report \u2014 10 Afghan provinces affected, WFP suspends food distribution across 46 districts' },
+    { time: '2026-03-05T10:00:00Z', text: 'Afghan government claims 110 civilians killed (incl. 65 women and children), 123 wounded since Feb 27' },
+    // March 4 — Day 7
+    { time: '2026-03-04T16:00:00Z', text: 'UN reports nearly 66,000 Afghans displaced \u2014 16,370 families across Paktia, Kunar, Nangarhar, Khost, Paktika, Nuristan' },
+    { time: '2026-03-04T12:00:00Z', text: 'Afghanistan claims to shoot down Pakistani drone, captures 7 border posts' },
+    { time: '2026-03-04T08:00:00Z', text: 'Seventh consecutive day of heavy shelling and border clashes along Durand Line' },
+    // March 3 — Day 6
+    { time: '2026-03-03T18:00:00Z', text: 'NYT satellite imagery confirms Pakistani strikes destroyed hangar and 2 warehouses at Bagram Airfield' },
+    { time: '2026-03-03T14:00:00Z', text: 'Turkey offers to mediate \u2014 Erdo\u011fan calls for ceasefire and diplomatic engagement' },
+    { time: '2026-03-03T10:00:00Z', text: 'Pakistan updates claims: 481 Taliban fighters killed, 696+ injured, 2 corps HQs and 3 brigade HQs destroyed' },
+    // March 2 — Day 5
+    { time: '2026-03-02T16:00:00Z', text: 'Afghan Taliban strikes deep into Pakistan \u2014 hits Nur Khan Airbase (Rawalpindi), 12th Division HQ (Quetta), Khwazai Camp' },
+    { time: '2026-03-02T10:00:00Z', text: 'Afghan deputy spokesman: Pakistani strikes have killed 55 civilians across multiple provinces since Feb 27' },
+    // March 1 — Day 4
+    { time: '2026-03-01T14:00:00Z', text: 'PAF strikes hit 46 locations since operation began \u2014 including Bagram Airfield; 130 Taliban posts destroyed' },
+    { time: '2026-03-01T10:00:00Z', text: 'Taliban deploys anti-aircraft and missile defense systems against PAF jets entering Afghan airspace' },
+    { time: '2026-03-01T06:00:00Z', text: 'Clashes resume along border in Nangarhar, Khost, and Paktia provinces' },
+    // February 28 — Day 3
+    { time: '2026-02-28T16:00:00Z', text: 'Pakistan claims 32 sq km of Afghan territory south of Zhob sector \u2014 establishes "Ghudwana Enclave"' },
+    { time: '2026-02-28T12:00:00Z', text: 'Afghanistan claims Pakistani F-16 shot down over Jalalabad \u2014 Pakistan denies, calls it "wartime propaganda"' },
+    { time: '2026-02-28T08:00:00Z', text: 'Pakistan rejects all dialogue: "There won\'t be any talks. There\'s no dialogue. There\'s no negotiation."' },
+    // February 27 — Day 2: Open War Declared
+    { time: '2026-02-27T14:00:00Z', text: 'Pakistan launches Operation Ghazab Lil Haq \u2014 massive airstrikes on Kabul, Kandahar, and Paktia' },
+    { time: '2026-02-27T12:00:00Z', text: 'Defence Minister Khawaja Asif declares Pakistan in "open war" with Afghanistan \u2014 "Islamabad\'s patience is exhausted"' },
+    { time: '2026-02-27T10:00:00Z', text: 'Explosions rock Kabul \u2014 secondary blasts at weapons depot on western outskirts' },
+    { time: '2026-02-27T08:00:00Z', text: 'Pakistan military: 274 Taliban killed, 83 posts destroyed, 17 captured in first day of operation' },
+    // February 26 — Day 1
+    { time: '2026-02-26T14:00:00Z', text: 'Afghanistan launches coordinated attack on 53 locations along 2,600 km Durand Line border' },
+    { time: '2026-02-26T10:00:00Z', text: 'Afghan forces capture multiple Pakistani military outposts in Khyber Pakhtunkhwa' },
+    { time: '2026-02-26T06:00:00Z', text: 'Afghan Defence Ministry claims 55 Pakistani soldiers killed, 19 army posts destroyed, 2 bases overrun' },
+    // February 21 — Initial Strikes
+    { time: '2026-02-21T02:00:00Z', text: 'PAF strikes 7 alleged TTP/ISIS-K camps in Nangarhar, Paktika, and Khost \u2014 18 civilians killed in Nangarhar' },
+  ];
+
+  const PAK_AFG_WAR_KW = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'paktia', 'paktika', 'nangarhar', 'bagram', 'nur khan', 'islamabad'];
+  const PAK_AFG_TIMELINE = useMemo(() => {
+    const merged = [...PAK_AFG_TIMELINE_BASE];
+    const baseTexts = PAK_AFG_TIMELINE_BASE.map(b => b.text.toLowerCase());
+
+    for (const event of DAILY_EVENTS) {
+      if (event.breaking) continue;
+      const hl = (event.headline || '').toLowerCase();
+      if (!PAK_AFG_WAR_KW.some(kw => hl.includes(kw))) continue;
+      // Must relate to the war specifically
+      const warTerms = ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'operation', 'border', 'clash', 'drone', 'airbase', 'troops'];
+      if (!warTerms.some(t => hl.includes(t))) continue;
+
+      const words = hl.split(/\s+/).filter(w => w.length > 3);
+      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
+      if (isDupe) continue;
+
+      merged.push({
+        time: event.pubDate || new Date().toISOString(),
+        text: event.headline,
+        live: true,
+      });
+    }
+
+    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+  }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const PAK_AFG_INTEL = {
+    what: 'Pakistan declared "open war" on Afghanistan on February 27, 2026, launching Operation Ghazab Lil Haq ("Righteous Fury") with massive airstrikes on Kabul, Kandahar, and Paktia. The operation followed months of escalating TTP terrorism inside Pakistan and cross-border clashes along the Durand Line. On February 26, Afghan Taliban forces attacked 53 locations along the 2,600 km border, capturing multiple Pakistani outposts. Pakistan responded with full-scale air and ground operations, striking 46+ locations including Bagram Airfield (confirmed by NYT satellite imagery). Pakistan claims 481 Taliban fighters killed and 696+ injured, with 130+ Taliban posts destroyed. Afghanistan claims 110 civilians killed including 65 women and children. Afghan Taliban retaliated by striking deep into Pakistan \u2014 hitting Nur Khan Airbase in Rawalpindi, the 12th Division HQ in Quetta, and camps in Mohmand Agency. Pakistan claims to have seized 32 sq km of Afghan territory (the "Ghudwana Enclave"). Nearly 66,000 Afghans have been displaced across 6 provinces.',
+    why: 'This is the first conventional inter-state war between Pakistan and Afghanistan\'s Taliban government \u2014 a regime Pakistan itself helped bring to power. Pakistan is a nuclear-armed state of 231 million people; Afghanistan is already in humanitarian crisis. The war threatens to destabilize the entire South Asian region. Pakistan has rejected all dialogue ("There won\'t be any talks"). WFP has suspended food distribution across 46 districts affecting 160,000 people. Health facilities including an IOM transit centre have been damaged. The conflict creates a refugee crisis on top of Afghanistan\'s existing displacement of millions. Both sides\' casualty claims are unverifiable \u2014 the fog of war is thick.',
+    outlook: 'No ceasefire is in sight. Pakistan has explicitly rejected negotiations. Turkey has offered to mediate but neither side has accepted. The war is entering its second week with sustained air and ground operations. Key risks: further Afghan strikes on Pakistani military infrastructure, escalation to Pakistani cities, humanitarian catastrophe in border provinces, and the nuclear dimension \u2014 Pakistan possesses ~170 nuclear warheads. China has called for restraint given its CPEC investments in Pakistan. The international community is urging de-escalation but has limited leverage over either side.',
+  };
+
+  const openPakAfgModal = () => {
+    const syntheticEvent = {
+      id: 'breaking-pak-afg-war',
+      headline: 'Pakistan Declares Open War on Afghanistan',
+      category: 'CONFLICT',
+      breaking: true,
+      time: timeAgo('2026-02-27T12:00:00Z'),
+      warIntel: PAK_AFG_INTEL,
+      warTimeline: PAK_AFG_TIMELINE,
+      articles: [],
+    };
+    setSelectedEvent(syntheticEvent);
+  };
+
+  const renderPakAfgCard = () => {
+    const preview = 'Operation Ghazab Lil Haq. Kabul, Kandahar, Bagram hit. 481 Taliban killed (claimed). Afghan drones strike Nur Khan Airbase. 66,000 displaced. No talks \u2014 Day 8.';
+
+    return (
+      <div
+        key="breaking-pak-afg-card"
+        className="card"
+        onClick={openPakAfgModal}
+        style={{ cursor: 'pointer', borderLeft: '3px solid #dc2626' }}
+      >
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              fontSize: '8px', fontWeight: 800, color: '#fff', background: '#dc2626',
+              padding: '2px 6px', borderRadius: '3px', letterSpacing: '1px'
+            }}>BREAKING</span>
+            <span className="card-cat CONFLICT">CONFLICT</span>
+          </div>
+          <span className="card-time">{timeAgo('2026-02-27T12:00:00Z')}</span>
+        </div>
+        <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
+          Pakistan Declares Open War on Afghanistan
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            AFG: 110+ civilians killed
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            66,000 displaced
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            PAK: 12+ soldiers killed
+          </span>
+        </div>
+        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
+          {preview}
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // Russia-Ukraine War Data (Persistent Top Story)
+  // ============================================================
+  const UKR_RUS_TIMELINE = [
+    { time: '2026-03-05T12:00:00Z', text: 'Russia and Ukraine exchange 200 POWs each \u2014 300 more expected, agreed during Geneva round' },
+    { time: '2026-02-18T12:00:00Z', text: 'Geneva talks end abruptly after 2 hours on day two \u2014 territory remains core sticking point' },
+    { time: '2026-01-23T12:00:00Z', text: 'First trilateral US-Russia-Ukraine talks in Abu Dhabi \u2014 first time all three sit at same table since invasion' },
+    { time: '2025-04-30T12:00:00Z', text: 'US-Ukraine minerals deal signed \u2014 Trump secures critical minerals agreement, resumes military aid' },
+    { time: '2024-08-06T12:00:00Z', text: 'Ukraine launches Kursk incursion \u2014 captures ~1,300 sq km of Russian territory, first foreign occupation since WWII' },
+    { time: '2024-02-17T12:00:00Z', text: 'Avdiivka falls to Russia \u2014 largest Russian advance since Bakhmut, marks shift in battlefield momentum' },
+    { time: '2023-06-24T12:00:00Z', text: 'Wagner mutiny \u2014 Prigozhin marches to within 200 km of Moscow before standing down' },
+    { time: '2023-06-06T12:00:00Z', text: 'Kakhovka Dam destroyed \u2014 catastrophic flooding in southern Ukraine' },
+    { time: '2023-05-20T12:00:00Z', text: 'Bakhmut falls after 9 months of brutal urban combat \u2014 costliest battle of the war' },
+    { time: '2022-11-11T12:00:00Z', text: 'Kherson liberated \u2014 Ukraine\u2019s most significant counteroffensive victory' },
+    { time: '2022-09-30T12:00:00Z', text: 'Russia annexes Donetsk, Luhansk, Zaporizhzhia, Kherson \u2014 none fully controlled' },
+    { time: '2022-04-02T12:00:00Z', text: 'Bucha massacre revealed \u2014 mass civilian killings spark international war crimes investigations' },
+    { time: '2022-02-24T06:00:00Z', text: 'Russia launches full-scale invasion of Ukraine \u2014 largest European land war since WWII' },
+  ];
+
+  const UKR_RUS_INTEL = {
+    what: 'Russia\'s full-scale invasion of Ukraine, launched on February 24, 2022, is now in its fourth year \u2014 the largest military conflict in Europe since WWII. Russia occupies approximately 20% of Ukraine\'s territory (~120,000 sq km). Combined casualties are approaching 2 million: Russia has lost an estimated 325,000 killed and ~1.2 million total casualties; Ukraine has suffered 500,000-600,000 total casualties. Russia gained only 49 sq mi in February 2026 \u2014 the smallest monthly gain since July 2024. Ukrainian Commander-in-Chief Syrskyi claimed Ukraine captured more territory than it lost in February 2026, with offensive operations along the southern front.',
+    why: 'This conflict has fundamentally reshaped European security. Three rounds of US-brokered trilateral talks (Abu Dhabi, Geneva) have produced no breakthrough \u2014 territory remains the core sticking point. Russia demands Ukraine cede all of Donetsk, Luhansk, Zaporizhzhia, and Kherson oblasts; Ukraine refuses. Russia is now losing ~40,000 troops per month, exceeding its recruitment rate for the first time. The US-Ukraine minerals deal in April 2025 restored military aid after a freeze. France and the UK have pledged military hubs in Ukraine.',
+    outlook: 'Peace talks are stalled with the next round (Abu Dhabi, early March) uncertain. A POW exchange of 500 per side was agreed at Geneva. The battlefield has reached an attritional equilibrium \u2014 neither side can achieve decisive breakthrough. Key variables: Trump\'s diplomatic leverage, Putin\'s territorial maximalism, Zelenskyy\'s red lines, European security commitments, and Russian economic sustainability under 16,000+ Western sanctions.',
+  };
+
+  const openUkrRusModal = () => {
+    const syntheticEvent = {
+      id: 'top-ukr-rus-war',
+      headline: 'Russia-Ukraine War \u2014 Year 4',
+      category: 'CONFLICT',
+      breaking: true,
+      time: timeAgo('2022-02-24T06:00:00Z'),
+      warIntel: UKR_RUS_INTEL,
+      warTimeline: UKR_RUS_TIMELINE,
+      articles: [],
+    };
+    setSelectedEvent(syntheticEvent);
+  };
+
+  const renderUkrRusCard = () => {
+    const preview = '4 years. ~2M casualties. Russia holds 20% of Ukraine. Geneva talks stalled. POW exchange of 500 agreed. Russia gaining slowest since mid-2024.';
+
+    return (
+      <div
+        key="top-ukr-rus-card"
+        className="card"
+        onClick={openUkrRusModal}
+        style={{ cursor: 'pointer', borderLeft: '2px solid #ef4444' }}
+      >
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="card-cat CONFLICT">CONFLICT</span>
+            <span style={{ fontSize: '8px', fontWeight: 700, color: '#9ca3af', background: 'rgba(156,163,175,0.15)', padding: '2px 5px', borderRadius: '3px', letterSpacing: '0.3px' }}>
+              4 years
+            </span>
+          </div>
+          <span className="card-time">{timeAgo('2022-02-24T06:00:00Z')}</span>
+        </div>
+        <div className="card-headline" style={{ fontWeight: 600 }}>
+          Russia-Ukraine War \u2014 Year 4
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            ~2M total casualties
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fcd34d', background: 'rgba(234,179,8,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            Peace talks stalled
+          </span>
+        </div>
+        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
+          {preview}
+        </div>
+      </div>
+    );
+  };
+
+  // Top Stories: up to 4, fixed order — Iran/PakAfg wars covered by BREAKING banners, UkrRus by persistent card
   const getStableTopStories = useCallback((events) => {
     // Filter out Iran/Gulf war events — those belong in the breaking banner
     const IRAN_WAR_KEYWORDS = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi', 'ras tanura', 'pezeshkian', 'beirut'];
-    const isIranWar = (e) => {
+    const PAK_AFG_KEYWORDS = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'bagram', 'islamabad'];
+    const UKR_RUS_KEYWORDS = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'donbas', 'crimea', 'russia', 'russian', 'moscow', 'kremlin'];
+    const isBannerWar = (e) => {
       const text = ((e.headline || '') + ' ' + (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
-      return IRAN_WAR_KEYWORDS.some(kw => text.includes(kw));
+      return IRAN_WAR_KEYWORDS.some(kw => text.includes(kw)) ||
+        PAK_AFG_KEYWORDS.some(kw => text.includes(kw)) ||
+        UKR_RUS_KEYWORDS.some(kw => text.includes(kw));
     };
-    const filtered = events.filter(e => !isIranWar(e));
+    const filtered = events.filter(e => !isBannerWar(e));
 
     const PRIORITY = [
-      {
-        countries: ['ukraine', 'russia'],
-        keywords: ['ukraine', 'ukrainian', 'kyiv', 'donbas', 'crimea', 'zelensky', 'russia', 'russian', 'moscow'],
-        boost: ['war', 'peace talks', 'frontline', 'offensive', 'ceasefire', 'troops', 'missile'],
-        penalize: ['recruitment', 'kenya'],
-        fallback: null,
-      },
-      {
-        countries: ['pakistan', 'afghanistan'],
-        keywords: ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'islamabad', 'kabul'],
-        boost: ['taliban', 'killed', 'strike', 'offensive', 'military', 'border', 'operation'],
-        penalize: ['cricket', 'flood'],
-        fallback: null,
-      },
       {
         countries: ['sudan'],
         keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher'],
         boost: ['genocide', 'un ', 'atrocities', 'famine', 'crisis', 'humanitarian', 'war crime'],
         penalize: ['drone'],
+        fallback: null,
+      },
+      {
+        countries: ['drc', 'congo'],
+        keywords: ['congo', 'drc', 'goma', 'bukavu', 'm23', 'kivu'],
+        boost: ['m23', 'rwanda', 'ceasefire', 'humanitarian', 'displaced', 'rebel'],
+        penalize: [],
+        fallback: null,
+      },
+      {
+        countries: ['myanmar'],
+        keywords: ['myanmar', 'burma', 'junta', 'rohingya'],
+        boost: ['coup', 'resistance', 'military', 'rebel', 'offensive', 'junta'],
+        penalize: [],
         fallback: null,
       },
     ];
@@ -500,29 +707,27 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
         </div>
         {renderBreakingCard()}
+        {renderPakAfgCard()}
 
-        {/* Loading state — show after breaking card */}
+        {/* Loading state — show after breaking cards */}
         {DAILY_EVENTS.length === 0 && (
           <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
             {DAILY_BRIEFING.length === 0 ? 'Loading events...' : 'Clustering articles into events...'}
           </div>
         )}
 
-        {/* Top Stories */}
-        {topEvents.length > 0 && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
-              {DAILY_EVENTS.some(e => e.summaryLoading) && (
-                <span style={{ fontSize: '8px', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  <span style={{ display: 'inline-block', width: '6px', height: '6px', border: '1.5px solid #1f2937', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                  AI summaries loading
-                </span>
-              )}
-            </div>
-            {topEvents.map(event => renderEventCard(event, true))}
-          </>
-        )}
+        {/* Top Stories — persistent war banners + dynamic RSS stories */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
+          {DAILY_EVENTS.some(e => e.summaryLoading) && (
+            <span style={{ fontSize: '8px', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <span style={{ display: 'inline-block', width: '6px', height: '6px', border: '1.5px solid #1f2937', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              AI summaries loading
+            </span>
+          )}
+        </div>
+        {renderUkrRusCard()}
+        {topEvents.map(event => renderEventCard(event, true))}
 
         {/* Latest Updates */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(59,130,246,0.1)', borderLeft: '3px solid #3b82f6', margin: '14px 0 10px 0' }}>
