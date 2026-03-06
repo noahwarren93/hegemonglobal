@@ -982,6 +982,11 @@ async function fetchPreGeneratedEvents() {
     // Store last updated timestamp for UI
     window._eventsLastUpdated = data.lastUpdated;
 
+    // Store war synthesis for timeline injection
+    if (data.warSynthesis) {
+      window._warSynthesis = data.warSynthesis;
+    }
+
     notifyEventsUpdated();
     saveNewsToLocalStorage();
 

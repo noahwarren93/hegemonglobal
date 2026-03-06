@@ -61,7 +61,7 @@ const PAK_AFG_INTEL = {
 };
 
 // Russia-Ukraine War Timeline (static milestones)
-const UKR_RUS_TIMELINE = [
+const UKR_RUS_TIMELINE_BASE = [
   { time: '2026-03-05T12:00:00Z', text: 'Russia and Ukraine exchange 200 POWs each \u2014 300 more expected, agreed during Geneva round' },
   { time: '2026-02-18T12:00:00Z', text: 'Geneva talks end abruptly after 2 hours on day two \u2014 territory remains core sticking point' },
   { time: '2026-01-23T12:00:00Z', text: 'First trilateral US-Russia-Ukraine talks in Abu Dhabi \u2014 first time all three sit at same table since invasion' },
@@ -82,6 +82,8 @@ const UKR_RUS_INTEL = {
   why: 'This conflict has fundamentally reshaped European security. Three rounds of US-brokered trilateral talks (Abu Dhabi, Geneva) have produced no breakthrough \u2014 territory remains the core sticking point. Russia demands Ukraine cede all of Donetsk, Luhansk, Zaporizhzhia, and Kherson oblasts; Ukraine refuses. Russia is now losing ~40,000 troops per month, exceeding its recruitment rate for the first time. The US-Ukraine minerals deal in April 2025 restored military aid after a freeze. France and the UK have pledged military hubs in Ukraine.',
   outlook: 'Peace talks are stalled with the next round (Abu Dhabi, early March) uncertain. A POW exchange of 500 per side was agreed at Geneva. The battlefield has reached an attritional equilibrium \u2014 neither side can achieve decisive breakthrough. Key variables: Trump\'s diplomatic leverage, Putin\'s territorial maximalism, Zelenskyy\'s red lines, European security commitments, and Russian economic sustainability under 16,000+ Western sanctions.',
 };
+
+const UKR_RUS_WAR_KW = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'donbas', 'crimea', 'russia', 'russian', 'moscow', 'kremlin', 'kursk', 'zaporizhzhia', 'kherson'];
 
 // Sudan Civil War Timeline
 const SUDAN_TIMELINE_BASE = [
@@ -427,10 +429,21 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       });
     }
 
+    // Inject daily AI synthesis if available
+    const synthesis = window._warSynthesis?.syntheses?.pakafg;
+    if (synthesis && window._warSynthesis?.date) {
+      const synthDate = window._warSynthesis.date + 'T00:00:00Z';
+      const alreadyHas = merged.some(m => m.synthesis && m.time === synthDate);
+      if (!alreadyHas) {
+        merged.push({ time: synthDate, text: synthesis, live: true, synthesis: true });
+      }
+    }
+
     return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openPakAfgModal = () => {
+    const mostRecent = PAK_AFG_TIMELINE.length > 0 ? PAK_AFG_TIMELINE[0].time : null;
     const syntheticEvent = {
       id: 'breaking-pak-afg-war',
       headline: 'Pakistan Declares Open War on Afghanistan',
@@ -439,6 +452,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       time: timeAgo('2026-02-27T12:00:00Z'),
       warIntel: PAK_AFG_INTEL,
       warTimeline: PAK_AFG_TIMELINE,
+      timelineLastUpdated: mostRecent,
       articles: [],
     };
     setSelectedEvent(syntheticEvent);
@@ -485,7 +499,44 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
+  // Auto-merge live Russia-Ukraine war articles from RSS feeds into the timeline
+  const UKR_RUS_TIMELINE = useMemo(() => {
+    const merged = [...UKR_RUS_TIMELINE_BASE];
+    const baseTexts = UKR_RUS_TIMELINE_BASE.map(b => b.text.toLowerCase());
+
+    for (const event of DAILY_EVENTS) {
+      if (event.breaking) continue;
+      const hl = (event.headline || '').toLowerCase();
+      if (!UKR_RUS_WAR_KW.some(kw => hl.includes(kw))) continue;
+      const warTerms = ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'offensive', 'frontline', 'drone', 'missile', 'troops', 'advance', 'retreat', 'counteroffensive', 'ceasefire', 'talks', 'peace', 'pow'];
+      if (!warTerms.some(t => hl.includes(t))) continue;
+
+      const words = hl.split(/\s+/).filter(w => w.length > 3);
+      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
+      if (isDupe) continue;
+
+      merged.push({
+        time: event.pubDate || new Date().toISOString(),
+        text: event.headline,
+        live: true,
+      });
+    }
+
+    // Inject daily AI synthesis if available
+    const synthesis = window._warSynthesis?.syntheses?.ukrrus;
+    if (synthesis && window._warSynthesis?.date) {
+      const synthDate = window._warSynthesis.date + 'T00:00:00Z';
+      const alreadyHas = merged.some(m => m.synthesis && m.time === synthDate);
+      if (!alreadyHas) {
+        merged.push({ time: synthDate, text: synthesis, live: true, synthesis: true });
+      }
+    }
+
+    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+  }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const openUkrRusModal = () => {
+    const mostRecent = UKR_RUS_TIMELINE.length > 0 ? UKR_RUS_TIMELINE[0].time : null;
     const syntheticEvent = {
       id: 'top-ukr-rus-war',
       headline: 'Russia-Ukraine War Enters Fourth Year',
@@ -494,6 +545,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       time: timeAgo('2022-02-24T06:00:00Z'),
       warIntel: UKR_RUS_INTEL,
       warTimeline: UKR_RUS_TIMELINE,
+      timelineLastUpdated: mostRecent,
       articles: [],
     };
     setSelectedEvent(syntheticEvent);
@@ -558,10 +610,21 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       });
     }
 
+    // Inject daily AI synthesis if available
+    const synthesis = window._warSynthesis?.syntheses?.sudan;
+    if (synthesis && window._warSynthesis?.date) {
+      const synthDate = window._warSynthesis.date + 'T00:00:00Z';
+      const alreadyHas = merged.some(m => m.synthesis && m.time === synthDate);
+      if (!alreadyHas) {
+        merged.push({ time: synthDate, text: synthesis, live: true, synthesis: true });
+      }
+    }
+
     return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openSudanModal = () => {
+    const mostRecent = SUDAN_TIMELINE.length > 0 ? SUDAN_TIMELINE[0].time : null;
     const syntheticEvent = {
       id: 'top-sudan-war',
       headline: 'Sudan Civil War Approaches 1,000 Days',
@@ -570,6 +633,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       time: timeAgo('2023-04-15T06:00:00Z'),
       warIntel: SUDAN_INTEL,
       warTimeline: SUDAN_TIMELINE,
+      timelineLastUpdated: mostRecent,
       articles: [],
     };
     setSelectedEvent(syntheticEvent);
@@ -642,10 +706,21 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       });
     }
 
+    // Inject daily AI synthesis if available
+    const synthesis = window._warSynthesis?.syntheses?.iran;
+    if (synthesis && window._warSynthesis?.date) {
+      const synthDate = window._warSynthesis.date + 'T00:00:00Z';
+      const alreadyHas = merged.some(m => m.synthesis && m.time === synthDate);
+      if (!alreadyHas) {
+        merged.push({ time: synthDate, text: synthesis, live: true, synthesis: true });
+      }
+    }
+
     return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openBreakingModal = () => {
+    const mostRecent = WAR_TIMELINE.length > 0 ? WAR_TIMELINE[0].time : null;
     const syntheticEvent = {
       id: 'breaking-iran-war',
       headline: 'US and Israel at War with Iran',
@@ -654,6 +729,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       time: timeAgo('2026-02-28T06:15:00Z'),
       warIntel: WAR_INTEL,
       warTimeline: WAR_TIMELINE,
+      timelineLastUpdated: mostRecent,
       articles: [],
     };
     setSelectedEvent(syntheticEvent);

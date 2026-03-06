@@ -1422,6 +1422,142 @@ Return ONLY the JSON array, no other text.`;
 }
 
 // ============================================================
+// War Synthesis — daily AI recap for each active conflict
+// ============================================================
+
+const CONFLICT_CONFIGS = [
+  {
+    id: 'iran',
+    label: 'US-Israel vs Iran',
+    keywords: ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'hormuz', 'epic fury', 'roaring lion', 'pezeshkian', 'hezbollah', 'houthi', 'ras tanura', 'ras laffan', 'beirut', 'nakhchivan'],
+    warTerms: ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'missile', 'drone', 'casualties', 'intercept', 'retaliat', 'nuclear', 'blockade'],
+  },
+  {
+    id: 'pakafg',
+    label: 'Pakistan vs Afghanistan',
+    keywords: ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'paktia', 'paktika', 'nangarhar', 'bagram', 'islamabad'],
+    warTerms: ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'operation', 'border', 'clash', 'drone', 'airbase', 'troops'],
+  },
+  {
+    id: 'ukrrus',
+    label: 'Russia-Ukraine War',
+    keywords: ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'donbas', 'crimea', 'russia', 'russian', 'moscow', 'kremlin'],
+    warTerms: ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'offensive', 'frontline', 'drone', 'missile', 'troops', 'advance', 'retreat', 'counteroffensive', 'ceasefire', 'talks', 'peace', 'pow'],
+  },
+  {
+    id: 'sudan',
+    label: 'Sudan Civil War',
+    keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher', 'rsf', 'rapid support', 'burhan', 'hemedti', 'port sudan'],
+    warTerms: ['war', 'kill', 'strike', 'attack', 'famine', 'genocide', 'atrocit', 'displace', 'sanction', 'offensive', 'humanitarian'],
+  },
+];
+
+async function generateDailySynthesis(articles, env) {
+  const apiKey = env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+
+  // Check if synthesis already generated today
+  const today = new Date().toISOString().split('T')[0];
+  const kvKey = 'war_synthesis_' + today;
+
+  try {
+    const existing = await env.HEGEMON_CACHE.get(kvKey);
+    if (existing) {
+      console.log('[Cron] War synthesis already exists for today');
+      return JSON.parse(existing);
+    }
+  } catch { /* miss */ }
+
+  // Match articles to each conflict
+  const conflictHeadlines = {};
+  for (const config of CONFLICT_CONFIGS) {
+    const matched = [];
+    for (const article of articles) {
+      const hl = (article.headline || article.title || '').toLowerCase();
+      if (!config.keywords.some(kw => hl.includes(kw))) continue;
+      if (!config.warTerms.some(t => hl.includes(t))) continue;
+      matched.push(article.headline || article.title);
+      if (matched.length >= 15) break;
+    }
+    conflictHeadlines[config.id] = matched;
+  }
+
+  // Skip if no conflicts have any matching headlines
+  const totalMatched = Object.values(conflictHeadlines).reduce((sum, arr) => sum + arr.length, 0);
+  if (totalMatched === 0) {
+    console.log('[Cron] No war-related headlines found for synthesis');
+    return null;
+  }
+
+  // Build prompt for all conflicts in a single call
+  const conflictDescriptions = CONFLICT_CONFIGS.map(config => {
+    const headlines = conflictHeadlines[config.id];
+    if (headlines.length === 0) return `${config.id}: No new developments today.`;
+    return `${config.id} (${config.label}):\n${headlines.map(h => `  - ${h}`).join('\n')}`;
+  }).join('\n\n');
+
+  const prompt = `You are an intelligence analyst writing daily conflict summaries for the Hegemon geopolitical monitoring platform.
+
+Based on today's headlines for each active conflict, write a 2-3 sentence daily recap summarizing the key developments. Be factual, concise, and specific. Include numbers, names, and locations where available.
+
+If a conflict has "No new developments today", write "No significant developments reported today."
+
+${conflictDescriptions}
+
+Respond with a JSON object mapping conflict ID to summary string. Format:
+{"iran": "summary...", "pakafg": "summary...", "ukrrus": "summary...", "sudan": "summary..."}
+
+Return ONLY the JSON object, no other text.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`[Cron] War synthesis API error: ${response.status}`);
+      return null;
+    }
+
+    const aiData = await response.json();
+    const aiText = aiData.content?.[0]?.text || '';
+
+    let syntheses;
+    try {
+      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+      syntheses = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch {
+      console.error('[Cron] Failed to parse war synthesis response');
+      return null;
+    }
+
+    const result = { date: today, syntheses, generatedAt: Date.now() };
+
+    // Store in KV with 36h TTL
+    await env.HEGEMON_CACHE.put(kvKey, JSON.stringify(result), { expirationTtl: 129600 });
+    // Also store as "latest" for easy retrieval
+    await env.HEGEMON_CACHE.put('war_synthesis_latest', JSON.stringify(result), { expirationTtl: 129600 });
+
+    console.log(`[Cron] War synthesis generated for ${today}: ${Object.keys(syntheses).length} conflicts`);
+    return result;
+
+  } catch (err) {
+    console.error('[Cron] War synthesis error:', err.message);
+    return null;
+  }
+}
+
+// ============================================================
 // Worker Export: fetch + scheduled handlers
 // ============================================================
 
@@ -1861,14 +1997,25 @@ Return ONLY the JSON array, no other text.`;
       // 4. Generate AI summaries (with KV caching)
       await generateSummaries(events, env);
 
+      // 4b. Generate daily war synthesis (once per day)
+      await generateDailySynthesis(processed, env);
+
       // 5. Clean up internal fields
       for (const event of events) {
         delete event._primaryCountry;
       }
 
-      // 6. Store in KV
+      // 6. Read latest war synthesis from KV
+      let warSynthesis = null;
+      try {
+        const synthRaw = await env.HEGEMON_CACHE.get('war_synthesis_latest');
+        if (synthRaw) warSynthesis = JSON.parse(synthRaw);
+      } catch { /* miss */ }
+
+      // 7. Store in KV
       const payload = {
         lastUpdated: Date.now(),
+        warSynthesis: warSynthesis,
         events: events,
         briefing: processed.slice(0, 100).map(a => ({
           headline: a.headline || a.title,

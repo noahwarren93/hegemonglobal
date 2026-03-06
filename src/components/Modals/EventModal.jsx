@@ -132,12 +132,31 @@ export default function EventModal({ event, isOpen, onClose }) {
 
               {event.warTimeline && event.warTimeline.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '10px' }}>Live Timeline</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Live Timeline</span>
+                    {event.timelineLastUpdated && (
+                      <span style={{ fontSize: '9px', color: '#06b6d4', fontWeight: 500 }}>Updated {timeAgo(event.timelineLastUpdated)}</span>
+                    )}
+                  </div>
                   <div style={{ borderLeft: '2px solid #dc262666', paddingLeft: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {event.warTimeline.map((item, i) => (
-                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: '9px', color: i === 0 ? '#dc2626' : '#6b7280', fontWeight: 700, minWidth: '52px', flexShrink: 0, paddingTop: '1px' }}>{timeAgo(item.time)}</span>
-                        <span style={{ fontSize: '11px', color: i === 0 ? '#fca5a5' : '#d1d5db', lineHeight: 1.5 }}>{item.text}</span>
+                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', ...(item.synthesis ? { background: 'rgba(6,182,212,0.08)', borderRadius: '4px', padding: '4px 6px', margin: '0 -6px' } : {}) }}>
+                        <span style={{
+                          fontSize: '9px',
+                          fontWeight: 700,
+                          minWidth: '52px',
+                          flexShrink: 0,
+                          paddingTop: '1px',
+                          color: item.synthesis ? '#06b6d4' : (i === 0 ? '#dc2626' : '#6b7280'),
+                        }}>
+                          {item.synthesis ? 'AI RECAP' : timeAgo(item.time)}
+                        </span>
+                        <span style={{
+                          fontSize: '11px',
+                          lineHeight: 1.5,
+                          color: item.synthesis ? '#67e8f9' : (i === 0 ? '#fca5a5' : '#d1d5db'),
+                          ...(item.synthesis ? { fontStyle: 'italic' } : {}),
+                        }}>{item.text}</span>
                       </div>
                     ))}
                   </div>
