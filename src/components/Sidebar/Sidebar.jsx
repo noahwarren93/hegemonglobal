@@ -353,7 +353,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const openUkrRusModal = () => {
     const syntheticEvent = {
       id: 'top-ukr-rus-war',
-      headline: 'Russia-Ukraine War \u2014 Year 4',
+      headline: 'Russia-Ukraine War Enters Fourth Year',
       category: 'CONFLICT',
       breaking: true,
       time: timeAgo('2022-02-24T06:00:00Z'),
@@ -384,7 +384,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span className="card-time">{timeAgo('2022-02-24T06:00:00Z')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
-          Russia-Ukraine War {'\u2014'} Year 4
+          Russia-Ukraine War Enters Fourth Year
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
@@ -401,28 +401,131 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: up to 4, fixed order — Iran/PakAfg wars covered by BREAKING banners, UkrRus by persistent card
+  // ============================================================
+  // Sudan Civil War Data (Persistent Top Story)
+  // ============================================================
+  const SUDAN_TIMELINE_BASE = [
+    // March 2026
+    { time: '2026-03-06T08:00:00Z', text: 'Sudan civil war reaches ~1,000 days \u2014 drone strikes intensify on both sides across multiple fronts' },
+    { time: '2026-03-04T12:00:00Z', text: 'SAF retakes Habila in West Kordofan \u2014 RSF retreats after sustained ground offensive' },
+    // February 2026
+    { time: '2026-02-25T12:00:00Z', text: 'UN warns of "escalating atrocity risks" \u2014 reports systematic sexual violence by RSF in Darfur and Gezira' },
+    { time: '2026-02-20T12:00:00Z', text: 'UK imposes sanctions on RSF commanders and affiliated companies funding the war' },
+    { time: '2026-02-10T12:00:00Z', text: 'RSF drone strikes hit civilian market in El-Fasher \u2014 dozens killed, hospitals overwhelmed' },
+    // Late 2025
+    { time: '2025-12-15T12:00:00Z', text: 'SAF retakes key districts in central Khartoum \u2014 government begins phased return from Port Sudan' },
+    { time: '2025-11-01T12:00:00Z', text: 'EU imposes expanded sanctions on RSF leaders and gold smuggling networks funding the conflict' },
+    { time: '2025-10-01T12:00:00Z', text: 'Mass displacement tops 11 million \u2014 world\'s largest displacement crisis, 4M+ cross-border refugees' },
+    // 2024
+    { time: '2024-10-15T12:00:00Z', text: 'SAF launches major counteroffensive in Khartoum \u2014 retakes key bridges and government buildings' },
+    { time: '2024-07-01T12:00:00Z', text: 'RSF advances into Sennar and Gezira states \u2014 mass atrocities reported against civilians' },
+    { time: '2024-02-01T12:00:00Z', text: 'UN reports famine conditions emerging in Darfur \u2014 aid access blocked by both sides' },
+    // 2023
+    { time: '2023-11-15T12:00:00Z', text: 'RSF captures most of Darfur \u2014 ethnic cleansing of Masalit people reported in West Darfur' },
+    { time: '2023-06-15T12:00:00Z', text: 'RSF seizes most of Khartoum \u2014 government relocates to Port Sudan as capital becomes frontline' },
+    { time: '2023-04-15T06:00:00Z', text: 'War erupts between SAF (Gen. Burhan) and RSF (Gen. Hemedti) \u2014 fighting breaks out across Khartoum' },
+  ];
+
+  const SUDAN_WAR_KW = ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher', 'rsf', 'rapid support', 'burhan', 'hemedti', 'port sudan'];
+  const SUDAN_TIMELINE = useMemo(() => {
+    const merged = [...SUDAN_TIMELINE_BASE];
+    const baseTexts = SUDAN_TIMELINE_BASE.map(b => b.text.toLowerCase());
+
+    for (const event of DAILY_EVENTS) {
+      if (event.breaking) continue;
+      const hl = (event.headline || '').toLowerCase();
+      if (!SUDAN_WAR_KW.some(kw => hl.includes(kw))) continue;
+      const warTerms = ['war', 'kill', 'strike', 'attack', 'famine', 'genocide', 'atrocit', 'displace', 'sanction', 'offensive', 'humanitarian'];
+      if (!warTerms.some(t => hl.includes(t))) continue;
+
+      const words = hl.split(/\s+/).filter(w => w.length > 3);
+      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
+      if (isDupe) continue;
+
+      merged.push({
+        time: event.pubDate || new Date().toISOString(),
+        text: event.headline,
+        live: true,
+      });
+    }
+
+    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+  }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const SUDAN_INTEL = {
+    what: 'Sudan\'s civil war between the Sudanese Armed Forces (SAF, Gen. al-Burhan) and the Rapid Support Forces (RSF, Gen. Hemedti) erupted on April 15, 2023 and is approaching 1,000 days. An estimated 150,000+ people have been killed and 11 million displaced \u2014 the world\'s largest displacement crisis. The RSF seized most of Khartoum in mid-2023 and captured nearly all of Darfur by late 2023, with systematic ethnic cleansing of the Masalit people in West Darfur. The RSF expanded into Sennar and Gezira states in 2024 with mass atrocities against civilians. The SAF launched a counteroffensive in late 2024, retaking key districts in Khartoum, and the government has begun a phased return from Port Sudan. Drone strikes from both sides have intensified, hitting civilian markets and hospitals. Famine conditions are spreading with aid access blocked across frontlines.',
+    why: 'This is one of the world\'s deadliest conflicts with catastrophic humanitarian consequences that receive far less attention than other wars. The RSF has documented links to Wagner Group/Russia and receives UAE support, while the SAF has Egyptian and Iranian backing \u2014 making Sudan a proxy battlefield. The EU and UK have imposed sanctions on RSF commanders and gold smuggling networks. Man-made famine threatens millions. The UN has reported systematic sexual violence by the RSF. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The conflict threatens to destabilize the entire Horn of Africa and Sahel region.',
+    outlook: 'Neither side can achieve decisive military victory. The SAF has momentum in Khartoum but the RSF controls vast rural territory. Drone warfare is escalating on both sides. Watch for: humanitarian access, famine spread, SAF counteroffensive progress, RSF atrocities in occupied areas, international sanctions impact, and any ceasefire negotiations. Without sustained pressure and humanitarian access, mass starvation will worsen. Long-term scenarios include partition, failed state status, or exhaustion-driven talks.',
+  };
+
+  const openSudanModal = () => {
+    const syntheticEvent = {
+      id: 'top-sudan-war',
+      headline: 'Sudan Civil War Approaches 1,000 Days',
+      category: 'CONFLICT',
+      breaking: true,
+      time: timeAgo('2023-04-15T06:00:00Z'),
+      warIntel: SUDAN_INTEL,
+      warTimeline: SUDAN_TIMELINE,
+      articles: [],
+    };
+    setSelectedEvent(syntheticEvent);
+  };
+
+  const renderSudanCard = () => {
+    const preview = 'SAF vs RSF. ~1,000 days. SAF retakes parts of Khartoum. Drone strikes on markets and hospitals. Man-made famine. EU/UK sanctions imposed. World\'s largest displacement crisis.';
+
+    return (
+      <div
+        key="top-sudan-card"
+        className="card"
+        onClick={openSudanModal}
+        style={{ cursor: 'pointer', borderLeft: '2px solid #ef4444' }}
+      >
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="card-cat CONFLICT">CONFLICT</span>
+            <span style={{ fontSize: '8px', fontWeight: 700, color: '#9ca3af', background: 'rgba(156,163,175,0.15)', padding: '2px 5px', borderRadius: '3px', letterSpacing: '0.3px' }}>
+              ~1,000 days
+            </span>
+          </div>
+          <span className="card-time">{timeAgo('2023-04-15T06:00:00Z')}</span>
+        </div>
+        <div className="card-headline" style={{ fontWeight: 600 }}>
+          Sudan Civil War Approaches 1,000 Days
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            Est. 150,000+ killed
+          </span>
+          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
+            11M+ displaced
+          </span>
+        </div>
+        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
+          {preview}
+        </div>
+      </div>
+    );
+  };
+
+  // Top Stories: up to 4, fixed order — wars covered by dedicated banners above
   const getStableTopStories = useCallback((events) => {
-    // Filter out Iran/Gulf war events — those belong in the breaking banner
+    // Filter out events that belong in dedicated war banners
     const IRAN_WAR_KEYWORDS = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi', 'ras tanura', 'pezeshkian', 'beirut'];
     const PAK_AFG_KEYWORDS = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'bagram', 'islamabad'];
     const UKR_RUS_KEYWORDS = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'donbas', 'crimea', 'russia', 'russian', 'moscow', 'kremlin'];
+    const SUDAN_KEYWORDS = ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher', 'rsf', 'rapid support', 'burhan', 'hemedti'];
     const isBannerWar = (e) => {
       const text = ((e.headline || '') + ' ' + (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
       return IRAN_WAR_KEYWORDS.some(kw => text.includes(kw)) ||
         PAK_AFG_KEYWORDS.some(kw => text.includes(kw)) ||
-        UKR_RUS_KEYWORDS.some(kw => text.includes(kw));
+        UKR_RUS_KEYWORDS.some(kw => text.includes(kw)) ||
+        SUDAN_KEYWORDS.some(kw => text.includes(kw));
     };
     const filtered = events.filter(e => !isBannerWar(e));
 
     const PRIORITY = [
-      {
-        countries: ['sudan'],
-        keywords: ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher'],
-        boost: ['genocide', 'un ', 'atrocities', 'famine', 'crisis', 'humanitarian', 'war crime'],
-        penalize: ['drone'],
-        fallback: null,
-      },
       {
         countries: ['drc', 'congo'],
         keywords: ['congo', 'drc', 'goma', 'bukavu', 'm23', 'kivu'],
@@ -727,6 +830,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         {renderPakAfgCard()}
         {renderUkrRusCard()}
+        {renderSudanCard()}
         {topEvents.map(event => renderEventCard(event, true))}
 
         {/* Latest Updates */}
