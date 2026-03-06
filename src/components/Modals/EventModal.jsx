@@ -1,6 +1,6 @@
 // EventModal.jsx - Event detail modal with AI summary and source list
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { renderBiasTag, getStateMediaLabel, timeAgo } from '../../utils/riskColors';
 
 const CAT_BORDER = {
@@ -53,6 +53,14 @@ function renderStructuredSummary(summary) {
 }
 
 export default function EventModal({ event, isOpen, onClose }) {
+  // Force periodic re-render so timeAgo() timestamps stay current while modal is open
+  const [, setTimeTick] = useState(0);
+  useEffect(() => {
+    if (!isOpen) return;
+    const interval = setInterval(() => setTimeTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
