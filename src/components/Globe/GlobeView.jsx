@@ -765,21 +765,20 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
     }
 
-    // ---- Touch events ----
+    // ---- Touch events (with null guards for Android compatibility) ----
     function handleTouchStart(e) {
-      if (e.touches.length === 1) {
-        isDraggingRef.current = true;
-        velocityRef.current = { x: 0, y: 0 };
-        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
+      if (!e.touches || e.touches.length !== 1) return;
+      isDraggingRef.current = true;
+      velocityRef.current = { x: 0, y: 0 };
+      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
     function handleDocTouchEnd() {
       isDraggingRef.current = false;
       isPinchingRef.current = false;
     }
     function handleDocTouchMove(e) {
-      if (!globe) return;
+      if (!globe || !e.touches) return;
       // Pinch zoom
       if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -807,13 +806,12 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // Touch tap (mobile click) — uses shared click logic
     function handleTouchEnd(e) {
-      if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const dx = Math.abs(touch.clientX - touchStartRef.current.x);
-        const dy = Math.abs(touch.clientY - touchStartRef.current.y);
-        if (dx < 10 && dy < 10) {
-          handleCountrySelection(touch.clientX, touch.clientY);
-        }
+      if (!e.changedTouches || e.changedTouches.length !== 1) return;
+      const touch = e.changedTouches[0];
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+      if (dx < 10 && dy < 10) {
+        handleCountrySelection(touch.clientX, touch.clientY);
       }
     }
 
