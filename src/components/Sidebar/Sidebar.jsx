@@ -525,22 +525,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     };
     const filtered = events.filter(e => !isBannerWar(e));
 
-    const PRIORITY = [
-      {
-        countries: ['drc', 'congo'],
-        keywords: ['congo', 'drc', 'goma', 'bukavu', 'm23', 'kivu'],
-        boost: ['m23', 'rwanda', 'ceasefire', 'humanitarian', 'displaced', 'rebel'],
-        penalize: [],
-        fallback: null,
-      },
-      {
-        countries: ['myanmar'],
-        keywords: ['myanmar', 'burma', 'junta', 'rohingya'],
-        boost: ['coup', 'resistance', 'military', 'rebel', 'offensive', 'junta'],
-        penalize: [],
-        fallback: null,
-      },
-    ];
+    // All major conflicts now have dedicated persistent banners above.
+    // No additional RSS articles are promoted to Top Stories.
+    const PRIORITY = [];
 
     const getEventText = (evt) => {
       return ((evt.headline || '') + ' ' +
