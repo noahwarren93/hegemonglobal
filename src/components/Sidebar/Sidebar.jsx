@@ -384,7 +384,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span className="card-time">{timeAgo('2022-02-24T06:00:00Z')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
-          Russia-Ukraine War \u2014 Year 4
+          Russia-Ukraine War {'\u2014'} Year 4
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
@@ -707,9 +707,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
         </div>
         {renderBreakingCard()}
-        {renderPakAfgCard()}
 
-        {/* Loading state — show after breaking cards */}
+        {/* Loading state — show after breaking card */}
         {DAILY_EVENTS.length === 0 && (
           <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
             {DAILY_BRIEFING.length === 0 ? 'Loading events...' : 'Clustering articles into events...'}
@@ -726,6 +725,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             </span>
           )}
         </div>
+        {renderPakAfgCard()}
         {renderUkrRusCard()}
         {topEvents.map(event => renderEventCard(event, true))}
 
