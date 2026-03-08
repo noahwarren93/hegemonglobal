@@ -234,6 +234,9 @@ const NEWS_APIS = {
 
 export const NEWS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes — matches Worker cron
 const apiFailures = {};
+let _rssFallbackAttempts = 0;
+const MAX_RSS_FALLBACK_ATTEMPTS = 3; // Stop trying RSS after 3 failures
+let _rssFallbackInProgress = false; // Prevent concurrent RSS fallback runs
 
 // ============================================================
 // localStorage News Cache (show cached immediately, fetch in background)
@@ -944,10 +947,10 @@ async function fetchPreGeneratedEvents() {
     const minutesAgo = data.lastUpdated
       ? Math.round((Date.now() - data.lastUpdated) / 60000)
       : null;
-    // Reject stale data (older than 6 hours — cron runs every 5m but may be delayed)
+    // Log staleness but ALWAYS use pre-generated data if available
+    // (falling back to client-side RSS causes rate-limiting and page freezes)
     if (minutesAgo !== null && minutesAgo > 360) {
-      console.warn('[Hegemon] Pre-generated data too stale, falling back');
-      return false;
+      console.warn(`[Hegemon] Pre-generated data is ${minutesAgo}min old — using anyway (stale > broken)`);
     }
 
     // Populate DAILY_BRIEFING
@@ -1021,8 +1024,26 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     return;
   }
 
-  // Fall back to client-side RSS fetching
-  console.warn('[Hegemon] Falling back to client-side RSS fetching');
+  // Fall back to client-side RSS fetching (with circuit breaker)
+  if (_rssFallbackInProgress) {
+    console.warn('[Hegemon] RSS fallback already in progress, skipping');
+    if (onStatusUpdate) onStatusUpdate('complete');
+    return;
+  }
+  if (_rssFallbackAttempts >= MAX_RSS_FALLBACK_ATTEMPTS) {
+    console.warn(`[Hegemon] RSS fallback disabled after ${MAX_RSS_FALLBACK_ATTEMPTS} failed attempts`);
+    if (DAILY_BRIEFING.length === 0) {
+      DAILY_BRIEFING.length = 0;
+      DAILY_BRIEFING.push(...DAILY_BRIEFING_FALLBACK);
+    }
+    if (onStatusUpdate) onStatusUpdate('complete');
+    if (onComplete) onComplete(DAILY_BRIEFING);
+    return;
+  }
+
+  _rssFallbackInProgress = true;
+  _rssFallbackAttempts++;
+  console.warn(`[Hegemon] Falling back to client-side RSS fetching (attempt ${_rssFallbackAttempts}/${MAX_RSS_FALLBACK_ATTEMPTS})`);
 
   try {
     const feeds = RSS_FEEDS.daily;
@@ -1232,20 +1253,27 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       // Fetch only truly uncached summaries AFTER events are displayed
       setTimeout(() => fetchEventSummaries(), 2000);
 
+      _rssFallbackAttempts = 0; // Reset on success
+      if (onStatusUpdate) onStatusUpdate('complete');
       if (onComplete) onComplete(DAILY_BRIEFING);
       return;
     }
   } catch (error) {
     console.warn('RSS feeds failed:', error.message);
+  } finally {
+    _rssFallbackInProgress = false;
   }
 
-  // Fallback: try each backup API
+  // Fallback: try each backup API (with timeout to prevent hanging)
   const dailyApiOrder = ['gnews', 'newsdata', 'mediastack'];
   for (const apiName of dailyApiOrder) {
     try {
       const api = NEWS_APIS[apiName];
       if (!api || !api.key || !api.buildDailyUrl) continue;
-      const response = await fetch(api.buildDailyUrl(api.key));
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(api.buildDailyUrl(api.key), { signal: controller.signal });
+      clearTimeout(timeout);
       if (response.ok) {
         const data = await response.json();
         const results = api.parseResults(data);
@@ -1281,6 +1309,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
           setTimeout(() => fetchEventSummaries(), 2000);
 
+          _rssFallbackAttempts = 0; // Reset on success
+          if (onStatusUpdate) onStatusUpdate('complete');
           if (onComplete) onComplete(DAILY_BRIEFING);
           return;
         }
@@ -1290,14 +1320,15 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     }
   }
 
-  // All sources failed
-  console.error('All news sources failed');
+  // All sources failed — page must still work
+  console.error('[Hegemon] All news sources failed — using static fallback');
   if (DAILY_BRIEFING.length === 0) {
     DAILY_BRIEFING.length = 0;
     DAILY_BRIEFING.push(...DAILY_BRIEFING_FALLBACK);
   }
 
-  if (onStatusUpdate) onStatusUpdate('failed');
+  if (onStatusUpdate) onStatusUpdate('complete');
+  if (onComplete) onComplete(DAILY_BRIEFING);
 }
 
 // ============================================================
