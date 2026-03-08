@@ -161,16 +161,30 @@ export const COUNTRIES = {
     ]
   },
 
-  'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'extreme', tags: ['Terrorism/Insurgency', 'Humanitarian Crisis', 'Authoritarian Crackdown'], region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Taliban', title: 'Humanitarian Crisis',
+  'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'catastrophic', tags: ['Armed Conflict', 'Humanitarian Crisis', 'Authoritarian Crackdown'], region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Taliban', title: 'Active War — Pakistan Conflict',
+    casualties: {
+      total: '110+ civilians',
+      label: 'Afghan civilians killed since Feb 27 (Afghan govt claim)',
+      lastUpdated: 'March 2026',
+      source: 'Afghan government / UNOCHA',
+      contested: true,
+      sources: [
+        { name: 'Afghan government', figure: '110 civilians killed', note: 'Including 65 women and children, 123 wounded' },
+        { name: 'UNOCHA (verified)', figure: '56 civilian deaths', note: '129 injuries confirmed across 10 provinces' },
+        { name: 'Pakistan military (claimed)', figure: '481 Taliban killed', note: '696+ injured — unverifiable, likely inflated' },
+        { name: 'Displacement', figure: '66,000 displaced', note: '16,370 families across 6 provinces — UNOCHA confirmed' }
+      ]
+    },
     analysis: {
-      what: 'The Taliban seized power in August 2021 as US forces withdrew after 20 years of war. The regime has imposed strict Islamic law, banning girls from secondary education and women from most employment. The economy has collapsed with international sanctions and frozen assets. Over 23 million people face acute hunger. ISIS-K conducts attacks against the Taliban and minorities. Resistance movements exist but pose no serious threat to Taliban control.',
-      why: 'Afghanistan remains a potential terrorist safe haven—Al-Qaeda leader Zawahiri was killed there in 2022. The humanitarian crisis creates refugee pressure on Pakistan and Iran. Women\'s rights rollback is the most severe in the world. Drug production (opium, methamphetamine) fuels regional trafficking. Neighboring countries face spillover instability.',
-      next: 'Taliban rule appears consolidated despite international isolation. No recognition from major powers is likely given women\'s rights abuses. Watch for: humanitarian conditions, terrorist activity, refugee flows, and any internal Taliban splits. The population faces grinding poverty with no improvement in sight.'
+      what: 'Pakistan declared "open war" on Afghanistan on February 27, 2026, launching Operation Ghazab Lil Haq with airstrikes on Kabul, Kandahar, Paktia, and Bagram Airfield. The conflict erupted after months of escalating TTP terrorism inside Pakistan and cross-border clashes along the Durand Line. Afghan Taliban forces attacked 53 locations along the 2,600 km border on February 26. Pakistan claims 481 Taliban fighters killed. Afghanistan claims 110 civilians killed including 65 women and children. Afghan Taliban retaliated by striking Nur Khan Airbase in Rawalpindi and the 12th Division HQ in Quetta. WFP has suspended food distribution across 46 districts. Nearly 66,000 Afghans displaced.',
+      why: 'This is the first conventional inter-state war between Pakistan and the Taliban government Pakistan helped bring to power. Afghanistan was already in humanitarian crisis with 23 million facing acute hunger. Pakistani airstrikes on civilian areas have compounded suffering. The war threatens to create a new mass refugee crisis. Afghanistan\'s anti-aircraft systems and drone strike capability against Pakistan demonstrate military capacity few expected from the Taliban.',
+      next: 'No ceasefire in sight — Pakistan has rejected all dialogue. Turkey has offered to mediate. Watch for: further Afghan strikes on Pakistani military infrastructure, humanitarian access in border provinces, civilian casualty trajectory, and whether international pressure can force negotiations. The war is entering its second week with no sign of de-escalation.'
     },
     news: [
-      { source: 'UN News', bias: 'center', time: '2026-02-28T09:15:00Z', headline: 'Millions face starvation as winter approaches', url: '#' },
-      { source: 'BBC', bias: 'center-left', time: '2026-02-28T06:15:00Z', headline: 'Taliban expands restrictions on women', url: '#' },
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T02:15:00Z', headline: 'ISIS-K claims attack in Kabul province', url: '#' }
+      { source: 'Al Jazeera', bias: 'center', time: '2026-03-05T14:00:00Z', headline: 'UNOCHA: 10 Afghan provinces affected by Pakistan airstrikes', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-04T16:00:00Z', headline: 'Nearly 66,000 Afghans displaced as fighting enters second week', url: '#' },
+      { source: 'BBC', bias: 'center-left', time: '2026-03-03T18:00:00Z', headline: 'Satellite imagery confirms Bagram Airfield damage from Pakistani strikes', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-03-02T16:00:00Z', headline: 'Afghan Taliban strikes Nur Khan Airbase deep inside Pakistan', url: '#' }
     ]
   },
 
@@ -384,17 +398,30 @@ export const COUNTRIES = {
     ]
   },
 
-  'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'severe', tags: ['Terrorism/Insurgency', 'Political Instability'], region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Economic & Political Crisis',
-    nuclear: { warheads: '~170', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Estimated 170 warheads — tactical & strategic' },
+  'Pakistan': { lat: 30.38, lng: 69.35, flag: '🇵🇰', risk: 'catastrophic', tags: ['Armed Conflict', 'Terrorism/Insurgency', 'Nuclear State'], region: 'South Asia', pop: '231M', gdp: '$350B', leader: 'Shehbaz Sharif', title: 'Active War — Afghanistan Conflict',
+    nuclear: { warheads: '~170', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Estimated 170 warheads \u2014 tactical & strategic' },
+    casualties: {
+      total: '12-27+',
+      label: 'Pakistani soldiers killed since Feb 26 (Pakistan official)',
+      lastUpdated: 'March 2026',
+      source: 'Pakistan military / Afghan claims',
+      contested: true,
+      sources: [
+        { name: 'Pakistan military (official)', figure: '12-27 soldiers killed', note: 'Pakistan acknowledges limited losses' },
+        { name: 'Afghan government (claimed)', figure: '150+ Pakistani soldiers killed', note: 'Unverifiable — likely includes border police and paramilitaries' },
+        { name: 'Pakistan military (claimed kills)', figure: '481 Taliban fighters killed', note: '696+ injured, 130+ posts destroyed — unverifiable' }
+      ]
+    },
     analysis: {
-      what: 'Pakistan faces severe economic crisis with inflation above 30%, IMF bailouts, and depleted foreign reserves. Former PM Imran Khan was jailed on multiple charges his supporters call politically motivated. The military remains the ultimate power broker, engineering Khan\'s removal and subsequent elections. Terrorism has resurged with TTP attacks from Afghanistan. Climate disasters (2022 floods killed 1,700) add to challenges.',
-      why: 'Pakistan is a nuclear-armed state of 230 million—instability has global implications. Taliban-controlled Afghanistan enables cross-border terrorism. Pakistan\'s relations with India remain tense. Its economic crisis affects regional trade. The military\'s political role undermines democratic consolidation.',
-      next: 'IMF conditionality will impose painful reforms. Watch for: economic indicators, Khan\'s legal battles, military-civilian relations, and terrorism. Structural reform is needed but politically difficult.'
+      what: 'Pakistan declared "open war" on Afghanistan on February 27, 2026, launching Operation Ghazab Lil Haq after months of escalating TTP terrorism and a coordinated Afghan attack on 53 locations along the Durand Line. Pakistani airstrikes have hit Kabul, Kandahar, Paktia, and Bagram Airfield. Pakistan claims to have seized 32 sq km of Afghan territory ("Ghudwana Enclave"). In retaliation, Afghan Taliban struck deep into Pakistan \u2014 hitting Nur Khan Airbase in Rawalpindi and the 12th Division HQ in Quetta. Pakistan has rejected all dialogue. WFP has suspended food distribution across 46 Afghan districts.',
+      why: 'Pakistan is a nuclear-armed state of 231 million people now engaged in conventional war with its neighbor. This is the first inter-state war between Pakistan and the Taliban government it helped bring to power. Pakistan possesses ~170 nuclear warheads \u2014 while nuclear use is extremely unlikely, the conflict introduces nuclear-armed state instability. Afghan drone strikes on Nur Khan Airbase demonstrate unexpected Taliban military capability. CPEC investments are at risk. The economic crisis (inflation, IMF dependency) is compounded by war costs.',
+      next: 'Pakistan has explicitly rejected negotiations. Turkey offered to mediate but neither side has accepted. Watch for: Afghan strikes on Pakistani cities, ground operations in the Ghudwana Enclave, humanitarian crisis along the border, international pressure for ceasefire, and economic impact of sustained military operations on an already-strained economy.'
     },
     news: [
-      { source: 'Reuters', bias: 'center', time: '2026-02-28T10:15:00Z', headline: 'IMF approves next loan tranche after reforms', url: '#' },
-      { source: 'Dawn', bias: 'center', time: '2026-02-28T07:15:00Z', headline: 'Imran Khan faces new charges in prison', url: '#' },
-      { source: 'AP', bias: 'center', time: '2026-02-28T04:15:00Z', headline: 'Terrorist attack kills soldiers near Afghan border', url: '#' }
+      { source: 'Dawn', bias: 'center', time: '2026-03-04T12:00:00Z', headline: 'Operation Ghazab Lil Haq enters second week — 481 Taliban killed (claimed)', url: '#' },
+      { source: 'Reuters', bias: 'center', time: '2026-03-03T10:00:00Z', headline: 'Pakistan updates war claims: 2 corps HQs, 3 brigade HQs destroyed', url: '#' },
+      { source: 'Al Jazeera', bias: 'center', time: '2026-03-02T16:00:00Z', headline: 'Afghan Taliban strikes Nur Khan Airbase and 12th Division HQ inside Pakistan', url: '#' },
+      { source: 'AP', bias: 'center', time: '2026-02-27T14:00:00Z', headline: 'Pakistan declares "open war" on Afghanistan — airstrikes hit Kabul', url: '#' }
     ]
   },
 

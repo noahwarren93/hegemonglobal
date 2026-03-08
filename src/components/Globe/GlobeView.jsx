@@ -32,16 +32,183 @@ export function vector3ToLatLng(worldPoint, globe) {
   return { lat, lng };
 }
 
+// Extra anchor points for large countries so clicks anywhere on their territory register.
+// Each anchor covers ~8° radius; together they tile the country's landmass.
+const COUNTRY_ANCHORS = {
+  'Russia': [
+    { lat: 55.7, lng: 37.6 },   // Moscow
+    { lat: 56, lng: 60.6 },     // Yekaterinburg
+    { lat: 55, lng: 82.9 },     // Novosibirsk
+    { lat: 62, lng: 130 },      // Yakutsk
+    { lat: 43, lng: 47 },       // Dagestan
+    { lat: 53, lng: 158 },      // Kamchatka
+    { lat: 69, lng: 33 },       // Murmansk
+    { lat: 56, lng: 44 },       // Nizhny Novgorod
+    { lat: 46, lng: 48 },       // Astrakhan
+    { lat: 50, lng: 127 },      // Blagoveshchensk
+    { lat: 43, lng: 132 },      // Vladivostok
+    { lat: 68, lng: 76 },       // Novy Urengoy
+    { lat: 62, lng: 110 },      // Central Siberia
+    { lat: 66, lng: 150 },      // Magadan
+    { lat: 70, lng: 60 },       // Yamalo-Nenets
+  ],
+  'United States': [
+    { lat: 47, lng: -122 },     // Seattle
+    { lat: 37.8, lng: -122 },   // San Francisco
+    { lat: 34, lng: -118 },     // Los Angeles
+    { lat: 33, lng: -112 },     // Phoenix
+    { lat: 40, lng: -105 },     // Denver
+    { lat: 30, lng: -97 },      // Austin
+    { lat: 42, lng: -87.6 },    // Chicago
+    { lat: 26, lng: -80 },      // Miami
+    { lat: 41, lng: -74 },      // New York
+    { lat: 47, lng: -100 },     // North Dakota
+    { lat: 35, lng: -86 },      // Tennessee
+    { lat: 64, lng: -150 },     // Alaska
+    { lat: 21, lng: -157 },     // Hawaii
+  ],
+  'Canada': [
+    { lat: 49, lng: -123 },     // Vancouver
+    { lat: 51, lng: -114 },     // Calgary
+    { lat: 52, lng: -106 },     // Saskatchewan
+    { lat: 50, lng: -97 },      // Winnipeg
+    { lat: 44, lng: -79 },      // Toronto
+    { lat: 47, lng: -71 },      // Quebec City
+    { lat: 47, lng: -56 },      // Newfoundland
+    { lat: 62, lng: -114 },     // Yellowknife
+    { lat: 64, lng: -139 },     // Yukon
+    { lat: 60, lng: -95 },      // Hudson Bay
+    { lat: 70, lng: -90 },      // Baffin
+  ],
+  'China': [
+    { lat: 40, lng: 116 },      // Beijing
+    { lat: 31, lng: 121 },      // Shanghai
+    { lat: 23, lng: 113 },      // Guangzhou
+    { lat: 30, lng: 104 },      // Chengdu
+    { lat: 44, lng: 87 },       // Urumqi (Xinjiang)
+    { lat: 30, lng: 91 },       // Lhasa (Tibet)
+    { lat: 46, lng: 127 },      // Harbin
+    { lat: 38, lng: 106 },      // Central China
+  ],
+  'Brazil': [
+    { lat: -23, lng: -47 },     // São Paulo
+    { lat: -3, lng: -60 },      // Manaus (Amazon)
+    { lat: -8, lng: -35 },      // Recife
+    { lat: -16, lng: -48 },     // Brasília
+    { lat: -30, lng: -51 },     // Porto Alegre
+    { lat: -13, lng: -39 },     // Salvador
+    { lat: -5, lng: -47 },      // Northern interior
+    { lat: -10, lng: -55 },     // Mato Grosso
+  ],
+  'Australia': [
+    { lat: -34, lng: 151 },     // Sydney
+    { lat: -32, lng: 116 },     // Perth
+    { lat: -12, lng: 131 },     // Darwin
+    { lat: -28, lng: 153 },     // Brisbane
+    { lat: -38, lng: 145 },     // Melbourne
+    { lat: -24, lng: 134 },     // Alice Springs
+    { lat: -20, lng: 120 },     // Western interior
+    { lat: -18, lng: 145 },     // Cairns
+  ],
+  'India': [
+    { lat: 29, lng: 77 },       // Delhi
+    { lat: 19, lng: 73 },       // Mumbai
+    { lat: 13, lng: 80 },       // Chennai
+    { lat: 23, lng: 88 },       // Kolkata
+    { lat: 26, lng: 73 },       // Rajasthan
+  ],
+  'Argentina': [
+    { lat: -35, lng: -58 },     // Buenos Aires
+    { lat: -25, lng: -66 },     // Salta
+    { lat: -31, lng: -64 },     // Córdoba
+    { lat: -42, lng: -65 },     // Patagonia
+    { lat: -54, lng: -68 },     // Tierra del Fuego
+  ],
+  'Algeria': [
+    { lat: 37, lng: 3 },        // Algiers
+    { lat: 32, lng: 4 },        // Ghardaia
+    { lat: 27, lng: 2.5 },      // Central Sahara
+    { lat: 23, lng: 5.5 },      // Southern Algeria
+  ],
+  'Indonesia': [
+    { lat: -6, lng: 107 },      // Jakarta
+    { lat: -7, lng: 112 },      // Surabaya
+    { lat: -1, lng: 104 },      // Sumatra
+    { lat: -1, lng: 116 },      // Borneo
+    { lat: -5, lng: 120 },      // Sulawesi
+    { lat: -4, lng: 138 },      // Papua
+    { lat: -8, lng: 125 },      // Timor region
+  ],
+  'Mexico': [
+    { lat: 19, lng: -99 },      // Mexico City
+    { lat: 25, lng: -100 },     // Monterrey
+    { lat: 29, lng: -110 },     // Hermosillo
+    { lat: 17, lng: -93 },      // Chiapas
+    { lat: 21, lng: -90 },      // Yucatan
+  ],
+  'Saudi Arabia': [
+    { lat: 25, lng: 45 },       // Riyadh
+    { lat: 21, lng: 40 },       // Jeddah
+    { lat: 27, lng: 50 },       // Eastern Province
+    { lat: 28, lng: 37 },       // Tabuk
+    { lat: 20, lng: 45 },       // Southern
+  ],
+  'Libya': [
+    { lat: 33, lng: 13 },       // Tripoli
+    { lat: 32, lng: 20 },       // Benghazi
+    { lat: 27, lng: 14 },       // Central Libya
+    { lat: 24, lng: 20 },       // Southern Libya
+  ],
+  'Mongolia': [
+    { lat: 48, lng: 107 },      // Ulaanbaatar
+    { lat: 48, lng: 92 },       // Western
+    { lat: 46, lng: 115 },      // Eastern
+  ],
+  'Kazakhstan': [
+    { lat: 51, lng: 71 },       // Astana
+    { lat: 43, lng: 77 },       // Almaty
+    { lat: 47, lng: 52 },       // West
+    { lat: 50, lng: 80 },       // East
+  ],
+  'DRC': [
+    { lat: -4, lng: 15 },       // Kinshasa
+    { lat: -2, lng: 29 },       // Goma
+    { lat: -6, lng: 24 },       // Central
+    { lat: 3, lng: 26 },        // Northern
+    { lat: -10, lng: 26 },      // Southern
+  ],
+  'Sudan': [
+    { lat: 16, lng: 33 },       // Khartoum
+    { lat: 14, lng: 25 },       // Darfur
+    { lat: 19, lng: 30 },       // Northern
+    { lat: 10, lng: 32 },       // Southern
+  ],
+};
+
+// Distance helper (degrees, dateline-aware)
+function anchorDist(aLat, aLng, lat, lng) {
+  const dLat = aLat - lat;
+  let dLng = aLng - lng;
+  if (dLng > 180) dLng -= 360;
+  if (dLng < -180) dLng += 360;
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+}
+
 export function findNearestCountry(lat, lng, maxDist) {
   maxDist = maxDist || 8;
   let nearest = null, minDist = Infinity;
   Object.entries(COUNTRIES).forEach(([name, data]) => {
-    const dLat = data.lat - lat;
-    let dLng = data.lng - lng;
-    if (dLng > 180) dLng -= 360;
-    if (dLng < -180) dLng += 360;
-    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-    if (dist < minDist) { minDist = dist; nearest = name; }
+    // Distance to center point
+    let best = anchorDist(data.lat, data.lng, lat, lng);
+    // Also check extra anchor points for large countries
+    const anchors = COUNTRY_ANCHORS[name];
+    if (anchors) {
+      for (let i = 0; i < anchors.length; i++) {
+        const d = anchorDist(anchors[i].lat, anchors[i].lng, lat, lng);
+        if (d < best) best = d;
+      }
+    }
+    if (best < minDist) { minDist = best; nearest = name; }
   });
   return minDist <= maxDist ? nearest : null;
 }
@@ -143,6 +310,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const touchStartRef = useRef({ x: 0, y: 0 });
   const isPinchingRef = useRef(false);
   const lastPinchDistRef = useRef(0);
+  const velocityRef = useRef({ x: 0, y: 0 });
 
   // Reset view animation ref
   const resetAnimRef = useRef(null);
@@ -580,6 +748,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // ---- Mouse drag rotation ----
     function handleMouseDown(e) {
       isDraggingRef.current = true;
+      velocityRef.current = { x: 0, y: 0 };
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
       clickStartRef.current = { x: e.clientX, y: e.clientY };
     }
@@ -588,26 +757,28 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     }
     function handleDocMouseMove(e) {
       if (!isDraggingRef.current || !globe) return;
-      globe.rotation.y += (e.clientX - prevMouseRef.current.x) * 0.005;
-      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
-        globe.rotation.x + (e.clientY - prevMouseRef.current.y) * 0.005));
+      const dx = (e.clientX - prevMouseRef.current.x) * 0.005;
+      const dy = (e.clientY - prevMouseRef.current.y) * 0.005;
+      globe.rotation.y += dx;
+      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + dy));
+      velocityRef.current = { x: dy, y: dx };
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
     }
 
-    // ---- Touch events ----
+    // ---- Touch events (with null guards for Android compatibility) ----
     function handleTouchStart(e) {
-      if (e.touches.length === 1) {
-        isDraggingRef.current = true;
-        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
+      if (!e.touches || e.touches.length !== 1) return;
+      isDraggingRef.current = true;
+      velocityRef.current = { x: 0, y: 0 };
+      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
     function handleDocTouchEnd() {
       isDraggingRef.current = false;
       isPinchingRef.current = false;
     }
     function handleDocTouchMove(e) {
-      if (!globe) return;
+      if (!globe || !e.touches) return;
       // Pinch zoom
       if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -625,21 +796,22 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       // Single finger drag
       if (!isDraggingRef.current || e.touches.length !== 1) return;
       const touch = e.touches[0];
-      globe.rotation.y += (touch.clientX - prevMouseRef.current.x) * 0.005;
-      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
-        globe.rotation.x + (touch.clientY - prevMouseRef.current.y) * 0.005));
+      const dx = (touch.clientX - prevMouseRef.current.x) * 0.005;
+      const dy = (touch.clientY - prevMouseRef.current.y) * 0.005;
+      globe.rotation.y += dx;
+      globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + dy));
+      velocityRef.current = { x: dy, y: dx };
       prevMouseRef.current = { x: touch.clientX, y: touch.clientY };
     }
 
     // Touch tap (mobile click) — uses shared click logic
     function handleTouchEnd(e) {
-      if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const dx = Math.abs(touch.clientX - touchStartRef.current.x);
-        const dy = Math.abs(touch.clientY - touchStartRef.current.y);
-        if (dx < 10 && dy < 10) {
-          handleCountrySelection(touch.clientX, touch.clientY);
-        }
+      if (!e.changedTouches || e.changedTouches.length !== 1) return;
+      const touch = e.changedTouches[0];
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+      if (dx < 10 && dy < 10) {
+        handleCountrySelection(touch.clientX, touch.clientY);
       }
     }
 
@@ -677,8 +849,24 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (isMobile && now - lastFrameTime < frameInterval) return;
       lastFrameTime = now;
 
-      if (!isDraggingRef.current && autoRotateRef.current && globe) {
-        globe.rotation.y += isMobile ? 0.0005 : 0.0008;
+      if (!isDraggingRef.current && globe) {
+        const v = velocityRef.current;
+        const speed = Math.abs(v.x) + Math.abs(v.y);
+        if (speed > 0.0001) {
+          // Apply momentum
+          globe.rotation.y += v.y;
+          globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x + v.x));
+          // Friction decay
+          v.x *= 0.95;
+          v.y *= 0.95;
+        } else {
+          v.x = 0;
+          v.y = 0;
+          // Auto-rotate only after momentum has stopped
+          if (autoRotateRef.current) {
+            globe.rotation.y += isMobile ? 0.0005 : 0.0008;
+          }
+        }
       }
       animateConflictZones();
       renderer.render(scene, camera);
