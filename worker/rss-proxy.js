@@ -553,6 +553,23 @@ const COUNTRY_DEMONYMS = {
 };
 
 // ============================================================
+// ============================================================
+// Conflict Timeline Keywords (mirrored from Sidebar.jsx)
+// ============================================================
+
+const TIMELINE_IRAN_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'mojtaba', 'irgc', 'hormuz', 'epic fury', 'roaring lion', 'pezeshkian', 'hezbollah', 'ras tanura', 'ras laffan', 'beirut', 'houthi', 'iris dena', 'nakhchivan'];
+const TIMELINE_UKRAINE_KW = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'zelenskyy', 'donbas', 'donetsk', 'luhansk', 'zaporizhzhia', 'kherson', 'crimea', 'russia', 'russian', 'moscow', 'kremlin', 'putin', 'kursk', 'syrskyi', 'bakhmut', 'kharkiv', 'odesa', 'odessa'];
+const TIMELINE_SUDAN_KW = ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher', 'rsf', 'rapid support', 'burhan', 'hemedti', 'port sudan'];
+const TIMELINE_PAKAFG_KW = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'paktia', 'paktika', 'nangarhar', 'bagram', 'nur khan', 'islamabad'];
+const TIMELINE_ACTION_KW = ['strike', 'struck', 'attack', 'missile', 'bomb', 'troops', 'casualt', 'offensive', 'airstrike', 'military', 'defense', 'defence', 'killed', 'destroy', 'combat', 'invasion', 'ceasefire', 'frontline', 'artillery', 'drone', 'naval', 'weapon', 'nuclear', 'shoot', 'shot down', 'shell', 'rocket', 'intercept', 'siege', 'blockade', 'retreat', 'captur', 'deploy', 'incursion', 'escalat', 'retaliat', 'surrender', 'wounded', 'death toll', 'warship', 'torpedo', 'displaced', 'evacuat', 'famine', 'atrocit', 'genocide', 'war crime', 'sanction', 'clash', 'raid', 'launch', 'target', 'blast', 'explosi', 'ground forces'];
+
+const TIMELINE_CONFLICTS = {
+  iran: { name: 'US-Israel War on Iran', keywords: TIMELINE_IRAN_KW },
+  ukraine: { name: 'Russia-Ukraine War', keywords: TIMELINE_UKRAINE_KW },
+  sudan: { name: 'Sudan Civil War', keywords: TIMELINE_SUDAN_KW },
+  pakafg: { name: 'Pakistan-Afghanistan War', keywords: TIMELINE_PAKAFG_KW },
+};
+
 // Primary Country Extraction (ported from eventsService.js)
 // ============================================================
 
@@ -1540,6 +1557,143 @@ export default {
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /timeline-update — AI-powered conflict timeline entries
+    // ============================================================
+    if (url.pathname === '/timeline-update' && request.method === 'GET') {
+      try {
+        // Check KV cache first
+        const cacheKey = 'timeline_ai_cache';
+        const cached = await env.HEGEMON_CACHE.get(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.lastUpdated && Date.now() - parsed.lastUpdated < 7200000) {
+            return new Response(JSON.stringify({ ...parsed, cached: true }), {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' }
+            });
+          }
+        }
+
+        // Read briefing articles from KV
+        const eventsRaw = await env.HEGEMON_CACHE.get('latest_events');
+        if (!eventsRaw) {
+          return new Response(
+            JSON.stringify({ error: 'No events data available' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const eventsData = JSON.parse(eventsRaw);
+        const briefing = eventsData.briefing || [];
+
+        const apiKey = env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+          return new Response(
+            JSON.stringify({ error: 'API key not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Filter briefing articles per conflict and call Claude
+        const result = { iran: null, ukraine: null, sudan: null, pakafg: null, lastUpdated: Date.now(), cached: false };
+
+        for (const [key, conflict] of Object.entries(TIMELINE_CONFLICTS)) {
+          const matching = briefing.filter(article => {
+            const hl = (article.headline || article.title || '').toLowerCase();
+            if (!hl) return false;
+            const hasCountry = conflict.keywords.some(kw => hl.includes(kw));
+            const hasAction = TIMELINE_ACTION_KW.some(kw => hl.includes(kw));
+            return hasCountry && hasAction;
+          });
+
+          if (matching.length === 0) {
+            result[key] = { timeline_entries: [], stats: {} };
+            continue;
+          }
+
+          // Build article text for Claude
+          const articleText = matching.slice(0, 20).map((a, i) => {
+            const hl = a.headline || a.title || '';
+            const desc = a.description || '';
+            const time = a.pubDate || a.time || '';
+            return `${i + 1}. [${time}] ${hl}${desc ? ' — ' + desc.substring(0, 200) : ''}`;
+          }).join('\n');
+
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+
+            const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01'
+              },
+              signal: controller.signal,
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1000,
+                messages: [{
+                  role: 'user',
+                  content: `You are a military intelligence analyst. Given these recent news articles about the ${conflict.name}, extract:
+1. A list of timeline entries — each should be a single sentence describing a concrete event (strike, casualty report, diplomatic move, military operation). No opinion pieces, photo galleries, or commentary. Include the approximate timestamp from the article.
+2. Updated casualty/stats figures: total deaths (by side), displaced persons, missiles launched, targets struck — whatever key metrics are trackable from these articles. Return as JSON.
+
+Articles:
+${articleText}
+
+Return ONLY valid JSON in this format:
+{
+  "timeline_entries": [{"text": "...", "timestamp": "ISO date string"}],
+  "stats": {"key": "value"}
+}`
+                }]
+              })
+            });
+            clearTimeout(timeout);
+
+            if (claudeResponse.ok) {
+              const claudeData = await claudeResponse.json();
+              const text = (claudeData.content || []).map(b => b.text || '').join('');
+              // Extract JSON from response (may be wrapped in markdown code blocks)
+              const jsonMatch = text.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                result[key] = {
+                  timeline_entries: (parsed.timeline_entries || []).filter(e => e.text && e.timestamp),
+                  stats: parsed.stats || {}
+                };
+              } else {
+                result[key] = { timeline_entries: [], stats: {} };
+              }
+            } else {
+              console.error(`Claude API error for ${key}:`, claudeResponse.status);
+              result[key] = { timeline_entries: [], stats: {} };
+            }
+          } catch (err) {
+            console.error(`Timeline Claude call failed for ${key}:`, err.message);
+            result[key] = { timeline_entries: [], stats: {} };
+          }
+        }
+
+        // Cache in KV with 2h TTL
+        await env.HEGEMON_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 7200 });
+
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        console.error('Timeline update error:', err);
         return new Response(
           JSON.stringify({ error: err.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate } from '../../data/countries';
 import { RISK_COLORS, timeAgo } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
-import { onEventsUpdated } from '../../services/apiService';
+import { onEventsUpdated, AI_TIMELINE_DATA } from '../../services/apiService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
@@ -483,7 +483,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // ============================================================
   const PAK_AFG_TIMELINE = useMemo(() => {
     const live = filterBriefingForTimeline(PAK_AFG_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
-    return [...PAK_AFG_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
+    const aiEntries = (AI_TIMELINE_DATA.pakafg?.timeline_entries || [])
+      .filter(e => e.text && e.timestamp)
+      .map(e => ({ time: e.timestamp, text: e.text }));
+    const all = [...PAK_AFG_TIMELINE_BASE, ...live, ...aiEntries];
+    const seen = new Set();
+    return all.filter(e => {
+      const key = e.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openPakAfgModal = () => {
@@ -501,6 +511,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderPakAfgCard = () => {
+    const pakStats = AI_TIMELINE_DATA.pakafg?.stats || {};
+    const afgCivKilled = pakStats.afghan_civilians_killed || '110+';
+    const displaced = pakStats.displaced || '115,000';
+    const talibanKilled = pakStats.taliban_killed || '527+';
     const preview = 'Operation Ghazab Lil Haq. 62 PAF strikes in single day. 527+ Taliban killed (claimed). 115,000 displaced. 11 nations urge ceasefire \u2014 Day 10.';
 
     return (
@@ -525,13 +539,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            AFG: 110+ civilians killed
+            AFG: {afgCivKilled} civilians killed
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            115,000 displaced
+            {displaced} displaced
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            527+ Taliban killed
+            {talibanKilled} Taliban killed
           </span>
         </div>
         <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
@@ -543,7 +557,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const UKR_RUS_TIMELINE = useMemo(() => {
     const live = filterBriefingForTimeline(UKR_RUS_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
-    return [...UKR_RUS_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
+    const aiEntries = (AI_TIMELINE_DATA.ukraine?.timeline_entries || [])
+      .filter(e => e.text && e.timestamp)
+      .map(e => ({ time: e.timestamp, text: e.text }));
+    const all = [...UKR_RUS_TIMELINE_BASE, ...live, ...aiEntries];
+    const seen = new Set();
+    return all.filter(e => {
+      const key = e.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openUkrRusModal = () => {
@@ -561,6 +585,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderUkrRusCard = () => {
+    const ukrStats = AI_TIMELINE_DATA.ukraine?.stats || {};
+    const totalCasualties = ukrStats.total_casualties || '~2M';
     const preview = '4 years. ~2M casualties. 500-for-500 POW swap completed. Kharkiv apartment hit \u2014 10 killed. Abu Dhabi talks postponed. Ukraine recaptures more ground than lost in Feb.';
 
     return (
@@ -584,7 +610,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            ~2M total casualties
+            {totalCasualties} total casualties
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fcd34d', background: 'rgba(234,179,8,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
             Peace talks stalled
@@ -599,7 +625,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const SUDAN_TIMELINE = useMemo(() => {
     const live = filterBriefingForTimeline(SUDAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
-    return [...SUDAN_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
+    const aiEntries = (AI_TIMELINE_DATA.sudan?.timeline_entries || [])
+      .filter(e => e.text && e.timestamp)
+      .map(e => ({ time: e.timestamp, text: e.text }));
+    const all = [...SUDAN_TIMELINE_BASE, ...live, ...aiEntries];
+    const seen = new Set();
+    return all.filter(e => {
+      const key = e.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openSudanModal = () => {
@@ -617,6 +653,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderSudanCard = () => {
+    const sudanStats = AI_TIMELINE_DATA.sudan?.stats || {};
+    const killed = sudanStats.total_killed || sudanStats.estimated_killed || '150,000+';
+    const displaced = sudanStats.displaced || sudanStats.total_displaced || '13.6M';
     const preview = 'SAF vs RSF. ~1,000 days. SAF retakes Bara. RSF drones hit hospital, black out El-Obeid. WFP food stocks running out. 169 killed in South Sudan cross-border attack. Famine spreading.';
 
     return (
@@ -640,10 +679,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            Est. 150,000+ killed
+            Est. {killed} killed
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            13.6M displaced
+            {displaced} displaced
           </span>
         </div>
         <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
@@ -661,7 +700,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // Auto-merge live Iran war articles from RSS feeds into the timeline
   const WAR_TIMELINE = useMemo(() => {
     const live = filterBriefingForTimeline(IRAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
-    return [...WAR_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
+    const aiEntries = (AI_TIMELINE_DATA.iran?.timeline_entries || [])
+      .filter(e => e.text && e.timestamp)
+      .map(e => ({ time: e.timestamp, text: e.text }));
+    const all = [...WAR_TIMELINE_BASE, ...live, ...aiEntries];
+    const seen = new Set();
+    return all.filter(e => {
+      const key = e.text.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openBreakingModal = () => {
@@ -679,6 +728,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderBreakingCard = () => {
+    const iranStats = AI_TIMELINE_DATA.iran?.stats || {};
+    const iranKilled = iranStats.iran_killed || iranStats.iranian_deaths || '1,332+';
+    const israelKilled = iranStats.israel_killed || iranStats.israeli_deaths || '11';
+    const usKilled = iranStats.us_killed || iranStats.us_deaths || '6';
     const preview = '3,000+ targets struck. 1,332+ killed. Tehran oil depots hit. Iran strikes Haifa refinery. Mojtaba delivers first address. Bekaa Valley operation. $92/barrel. Iraq votes to expel US \u2014 Day 9.';
 
     return (
@@ -703,13 +756,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            IRAN: 1,332+ killed
+            IRAN: {iranKilled} killed
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            ISRAEL: 11 killed
+            ISRAEL: {israelKilled} killed
           </span>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
-            US: 6 killed
+            US: {usKilled} killed
           </span>
         </div>
         <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>

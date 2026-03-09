@@ -1039,6 +1039,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       seedPastBriefingIfEmpty();
     }, 50);
     setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
+    setTimeout(() => fetchTimelineUpdates(), 2000);
 
     if (onStatusUpdate) onStatusUpdate('complete');
     if (onComplete) onComplete(DAILY_BRIEFING);
@@ -1329,6 +1330,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
           }, 50);
           setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
           setTimeout(() => fetchEventSummaries(), 2000);
+          setTimeout(() => fetchTimelineUpdates(), 3000);
 
           _rssFallbackAttempts = 0; // Reset on success
           if (onStatusUpdate) onStatusUpdate('complete');
@@ -1350,6 +1352,77 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
   if (onStatusUpdate) onStatusUpdate('complete');
   if (onComplete) onComplete(DAILY_BRIEFING);
+}
+
+// ============================================================
+// AI Timeline Updates (via Cloudflare Worker → Claude API)
+// ============================================================
+
+const TIMELINE_AI_LS_KEY = 'hegemon_timeline_ai';
+const TIMELINE_AI_TTL = 2 * 60 * 60 * 1000; // 2 hours
+
+export const AI_TIMELINE_DATA = { iran: null, ukraine: null, sudan: null, pakafg: null };
+
+export async function fetchTimelineUpdates() {
+  // Check localStorage cache
+  try {
+    const raw = localStorage.getItem(TIMELINE_AI_LS_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (cached.ts && Date.now() - cached.ts < TIMELINE_AI_TTL && cached.data) {
+        Object.assign(AI_TIMELINE_DATA, cached.data);
+        console.log('[Hegemon] Timeline AI data loaded from cache');
+        notifyEventsUpdated();
+        return cached.data;
+      }
+    }
+  } catch { /* ignore cache errors */ }
+
+  // Fetch from worker
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    const response = await fetch(`${RSS_PROXY_BASE}/timeline-update`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.warn('[Hegemon] Timeline update fetch failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.error) {
+      console.warn('[Hegemon] Timeline update error:', data.error);
+      return null;
+    }
+
+    // Update module-level data
+    if (data.iran) AI_TIMELINE_DATA.iran = data.iran;
+    if (data.ukraine) AI_TIMELINE_DATA.ukraine = data.ukraine;
+    if (data.sudan) AI_TIMELINE_DATA.sudan = data.sudan;
+    if (data.pakafg) AI_TIMELINE_DATA.pakafg = data.pakafg;
+
+    // Cache in localStorage
+    try {
+      localStorage.setItem(TIMELINE_AI_LS_KEY, JSON.stringify({
+        ts: Date.now(),
+        data: { iran: data.iran, ukraine: data.ukraine, sudan: data.sudan, pakafg: data.pakafg }
+      }));
+    } catch { /* storage full */ }
+
+    console.log('[Hegemon] Timeline AI data updated', data.cached ? '(worker cache)' : '(fresh)');
+    notifyEventsUpdated();
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.warn('[Hegemon] Timeline update timed out (20s)');
+    } else {
+      console.warn('[Hegemon] Timeline update fetch error:', err.message);
+    }
+    return null;
+  }
 }
 
 // ============================================================
