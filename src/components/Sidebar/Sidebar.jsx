@@ -246,8 +246,170 @@ const WAR_INTEL = {
 const WAR_ACTION_KW = ['strike', 'struck', 'attack', 'missile', 'bomb', 'troops', 'casualt', 'offensive', 'airstrike', 'military', 'defense', 'defence', 'killed', 'destroy', 'combat', 'invasion', 'ceasefire', 'frontline', 'front line', 'artillery', 'drone strike', 'naval', 'weapon', 'nuclear', 'shoot', 'shot down', 'shell', 'rocket', 'intercept', 'siege', 'blockade', 'retreat', 'captur', 'deploy', 'incursion', 'escalat', 'retaliat', 'surrender', 'wounded', 'death toll', 'airspace', 'warship', 'fighter jet', 'battalion', 'brigade', 'regiment', 'division', 'torpedo', 'sniper', 'mortar', 'infantry', 'armored', 'tank', 'convoy', 'ambush', 'displaced', 'evacuat', 'famine', 'atrocit', 'genocide', 'war crime', 'sanction', 'threat', 'warn', 'clash', 'raid', 'operat', 'launch', 'target', 'hit ', 'hits ', 'fire', 'blast', 'explosi', 'shell', 'ground forces'];
 
 // Headline prefixes/content that indicate non-event articles (commentary, galleries, etc.)
-const TIMELINE_JUNK_STARTS = ['photos show', 'opinion:', 'analysis:', 'watch:', 'video:', 'live updates:', 'in photos:'];
-const TIMELINE_JUNK_CONTAINS = ['photos', 'gallery', 'opinion', 'podcast', 'review', 'newsletter', 'subscribe', 'exclusive interview'];
+const TIMELINE_JUNK_STARTS = ['photos show', 'opinion:', 'analysis:', 'watch:', 'video:', 'live updates:', 'in photos:', 'why ', 'which ', 'how ', 'what is ', 'what are ', 'who is ', 'who are ', 'can ', 'could ', 'should ', 'is the ', 'moment ', 'inside ', 'meet the ', 'the case for ', 'the case against '];
+const TIMELINE_JUNK_CONTAINS = ['photos', 'gallery', 'opinion', 'podcast', 'review', 'newsletter', 'subscribe', 'exclusive interview', 'analysis:', 'video shows', 'photos show', 'no point talking', 'could bring down', 'profiting', 'what it means', 'what you need to know', 'here\'s what', 'everything you need', 'explained', 'a closer look', 'lashes out', 'confiscate homes'];
+
+// Patterns that indicate feature/commentary, not concrete events
+const TIMELINE_JUNK_PATTERNS = [
+  /\bopinion\b/i, /\banalysis\b/i, /\bpodcast\b/i, /\bcolumn\b/i,
+  /\byacht/i, /\bprofit/i,                            // feature stories
+  /\bcould\s+(bring|cause|send|lead|push|trigger|spark|mean|reach)\b/i, // speculation
+  /\bguarantees?\b/i,                                  // political bluster
+  /\bdefiant\b/i, /\brejoice\b/i,                      // editorializing
+  /\bmoment\b.*\b(rejoice|defiant|cheer|celebrate)\b/i,
+  /\bwaited to\b/i,                                    // feature narrative
+  /\bwhat .*means\b/i, /\bwhat .*looks like\b/i,
+  /\bhardly anyone\b/i, /\bno one came\b/i,
+  /^\s*['"\u2018\u201C].*['"\u2019\u201D]\s*$/,         // entire headline is a quote
+  /\bblind vengeance\b/i, /\breprehensible\b/i,        // opinion language
+  /\bwarns\b/i, /\bvows\b/i, /\blashes out\b/i,        // reaction/threat language
+  /\bconsiders\s+(sending|deploying|using|launching)\b/i, // speculation about future
+  /\basks\b.*\bnot to\b/i,                             // diplomatic request, not event
+  /\bplans to\b/i, /\bweighs\b/i, /\bmulls\b/i,        // speculation
+  /\bhit historic high\b/i, /\bprices? (hit|surge|soar|jump|spike)\b/i, // market reaction
+  /\bconfiscate\b/i,                                    // internal policy
+  /\bthis is only the beginning\b/i,                    // rhetoric
+];
+
+// Words to ignore during fuzzy dedup comparison
+const DEDUP_STOPWORDS = new Set(['the', 'a', 'an', 'in', 'on', 'at', 'to', 'of', 'for', 'and', 'or', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'be', 'been', 'with', 'from', 'by', 'as', 'its', 'it', 'that', 'this', 'says', 'said', 'after', 'since', 'into', 'over', 'more', 'than', 'but', 'not', 'no', 'will', 'would', 'could', 'may', 'report', 'reports', 'new', 'first', 'during']);
+
+// Strip source suffix from headline text (e.g. " - Haaretz", " - Reuters", " | CNN")
+// Uses " - " or " | " separator followed by a short capitalized source name (1-6 words)
+function cleanHeadlineText(text) {
+  return text
+    .replace(/\s+[-|]\s+(?:[A-Z][\w.&']+\s*){1,6}(?:\s+by\s+(?:[A-Z\s]+))?$/m, '')
+    .trim();
+}
+
+function getSignificantWords(text) {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 1 && !DEDUP_STOPWORDS.has(w));
+}
+
+function wordOverlap(wordsA, wordsB) {
+  if (wordsA.length === 0 || wordsB.length === 0) return 0;
+  const setB = new Set(wordsB);
+  let overlap = 0;
+  for (const w of wordsA) {
+    if (setB.has(w)) overlap++;
+  }
+  const shorter = Math.min(wordsA.length, wordsB.length);
+  return overlap / shorter;
+}
+
+function isTimelineJunk(text) {
+  const lower = text.toLowerCase();
+  if (TIMELINE_JUNK_STARTS.some(prefix => lower.startsWith(prefix))) return true;
+  if (TIMELINE_JUNK_CONTAINS.some(junk => lower.includes(junk))) return true;
+  if (TIMELINE_JUNK_PATTERNS.some(pat => pat.test(text))) return true;
+  // Ends with question mark
+  if (text.trim().endsWith('?')) return true;
+  // Headlines that are mostly a quote (contains both opening and closing quote marks with >60% quoted)
+  const quoteMatch = text.match(/['"\u2018\u2019\u201C\u201D]/g);
+  if (quoteMatch && quoteMatch.length >= 4) return true;
+  // Headline is a reaction piece: starts with a quoted word/phrase
+  if (/^['"\u2018\u201C]/.test(text.trim()) && /['"\u2019\u201D]:?\s/.test(text)) return true;
+  return false;
+}
+
+// Fuzzy-dedup a merged timeline: 40%+ word overlap = duplicate, keep shorter/cleaner entry
+// Also dedup entries within 2 hours that share 3+ key subject words
+// Entries with _base=true skip the junk filter (they are hand-curated)
+function dedupeTimeline(entries) {
+  const result = [];
+  const wordCache = [];
+  const timeCache = [];
+  for (const entry of entries) {
+    const cleaned = cleanHeadlineText(entry.text);
+    // Only filter non-base entries through the junk detector
+    if (!entry._base && isTimelineJunk(cleaned)) continue;
+    const cleanedEntry = { time: entry.time, text: entry._base ? entry.text : cleaned };
+    const words = getSignificantWords(cleanedEntry.text);
+    let isDup = false;
+    for (let i = 0; i < result.length; i++) {
+      const overlap = wordOverlap(words, wordCache[i]);
+      if (overlap >= 0.4) {
+        // Always prefer the base entry; otherwise keep shorter
+        if (result[i]._base) { isDup = true; break; }
+        if (entry._base || cleanedEntry.text.length < result[i].text.length) {
+          result[i] = cleanedEntry;
+          wordCache[i] = words;
+          timeCache[i] = new Date(cleanedEntry.time).getTime();
+        }
+        isDup = true;
+        break;
+      }
+      // Time-proximity dedup: within 2 hours with 3+ shared significant words
+      const timeDiff = Math.abs(new Date(cleanedEntry.time).getTime() - timeCache[i]);
+      if (timeDiff < 7200000) { // 2 hours
+        const setB = new Set(wordCache[i]);
+        let shared = 0;
+        for (const w of words) { if (setB.has(w)) shared++; }
+        if (shared >= 3) {
+          if (result[i]._base) { isDup = true; break; }
+          if (entry._base || cleanedEntry.text.length < result[i].text.length) {
+            result[i] = cleanedEntry;
+            wordCache[i] = words;
+            timeCache[i] = new Date(cleanedEntry.time).getTime();
+          }
+          isDup = true;
+          break;
+        }
+      }
+    }
+    if (!isDup) {
+      result.push(cleanedEntry);
+      wordCache.push(words);
+      timeCache.push(new Date(cleanedEntry.time).getTime());
+    }
+  }
+  return result;
+}
+
+// Extract a numeric value from a stat string like "1,332+", "~150,000", "7", etc.
+function parseStatNum(val) {
+  if (val == null) return NaN;
+  const s = String(val).replace(/[^0-9.]/g, '');
+  return parseFloat(s) || NaN;
+}
+
+// Search AI stats object for a value matching keyword patterns
+// Claude returns unpredictable key names — search all keys for best match
+function findStat(stats, entityKeywords, metricKeywords) {
+  if (!stats || typeof stats !== 'object') return null;
+  for (const [key, val] of Object.entries(stats)) {
+    const k = key.toLowerCase().replace(/[_-]/g, ' ');
+    const hasEntity = entityKeywords.some(ek => k.includes(ek.toLowerCase()));
+    const hasMetric = metricKeywords.some(mk => k.includes(mk.toLowerCase()));
+    if (hasEntity && hasMetric && val != null && val !== '') {
+      return String(val);
+    }
+  }
+  return null;
+}
+
+// findStat variant: match entity as a whole word in key (for short terms like "us")
+function findStatWholeWord(stats, entity, metricKeywords) {
+  if (!stats || typeof stats !== 'object') return null;
+  const re = new RegExp('(^|[_ -])' + entity + '([_ -]|$)', 'i');
+  for (const [key, val] of Object.entries(stats)) {
+    if (!re.test(key)) continue;
+    const k = key.toLowerCase().replace(/[_-]/g, ' ');
+    const hasMetric = metricKeywords.some(mk => k.includes(mk.toLowerCase()));
+    if (hasMetric && val != null && val !== '') return String(val);
+  }
+  return null;
+}
+
+// Return the higher of AI stat vs hardcoded floor — AI can never decrease stats
+function floorStat(aiVal, hardcodedFloor) {
+  const aiNum = parseStatNum(aiVal);
+  const floorNum = parseStatNum(hardcodedFloor);
+  if (isNaN(aiNum)) return hardcodedFloor;
+  if (isNaN(floorNum)) return aiVal || hardcodedFloor;
+  if (aiNum >= floorNum) return aiVal;
+  return hardcodedFloor;
+}
 
 // Filter DAILY_BRIEFING articles into timeline entries for a given conflict
 function filterBriefingForTimeline(countryKW, actionKW, excludeKW) {
@@ -263,8 +425,7 @@ function filterBriefingForTimeline(countryKW, actionKW, excludeKW) {
     if (!actionKW.some(kw => hl.includes(kw))) continue;
 
     // Exclude non-event content
-    if (TIMELINE_JUNK_STARTS.some(prefix => hl.startsWith(prefix))) continue;
-    if (TIMELINE_JUNK_CONTAINS.some(junk => hl.includes(junk))) continue;
+    if (isTimelineJunk(hl)) continue;
     if (excludeKW.some(ex => hl.includes(ex))) continue;
 
     // Exact-title dedup only
@@ -482,18 +643,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // War Timeline Merging (useMemo — only recompute on events update)
   // ============================================================
   const PAK_AFG_TIMELINE = useMemo(() => {
+    const base = PAK_AFG_TIMELINE_BASE.map(e => ({ ...e, _base: true }));
     const live = filterBriefingForTimeline(PAK_AFG_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
     const aiEntries = (AI_TIMELINE_DATA.pakafg?.timeline_entries || [])
-      .filter(e => e.text && e.timestamp)
+      .filter(e => e.text && e.timestamp && !isTimelineJunk(e.text))
       .map(e => ({ time: e.timestamp, text: e.text }));
-    const all = [...PAK_AFG_TIMELINE_BASE, ...live, ...aiEntries];
-    const seen = new Set();
-    return all.filter(e => {
-      const key = e.text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => new Date(b.time) - new Date(a.time));
+    return dedupeTimeline([...base, ...live, ...aiEntries]).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openPakAfgModal = () => {
@@ -512,9 +667,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderPakAfgCard = () => {
     const pakStats = AI_TIMELINE_DATA.pakafg?.stats || {};
-    const afgCivKilled = pakStats.afghan_civilians_killed || '110+';
-    const displaced = pakStats.displaced || '115,000';
-    const talibanKilled = pakStats.taliban_killed || '527+';
+    if (AI_TIMELINE_DATA.pakafg?.stats) console.log('[Hegemon] AI PakAfg stats:', JSON.stringify(pakStats));
+    const afgCivKilled = floorStat(findStat(pakStats, ['afghan', 'civilian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '110+');
+    const displaced = floorStat(findStat(pakStats, ['displac', 'refugee'], ['displac', 'total', 'number', 'people']) || findStat(pakStats, [''], ['displac']), '115,000');
+    const talibanKilled = floorStat(findStat(pakStats, ['taliban'], ['killed', 'deaths', 'dead', 'casualties']), '527+');
     const preview = 'Operation Ghazab Lil Haq. 62 PAF strikes in single day. 527+ Taliban killed (claimed). 115,000 displaced. 11 nations urge ceasefire \u2014 Day 10.';
 
     return (
@@ -556,18 +712,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const UKR_RUS_TIMELINE = useMemo(() => {
+    const base = UKR_RUS_TIMELINE_BASE.map(e => ({ ...e, _base: true }));
     const live = filterBriefingForTimeline(UKR_RUS_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
     const aiEntries = (AI_TIMELINE_DATA.ukraine?.timeline_entries || [])
-      .filter(e => e.text && e.timestamp)
+      .filter(e => e.text && e.timestamp && !isTimelineJunk(e.text))
       .map(e => ({ time: e.timestamp, text: e.text }));
-    const all = [...UKR_RUS_TIMELINE_BASE, ...live, ...aiEntries];
-    const seen = new Set();
-    return all.filter(e => {
-      const key = e.text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => new Date(b.time) - new Date(a.time));
+    return dedupeTimeline([...base, ...live, ...aiEntries]).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openUkrRusModal = () => {
@@ -586,7 +736,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderUkrRusCard = () => {
     const ukrStats = AI_TIMELINE_DATA.ukraine?.stats || {};
-    const totalCasualties = ukrStats.total_casualties || '~2M';
+    if (AI_TIMELINE_DATA.ukraine?.stats) console.log('[Hegemon] AI Ukraine stats:', JSON.stringify(ukrStats));
+    const totalCasualties = floorStat(findStat(ukrStats, ['total', 'combined', 'overall'], ['casualties', 'killed', 'losses']), '~2M');
     const preview = '4 years. ~2M casualties. 500-for-500 POW swap completed. Kharkiv apartment hit \u2014 10 killed. Abu Dhabi talks postponed. Ukraine recaptures more ground than lost in Feb.';
 
     return (
@@ -624,18 +775,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const SUDAN_TIMELINE = useMemo(() => {
+    const base = SUDAN_TIMELINE_BASE.map(e => ({ ...e, _base: true }));
     const live = filterBriefingForTimeline(SUDAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
     const aiEntries = (AI_TIMELINE_DATA.sudan?.timeline_entries || [])
-      .filter(e => e.text && e.timestamp)
+      .filter(e => e.text && e.timestamp && !isTimelineJunk(e.text))
       .map(e => ({ time: e.timestamp, text: e.text }));
-    const all = [...SUDAN_TIMELINE_BASE, ...live, ...aiEntries];
-    const seen = new Set();
-    return all.filter(e => {
-      const key = e.text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => new Date(b.time) - new Date(a.time));
+    return dedupeTimeline([...base, ...live, ...aiEntries]).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openSudanModal = () => {
@@ -654,8 +799,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderSudanCard = () => {
     const sudanStats = AI_TIMELINE_DATA.sudan?.stats || {};
-    const killed = sudanStats.total_killed || sudanStats.estimated_killed || '150,000+';
-    const displaced = sudanStats.displaced || sudanStats.total_displaced || '13.6M';
+    if (AI_TIMELINE_DATA.sudan?.stats) console.log('[Hegemon] AI Sudan stats:', JSON.stringify(sudanStats));
+    const killed = floorStat(findStat(sudanStats, ['total', 'estimated', 'civilian'], ['killed', 'deaths', 'dead', 'toll']), '150,000+');
+    const displaced = floorStat(findStat(sudanStats, ['displac', 'total', 'internal'], ['displac', 'people', 'million']), '13.6M');
     const preview = 'SAF vs RSF. ~1,000 days. SAF retakes Bara. RSF drones hit hospital, black out El-Obeid. WFP food stocks running out. 169 killed in South Sudan cross-border attack. Famine spreading.';
 
     return (
@@ -699,18 +845,12 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Auto-merge live Iran war articles from RSS feeds into the timeline
   const WAR_TIMELINE = useMemo(() => {
+    const base = WAR_TIMELINE_BASE.map(e => ({ ...e, _base: true }));
     const live = filterBriefingForTimeline(IRAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
     const aiEntries = (AI_TIMELINE_DATA.iran?.timeline_entries || [])
-      .filter(e => e.text && e.timestamp)
+      .filter(e => e.text && e.timestamp && !isTimelineJunk(e.text))
       .map(e => ({ time: e.timestamp, text: e.text }));
-    const all = [...WAR_TIMELINE_BASE, ...live, ...aiEntries];
-    const seen = new Set();
-    return all.filter(e => {
-      const key = e.text.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => new Date(b.time) - new Date(a.time));
+    return dedupeTimeline([...base, ...live, ...aiEntries]).sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openBreakingModal = () => {
@@ -729,9 +869,16 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderBreakingCard = () => {
     const iranStats = AI_TIMELINE_DATA.iran?.stats || {};
-    const iranKilled = iranStats.iran_killed || iranStats.iranian_deaths || '1,332+';
-    const israelKilled = iranStats.israel_killed || iranStats.israeli_deaths || '11';
-    const usKilled = iranStats.us_killed || iranStats.us_deaths || '6';
+    if (AI_TIMELINE_DATA.iran?.stats) console.log('[Hegemon] AI Iran stats:', JSON.stringify(iranStats));
+    const iranKilled = floorStat(findStat(iranStats, ['iran', 'iranian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '1,332+');
+    const israelKilled = floorStat(findStat(iranStats, ['israel'], ['killed', 'deaths', 'dead', 'casualties']), '11');
+    // "us" is too short — match "u.s", "us_", "american", "united states", or key containing "us" as whole word
+    const usKilled = floorStat(
+      findStat(iranStats, ['u.s', 'american', 'united states'], ['killed', 'deaths', 'dead', 'service']) ||
+      findStat(iranStats, ['us '], ['killed', 'deaths', 'dead']) ||
+      findStatWholeWord(iranStats, 'us', ['killed', 'deaths', 'dead', 'service']),
+      '7'
+    );
     const preview = '3,000+ targets struck. 1,332+ killed. Tehran oil depots hit. Iran strikes Haifa refinery. Mojtaba delivers first address. Bekaa Valley operation. $92/barrel. Iraq votes to expel US \u2014 Day 9.';
 
     return (

@@ -1404,6 +1404,13 @@ export async function fetchTimelineUpdates() {
     if (data.sudan) AI_TIMELINE_DATA.sudan = data.sudan;
     if (data.pakafg) AI_TIMELINE_DATA.pakafg = data.pakafg;
 
+    // Debug: log stats so we can verify key names
+    for (const [key, val] of Object.entries(AI_TIMELINE_DATA)) {
+      if (val?.stats && Object.keys(val.stats).length > 0) {
+        console.log(`[Hegemon] AI stats for ${key}:`, JSON.stringify(val.stats));
+      }
+    }
+
     // Cache in localStorage
     try {
       localStorage.setItem(TIMELINE_AI_LS_KEY, JSON.stringify({
