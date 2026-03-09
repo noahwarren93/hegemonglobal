@@ -947,13 +947,8 @@ async function fetchPreGeneratedEvents() {
     const minutesAgo = data.lastUpdated
       ? Math.round((Date.now() - data.lastUpdated) / 60000)
       : null;
-    // Log staleness but ALWAYS use pre-generated data if available
-    // (falling back to client-side RSS causes rate-limiting and page freezes)
-    if (minutesAgo !== null && minutesAgo > 360) {
-      console.warn(`[Hegemon] Pre-generated data is ${minutesAgo}min old — using anyway (stale > broken)`);
-    }
 
-    // Populate DAILY_BRIEFING
+    // Always populate DAILY_BRIEFING from Worker (articles are fresh even if events are stale)
     if (data.briefing && data.briefing.length > 0) {
       DAILY_BRIEFING.length = 0;
       DAILY_BRIEFING.push(...data.briefing.map(a => ({
@@ -963,23 +958,49 @@ async function fetchPreGeneratedEvents() {
       })));
     }
 
-    // Populate DAILY_EVENTS
-    DAILY_EVENTS.length = 0;
-    for (const event of data.events) {
-      const hl = event.headline || event.title || 'Breaking News';
-      DAILY_EVENTS.push({
-        ...event,
-        headline: hl,
-        _primaryCountry: event._primaryCountry || quickPrimaryCountry(hl),
-        category: event.category || 'CONFLICT',
-        time: event.time || timeAgo(event.pubDate),
-        summaryLoading: false,
-        summaryError: !event.summary,
-        articles: (event.articles || []).map(a => ({
-          ...a,
-          time: timeAgo(a.pubDate),
-        }))
-      });
+    // If pre-generated events are >60min stale, rebuild from fresh DAILY_BRIEFING
+    if (minutesAgo !== null && minutesAgo > 60 && DAILY_BRIEFING.length > 0) {
+      console.warn(`[Hegemon] Pre-generated events ${minutesAgo}min stale — rebuilding from ${DAILY_BRIEFING.length} fresh articles`);
+      const freshEvents = await clusterArticles(DAILY_BRIEFING);
+
+      // Normalize: add pubDate from first article (client buildEvent omits it, Worker includes it)
+      const fallbackDate = new Date().toISOString();
+      DAILY_EVENTS.length = 0;
+      for (const event of freshEvents) {
+        // Find first valid pubDate from any article
+        let bestPubDate = '';
+        for (const a of (event.articles || [])) {
+          if (a.pubDate && !isNaN(new Date(a.pubDate).getTime())) {
+            bestPubDate = a.pubDate;
+            break;
+          }
+        }
+        const pubDate = event.pubDate || bestPubDate || fallbackDate;
+        DAILY_EVENTS.push({
+          ...event,
+          pubDate,
+          time: timeAgo(pubDate),
+        });
+      }
+    } else {
+      // Use pre-generated events directly
+      DAILY_EVENTS.length = 0;
+      for (const event of data.events) {
+        const hl = event.headline || event.title || 'Breaking News';
+        DAILY_EVENTS.push({
+          ...event,
+          headline: hl,
+          _primaryCountry: event._primaryCountry || quickPrimaryCountry(hl),
+          category: event.category || 'CONFLICT',
+          time: event.time || timeAgo(event.pubDate),
+          summaryLoading: false,
+          summaryError: !event.summary,
+          articles: (event.articles || []).map(a => ({
+            ...a,
+            time: timeAgo(a.pubDate),
+          }))
+        });
+      }
     }
 
     // Store last updated timestamp for UI

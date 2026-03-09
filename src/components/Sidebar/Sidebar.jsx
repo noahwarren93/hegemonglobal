@@ -68,8 +68,8 @@ const PAK_AFG_INTEL = {
   outlook: 'No ceasefire is in sight. Pakistan has explicitly rejected negotiations. Turkey has offered to mediate but neither side has accepted. The war is entering its second week with sustained air and ground operations. Key risks: further Afghan strikes on Pakistani military infrastructure, escalation to Pakistani cities, humanitarian catastrophe in border provinces, and the nuclear dimension \u2014 Pakistan possesses ~170 nuclear warheads. China has called for restraint given its CPEC investments in Pakistan. The international community is urging de-escalation but has limited leverage over either side.',
 };
 
-// Russia-Ukraine War Timeline (static milestones)
-const UKR_RUS_TIMELINE = [
+// Russia-Ukraine War Timeline
+const UKR_RUS_TIMELINE_BASE = [
   { time: '2026-03-07T10:00:00Z', text: 'Russian missile strikes apartment building in Kharkiv \u2014 10 killed including 2 children, new "Izdeliye-30" cruise missile identified' },
   { time: '2026-03-07T04:00:00Z', text: 'Russia launches massive combined attack \u2014 29 missiles (including 2 hypersonic Tsyrkon) and 480 drones hit energy and port infrastructure' },
   { time: '2026-03-06T18:00:00Z', text: 'Abu Dhabi round 3 postponed due to Iran war \u2014 Geneva or Istanbul discussed as alternatives, talks expected "next week"' },
@@ -88,6 +88,8 @@ const UKR_RUS_TIMELINE = [
   { time: '2022-04-02T12:00:00Z', text: 'Bucha massacre revealed \u2014 mass civilian killings spark international war crimes investigations' },
   { time: '2022-02-24T06:00:00Z', text: 'Russia launches full-scale invasion of Ukraine \u2014 largest European land war since WWII' },
 ];
+
+const UKR_RUS_WAR_KW = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'zelenskyy', 'donbas', 'donetsk', 'luhansk', 'zaporizhzhia', 'kherson', 'crimea', 'russia', 'russian', 'moscow', 'kremlin', 'putin', 'kursk', 'syrskyi', 'bakhmut', 'kharkiv', 'odesa', 'odessa'];
 
 const UKR_RUS_INTEL = {
   what: 'Russia\'s full-scale invasion of Ukraine, launched on February 24, 2022, is now in its fourth year \u2014 the largest military conflict in Europe since WWII. Russia occupies approximately 20% of Ukraine\'s territory (~120,000 sq km). Combined casualties are approaching 2 million: Russia has lost an estimated 325,000 killed and ~1.2 million total casualties; Ukraine has suffered 500,000-600,000 total casualties. Russia gained only 49 sq mi in February 2026 \u2014 the smallest monthly gain since July 2024. Ukrainian Commander-in-Chief Syrskyi claimed Ukraine captured more territory than it lost in February 2026, with offensive operations along the southern front.',
@@ -240,16 +242,45 @@ const WAR_INTEL = {
   outlook: 'Full regional war is the baseline scenario. Trump declares "no time limits" on the conflict. Active fronts: IRGC has launched 22+ waves of retaliatory strikes against Gulf infrastructure, a US submarine sank the IRIS Dena in the Indian Ocean, IDF ground forces operating in southern Lebanon with evacuation warnings south of the Litani, Houthis preparing Red Sea shipping attacks (dual Hormuz + Red Sea blockade would be unprecedented), Iranian drones hitting Azerbaijan for the first time, and the CIA arming Kurdish insurgents. France has deployed the aircraft carrier Charles de Gaulle. The Assembly of Experts has reportedly selected Mojtaba Khamenei as successor \u2014 Trump calls this "unacceptable." Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
 };
 
-// Extract a valid ISO timestamp from a DAILY_EVENTS item.
-// Falls back through: event.pubDate → first article's pubDate → null (skip entry).
-// Never returns new Date() — that would create non-deterministic useMemo output.
-function extractEventTimestamp(event) {
-  if (event.pubDate && !isNaN(new Date(event.pubDate).getTime())) return event.pubDate;
-  const arts = event.articles || [];
-  for (const a of arts) {
-    if (a.pubDate && !isNaN(new Date(a.pubDate).getTime())) return a.pubDate;
+// Shared war-action keywords — article must match one of these AND a conflict keyword
+const WAR_ACTION_KW = ['strike', 'struck', 'attack', 'missile', 'bomb', 'troops', 'casualt', 'offensive', 'airstrike', 'military', 'defense', 'defence', 'killed', 'destroy', 'combat', 'invasion', 'ceasefire', 'frontline', 'front line', 'artillery', 'drone strike', 'naval', 'weapon', 'nuclear', 'shoot', 'shot down', 'shell', 'rocket', 'intercept', 'siege', 'blockade', 'retreat', 'captur', 'deploy', 'incursion', 'escalat', 'retaliat', 'surrender', 'wounded', 'death toll', 'airspace', 'warship', 'fighter jet', 'battalion', 'brigade', 'regiment', 'division', 'torpedo', 'sniper', 'mortar', 'infantry', 'armored', 'tank', 'convoy', 'ambush', 'displaced', 'evacuat', 'famine', 'atrocit', 'genocide', 'war crime', 'sanction', 'threat', 'warn', 'clash', 'raid', 'operat', 'launch', 'target', 'hit ', 'hits ', 'fire', 'blast', 'explosi', 'shell', 'ground forces'];
+
+// Headline prefixes/content that indicate non-event articles (commentary, galleries, etc.)
+const TIMELINE_JUNK_STARTS = ['photos show', 'opinion:', 'analysis:', 'watch:', 'video:', 'live updates:', 'in photos:'];
+const TIMELINE_JUNK_CONTAINS = ['photos', 'gallery', 'opinion', 'podcast', 'review', 'newsletter', 'subscribe', 'exclusive interview'];
+
+// Filter DAILY_BRIEFING articles into timeline entries for a given conflict
+function filterBriefingForTimeline(countryKW, actionKW, excludeKW) {
+  const entries = [];
+  const seenTitles = new Set();
+
+  for (const article of DAILY_BRIEFING) {
+    const hl = (article.headline || article.title || '').toLowerCase();
+    if (!hl) continue;
+
+    // Must match both a country keyword and a war-action keyword
+    if (!countryKW.some(kw => hl.includes(kw))) continue;
+    if (!actionKW.some(kw => hl.includes(kw))) continue;
+
+    // Exclude non-event content
+    if (TIMELINE_JUNK_STARTS.some(prefix => hl.startsWith(prefix))) continue;
+    if (TIMELINE_JUNK_CONTAINS.some(junk => hl.includes(junk))) continue;
+    if (excludeKW.some(ex => hl.includes(ex))) continue;
+
+    // Exact-title dedup only
+    if (seenTitles.has(hl)) continue;
+    seenTitles.add(hl);
+
+    // Get timestamp — use pubDate, fall back to current time
+    const pubDate = article.pubDate && !isNaN(new Date(article.pubDate).getTime())
+      ? article.pubDate : null;
+    if (!pubDate) continue;
+
+    const displayHL = article.headline || article.title || '';
+    entries.push({ time: pubDate, text: displayHL });
   }
-  return null;
+
+  return entries;
 }
 
 // Banner war keyword filter — used by getStableTopStories to prevent duplicates
@@ -451,31 +482,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // War Timeline Merging (useMemo — only recompute on events update)
   // ============================================================
   const PAK_AFG_TIMELINE = useMemo(() => {
-    const merged = [...PAK_AFG_TIMELINE_BASE];
-    const baseTexts = PAK_AFG_TIMELINE_BASE.map(b => b.text.toLowerCase());
-
-    for (const event of DAILY_EVENTS) {
-      if (event.breaking) continue;
-      const hl = (event.headline || '').toLowerCase();
-      if (!PAK_AFG_WAR_KW.some(kw => hl.includes(kw))) continue;
-      // Must relate to the war specifically
-      const warTerms = ['strike', 'bomb', 'attack', 'kill', 'war', 'military', 'operation', 'border', 'clash', 'drone', 'airbase', 'troops'];
-      if (!warTerms.some(t => hl.includes(t))) continue;
-
-      const words = hl.split(/\s+/).filter(w => w.length > 3);
-      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
-      if (isDupe) continue;
-
-      const ts = extractEventTimestamp(event);
-      if (!ts) continue;
-      merged.push({
-        time: ts,
-        text: event.headline,
-        live: true,
-      });
-    }
-
-    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const live = filterBriefingForTimeline(PAK_AFG_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
+    return [...PAK_AFG_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openPakAfgModal = () => {
@@ -533,6 +541,11 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
+  const UKR_RUS_TIMELINE = useMemo(() => {
+    const live = filterBriefingForTimeline(UKR_RUS_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
+    return [...UKR_RUS_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
+  }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const openUkrRusModal = () => {
     const syntheticEvent = {
       id: 'top-ukr-rus-war',
@@ -585,30 +598,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const SUDAN_TIMELINE = useMemo(() => {
-    const merged = [...SUDAN_TIMELINE_BASE];
-    const baseTexts = SUDAN_TIMELINE_BASE.map(b => b.text.toLowerCase());
-
-    for (const event of DAILY_EVENTS) {
-      if (event.breaking) continue;
-      const hl = (event.headline || '').toLowerCase();
-      if (!SUDAN_WAR_KW.some(kw => hl.includes(kw))) continue;
-      const warTerms = ['war', 'kill', 'strike', 'attack', 'famine', 'genocide', 'atrocit', 'displace', 'sanction', 'offensive', 'humanitarian'];
-      if (!warTerms.some(t => hl.includes(t))) continue;
-
-      const words = hl.split(/\s+/).filter(w => w.length > 3);
-      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
-      if (isDupe) continue;
-
-      const ts = extractEventTimestamp(event);
-      if (!ts) continue;
-      merged.push({
-        time: ts,
-        text: event.headline,
-        live: true,
-      });
-    }
-
-    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const live = filterBriefingForTimeline(SUDAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
+    return [...SUDAN_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openSudanModal = () => {
@@ -669,32 +660,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Auto-merge live Iran war articles from RSS feeds into the timeline
   const WAR_TIMELINE = useMemo(() => {
-    const merged = [...WAR_TIMELINE_BASE];
-    const baseTexts = WAR_TIMELINE_BASE.map(b => b.text.toLowerCase());
-
-    for (const event of DAILY_EVENTS) {
-      if (event.breaking) continue;
-      const hl = (event.headline || '').toLowerCase();
-      if (!IRAN_WAR_KW.some(kw => hl.includes(kw))) continue;
-
-      // Exclude peripheral stories that match keywords but aren't core war developments
-      if (TIMELINE_EXCLUDE.some(ex => hl.includes(ex))) continue;
-
-      // Deduplicate — skip if 3+ significant words overlap with any base entry
-      const words = hl.split(/\s+/).filter(w => w.length > 3);
-      const isDupe = baseTexts.some(bt => words.filter(w => bt.includes(w)).length >= 3);
-      if (isDupe) continue;
-
-      const ts = extractEventTimestamp(event);
-      if (!ts) continue;
-      merged.push({
-        time: ts,
-        text: event.headline,
-        live: true,
-      });
-    }
-
-    return merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const live = filterBriefingForTimeline(IRAN_WAR_KW, WAR_ACTION_KW, TIMELINE_EXCLUDE);
+    return [...WAR_TIMELINE_BASE, ...live].sort((a, b) => new Date(b.time) - new Date(a.time));
   }, [eventsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openBreakingModal = () => {

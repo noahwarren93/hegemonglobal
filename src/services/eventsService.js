@@ -576,6 +576,7 @@ function buildEvent(annotated, indices) {
     category,
     importance,
     sourceCount: clusterArts.length,
+    pubDate: primary.pubDate || clusterArts[0].pubDate || '',
     time: primary.time || clusterArts[0].time,
     articles: cleanArticles,
     entities: [...allEntities],
