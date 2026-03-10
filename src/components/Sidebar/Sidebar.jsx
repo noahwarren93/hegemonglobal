@@ -2093,7 +2093,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         )}
 
         {/* Tabs */}
-        <div className="tabs" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+        <div className="tabs">
           {TABS.map(tab => (
             <button
               key={tab.id}

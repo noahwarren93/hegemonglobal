@@ -97,8 +97,7 @@
       .compare-panel.active { transform: translateY(0); }
       .compare-panel.expanded { max-height: 65vh; overflow-y: auto; }
 
-      .tabs { overflow-x: auto; }
-      .tab { padding: 8px 0; font-size: 8px; white-space: nowrap; overflow: hidden; }
+      .tab { font-size: 8px; }
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
       .modal-header { padding: 12px; }
       .modal-title { font-size: 16px; }
