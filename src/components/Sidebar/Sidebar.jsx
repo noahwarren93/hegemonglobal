@@ -1382,8 +1382,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           danger.push({ country: name, region: t.region, threat: t.threat, level: t.level, color: meta.color, flag: data.flag, articleCount });
         }
       }
-      // Sort by article activity first, then level
-      danger.sort((a, b) => b.articleCount - a.articleCount || b.level - a.level);
+      // Sort by level (5 first, then 4), then by article count within same level
+      danger.sort((a, b) => b.level - a.level || b.articleCount - a.articleCount);
 
       // Popular Destinations — with dynamic risk bumps from DAILY_BRIEFING
       const popular = POPULAR_DESTINATIONS.map((d) => {
