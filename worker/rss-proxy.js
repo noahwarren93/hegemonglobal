@@ -539,6 +539,14 @@ const IRRELEVANT_KEYWORDS = [
   'retail rents', 'devotes life to', 'daily devotional',
   'best places to live', 'best cities', 'travel deals', 'vacation deals',
   'spring break', 'summer vacation',
+  'golden corral', 'irreversible injuries', 'dress shoes', 'gifting $',
+  'stephen a. smith', 'stephen a smith', 'literally anybody else',
+  'intersystems appoints', 'inappropriate relationship',
+  'oil sands', 'warmest winter', 'frigid east', 'hard to fathom',
+  'free speech crisis', 'quiet part out loud',
+  'cancer haunts', 'neighbors of canada',
+  'trooper shot', 'state police trooper', 'prank goes wrong',
+  'toilet paper prank', 'campus scandal',
 ];
 
 // ============================================================
@@ -645,6 +653,31 @@ const OPINION_PATTERNS = [
   /things you (?:need to|should) know/i,
   /what you need to know about/i,
   /\bexplainer\s*:/i,
+  // Podcast/YouTube episode formats
+  /\bep\.?\s*\d+/i,
+  /\|\s*\d{1,2}\.\d{1,2}\.\d{2,4}\s*$/,
+  // Photo captions
+  /^photo\s*:/i,
+  /^photos\s*:/i,
+  /^video\s*:/i,
+  /^watch\s*:/i,
+  /^listen\s*:/i,
+  // Fact-check/debunk articles
+  /\bfalsely linked\b/i,
+  /\bdoes not show\b/i,
+  /\bmisrepresented\b/i,
+  /\bfalse claim\b/i,
+  /\bfact.?check\b/i,
+  /\bold video of\b/i,
+  /\bold photo of\b/i,
+  /\bfootage from \d{4}\b/i,
+  /\bai video of\b/i,
+  // Corporate appointments (not heads of state)
+  /\bappoints\b.*\b(?:CEO|CTO|CFO|COO|CMO|VP|director|leader|chief|officer|manager)\b/i,
+  /\bnamed\s+(?:CEO|CTO|CFO|COO|CMO|VP|director|chief)\b/i,
+  // Saying the quiet part / opinion phrasing
+  /\bsaying the quiet part\b/i,
+  /\bthink tank helped\b/i,
 ];
 
 function scoreGeopoliticalRelevance(text) {
@@ -1237,17 +1270,69 @@ function clusterArticles(articles) {
   const events = rawEvents;
 
   // Filter out low-quality single-source WORLD events
-  const filtered = events.filter(e => {
+  const qualityFiltered = events.filter(e => {
     if (e.sourceCount === 1 && e.category === 'WORLD') return false;
     return true;
   });
 
-  // Sort by relevance score
-  filtered.sort((a, b) => b._score - a._score);
-  for (const e of filtered) delete e._score;
+  // Event-level headline dedup — drop events with near-identical headlines
+  const seenHeadlines = [];
+  const filtered = [];
+  for (const evt of qualityFiltered) {
+    const norm = (evt.headline || '').toLowerCase()
+      .replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    if (norm.length < 10) { filtered.push(evt); continue; }
+    const words = new Set(norm.split(' '));
+    let isDupeHeadline = false;
+    for (const seen of seenHeadlines) {
+      let overlap = 0;
+      for (const w of words) { if (seen.has(w)) overlap++; }
+      const maxLen = Math.max(words.size, seen.size);
+      if (maxLen > 0 && overlap / maxLen >= 0.7) { isDupeHeadline = true; break; }
+    }
+    if (!isDupeHeadline) {
+      seenHeadlines.push(words);
+      filtered.push(evt);
+    }
+  }
 
-  console.log(`[Cron] Clustering: ${articles.length} articles -> ${events.length} raw events -> ${filtered.length} after quality filter`);
-  return filtered;
+  // Sort by relevance score first
+  filtered.sort((a, b) => b._score - a._score);
+
+  // Interleave categories — no more than 3 of the same category in a row
+  const interleaved = [];
+  const remaining = [...filtered];
+  while (remaining.length > 0) {
+    // Count consecutive same-category at end of interleaved
+    let consecutiveCount = 0;
+    let lastCat = null;
+    if (interleaved.length > 0) {
+      lastCat = interleaved[interleaved.length - 1].category;
+      for (let k = interleaved.length - 1; k >= 0; k--) {
+        if (interleaved[k].category === lastCat) consecutiveCount++;
+        else break;
+      }
+    }
+
+    if (consecutiveCount >= 3) {
+      // Find the next event with a different category
+      const diffIdx = remaining.findIndex(e => e.category !== lastCat);
+      if (diffIdx > 0) {
+        interleaved.push(remaining[diffIdx]);
+        remaining.splice(diffIdx, 1);
+      } else {
+        // All remaining are same category, just push
+        interleaved.push(remaining.shift());
+      }
+    } else {
+      interleaved.push(remaining.shift());
+    }
+  }
+
+  for (const e of interleaved) delete e._score;
+
+  console.log(`[Cron] Clustering: ${articles.length} articles -> ${events.length} raw events -> ${interleaved.length} after quality filter`);
+  return interleaved;
 }
 
 function subClusterByTopic(annotated, indices) {
@@ -1493,6 +1578,13 @@ function processArticles(allArticles) {
   const relevant = [];
   for (const article of fresh) {
     const title = article.title || article.headline || '';
+
+    // Skip broken/empty entries
+    if (title.trim().length < 10) continue;
+    const titleLower = title.toLowerCase().trim();
+    if (titleLower === 'politics and government' || titleLower === 'world' ||
+        titleLower === 'news' || titleLower === 'breaking news') continue;
+
     const text = (title + ' ' + (article.description || '')).toLowerCase();
 
     if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
@@ -1555,7 +1647,7 @@ function processArticles(allArticles) {
           let overlap = 0;
           for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
           const maxLen = Math.max(wordsA.size, wordsB.size);
-          const threshold = existing.source === source ? 0.7 : 0.95;
+          const threshold = existing.source === source ? 0.6 : 0.8;
           if (maxLen > 0 && overlap / maxLen >= threshold) { isDupe = true; break; }
         }
       }
