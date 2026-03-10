@@ -714,7 +714,7 @@ const OPINION_PATTERNS = [
   /\bliberal comic\b/i,
   /\bconservative comic\b/i,
   // Podcast/show with pipe + date at end
-  /\|\s*\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}/,
+  /\|\s*\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}/,
   /\|\s*(?:ep|episode)\b/i,
   // "How X took over Y" opinion format
   /\bhow\s+\w+\s+took\s+over\b/i,
@@ -1184,23 +1184,38 @@ function scoreHeadlineNeutrality(headline, source) {
 }
 
 // ============================================================
-// Event Scoring
+// Event Scoring & Tiered Summarization
 // ============================================================
 
-const TIER1_KEYWORDS = [
-  'military', 'nuclear', 'invasion', 'missile', 'troops', 'airstrikes',
-  'airstrike', 'bombing', 'war crime', 'genocide', 'ethnic cleansing',
-  'weapons', 'arsenal', 'enrichment', 'warhead', 'siege', 'blockade', 'offensive',
-  'strike', 'strikes', 'struck', 'bombardment', 'shelling', 'casualties',
-  'killed', 'destroyed', 'retaliat', 'intercept', 'shot down', 'ground offensive',
-  'naval operation', 'carrier group', 'oil field', 'refinery attack', 'ras tanura'
-];
-const TIER2_KEYWORDS = [
-  'ceasefire', 'peace', 'peace talks', 'sanctions', 'territorial',
-  'coup', 'escalat', 'buildup', 'hostage', 'humanitarian crisis',
-  'reconstruction', 'occupation', 'diplomatic', 'condemn', 'strait of hormuz',
-  'nuclear site', 'deployment', 'mobiliz', 'evacuati'
-];
+const CONFLICT_KEYWORDS = new Set([
+  'strike', 'struck', 'killed', 'missile', 'war', 'invasion', 'ceasefire',
+  'airstrike', 'bombing', 'troops', 'casualties', 'offensive', 'shelling',
+  'bombardment', 'destroyed', 'retaliat', 'intercept', 'shot down',
+  'genocide', 'ethnic cleansing', 'siege', 'blockade', 'ground offensive',
+  'nuclear', 'warhead', 'enrichment', 'arsenal', 'weapons',
+  'naval operation', 'carrier group', 'war crime'
+]);
+
+const DIPLOMATIC_KEYWORDS = new Set([
+  'sanctions', 'summit', 'treaty', 'diplomatic', 'ceasefire', 'peace talks',
+  'ambassador', 'envoy', 'nato', 'un resolution', 'condemn',
+  'territorial', 'coup', 'escalat', 'hostage', 'humanitarian crisis',
+  'mobiliz', 'deployment', 'evacuati', 'occupation'
+]);
+
+const ECONOMIC_KEYWORDS = new Set([
+  'tariffs', 'tariff', 'oil prices', 'trade war', 'trade deal',
+  'debt crisis', 'energy crisis', 'embargo', 'economic warfare',
+  'gas pipeline', 'rare earth'
+]);
+
+// Strong keywords that qualify a single-source article as an event
+const STRONG_EVENT_KEYWORDS = new Set([
+  'conflict', 'war', 'military', 'strike', 'sanctions', 'nuclear',
+  'coup', 'election', 'diplomat', 'treaty', 'missile', 'invasion',
+  'ceasefire', 'genocide', 'assassination', 'bombing', 'airstrike',
+  'troops', 'offensive', 'blockade', 'siege', 'hostage'
+]);
 
 const BUSINESS_NOISE_KEYWORDS = [
   'surcharge', 'shipping cost', 'shipping rate', 'insurance premium',
@@ -1212,11 +1227,54 @@ const BUSINESS_NOISE_KEYWORDS = [
   'firms shocked', 'business impact', 'economic fallout', 'trade deficit'
 ];
 
-function getEventTier(event) {
+// Score an event for tiered summarization priority
+// Source count: 5+ = 3pts, 2-4 = 2pts, 1 = 1pt
+// Keyword weight: conflict = +3, diplomatic = +2, economic = +1
+// Recency: <2h = +2, <6h = +1
+function scoreTierPriority(event) {
+  let score = 0;
+  const srcCount = event.sourceCount || 1;
+  if (srcCount >= 5) score += 3;
+  else if (srcCount >= 2) score += 2;
+  else score += 1;
+
   const text = ((event.headline || '') + ' ' +
     (event.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
-  if (TIER1_KEYWORDS.some(kw => text.includes(kw))) return 1;
-  if (TIER2_KEYWORDS.some(kw => text.includes(kw))) return 2;
+
+  let hasConflict = false, hasDiplomatic = false, hasEconomic = false;
+  for (const kw of CONFLICT_KEYWORDS) {
+    if (text.includes(kw)) { hasConflict = true; break; }
+  }
+  for (const kw of DIPLOMATIC_KEYWORDS) {
+    if (text.includes(kw)) { hasDiplomatic = true; break; }
+  }
+  for (const kw of ECONOMIC_KEYWORDS) {
+    if (text.includes(kw)) { hasEconomic = true; break; }
+  }
+  if (hasConflict) score += 3;
+  if (hasDiplomatic) score += 2;
+  if (hasEconomic) score += 1;
+
+  // Recency — check newest article
+  const now = Date.now();
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+  const SIX_HOURS = 6 * 60 * 60 * 1000;
+  const pubDates = (event.articles || []).map(a => a.pubDate ? new Date(a.pubDate).getTime() : 0).filter(t => t > 0);
+  const newest = pubDates.length > 0 ? Math.max(...pubDates) : 0;
+  if (newest > 0) {
+    const age = now - newest;
+    if (age < TWO_HOURS) score += 2;
+    else if (age < SIX_HOURS) score += 1;
+  }
+
+  return score;
+}
+
+// Determine tier from priority score: 5+ = T1, 3-4 = T2, <3 = T3
+function getEventTier(event) {
+  const score = scoreTierPriority(event);
+  if (score >= 5) return 1;
+  if (score >= 3) return 2;
   return 3;
 }
 
@@ -1297,9 +1355,9 @@ function clusterArticles(articles) {
     for (const sub of subs) allClusters.push(sub);
   }
 
-  // Step 3c: No-country articles
+  // Step 3c: No-country articles — higher similarity threshold for tighter clusters
   if (noCountry.length > 0) {
-    const subs = subClusterBySimilarity(annotated, noCountry, 0.4);
+    const subs = subClusterBySimilarity(annotated, noCountry, 0.5);
     for (const sub of subs) allClusters.push(sub);
   }
 
@@ -1309,10 +1367,16 @@ function clusterArticles(articles) {
   // Step 5: Skip mergeByCountry — allow multiple distinct events per country
   const events = rawEvents;
 
-  // Filter out low-quality single-source WORLD events
+  // Filter: require 2+ sources OR strong keyword match for ANY event
   const qualityFiltered = events.filter(e => {
-    if (e.sourceCount === 1 && e.category === 'WORLD') return false;
-    return true;
+    if (e.sourceCount >= 2) return true;
+    // Single-source: must have a strong keyword to survive
+    const text = ((e.headline || '') + ' ' +
+      (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
+    for (const kw of STRONG_EVENT_KEYWORDS) {
+      if (text.includes(kw)) return true;
+    }
+    return false;
   });
 
   // Event-level headline dedup — drop events with near-identical headlines
@@ -1328,7 +1392,7 @@ function clusterArticles(articles) {
       let overlap = 0;
       for (const w of words) { if (seen.has(w)) overlap++; }
       const maxLen = Math.max(words.size, seen.size);
-      if (maxLen > 0 && overlap / maxLen >= 0.7) { isDupeHeadline = true; break; }
+      if (maxLen > 0 && overlap / maxLen >= 0.6) { isDupeHeadline = true; break; }
     }
     if (!isDupeHeadline) {
       seenHeadlines.push(words);
@@ -1385,15 +1449,19 @@ function subClusterByTopic(annotated, indices) {
     let placed = false;
     for (const cluster of clusters) {
       if (cluster.members.length >= HARD_CAP) continue;
-      if (sharedTopics(art._topics, cluster.topics) >= 1) {
+      // Require shared topic AND headline word overlap for tighter clustering
+      const topicMatch = sharedTopics(art._topics, cluster.topics) >= 1;
+      const headlineMatch = wordOverlap(art._headlineWords, cluster.seedWords) >= 0.25;
+      if (topicMatch && headlineMatch) {
         cluster.members.push(idx);
         for (const t of art._topics) cluster.topics.add(t);
+        for (const w of art._headlineWords) cluster.seedWords.add(w);
         placed = true;
         break;
       }
     }
     if (!placed) {
-      clusters.push({ topics: new Set(art._topics), members: [idx] });
+      clusters.push({ topics: new Set(art._topics), seedWords: new Set(art._headlineWords), members: [idx] });
     }
   }
   return clusters.map(c => c.members);
@@ -1490,40 +1558,6 @@ function buildEvent(annotated, indices) {
   return event;
 }
 
-function mergeByCountry(events) {
-  const countryMap = new Map();
-  const merged = [];
-  const consumed = new Set();
-
-  for (let i = 0; i < events.length; i++) {
-    const pc = events[i]._primaryCountry;
-    if (pc && !STOPLIST_COUNTRIES.has(pc)) {
-      if (!countryMap.has(pc)) countryMap.set(pc, []);
-      countryMap.get(pc).push(i);
-    }
-  }
-
-  for (const [, indices] of countryMap.entries()) {
-    if (indices.length <= 1) continue;
-    indices.sort((a, b) => events[b]._score - events[a]._score);
-    const base = events[indices[0]];
-    for (let k = 1; k < indices.length; k++) {
-      const donor = events[indices[k]];
-      base.articles.push(...donor.articles);
-      for (const ent of donor.entities) {
-        if (!base.entities.includes(ent)) base.entities.push(ent);
-      }
-      consumed.add(indices[k]);
-    }
-    base.sourceCount = base.articles.length;
-    base._score = scoreEvent(base);
-  }
-
-  for (let i = 0; i < events.length; i++) {
-    if (!consumed.has(i)) merged.push(events[i]);
-  }
-  return merged;
-}
 
 // ============================================================
 // RSS Fetching (for cron job)
@@ -1666,7 +1700,7 @@ function processArticles(allArticles) {
       if (nonEnCount >= 2) continue;
     }
 
-    if (scoreGeopoliticalRelevance(fullText) < 1) continue;
+    if (scoreGeopoliticalRelevance(fullText) < 2) continue;
 
     // Add category and importance
     const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
@@ -1720,6 +1754,13 @@ function processArticles(allArticles) {
 // AI Summary Generation (with KV caching per event)
 // ============================================================
 
+// Tiered refresh intervals (milliseconds)
+const TIER_REFRESH_MS = {
+  1: 0,                    // T1: every cron run (30 min) — always refresh
+  2: 2 * 60 * 60 * 1000,  // T2: every 2 hours
+  3: 3 * 60 * 60 * 1000,  // T3: every 3 hours
+};
+
 async function generateSummaries(events, env) {
   const apiKey = env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -1727,53 +1768,64 @@ async function generateSummaries(events, env) {
     return;
   }
 
-  // Check KV cache for each event
-  const uncached = [];
+  const now = Date.now();
+
+  // Load summary schedule tracker from KV — tracks last summary time per event hash
+  let scheduleTracker = {};
+  try {
+    const raw = await env.HEGEMON_CACHE.get('summary_schedule');
+    if (raw) scheduleTracker = JSON.parse(raw);
+  } catch { /* start fresh */ }
+
+  // Determine which events need summaries this run
+  const needsSummary = [];
+  const cachedFromKV = [];
+
   for (const event of events) {
     const key = hashEventTitles(event);
+    const tier = getEventTier(event);
+    const refreshInterval = TIER_REFRESH_MS[tier] || TIER_REFRESH_MS[3];
+    const lastSummarized = scheduleTracker[key]?.ts || 0;
+    const timeSinceLastSummary = now - lastSummarized;
+
+    // Try to load cached summary from KV
+    let hasCachedSummary = false;
     try {
       const cached = await env.HEGEMON_CACHE.get('summary_' + key);
       if (cached) {
         const data = JSON.parse(cached);
-        if (Date.now() - data.ts < 24 * 60 * 60 * 1000) { // 24h TTL
+        if (data.summary && Date.now() - data.ts < 24 * 60 * 60 * 1000) {
           event.summary = data.summary;
           if (data.headline) event.headline = data.headline;
-          continue;
+          hasCachedSummary = true;
         }
       }
     } catch { /* miss */ }
-    uncached.push(event);
+
+    if (!hasCachedSummary) {
+      // NEW EVENT — no summary at all. ABSOLUTE PRIORITY.
+      needsSummary.push({ event, tier, priority: 0 }); // priority 0 = highest
+    } else if (tier === 1 || timeSinceLastSummary >= refreshInterval) {
+      // Existing event due for refresh based on tier schedule
+      needsSummary.push({ event, tier, priority: tier });
+    } else {
+      cachedFromKV.push(event);
+    }
   }
 
-  const cachedCount = events.length - uncached.length;
-  if (cachedCount > 0) {
-    console.log(`[Cron] Summaries: ${cachedCount} cached, ${uncached.length} need generation`);
-  }
+  // Sort: new events (priority 0) first, then T1, T2, T3
+  needsSummary.sort((a, b) => a.priority - b.priority || a.tier - b.tier);
 
-  if (uncached.length === 0) return;
+  const newCount = needsSummary.filter(n => n.priority === 0).length;
+  const refreshCount = needsSummary.length - newCount;
+  console.log(`[Cron] Summaries: ${cachedFromKV.length} cached, ${newCount} new (priority), ${refreshCount} due for refresh`);
 
-  // Prioritize high-priority events — summarize them individually first
-  const HIGH_PRIORITY_KW = ['war', 'killed', 'strike', 'attack', 'missile', 'bomb', 'invasion', 'ceasefire', 'earthquake', 'tsunami', 'coup'];
-  const urgent = [];
-  const normal = [];
-  for (const event of uncached) {
-    const hl = (event.headline || '').toLowerCase();
-    const articles = event.articles || [];
-    const anyUrgent = HIGH_PRIORITY_KW.some(kw => hl.includes(kw)) ||
-      articles.some(a => HIGH_PRIORITY_KW.some(kw => ((a.headline || a.title || '').toLowerCase()).includes(kw)));
-    if (anyUrgent) urgent.push(event);
-    else normal.push(event);
-  }
+  if (needsSummary.length === 0) return;
 
-  // Reorder: urgent first, then normal
-  // Cap at 150 events — with batch size 15, that's 10 Claude API calls max
-  // Combined with ~35 RSS fetches = ~45 total subrequests (under 50 limit)
-  const ordered = [...urgent, ...normal].slice(0, 150);
-  if (urgent.length > 0) {
-    console.log(`[Cron] ${urgent.length} high-priority events will be summarized first`);
-  }
+  // Extract just the events in priority order
+  const ordered = needsSummary.map(n => n.event);
 
-  // Batch into groups of 10 to keep Claude prompts manageable
+  // Batch into groups of 10 for Claude API calls
   const BATCH_SIZE = 10;
   for (let i = 0; i < ordered.length; i += BATCH_SIZE) {
     const batch = ordered.slice(i, i + BATCH_SIZE);
@@ -1866,21 +1918,22 @@ Return ONLY the JSON array, no other text.`;
       // Apply summaries and cache in KV
       for (let j = 0; j < batch.length; j++) {
         if (summaries[j]) {
-          // Use AI-generated headline if provided
           if (summaries[j].headline) {
             batch[j].headline = summaries[j].headline;
           }
           batch[j].summary = summaries[j].summary || null;
 
-          // Cache individually in KV
           const key = hashEventTitles(batch[j]);
           try {
             await env.HEGEMON_CACHE.put('summary_' + key, JSON.stringify({
               summary: summaries[j].summary,
               headline: summaries[j].headline,
               ts: Date.now()
-            }), { expirationTtl: 86400 }); // 24h TTL
+            }), { expirationTtl: 86400 });
           } catch { /* best effort */ }
+
+          // Update schedule tracker
+          scheduleTracker[key] = { ts: Date.now(), tier: getEventTier(batch[j]) };
         }
       }
 
@@ -1890,6 +1943,17 @@ Return ONLY the JSON array, no other text.`;
       console.error('[Cron] Summary generation error:', err.message);
     }
   }
+
+  // Prune old entries from schedule tracker (older than 24h)
+  const pruned = {};
+  for (const [k, v] of Object.entries(scheduleTracker)) {
+    if (now - v.ts < 24 * 60 * 60 * 1000) pruned[k] = v;
+  }
+
+  // Save schedule tracker to KV
+  try {
+    await env.HEGEMON_CACHE.put('summary_schedule', JSON.stringify(pruned), { expirationTtl: 86400 });
+  } catch { /* best effort */ }
 
   const totalWithSummary = events.filter(e => e.summary).length;
   console.log(`[Cron] Summary generation complete: ${totalWithSummary}/${events.length} events have summaries`);
