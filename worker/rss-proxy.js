@@ -1406,7 +1406,7 @@ Return ONLY the JSON array, no other text.`;
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 2048,
+          max_tokens: 4096,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -1422,9 +1422,12 @@ Return ONLY the JSON array, no other text.`;
       let summaries;
       try {
         const jsonMatch = aiText.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+          console.error(`[Cron] No JSON array found in Claude response (length=${aiText.length}), first 200 chars: ${aiText.substring(0, 200)}`);
+        }
         summaries = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-      } catch {
-        console.error('[Cron] Failed to parse Claude response');
+      } catch (parseErr) {
+        console.error(`[Cron] Failed to parse Claude response: ${parseErr.message}, response length=${aiText.length}, first 300 chars: ${aiText.substring(0, 300)}`);
         summaries = [];
       }
 
@@ -1573,6 +1576,28 @@ export default {
         }));
         return new Response(
           JSON.stringify({ status: 'ok', lastUpdated: data.lastUpdated, minutesAgo, eventCount, summaryCount, briefingCount, topHeadlines }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /trigger-cron — manually trigger the cron handler
+    // ============================================================
+    if (url.pathname === '/trigger-cron' && request.method === 'GET') {
+      try {
+        await this.scheduled({}, env);
+        const raw = await env.HEGEMON_CACHE.get('latest_events');
+        const data = raw ? JSON.parse(raw) : {};
+        const eventCount = (data.events || []).length;
+        const summaryCount = (data.events || []).filter(e => e.summary).length;
+        return new Response(
+          JSON.stringify({ status: 'ok', eventCount, summaryCount, lastUpdated: data.lastUpdated }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (err) {
@@ -1849,7 +1874,7 @@ Return ONLY the JSON array, no other text.`;
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 2048,
+            max_tokens: 4096,
             messages: [{ role: 'user', content: prompt }]
           })
         });
