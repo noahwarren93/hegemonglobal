@@ -547,6 +547,23 @@ const IRRELEVANT_KEYWORDS = [
   'cancer haunts', 'neighbors of canada',
   'trooper shot', 'state police trooper', 'prank goes wrong',
   'toilet paper prank', 'campus scandal',
+  'killed by dogs', 'attack by dogs', 'attack by three dogs', 'dog attack',
+  'killed saving', 'young mother killed',
+  'advertising force of nature', 'force of nature',
+  'save fuel', 'ways to save', 'ways to cut', 'ways to reduce',
+  'ai fakes', 'ai disinformation', 'disinformation spread',
+  'how profits took', 'took over american',
+  'fails to meet trump', 'flying to mar-a-lago',
+  'turning point usa', 'college president resigns', 'racist text chat',
+  'free-market witness', 'jimmy lai',
+  'ripped for posing', 'grinning photo', 'posing for photo',
+  'liberal comic', 'we welcome everyone',
+  'cries islamophobia', 'zohran mamdani', 'mamdani',
+  'nearly destroyed fema', 'will her exit save',
+  'pathetic energy fragility', 'petrol warnings',
+  'covid response among', 'scars remain',
+  'nigel farage', 'farage fails',
+  'kristi noem', 'stephen a.', 'stephen a ',
 ];
 
 // ============================================================
@@ -678,6 +695,29 @@ const OPINION_PATTERNS = [
   // Saying the quiet part / opinion phrasing
   /\bsaying the quiet part\b/i,
   /\bthink tank helped\b/i,
+  // Listicles
+  /^\d+\s+(?:ways?|things?|reasons?|tips?|steps?)\s+to\b/i,
+  /^\d+\s+best\b/i,
+  // Meta/index pages — just date headers
+  /^headlines?\s+for\s+/i,
+  /^today'?s\s+headlines/i,
+  /^(?:morning|evening|daily)\s+(?:brief|digest|roundup|wrap)/i,
+  // Obituaries of non-political figures (dame, sir + non-geo context)
+  /^dame\s+\w+.*(?:force of nature|advertising|pioneer|legend|icon)/i,
+  // Strong editorial opinion language in titles
+  /\bthis government'?s blundering\b/i,
+  /\bpathetic\b.*\b(?:energy|fragility|response|failure)\b/i,
+  /\bcries\s+(?:islamophobia|racism|sexism|antisemitism)\b/i,
+  /\bripped for\b/i,
+  /\bwill (?:her|his|their) exit save\b/i,
+  // Culture war commentary about specific media personalities
+  /\bliberal comic\b/i,
+  /\bconservative comic\b/i,
+  // Podcast/show with pipe + date at end
+  /\|\s*\d{1,2}[\.\-\/]\d{1,2}[\.\-\/]\d{2,4}/,
+  /\|\s*(?:ep|episode)\b/i,
+  // "How X took over Y" opinion format
+  /\bhow\s+\w+\s+took\s+over\b/i,
 ];
 
 function scoreGeopoliticalRelevance(text) {
@@ -1538,11 +1578,23 @@ async function fetchSingleFeed(feedUrl, sourceName) {
 }
 
 async function fetchAllFeeds() {
-  console.log(`[Cron] Fetching ${RSS_FEEDS.length} RSS feeds...`);
+  // Cloudflare Workers have a subrequest limit (~50 free, ~1000 paid).
+  // Reserve subrequests for Claude API + KV writes (~15 needed).
+  const MAX_FEEDS_PER_RUN = 35;
 
-  // Fetch all feeds in parallel
+  // First 25 feeds are wire services + major outlets — always fetch
+  const priorityFeeds = RSS_FEEDS.slice(0, 25);
+  const rotatingFeeds = RSS_FEEDS.slice(25);
+
+  // Rotate through remaining feeds using time-based window
+  const rotationIndex = Math.floor(Date.now() / (30 * 60 * 1000)) % Math.ceil(rotatingFeeds.length / 10);
+  const rotatingBatch = rotatingFeeds.slice(rotationIndex * 10, rotationIndex * 10 + 10);
+
+  const feedsToFetch = [...priorityFeeds, ...rotatingBatch].slice(0, MAX_FEEDS_PER_RUN);
+  console.log(`[Cron] Fetching ${feedsToFetch.length}/${RSS_FEEDS.length} RSS feeds (rotation ${rotationIndex})...`);
+
   const results = await Promise.allSettled(
-    RSS_FEEDS.map(feed => fetchSingleFeed(feed.url, feed.source))
+    feedsToFetch.map(feed => fetchSingleFeed(feed.url, feed.source))
   );
 
   const allArticles = [];
@@ -1554,7 +1606,7 @@ async function fetchAllFeeds() {
     }
   }
 
-  console.log(`[Cron] RSS: ${okCount}/${RSS_FEEDS.length} feeds OK, ${allArticles.length} articles`);
+  console.log(`[Cron] RSS: ${okCount}/${feedsToFetch.length} feeds OK, ${allArticles.length} articles`);
   return allArticles;
 }
 
@@ -1685,6 +1737,7 @@ async function generateSummaries(events, env) {
         const data = JSON.parse(cached);
         if (Date.now() - data.ts < 24 * 60 * 60 * 1000) { // 24h TTL
           event.summary = data.summary;
+          if (data.headline) event.headline = data.headline;
           continue;
         }
       }
@@ -1712,8 +1765,10 @@ async function generateSummaries(events, env) {
     else normal.push(event);
   }
 
-  // Reorder: urgent first, then normal — cap at 100 to control API costs
-  const ordered = [...urgent, ...normal].slice(0, 100);
+  // Reorder: urgent first, then normal
+  // Cap at 150 events — with batch size 15, that's 10 Claude API calls max
+  // Combined with ~35 RSS fetches = ~45 total subrequests (under 50 limit)
+  const ordered = [...urgent, ...normal].slice(0, 150);
   if (urgent.length > 0) {
     console.log(`[Cron] ${urgent.length} high-priority events will be summarized first`);
   }
@@ -1782,13 +1837,14 @@ Return ONLY the JSON array, no other text.`;
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4096,
+          max_tokens: 6000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
 
       if (!response.ok) {
-        console.error(`[Cron] Claude API error: ${response.status}`);
+        const errBody = await response.text().catch(() => '');
+        console.error(`[Cron] Claude API error: ${response.status} - ${errBody.substring(0, 200)}`);
         continue;
       }
 
@@ -1834,6 +1890,9 @@ Return ONLY the JSON array, no other text.`;
       console.error('[Cron] Summary generation error:', err.message);
     }
   }
+
+  const totalWithSummary = events.filter(e => e.summary).length;
+  console.log(`[Cron] Summary generation complete: ${totalWithSummary}/${events.length} events have summaries`);
 }
 
 // ============================================================
