@@ -1359,7 +1359,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 // ============================================================
 
 const TIMELINE_AI_LS_KEY = 'hegemon_timeline_ai';
-const TIMELINE_AI_TTL = 2 * 60 * 60 * 1000; // 2 hours
+const TIMELINE_AI_TTL = 3 * 60 * 60 * 1000; // 3 hours
 
 export const AI_TIMELINE_DATA = { iran: null, ukraine: null, sudan: null, pakafg: null };
 

@@ -1323,10 +1323,29 @@ async function generateSummaries(events, env) {
 
   if (uncached.length === 0) return;
 
+  // Prioritize high-priority events — summarize them individually first
+  const HIGH_PRIORITY_KW = ['war', 'killed', 'strike', 'attack', 'missile', 'bomb', 'invasion', 'ceasefire', 'earthquake', 'tsunami', 'coup'];
+  const urgent = [];
+  const normal = [];
+  for (const event of uncached) {
+    const hl = (event.headline || '').toLowerCase();
+    const articles = event.articles || [];
+    const anyUrgent = HIGH_PRIORITY_KW.some(kw => hl.includes(kw)) ||
+      articles.some(a => HIGH_PRIORITY_KW.some(kw => ((a.headline || a.title || '').toLowerCase()).includes(kw)));
+    if (anyUrgent) urgent.push(event);
+    else normal.push(event);
+  }
+
+  // Reorder: urgent first, then normal
+  const ordered = [...urgent, ...normal];
+  if (urgent.length > 0) {
+    console.log(`[Cron] ${urgent.length} high-priority events will be summarized first`);
+  }
+
   // Batch into groups of 10 to keep Claude prompts manageable
   const BATCH_SIZE = 10;
-  for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
-    const batch = uncached.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < ordered.length; i += BATCH_SIZE) {
+    const batch = ordered.slice(i, i + BATCH_SIZE);
 
     const eventDescriptions = batch.map((event, idx) => {
       const articles = event.articles || [];
@@ -1387,7 +1406,7 @@ Return ONLY the JSON array, no other text.`;
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 8192,
+          max_tokens: 2048,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -1574,7 +1593,7 @@ export default {
         const cached = await env.HEGEMON_CACHE.get(cacheKey);
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed.lastUpdated && Date.now() - parsed.lastUpdated < 7200000) {
+          if (parsed.lastUpdated && Date.now() - parsed.lastUpdated < 10800000) {
             return new Response(JSON.stringify({ ...parsed, cached: true }), {
               status: 200,
               headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' }
@@ -1605,6 +1624,11 @@ export default {
         // Filter briefing articles per conflict and call Claude
         const result = { iran: null, ukraine: null, sudan: null, pakafg: null, lastUpdated: Date.now(), cached: false };
 
+        // Parse previous cache to reuse unchanged conflict data
+        const prevCache = cached ? JSON.parse(cached) : null;
+        const prevHashes = prevCache?._articleHashes || {};
+        const newHashes = {};
+
         for (const [key, conflict] of Object.entries(TIMELINE_CONFLICTS)) {
           const matching = briefing.filter(article => {
             const hl = (article.headline || article.title || '').toLowerCase();
@@ -1614,8 +1638,19 @@ export default {
             return hasCountry && hasAction;
           });
 
+          // Hash current articles for this conflict to detect changes
+          const articleFingerprint = matching.map(a => (a.headline || a.title || '').toLowerCase().trim()).sort().join('|');
+          newHashes[key] = articleFingerprint;
+
           if (matching.length === 0) {
             result[key] = { timeline_entries: [], stats: {} };
+            continue;
+          }
+
+          // Skip Claude call if articles haven't changed since last cache
+          if (prevCache && prevHashes[key] === articleFingerprint && prevCache[key]?.timeline_entries?.length > 0) {
+            result[key] = prevCache[key];
+            console.log(`[Timeline] Skipping ${key} — no new articles since last update`);
             continue;
           }
 
@@ -1685,8 +1720,11 @@ Return ONLY valid JSON in this format:
           }
         }
 
-        // Cache in KV with 2h TTL
-        await env.HEGEMON_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 7200 });
+        // Store article hashes for skip-empty-conflicts on next call
+        result._articleHashes = newHashes;
+
+        // Cache in KV with 3h TTL
+        await env.HEGEMON_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 10800 });
 
         return new Response(JSON.stringify(result), {
           status: 200,
@@ -1811,7 +1849,7 @@ Return ONLY the JSON array, no other text.`;
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 8192,
+            max_tokens: 2048,
             messages: [{ role: 'user', content: prompt }]
           })
         });
@@ -1986,7 +2024,7 @@ Return ONLY the JSON array, no other text.`;
   },
 
   // ============================================================
-  // Cron Handler — runs every 5 minutes
+  // Cron Handler — runs every 30 minutes
   // Fetches RSS feeds, clusters articles, generates AI summaries,
   // stores everything in KV for instant client access via GET /events
   // ============================================================

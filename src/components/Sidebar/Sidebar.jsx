@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAILY_BRIEFING, DAILY_EVENTS, lastNewsUpdate, COUNTRY_DEMONYMS } from '../../data/countries';
-import { SAFETY_RATING_MAP, REVERSE_CITY_INDEX, TRAVEL_INFO } from '../../data/travelData';
+import { REVERSE_CITY_INDEX, TRAVEL_INFO, getTravelSafety, REGIONAL_THREATS, CITY_RISKS, LEVEL_META, POPULAR_DESTINATIONS } from '../../data/travelData';
 import { RISK_COLORS, timeAgo } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
 import { onEventsUpdated, AI_TIMELINE_DATA } from '../../services/apiService';
@@ -496,6 +496,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // Travel tab state
   const [travelSearch, setTravelSearch] = useState('');
   const [travelCountry, setTravelCountry] = useState(null);
+  const [travelCity, setTravelCity] = useState(null);
   const [travelStartDate, setTravelStartDate] = useState('');
   const [travelEndDate, setTravelEndDate] = useState('');
   const [travelSuggestions, setTravelSuggestions] = useState([]);
@@ -1161,18 +1162,38 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const q = query.toLowerCase().trim();
     const matches = new Map();
 
-    // Check reverse city index first (cities, demonyms, leaders)
-    for (const [term, country] of Object.entries(REVERSE_CITY_INDEX)) {
-      if (term.includes(q) && COUNTRIES[country]) {
-        matches.set(country, (matches.get(country) || 0) + (term === q ? 10 : 1));
+    // Search CITY_RISKS for city matches (higher priority)
+    for (const entry of CITY_RISKS) {
+      const cityLower = entry.city.toLowerCase();
+      if (cityLower.includes(q) && COUNTRIES[entry.country]) {
+        const score = cityLower === q ? 12 : (cityLower.startsWith(q) ? 8 : 2);
+        const existing = matches.get(entry.country);
+        if (!existing || score > existing.score) {
+          matches.set(entry.country, { score, matchedCity: entry.city, cityRisk: entry.risk });
+        }
       }
     }
 
-    // Sort by relevance score, limit to 8
+    // Search reverse index for country/demonym matches
+    for (const [term, country] of Object.entries(REVERSE_CITY_INDEX)) {
+      if (term.includes(q) && COUNTRIES[country]) {
+        const score = term === q ? 10 : (term.startsWith(q) ? 5 : 1);
+        const existing = matches.get(country);
+        if (!existing || score > existing.score) {
+          matches.set(country, { score, matchedCity: null, cityRisk: null, matchedTerm: term !== country.toLowerCase() ? term : null });
+        }
+      }
+    }
+
     return [...matches.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1].score - a[1].score)
       .slice(0, 8)
-      .map(([country]) => country);
+      .map(([country, data]) => ({
+        country,
+        matchedCity: data.matchedCity || null,
+        cityRisk: data.cityRisk || null,
+        matchedTerm: data.matchedCity || (data.matchedTerm ? data.matchedTerm.charAt(0).toUpperCase() + data.matchedTerm.slice(1) : null),
+      }));
   }, []);
 
   const getCountryAlerts = useCallback((countryName) => {
@@ -1182,7 +1203,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const alerts = [];
 
     for (const article of DAILY_BRIEFING) {
-      if (alerts.length >= 5) break;
+      if (alerts.length >= 8) break;
       const hl = (article.headline || article.title || '').toLowerCase();
       if (allTerms.some(t => hl.includes(t))) {
         alerts.push({
@@ -1195,11 +1216,22 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return alerts;
   }, []);
 
+  // Count threat-related articles for a city/country to detect risk spikes
+  const getArticleCount = useCallback((searchTerm) => {
+    if (!searchTerm) return 0;
+    const term = searchTerm.toLowerCase();
+    let count = 0;
+    for (const article of DAILY_BRIEFING) {
+      const hl = (article.headline || article.title || '').toLowerCase();
+      if (hl.includes(term)) count++;
+    }
+    return count;
+  }, []);
+
   const getTravelElections = useCallback((countryName, startDate, endDate) => {
     if (!countryName || !startDate || !endDate) return [];
     return ELECTIONS.filter(e => {
       if (e.country !== countryName) return false;
-      // Rough date matching — election dates can be "Mar 2026" format
       const elDate = e.date;
       const monthMap = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
       const parts = elDate.split(' ');
@@ -1213,6 +1245,74 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     });
   }, []);
 
+  // Seasonal risk zones — returns array of risk alerts based on country+dates
+  const getSeasonalRisks = useCallback((countryName, startDate, endDate) => {
+    if (!countryName || !startDate) return [];
+    const start = new Date(startDate + 'T12:00:00');
+    const end = endDate ? new Date(endDate + 'T12:00:00') : start;
+    const startMonth = start.getMonth(); // 0-11
+    const endMonth = end.getMonth();
+    const months = [];
+    for (let m = startMonth; m <= endMonth + (end.getFullYear() > start.getFullYear() ? 12 : 0); m++) {
+      months.push(m % 12);
+    }
+    const countryRegion = COUNTRIES[countryName]?.region;
+    const risks = [];
+
+    // Hurricane season (Jun-Nov) — Caribbean, Central America, Gulf
+    const hurricaneCountries = ['Haiti', 'Cuba', 'Jamaica', 'Dominican Republic', 'Puerto Rico', 'Bahamas', 'Trinidad and Tobago', 'Honduras', 'Guatemala', 'Nicaragua', 'Belize', 'Mexico', 'United States'];
+    if (hurricaneCountries.includes(countryName) || countryRegion === 'Caribbean') {
+      if (months.some(m => m >= 5 && m <= 10)) {
+        risks.push({ type: 'hurricane', icon: '\u{1F300}', label: 'Hurricane Season', detail: 'Your travel dates fall within Atlantic hurricane season (Jun\u2013Nov). Monitor weather forecasts, have evacuation plans ready, and consider travel insurance that covers weather disruptions.' });
+      }
+    }
+
+    // Monsoon season (Jun-Sep) — South Asia
+    const monsoonCountries = ['India', 'Bangladesh', 'Nepal', 'Sri Lanka', 'Myanmar', 'Pakistan'];
+    if (monsoonCountries.includes(countryName)) {
+      if (months.some(m => m >= 5 && m <= 8)) {
+        risks.push({ type: 'monsoon', icon: '\u{1F327}', label: 'Monsoon Season', detail: 'Heavy monsoon rains expected. Flooding, landslides, and transport disruptions are common. Roads may be impassable, flights delayed. Pack waterproof gear and build flexibility into your itinerary.' });
+      }
+    }
+
+    // Wildfire season (Jun-Oct) — Western US, Mediterranean, Australia
+    const wildfireCountries = ['Greece', 'Turkey', 'Spain', 'Portugal', 'Italy', 'Croatia', 'United States', 'Canada', 'Australia'];
+    if (wildfireCountries.includes(countryName)) {
+      const wildfireMonths = countryName === 'Australia' ? [10, 11, 0, 1, 2] : [5, 6, 7, 8, 9];
+      if (months.some(m => wildfireMonths.includes(m))) {
+        risks.push({ type: 'wildfire', icon: '\u{1F525}', label: 'Wildfire Season', detail: 'Elevated wildfire risk during your travel dates. Air quality may deteriorate significantly. Check local fire advisories and have alternative routes planned. Avoid hiking in restricted areas.' });
+      }
+    }
+
+    // Extreme heat (Jun-Aug) — Middle East, South Asia
+    const heatCountries = ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Iraq', 'Iran', 'Jordan', 'Egypt', 'India', 'Pakistan'];
+    if (heatCountries.includes(countryName)) {
+      if (months.some(m => m >= 5 && m <= 7)) {
+        risks.push({ type: 'heat', icon: '\u{1F321}', label: 'Extreme Heat Warning', detail: 'Temperatures regularly exceed 45\u00B0C (113\u00B0F) during this period. Limit outdoor exposure, stay hydrated, and avoid midday activities. Heat stroke is a serious risk for travelers.' });
+      }
+    }
+
+    // Cyclone season (Nov-Apr) — South Pacific, Indian Ocean
+    const cycloneCountries = ['Fiji', 'Vanuatu', 'Tonga', 'Samoa', 'Madagascar', 'Mozambique', 'Mauritius', 'Philippines', 'Vietnam'];
+    if (cycloneCountries.includes(countryName)) {
+      if (months.some(m => m >= 10 || m <= 3)) {
+        risks.push({ type: 'cyclone', icon: '\u{1F32A}', label: 'Cyclone Season', detail: 'Your dates overlap with cyclone season. Tropical storms can develop rapidly with limited warning. Ensure your accommodation is storm-rated and flights may be cancelled on short notice.' });
+      }
+    }
+
+    // Ramadan — 2026: Feb 18 - Mar 19 (approximate)
+    const muslimCountries = ['Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Iran', 'Iraq', 'Jordan', 'Egypt', 'Turkey', 'Morocco', 'Tunisia', 'Algeria', 'Libya', 'Indonesia', 'Malaysia', 'Pakistan', 'Bangladesh', 'Afghanistan', 'Yemen', 'Syria', 'Lebanon', 'Palestine', 'Sudan', 'Somalia', 'Senegal', 'Mali', 'Niger'];
+    if (muslimCountries.includes(countryName)) {
+      const ramadanStart = new Date('2026-02-18');
+      const ramadanEnd = new Date('2026-03-19');
+      if (start <= ramadanEnd && end >= ramadanStart) {
+        risks.push({ type: 'ramadan', icon: '\u{1F319}', label: 'Ramadan in Effect', detail: 'Ramadan falls during your travel dates. Many restaurants closed during daylight hours, shorter business hours, and limited alcohol availability. Dress modestly and avoid eating/drinking in public during fasting hours as a sign of respect.' });
+      }
+    }
+
+    return risks;
+  }, []);
+
   const renderTravelTab = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const maxDate = new Date();
@@ -1220,12 +1320,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const maxDateStr = maxDate.toISOString().split('T')[0];
 
     const countryData = travelCountry ? COUNTRIES[travelCountry] : null;
-    const safetyInfo = countryData ? (SAFETY_RATING_MAP[countryData.risk] || SAFETY_RATING_MAP.clear) : null;
+    const safetyInfo = travelCountry ? getTravelSafety(travelCountry) : null;
     const travelInfo = travelCountry ? TRAVEL_INFO[travelCountry] : null;
-
-    // Get month name from selected start date for weather
-    const travelMonth = travelStartDate ? new Date(travelStartDate + 'T12:00:00').toLocaleString('en-US', { month: 'short' }) : null;
-    const weatherData = travelInfo?.weather?.seasons?.[travelMonth] || null;
+    const regionalThreats = travelCountry ? REGIONAL_THREATS[travelCountry] : null;
 
     // Get alerts for selected country
     const alerts = travelCountry ? getCountryAlerts(travelCountry) : [];
@@ -1233,34 +1330,284 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     // Get elections during trip
     const tripElections = getTravelElections(travelCountry, travelStartDate, travelEndDate);
 
-    // Default view: top alerts by risk
-    const getTopAlertCountries = () => {
-      const countryAlerts = new Map();
-      for (const [name, data] of Object.entries(COUNTRIES)) {
-        if (!data.risk) continue;
-        const rating = SAFETY_RATING_MAP[data.risk];
-        if (!rating || rating.level < 3) continue; // Only severe+ countries
-        const terms = COUNTRY_DEMONYMS[name] || [];
-        const allTerms = [name.toLowerCase(), ...terms.map(t => t.toLowerCase())];
-        let articleCount = 0;
-        for (const article of DAILY_BRIEFING) {
-          const hl = (article.headline || article.title || '').toLowerCase();
-          if (allTerms.some(t => hl.includes(t))) articleCount++;
-          if (articleCount >= 3) break; // cap check at 3
-        }
-        if (articleCount > 0) {
-          countryAlerts.set(name, { risk: data.risk, level: rating.level, articles: articleCount, flag: data.flag });
-        }
-      }
-      return [...countryAlerts.entries()]
-        .sort((a, b) => b[1].level - a[1].level || b[1].articles - a[1].articles)
-        .slice(0, 10);
+    // Get seasonal risks based on dates
+    const seasonalRisks = getSeasonalRisks(travelCountry, travelStartDate, travelEndDate);
+
+    // Format date range for display
+    const formatDateRange = () => {
+      if (!travelStartDate) return null;
+      const s = new Date(travelStartDate + 'T12:00:00');
+      const sStr = s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!travelEndDate) return sStr;
+      const e = new Date(travelEndDate + 'T12:00:00');
+      const eStr = e.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `${sStr}\u2013${eStr}`;
+    };
+    const dateRange = formatDateRange();
+
+    // Region map for forecast matching
+    const regionMap = {
+      'Middle East': 'Middle East', 'Eastern Europe': 'Eastern Europe',
+      'Southeast Asia': 'East Asia', 'East Asia': 'East Asia',
+      'Central Asia': 'East Asia', 'Africa': 'Sahel Africa',
+      'Caribbean': 'Global Economy', 'South America': 'Global Economy',
+      'South Asia': 'East Asia', 'Western Europe': 'Global Economy',
+      'North America': 'Global Economy', 'Oceania': 'Global Economy',
     };
 
-    const severityColor = (sev) => {
-      if (sev === 'high') return { bg: '#7f1d1d', text: '#fca5a5' };
-      if (sev === 'medium') return { bg: '#78350f', text: '#fcd34d' };
+    // Build forecast text — truncates at sentence boundary, references dates
+    const buildForecastText = (forecastRaw) => {
+      if (!forecastRaw) return null;
+      // Take first 2 sentences
+      const sentences = forecastRaw.match(/[^.!?]+[.!?]+/g) || [forecastRaw];
+      const text = sentences.slice(0, 2).join(' ').trim();
+      return text;
+    };
+
+    // Default view: dynamic hotspots — reorder based on DAILY_BRIEFING activity
+    const getHotspotSections = () => {
+      const danger = [];
+      const seen = new Set();
+      for (const [name, threats] of Object.entries(REGIONAL_THREATS)) {
+        const data = COUNTRIES[name];
+        if (!data) continue;
+        for (const t of threats) {
+          if (t.level < 4) continue;
+          const key = `${name}:${t.region}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const meta = LEVEL_META[t.level] || LEVEL_META[4];
+          // Dynamic: count recent articles mentioning this region
+          const articleCount = getArticleCount(t.region.split(' ')[0]);
+          danger.push({ country: name, region: t.region, threat: t.threat, level: t.level, color: meta.color, flag: data.flag, articleCount });
+        }
+      }
+      // Sort by article activity first, then level
+      danger.sort((a, b) => b.articleCount - a.articleCount || b.level - a.level);
+
+      // Popular Destinations — with dynamic risk bumps from DAILY_BRIEFING
+      const popular = POPULAR_DESTINATIONS.map((d) => {
+        const data = COUNTRIES[d.country];
+        const articleCount = getArticleCount(d.city);
+        // Bump risk if 3+ articles mention this city (temporary elevated risk)
+        const dynamicLevel = articleCount >= 5 ? Math.min(d.level + 2, 5) : articleCount >= 3 ? Math.min(d.level + 1, 5) : d.level;
+        const meta = LEVEL_META[dynamicLevel] || LEVEL_META[1];
+        return {
+          country: d.country, region: d.city, threat: d.risk,
+          level: dynamicLevel, baseLevel: d.level, color: meta.color,
+          flag: data ? data.flag : '', articleCount,
+          elevated: dynamicLevel > d.level,
+        };
+      });
+      // Elevated destinations first, then by level desc, then alpha
+      popular.sort((a, b) => {
+        if (a.elevated !== b.elevated) return a.elevated ? -1 : 1;
+        return b.level - a.level || a.region.localeCompare(b.region);
+      });
+
+      return { danger, popular };
+    };
+
+    const levelColor = (lvl) => {
+      if (lvl >= 5) return { bg: '#450a0a', text: '#fca5a5' };
+      if (lvl === 4) return { bg: '#451a03', text: '#fbbf24' };
+      if (lvl === 3) return { bg: '#78350f', text: '#fdba74' };
+      if (lvl === 2) return { bg: '#713f12', text: '#fcd34d' };
       return { bg: '#14532d', text: '#86efac' };
+    };
+
+    // Shared detail renderer for both city and country views
+    const renderDetailView = (displayName, displayLevel, displayMeta, isCity) => {
+      const lc = levelColor(displayLevel);
+      const cr = isCity ? CITY_RISKS.find(c => c.city === travelCity && c.country === travelCountry) : null;
+      const rt = isCity ? regionalThreats?.find(r => r.region === travelCity || travelCity.includes(r.region) || r.region.includes(travelCity)) : null;
+      const forecastRegion = regionMap[countryData.region] || 'Global Economy';
+      const regionForecast = FORECASTS.find(f => f.region === forecastRegion);
+      const forecastText = buildForecastText(regionForecast?.forecast);
+
+      // Dynamic risk bump from article activity
+      const articleCount = getArticleCount(displayName);
+      const isElevated = articleCount >= 3 && displayLevel < 5;
+
+      // Deduplicate threat text
+      const threatTexts = [];
+      if (cr?.risk) threatTexts.push(cr.risk);
+      if (rt?.threat && rt.threat !== cr?.risk) threatTexts.push(rt.threat);
+
+      return (
+        <>
+          {/* Header card */}
+          <div style={{
+            margin: '0 8px 10px', padding: '10px 12px', borderRadius: '8px',
+            background: `linear-gradient(135deg, ${displayMeta.color}15 0%, #111827 100%)`,
+            border: `1px solid ${displayMeta.color}40`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <CountryFlag flag={countryData.flag} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#e5e7eb' }}>{displayName}</div>
+                <div style={{ fontSize: '8px', color: '#6b7280' }}>{isCity ? `${travelCountry} \u00B7 ${countryData.region}` : countryData.region}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: displayMeta.color }}>{displayLevel}</div>
+                <div style={{ fontSize: '7px', color: displayMeta.color, fontWeight: 600 }}>/ 5</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{
+                fontSize: '9px', fontWeight: 700, color: displayMeta.color, flex: 1,
+                padding: '4px 8px', background: `${displayMeta.color}20`,
+                borderRadius: '4px', textAlign: 'center', letterSpacing: '0.5px',
+              }}>
+                {displayMeta.label.toUpperCase()}
+              </div>
+              {isElevated && (
+                <div style={{
+                  fontSize: '7px', fontWeight: 700, color: '#fbbf24',
+                  padding: '4px 6px', background: 'rgba(251,191,36,0.15)',
+                  borderRadius: '4px', whiteSpace: 'nowrap', animation: 'pulse 2s infinite',
+                }}>
+                  ELEVATED
+                </div>
+              )}
+            </div>
+            <div style={{ height: '3px', borderRadius: '2px', marginTop: '6px', background: '#1f2937', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${displayLevel * 20}%`, background: displayMeta.color, borderRadius: '2px' }} />
+            </div>
+          </div>
+
+          {/* Election warning — prominent banner if dates overlap */}
+          {tripElections.length > 0 && (
+            <div style={{
+              margin: '0 8px 10px', padding: '10px 12px', borderRadius: '6px',
+              background: 'linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 100%)',
+              border: '1px solid rgba(251,191,36,0.3)', borderLeft: '3px solid #fbbf24',
+            }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#fbbf24', letterSpacing: '0.5px', marginBottom: '4px' }}>ELECTION DURING YOUR TRIP</div>
+              {tripElections.map((el, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb' }}>{el.type} — {el.date}</div>
+                  <div style={{ fontSize: '8px', color: '#fcd34d', marginTop: '4px', lineHeight: 1.5 }}>
+                    Expect increased security presence, potential protests and demonstrations, possible road closures, and intermittent internet disruptions. Avoid political gatherings and have backup plans for transport.
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Seasonal risk alerts — date-dependent */}
+          {seasonalRisks.length > 0 && (
+            <div style={{ margin: '0 8px 10px' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '6px' }}>SEASONAL ALERTS</div>
+              {seasonalRisks.map((sr, i) => (
+                <div key={i} style={{
+                  padding: '8px 10px', marginBottom: '4px', borderRadius: '6px',
+                  background: sr.type === 'ramadan' ? 'rgba(139,92,246,0.08)' : 'rgba(245,158,11,0.08)',
+                  borderLeft: `3px solid ${sr.type === 'ramadan' ? '#8b5cf6' : '#f59e0b'}`,
+                }}>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: sr.type === 'ramadan' ? '#c4b5fd' : '#fcd34d', marginBottom: '3px' }}>
+                    {sr.icon} {sr.label.toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.5 }}>{sr.detail}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Threat assessment — city view only, with deduplication */}
+          {isCity && threatTexts.length > 0 && (
+            <div style={{ margin: '0 8px 10px', padding: '10px 12px', borderRadius: '6px', background: lc.bg, borderLeft: `3px solid ${lc.text}` }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: lc.text, letterSpacing: '0.5px', marginBottom: '6px' }}>
+                {displayLevel <= 2 ? 'TRAVEL NOTES' : 'THREAT ASSESSMENT'}
+              </div>
+              {threatTexts.map((text, i) => (
+                <div key={i} style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.6, marginBottom: i < threatTexts.length - 1 ? '6px' : 0 }}>{text}</div>
+              ))}
+              {displayLevel >= 4 && (
+                <div style={{ fontSize: '8px', color: '#fca5a5', marginTop: '6px', padding: '4px 6px', background: 'rgba(127,29,29,0.3)', borderRadius: '3px', lineHeight: 1.5 }}>
+                  Consular assistance may be severely limited. Consider postponing non-essential travel. Emergency evacuation capacity is constrained.
+                </div>
+              )}
+              {displayLevel === 3 && (
+                <div style={{ fontSize: '8px', color: '#fdba74', marginTop: '6px', padding: '4px 6px', background: 'rgba(120,53,15,0.3)', borderRadius: '3px', lineHeight: 1.5 }}>
+                  Exercise heightened situational awareness. Avoid demonstrations and unofficial transport. Register with your embassy before arrival.
+                </div>
+              )}
+              {displayLevel <= 2 && (
+                <div style={{ fontSize: '8px', color: '#86efac', marginTop: '6px', padding: '4px 6px', background: 'rgba(20,83,45,0.3)', borderRadius: '3px', lineHeight: 1.5 }}>
+                  {displayLevel === 1
+                    ? 'Generally very safe for tourists. Standard travel precautions apply \u2014 keep valuables secure and stay aware of your surroundings.'
+                    : 'Safe with normal precautions. Be aware of petty crime in crowded tourist areas. Use registered taxis and keep copies of your documents.'}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* WHAT'S EXPECTED — date-aware intelligence forecast */}
+          {regionForecast && (
+            <div style={{ margin: '0 8px 10px', padding: '10px 12px', borderRadius: '6px', background: '#0a0a0f', borderLeft: '3px solid #f97316' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#f97316', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                WHAT&apos;S EXPECTED {dateRange ? `\u2014 ${dateRange}` : ''}
+              </div>
+              {dateRange && (
+                <div style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '4px', fontStyle: 'italic' }}>
+                  {displayLevel <= 2
+                    ? `During your ${dateRange} visit, conditions are expected to remain stable. ${seasonalRisks.length > 0 ? 'See seasonal alerts above for date-specific considerations.' : 'No major disruptions anticipated.'}`
+                    : displayLevel === 3
+                      ? `During your ${dateRange} travel, exercise increased caution. Conditions may shift quickly. ${tripElections.length > 0 ? 'Political activity around elections could cause disruptions.' : 'Monitor local news daily.'}`
+                      : `Your ${dateRange} travel dates fall within an active risk period. Reassess plans regularly. ${tripElections.length > 0 ? 'Election-related unrest may compound existing risks.' : 'Conditions are volatile and may deteriorate.'}`
+                  }
+                </div>
+              )}
+              <div style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.6 }}>
+                {forecastText}
+              </div>
+              {regionForecast.indicators && (
+                <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                  {regionForecast.indicators.map((ind, i) => (
+                    <span key={i} style={{
+                      fontSize: '7px', padding: '2px 5px', borderRadius: '3px', fontWeight: 600,
+                      background: ind.dir === 'up' ? '#7f1d1d33' : ind.dir === 'down' ? '#14532d33' : '#1e3a5f33',
+                      color: ind.dir === 'up' ? '#fca5a5' : ind.dir === 'down' ? '#86efac' : '#93c5fd',
+                    }}>
+                      {ind.dir === 'up' ? '\u2191' : ind.dir === 'down' ? '\u2193' : '\u2194'} {ind.text}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Live alerts — filtered for city if applicable */}
+          {(() => {
+            const displayAlerts = isCity
+              ? alerts.filter(a => a.headline && a.headline.toLowerCase().includes(travelCity.toLowerCase()))
+              : alerts;
+            return displayAlerts.length > 0 ? (
+              <div style={{ margin: '0 8px 10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#ef4444', letterSpacing: '0.5px' }}>
+                    LIVE ALERTS{isCity ? ` \u2014 ${travelCity.toUpperCase()}` : ''}
+                  </div>
+                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }} />
+                </div>
+                {displayAlerts.slice(0, 5).map((a, i) => (
+                  <div key={i} style={{
+                    padding: '6px 8px', marginBottom: '4px', borderRadius: '4px',
+                    background: '#111827', borderLeft: '2px solid #ef4444', fontSize: '9px',
+                  }}>
+                    <div style={{ color: '#d1d5db', lineHeight: 1.4 }}>{a.headline}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+                      <span style={{ fontSize: '7px', color: '#6b7280' }}>{a.source}</span>
+                      {a.time && <span style={{ fontSize: '7px', color: '#6b7280' }}>{timeAgo(a.time)}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null;
+          })()}
+        </>
+      );
     };
 
     return (
@@ -1273,37 +1620,67 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
         {/* Search bar */}
         <div style={{ padding: '0 8px 8px', position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="Search country, city, or leader..."
-            value={travelSearch}
-            onChange={(e) => {
-              const val = e.target.value;
-              setTravelSearch(val);
-              setTravelSuggestions(resolveTravelSearch(val));
-            }}
-            style={{
-              width: '100%', padding: '7px 10px', fontSize: '10px',
-              background: '#111827', border: '1px solid #374151', borderRadius: '6px',
-              color: '#e5e7eb', outline: 'none',
-            }}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search country, region, or city..."
+              value={travelSearch}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTravelSearch(val);
+                if (!val) {
+                  setTravelCountry(null);
+                  setTravelCity(null);
+                  setTravelSuggestions([]);
+                } else {
+                  setTravelSuggestions(resolveTravelSearch(val));
+                }
+              }}
+              style={{
+                width: '100%', padding: '7px 28px 7px 10px', fontSize: '10px',
+                background: '#111827', border: '1px solid #374151', borderRadius: '6px',
+                color: '#e5e7eb', outline: 'none',
+              }}
+            />
+            {travelCountry && (
+              <button
+                onClick={() => {
+                  setTravelCountry(null);
+                  setTravelCity(null);
+                  setTravelSearch('');
+                  setTravelSuggestions([]);
+                }}
+                style={{
+                  position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)',
+                  background: '#4b5563', border: 'none', borderRadius: '50%',
+                  width: '20px', height: '20px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#e5e7eb', fontSize: '12px', fontWeight: 700, lineHeight: 1,
+                  padding: 0,
+                }}
+                title="Clear selection"
+              >
+                &times;
+              </button>
+            )}
+          </div>
           {/* Autocomplete dropdown */}
-          {travelSuggestions.length > 0 && travelSearch.length >= 2 && (
+          {travelSuggestions.length > 0 && travelSearch.length >= 2 && !travelCountry && (
             <div style={{
               position: 'absolute', top: '100%', left: '8px', right: '8px',
               background: '#1f2937', border: '1px solid #374151', borderRadius: '6px',
               zIndex: 20, maxHeight: '200px', overflowY: 'auto',
             }}>
-              {travelSuggestions.map(country => {
+              {travelSuggestions.map(({ country, matchedCity, cityRisk, matchedTerm }) => {
                 const cd = COUNTRIES[country];
-                const sr = cd ? SAFETY_RATING_MAP[cd.risk] : null;
+                const sr = getTravelSafety(country);
                 return (
                   <div
-                    key={country}
+                    key={matchedCity ? `${country}-${matchedCity}` : country}
                     onClick={() => {
                       setTravelCountry(country);
-                      setTravelSearch(country);
+                      setTravelCity(matchedCity || null);
+                      setTravelSearch(matchedCity ? `${matchedCity}, ${country}` : country);
                       setTravelSuggestions([]);
                     }}
                     style={{
@@ -1315,12 +1692,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                   >
                     <CountryFlag flag={cd?.flag} />
-                    <span style={{ flex: 1, color: '#e5e7eb' }}>{country}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: '#e5e7eb' }}>
+                        {matchedTerm ? <><span style={{ color: '#06b6d4' }}>{matchedTerm}</span>, {country}</> : country}
+                      </div>
+                      {cityRisk && <div style={{ fontSize: '8px', color: '#9ca3af', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cityRisk}</div>}
+                    </div>
                     {sr && (
                       <span style={{
                         fontSize: '7px', fontWeight: 700, color: sr.color,
                         background: 'rgba(0,0,0,0.3)', padding: '2px 5px',
-                        borderRadius: '3px',
+                        borderRadius: '3px', whiteSpace: 'nowrap',
                       }}>
                         LVL {sr.level}
                       </span>
@@ -1369,186 +1751,308 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         {/* Results or default view */}
         {travelCountry && countryData ? (
           <>
-            {/* Safety rating card */}
+            {/* Back button */}
             <div
-              onClick={() => handleCountryClick(travelCountry)}
+              onClick={() => { setTravelCountry(null); setTravelCity(null); setTravelSearch(''); }}
               style={{
-                margin: '0 8px 10px', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                background: `linear-gradient(135deg, ${safetyInfo.color}15 0%, #111827 100%)`,
-                border: `1px solid ${safetyInfo.color}40`,
+                margin: '0 8px 6px', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer',
+                background: '#1f2937', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                fontSize: '8px', color: '#9ca3af', fontWeight: 600,
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#e5e7eb'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <CountryFlag flag={countryData.flag} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#e5e7eb' }}>{travelCountry}</div>
-                  <div style={{ fontSize: '8px', color: '#6b7280' }}>{countryData.region}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: safetyInfo.color }}>{safetyInfo.level}</div>
-                  <div style={{ fontSize: '7px', color: safetyInfo.color, fontWeight: 600 }}>/ 5</div>
-                </div>
-              </div>
-              <div style={{
-                fontSize: '9px', fontWeight: 700, color: safetyInfo.color,
-                padding: '4px 8px', background: `${safetyInfo.color}20`,
-                borderRadius: '4px', textAlign: 'center', letterSpacing: '0.5px',
-              }}>
-                {safetyInfo.label.toUpperCase()}
-              </div>
-              {/* Color bar */}
-              <div style={{ height: '3px', borderRadius: '2px', marginTop: '6px', background: '#1f2937', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${safetyInfo.level * 20}%`, background: safetyInfo.color, borderRadius: '2px' }} />
-              </div>
+              \u2190 Back to alerts
             </div>
 
-            {/* Active alerts */}
-            {alerts.length > 0 && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#ef4444', letterSpacing: '0.5px', marginBottom: '6px' }}>ACTIVE ALERTS</div>
-                {alerts.map((a, i) => (
-                  <div key={i} style={{
-                    padding: '6px 8px', marginBottom: '4px', borderRadius: '4px',
-                    background: '#111827', borderLeft: '2px solid #ef4444', fontSize: '9px',
-                  }}>
-                    <div style={{ color: '#d1d5db', lineHeight: 1.4 }}>{a.headline}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-                      <span style={{ fontSize: '7px', color: '#6b7280' }}>{a.source}</span>
-                      {a.time && <span style={{ fontSize: '7px', color: '#6b7280' }}>{timeAgo(a.time)}</span>}
+            {/* === CITY/REGION VIEW === */}
+            {travelCity && (() => {
+              const rt = regionalThreats?.find(r => r.region === travelCity || travelCity.includes(r.region) || r.region.includes(travelCity));
+              const cityLevel = rt ? rt.level : safetyInfo.level;
+              const cityMeta = LEVEL_META[cityLevel] || LEVEL_META[1];
+
+              return (
+                <>
+                  {renderDetailView(travelCity, cityLevel, cityMeta, true)}
+
+                  {/* === COUNTRY SECTION — always visible === */}
+                  <div style={{ margin: '10px 8px 8px', borderTop: '1px solid #1f2937', paddingTop: '10px' }}>
+                    <div style={{ fontSize: '8px', fontWeight: 700, color: '#4b5563', letterSpacing: '1px', marginBottom: '8px' }}>COUNTRY OVERVIEW \u2014 {travelCountry.toUpperCase()}</div>
+                  </div>
+
+                  {/* Country safety card */}
+                  <div
+                    onClick={() => handleCountryClick(travelCountry)}
+                    style={{
+                      margin: '0 8px 10px', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                      background: `linear-gradient(135deg, ${safetyInfo.color}10 0%, #0d0d12 100%)`,
+                      border: `1px solid ${safetyInfo.color}30`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#e5e7eb' }}>{travelCountry}</div>
+                        <div style={{ fontSize: '8px', color: '#6b7280' }}>{countryData.region}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 800, color: safetyInfo.color }}>{safetyInfo.level}</span>
+                        <span style={{ fontSize: '7px', color: safetyInfo.color, fontWeight: 600 }}>/5</span>
+                      </div>
+                      <span style={{
+                        fontSize: '7px', fontWeight: 700, color: safetyInfo.color,
+                        padding: '2px 6px', background: `${safetyInfo.color}20`,
+                        borderRadius: '3px', whiteSpace: 'nowrap',
+                      }}>
+                        {safetyInfo.label.toUpperCase()}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
 
-            {/* Weather/Climate */}
-            {weatherData && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.5px', marginBottom: '6px' }}>WEATHER ({travelMonth.toUpperCase()})</div>
-                <div style={{ padding: '8px', background: '#111827', borderRadius: '6px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#e5e7eb' }}>{weatherData.temp}</div>
-                    <div style={{ fontSize: '7px', color: '#6b7280' }}>AVG TEMP</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#d1d5db' }}>{weatherData.condition}</div>
-                    {weatherData.risk && weatherData.risk !== 'Low' && (
-                      <div style={{ fontSize: '8px', color: '#f59e0b', marginTop: '2px' }}>Risk: {weatherData.risk}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Health advisories */}
-            {travelInfo?.health && travelInfo.health.length > 0 && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '6px' }}>HEALTH ADVISORIES</div>
-                {travelInfo.health.map((h, i) => {
-                  const sc = severityColor(h.severity);
-                  return (
-                    <div key={i} style={{
-                      padding: '5px 8px', marginBottom: '3px', borderRadius: '4px',
-                      background: sc.bg, fontSize: '9px', color: sc.text, lineHeight: 1.4,
-                    }}>
-                      {h.alert}
+                  {/* Entry requirements / visa */}
+                  {travelInfo?.visa && (
+                    <div style={{ margin: '0 8px 10px' }}>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#8b5cf6', letterSpacing: '0.5px', marginBottom: '6px' }}>ENTRY REQUIREMENTS</div>
+                      <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: '#c4b5fd', marginBottom: '3px' }}>{travelInfo.visa.type}</div>
+                        <div style={{ fontSize: '9px', color: '#9ca3af', lineHeight: 1.5 }}>{travelInfo.visa.details}</div>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
 
-            {/* Entry requirements */}
-            {travelInfo?.visa && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#8b5cf6', letterSpacing: '0.5px', marginBottom: '6px' }}>ENTRY REQUIREMENTS</div>
-                <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#c4b5fd', marginBottom: '3px' }}>{travelInfo.visa.type}</div>
-                  <div style={{ fontSize: '9px', color: '#9ca3af', lineHeight: 1.5 }}>{travelInfo.visa.details}</div>
-                </div>
-              </div>
-            )}
+                  {/* Health advisories */}
+                  {travelInfo?.health && travelInfo.health.length > 0 && (
+                    <div style={{ margin: '0 8px 10px' }}>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '6px' }}>HEALTH ADVISORIES</div>
+                      {travelInfo.health.map((h, i) => {
+                        const sc = levelColor(h.severity === 'high' ? 4 : h.severity === 'medium' ? 3 : 1);
+                        return (
+                          <div key={i} style={{
+                            padding: '5px 8px', marginBottom: '3px', borderRadius: '4px',
+                            background: sc.bg, fontSize: '9px', color: sc.text, lineHeight: 1.4,
+                          }}>
+                            {h.alert}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-            {/* Elections during trip */}
-            {tripElections.length > 0 && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#f97316', letterSpacing: '0.5px', marginBottom: '6px' }}>ELECTIONS DURING TRIP</div>
-                {tripElections.map((el, i) => (
-                  <div key={i} style={{
-                    padding: '8px', background: '#111827', borderRadius: '6px', borderLeft: '2px solid #f97316',
-                    marginBottom: '4px',
-                  }}>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb' }}>{el.type}</div>
-                    <div style={{ fontSize: '9px', color: '#f97316', marginTop: '2px' }}>{el.date}</div>
-                    {el.stakes && <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.4 }}>{el.stakes}</div>}
-                    <div style={{ fontSize: '8px', color: '#fcd34d', marginTop: '4px', fontStyle: 'italic' }}>
-                      Elections may cause protests, road closures, and heightened security.
+                  {/* Other regions in this country */}
+                  {regionalThreats && regionalThreats.length > 0 && (() => {
+                    const otherRegions = regionalThreats.filter(r => r.region !== travelCity && !travelCity.includes(r.region));
+                    return otherRegions.length > 0 ? (
+                      <div style={{ margin: '0 8px 10px' }}>
+                        <div style={{ fontSize: '9px', fontWeight: 700, color: '#f97316', letterSpacing: '0.5px', marginBottom: '6px' }}>OTHER REGIONS</div>
+                        {otherRegions.map((rItem, i) => {
+                          const sc = levelColor(rItem.level);
+                          return (
+                            <div key={i} style={{
+                              padding: '6px 8px', marginBottom: '3px', borderRadius: '4px',
+                              background: sc.bg, borderLeft: `2px solid ${sc.text}`, fontSize: '9px',
+                              display: 'flex', alignItems: 'flex-start', gap: '8px',
+                            }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '2px' }}>{rItem.region}</div>
+                                <div style={{ color: '#d1d5db', lineHeight: 1.4 }}>{rItem.threat}</div>
+                              </div>
+                              <span style={{
+                                fontSize: '7px', fontWeight: 700, color: sc.text,
+                                background: 'rgba(0,0,0,0.3)', padding: '2px 5px',
+                                borderRadius: '3px', whiteSpace: 'nowrap', flexShrink: 0,
+                              }}>
+                                LVL {rItem.level}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Local tips */}
+                  {travelInfo?.tips && (
+                    <div style={{ margin: '0 8px 10px' }}>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#22c55e', letterSpacing: '0.5px', marginBottom: '6px' }}>LOCAL TIPS</div>
+                      <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
+                        {[
+                          { label: 'Currency', value: travelInfo.tips.currency },
+                          { label: 'Emergency', value: travelInfo.tips.emergency },
+                          { label: 'Cultural', value: travelInfo.tips.cultural },
+                          { label: 'Transport', value: travelInfo.tips.transport },
+                        ].map((tip, i) => (
+                          <div key={i} style={{ marginBottom: i < 3 ? '6px' : 0 }}>
+                            <div style={{ fontSize: '7px', color: '#22c55e', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '1px' }}>{tip.label}</div>
+                            <div style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.4 }}>{tip.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* === NO CITY — country view directly === */}
+            {!travelCity && renderDetailView(travelCountry, safetyInfo.level, { color: safetyInfo.color, label: safetyInfo.label }, false)}
+
+            {/* Country-only sections when no city selected */}
+            {!travelCity && (
+              <>
+                {/* Regional breakdown */}
+                {regionalThreats && regionalThreats.length > 0 && (
+                  <div style={{ margin: '0 8px 10px' }}>
+                    <div style={{ fontSize: '9px', fontWeight: 700, color: '#f97316', letterSpacing: '0.5px', marginBottom: '6px' }}>REGIONAL BREAKDOWN</div>
+                    {regionalThreats.map((rtItem, i) => {
+                      const sc = levelColor(rtItem.level);
+                      return (
+                        <div key={i} style={{
+                          padding: '6px 8px', marginBottom: '3px', borderRadius: '4px',
+                          background: sc.bg, borderLeft: `2px solid ${sc.text}`, fontSize: '9px',
+                          display: 'flex', alignItems: 'flex-start', gap: '8px',
+                        }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, color: '#e5e7eb', marginBottom: '2px' }}>{rtItem.region}</div>
+                            <div style={{ color: '#d1d5db', lineHeight: 1.4 }}>{rtItem.threat}</div>
+                          </div>
+                          <span style={{
+                            fontSize: '7px', fontWeight: 700, color: sc.text,
+                            background: 'rgba(0,0,0,0.3)', padding: '2px 5px',
+                            borderRadius: '3px', whiteSpace: 'nowrap', flexShrink: 0,
+                          }}>
+                            LVL {rtItem.level}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Health */}
+                {travelInfo?.health && travelInfo.health.length > 0 && (
+                  <div style={{ margin: '0 8px 10px' }}>
+                    <div style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '6px' }}>HEALTH ADVISORIES</div>
+                    {travelInfo.health.map((h, i) => {
+                      const sc = levelColor(h.severity === 'high' ? 4 : h.severity === 'medium' ? 3 : 1);
+                      return (
+                        <div key={i} style={{
+                          padding: '5px 8px', marginBottom: '3px', borderRadius: '4px',
+                          background: sc.bg, fontSize: '9px', color: sc.text, lineHeight: 1.4,
+                        }}>
+                          {h.alert}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Visa */}
+                {travelInfo?.visa && (
+                  <div style={{ margin: '0 8px 10px' }}>
+                    <div style={{ fontSize: '9px', fontWeight: 700, color: '#8b5cf6', letterSpacing: '0.5px', marginBottom: '6px' }}>ENTRY REQUIREMENTS</div>
+                    <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#c4b5fd', marginBottom: '3px' }}>{travelInfo.visa.type}</div>
+                      <div style={{ fontSize: '9px', color: '#9ca3af', lineHeight: 1.5 }}>{travelInfo.visa.details}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+
+                {/* Tips */}
+                {travelInfo?.tips && (
+                  <div style={{ margin: '0 8px 10px' }}>
+                    <div style={{ fontSize: '9px', fontWeight: 700, color: '#22c55e', letterSpacing: '0.5px', marginBottom: '6px' }}>LOCAL TIPS</div>
+                    <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
+                      {[
+                        { label: 'Currency', value: travelInfo.tips.currency },
+                        { label: 'Emergency', value: travelInfo.tips.emergency },
+                        { label: 'Cultural', value: travelInfo.tips.cultural },
+                        { label: 'Transport', value: travelInfo.tips.transport },
+                      ].map((tip, i) => (
+                        <div key={i} style={{ marginBottom: i < 3 ? '6px' : 0 }}>
+                          <div style={{ fontSize: '7px', color: '#22c55e', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '1px' }}>{tip.label}</div>
+                          <div style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.4 }}>{tip.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Local tips */}
-            {travelInfo?.tips && (
-              <div style={{ margin: '0 8px 10px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#22c55e', letterSpacing: '0.5px', marginBottom: '6px' }}>LOCAL TIPS</div>
-                <div style={{ padding: '8px', background: '#111827', borderRadius: '6px' }}>
-                  {[
-                    { label: 'Currency', value: travelInfo.tips.currency },
-                    { label: 'Emergency', value: travelInfo.tips.emergency },
-                    { label: 'Cultural', value: travelInfo.tips.cultural },
-                    { label: 'Transport', value: travelInfo.tips.transport },
-                  ].map((tip, i) => (
-                    <div key={i} style={{ marginBottom: i < 3 ? '6px' : 0 }}>
-                      <div style={{ fontSize: '7px', color: '#22c55e', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '1px' }}>{tip.label}</div>
-                      <div style={{ fontSize: '9px', color: '#d1d5db', lineHeight: 1.4 }}>{tip.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Timestamp */}
+            <div style={{ margin: '4px 8px 10px', fontSize: '7px', color: '#4b5563', textAlign: 'center' }}>
+              Last updated: {newsTimestamp || 'Loading...'}
+            </div>
           </>
         ) : (
-          /* Default view — Top Alerts */
+          /* Default view — Danger Zones + Popular Destinations (dynamic) */
           <div style={{ padding: '0 8px' }}>
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#ef4444', letterSpacing: '0.5px', marginBottom: '8px' }}>TOP TRAVEL ALERTS</div>
-            {getTopAlertCountries().map(([country, info]) => {
-              const cd = COUNTRIES[country];
-              const sr = SAFETY_RATING_MAP[cd.risk];
+            {(() => {
+              const { danger, popular } = getHotspotSections();
+              const renderCard = (h, i) => {
+                const lc = levelColor(h.level);
+                return (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setTravelCountry(h.country);
+                      setTravelCity(h.region);
+                      setTravelSearch(`${h.region}, ${h.country}`);
+                      setTravelSuggestions([]);
+                    }}
+                    style={{
+                      padding: '7px 10px', marginBottom: '3px', borderRadius: '6px', cursor: 'pointer',
+                      background: lc.bg, borderLeft: `3px solid ${lc.text}`,
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                  >
+                    <span style={{ fontSize: '13px' }}>{h.flag}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb' }}>{h.region}</span>
+                        {h.elevated && (
+                          <span style={{ fontSize: '6px', fontWeight: 700, color: '#fbbf24', padding: '1px 3px', background: 'rgba(251,191,36,0.2)', borderRadius: '2px' }}>ELEVATED</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '8px', color: '#d1d5db', lineHeight: 1.3, marginTop: '1px' }}>{h.threat}</div>
+                      <div style={{ fontSize: '7px', color: '#6b7280', marginTop: '1px' }}>{h.country}{h.articleCount > 0 ? ` \u00B7 ${h.articleCount} recent articles` : ''}</div>
+                    </div>
+                    <div style={{
+                      fontSize: '7px', fontWeight: 700, color: lc.text, padding: '2px 5px',
+                      background: 'rgba(0,0,0,0.3)', borderRadius: '3px', whiteSpace: 'nowrap',
+                    }}>
+                      LVL {h.level}
+                    </div>
+                  </div>
+                );
+              };
               return (
-                <div
-                  key={country}
-                  onClick={() => {
-                    setTravelCountry(country);
-                    setTravelSearch(country);
-                    setTravelSuggestions([]);
-                  }}
-                  style={{
-                    padding: '8px 10px', marginBottom: '4px', borderRadius: '6px', cursor: 'pointer',
-                    background: '#111827', borderLeft: `3px solid ${sr.color}`,
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1f2937'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#111827'; }}
-                >
-                  <CountryFlag flag={cd.flag} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb' }}>{country}</div>
-                    <div style={{ fontSize: '8px', color: '#6b7280' }}>{cd.region}</div>
+                <>
+                  {/* Danger Zones */}
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#ef4444', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-block', width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }} />
+                    DANGER ZONES
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '8px', fontWeight: 700, color: sr.color }}>{sr.label}</div>
-                    <div style={{ fontSize: '7px', color: '#6b7280' }}>{info.articles} alert{info.articles !== 1 ? 's' : ''}</div>
+                  {danger.map(renderCard)}
+
+                  {/* Popular Destinations */}
+                  <div style={{ fontSize: '9px', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.5px', marginTop: '12px', marginBottom: '6px' }}>POPULAR DESTINATIONS</div>
+                  {popular.map(renderCard)}
+
+                  {danger.length === 0 && popular.length === 0 && (
+                    <div style={{ fontSize: '10px', color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>
+                      Loading travel alerts...
+                    </div>
+                  )}
+
+                  {/* Timestamp */}
+                  <div style={{ marginTop: '10px', fontSize: '7px', color: '#4b5563', textAlign: 'center', paddingBottom: '8px' }}>
+                    Last updated: {newsTimestamp || 'Loading...'}
                   </div>
-                </div>
+                </>
               );
-            })}
-            {getTopAlertCountries().length === 0 && (
-              <div style={{ fontSize: '10px', color: '#6b7280', textAlign: 'center', padding: '20px 0' }}>
-                Loading travel alerts...
-              </div>
-            )}
+            })()}
           </div>
         )}
       </>
@@ -1589,7 +2093,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         )}
 
         {/* Tabs */}
-        <div className="tabs">
+        <div className="tabs" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
           {TABS.map(tab => (
             <button
               key={tab.id}
