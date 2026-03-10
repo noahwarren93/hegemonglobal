@@ -531,6 +531,14 @@ const IRRELEVANT_KEYWORDS = [
   'ufo', 'ufos', 'alien', 'aliens', 'extraterrestrial',
   'epstein files', 'prince andrew',
   'dog show', 'cat show', 'spelling bee', 'beauty pageant',
+  'pets', 'abandoned pets', 'abandoned animals', 'lego', 'pokemon',
+  'gamblers', 'betting on', 'candace owens', 'satellite fall',
+  'superbugs', 'antimicrobial', 'youth unemployment',
+  'iftar', 'sehri', 'ramadan timings', 'interactive bricks',
+  'chatgpt-maker', 'sues chatgpt', 'marine insurers', 'insurance pricing',
+  'retail rents', 'devotes life to', 'daily devotional',
+  'best places to live', 'best cities', 'travel deals', 'vacation deals',
+  'spring break', 'summer vacation',
 ];
 
 // ============================================================
@@ -561,7 +569,35 @@ const GEOPOLITICAL_SIGNALS = [
   'trade war', 'tariff', 'debt crisis', 'oil price', 'energy crisis',
   'gas pipeline', 'supply chain', 'rare earth', 'food security',
   'civil war', 'independence', 'disinformation', 'propaganda',
-  'hypersonic', 'submarine', 'aircraft carrier', 'chip export', 'tech ban'
+  'hypersonic', 'submarine', 'aircraft carrier', 'chip export', 'tech ban',
+  'diplomatic', 'diplomat', 'ambassador', 'embassy', 'consulate', 'envoy',
+  'foreign minister', 'defense minister', 'prime minister', 'president',
+  'tariffs', 'trade deal', 'trade agreement', 'economic warfare',
+  'election results', 'election fraud', 'voter', 'ballot',
+  'un vote', 'un resolution', 'security council', 'general assembly',
+  'arms deal', 'weapons sale', 'military contract',
+  'border dispute', 'border clash', 'border crossing', 'demilitarized',
+  'refugee', 'asylum', 'migrant crisis', 'displacement',
+  'oil price', 'oil embargo', 'energy deal', 'gas deal', 'pipeline',
+  'cyber attack', 'cyberattack', 'hacking', 'state-sponsored',
+  'coup attempt', 'overthrow', 'martial law', 'state of emergency',
+  'protest', 'protests', 'demonstration', 'uprising', 'unrest',
+  'assassination', 'assassinated', 'attempted assassination',
+  'hostage', 'prisoner exchange', 'political prisoner', 'detained',
+  'peace talks', 'peace deal', 'peace agreement', 'negotiation',
+  'military exercise', 'military drill', 'war games',
+  'reconnaissance', 'surveillance', 'intelligence',
+  'naval exercise', 'fleet', 'destroyer', 'frigate', 'warship',
+  'fighter jet', 'bomber', 'radar', 'defense system', 'air defense',
+  'UN peacekeeping', 'humanitarian aid', 'aid delivery', 'relief effort',
+  'deport', 'deportation', 'extradition', 'indictment',
+  'election', 'referendum', 'constitutional', 'parliament',
+  'minister', 'ministry', 'cabinet', 'government',
+  'rebel', 'opposition', 'dissident', 'crackdown',
+  'terror', 'terrorism', 'terrorist', 'extremist', 'radicalization',
+  'explosion', 'bombing', 'attack', 'ambush', 'offensive',
+  'conflict', 'fighting', 'combat', 'clashes', 'skirmish',
+  'dead', 'killed', 'casualties', 'wounded', 'death toll'
 ];
 
 const STRONG_GEO_SIGNALS = new Set([
@@ -590,6 +626,25 @@ const DOMESTIC_NOISE_PATTERNS = [
   /\b(congress|dhs)\b.*\b(body cam|bodycam|body camera)\b/i,
   /\b(olympic)\b.*\b(culture|woke|spectacle|controversy|boycott)\b/i,
   /\b(school board|zoning|parking|HOA)\b.*\b(vote|meeting|decision|ruling)\b/i,
+];
+
+const OPINION_PATTERNS = [
+  /here'?s why that'?s/i,
+  /might have the answer to/i,
+  /\bhow i\b/i,
+  /\bwhy i\b/i,
+  /devotes life to/i,
+  /did \w+ discontinue/i,
+  /reportedly dropped.*(?:viewership|ratings|audience)/i,
+  /\bop-?ed\b/i,
+  /\bopinion\s*:/i,
+  /\bcolumn\s*:/i,
+  /\bcommentary\s*:/i,
+  /\bletter to the editor\b/i,
+  /\bbook review\b/i,
+  /things you (?:need to|should) know/i,
+  /what you need to know about/i,
+  /\bexplainer\s*:/i,
 ];
 
 function scoreGeopoliticalRelevance(text) {
@@ -1112,7 +1167,7 @@ function scoreEvent(event) {
 // Clustering Engine (ported from eventsService.js)
 // ============================================================
 
-const HARD_CAP = 40;
+const HARD_CAP = 8;
 
 function clusterArticles(articles) {
   if (!articles || articles.length === 0) return [];
@@ -1153,9 +1208,9 @@ function clusterArticles(articles) {
 
   const allClusters = [];
 
-  // Step 3a: Non-stoplist countries
+  // Step 3a: Non-stoplist countries — always sub-cluster for distinct events
   for (const [, indices] of countryGroups.entries()) {
-    if (indices.length <= HARD_CAP) {
+    if (indices.length === 1) {
       allClusters.push(indices);
     } else {
       const subs = subClusterByTopic(annotated, indices);
@@ -1178,15 +1233,21 @@ function clusterArticles(articles) {
   // Step 4: Build event objects
   const rawEvents = allClusters.map(indices => buildEvent(annotated, indices));
 
-  // Step 5: Merge events sharing same non-stoplist primary country
-  const events = mergeByCountry(rawEvents);
+  // Step 5: Skip mergeByCountry — allow multiple distinct events per country
+  const events = rawEvents;
+
+  // Filter out low-quality single-source WORLD events
+  const filtered = events.filter(e => {
+    if (e.sourceCount === 1 && e.category === 'WORLD') return false;
+    return true;
+  });
 
   // Sort by relevance score
-  events.sort((a, b) => b._score - a._score);
-  for (const e of events) delete e._score;
+  filtered.sort((a, b) => b._score - a._score);
+  for (const e of filtered) delete e._score;
 
-  console.log(`[Cron] Clustering: ${articles.length} articles -> ${events.length} events`);
-  return events;
+  console.log(`[Cron] Clustering: ${articles.length} articles -> ${events.length} raw events -> ${filtered.length} after quality filter`);
+  return filtered;
 }
 
 function subClusterByTopic(annotated, indices) {
@@ -1436,11 +1497,21 @@ function processArticles(allArticles) {
 
     if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
 
+    // Opinion/feature filter
+    if (OPINION_PATTERNS.some(p => p.test(title))) continue;
+
     const category = detectCategory(title, article.description);
     if (category === 'SPORTS') continue;
 
     const fullText = title + ' ' + (article.description || '');
     if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) continue;
+
+    // WORLD category must have at least one geopolitical signal
+    if (category === 'WORLD') {
+      const lowerFull = fullText.toLowerCase();
+      const hasGeoSignal = GEOPOLITICAL_SIGNALS.some(sig => lowerFull.includes(sig));
+      if (!hasGeoSignal) continue;
+    }
 
     // Non-English filter
     const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
@@ -1497,8 +1568,8 @@ function processArticles(allArticles) {
 
   console.log(`[Cron] Pipeline: ${allArticles.length} raw -> ${fresh.length} fresh -> ${relevant.length} relevant -> ${unique.length} unique`);
 
-  // Cap at 200 articles
-  return unique.slice(0, 200);
+  // Cap at 300 articles
+  return unique.slice(0, 300);
 }
 
 // ============================================================
@@ -1549,8 +1620,8 @@ async function generateSummaries(events, env) {
     else normal.push(event);
   }
 
-  // Reorder: urgent first, then normal
-  const ordered = [...urgent, ...normal];
+  // Reorder: urgent first, then normal — cap at 100 to control API costs
+  const ordered = [...urgent, ...normal].slice(0, 100);
   if (urgent.length > 0) {
     console.log(`[Cron] ${urgent.length} high-priority events will be summarized first`);
   }

@@ -1356,8 +1356,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       await yieldToMain(1);
 
-      // Build new briefing (200 cap)
-      const newArticles = uniqueArticles.slice(0, 200).map(article => {
+      // Build new briefing (300 cap)
+      const newArticles = uniqueArticles.slice(0, 300).map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
         const sourceName = formatSourceName(article.source_id);
