@@ -97,7 +97,7 @@
       .compare-panel.active { transform: translateY(0); }
       .compare-panel.expanded { max-height: 65vh; overflow-y: auto; }
 
-      .tab { font-size: 8px; }
+      .tab { font-size: 7.5px; letter-spacing: 0.3px; }
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
       .modal-header { padding: 12px; }
       .modal-title { font-size: 16px; }
@@ -129,7 +129,7 @@
       .stat-card { padding: 5px 6px; min-width: 44px; }
       .stat-value { font-size: 12px; }
       .stat-label { font-size: 5.5px; }
-      .tab { font-size: 8.5px; }
+      .tab { font-size: 7.5px; letter-spacing: 0.3px; }
 
       .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
       .globe-tool-btn { width: 26px; height: 26px; }
