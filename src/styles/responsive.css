@@ -77,8 +77,11 @@
       .globe-reset-btn { right: 8px; bottom: 8px; padding: 6px 10px; font-size: 8px; min-height: 44px; display: flex; align-items: center; }
       .globe-reset-btn svg { width: 9px; height: 9px; }
 
+      /* Sidebar content — extra bottom padding so last items aren't cut off */
+      .sidebar-content { padding-bottom: 80px; }
+
       /* Mobile Feature Buttons — stacked vertically above stats, compact */
-      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 3px; }
+      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 68px; left: 8px; z-index: 10; gap: 3px; }
       .globe-feature-btn { padding: 4px 8px; font-size: 7px; gap: 4px; }
 
       /* Compare hint on mobile - smaller text, JS handles positioning */
@@ -163,7 +166,7 @@
       .globe-reset-btn svg { width: 8px; height: 8px; }
 
       /* Mobile Feature Buttons — compact on small screens */
-      .mobile-feature-btns { bottom: 48px; gap: 2px; }
+      .mobile-feature-btns { bottom: 66px; gap: 2px; }
       .globe-feature-btn { padding: 3px 6px; font-size: 6px; gap: 3px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
 
