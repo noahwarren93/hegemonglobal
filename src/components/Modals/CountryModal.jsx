@@ -27,27 +27,24 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       fetchCountryNews(countryName).then(articles => {
         const all = articles || [];
         const nowMs = Date.now();
-        const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
         const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-        // Top Stories: prefer last 5 days, fall back to 7 days; sort by date then quality
-        let topPool = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < FIVE_DAYS);
-        if (topPool.length === 0) {
-          topPool = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
-        }
-        if (topPool.length === 0) topPool = all;
+        // Top Stories: max 3, hard cap 7 days, prefer last 3 days
+        const within7d = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
+        let topPool = within7d.filter(a => (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
+        if (topPool.length === 0) topPool = within7d;
         const top = [...topPool].sort((a, b) => {
           const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
           const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
           if (db !== da) return db - da;
           return (b.qualityScore || 0) - (a.qualityScore || 0);
-        }).slice(0, 5);
+        }).slice(0, 3);
         setTopStories(top);
-        // Latest Coverage: most recent by date (3 days, expand to 6)
-        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
-        const SIX_DAYS = 6 * 24 * 60 * 60 * 1000;
-        let recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
-        if (recent.length === 0) {
-          recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SIX_DAYS);
+        // Latest Coverage: 48h, expand to 72h if < 3 articles
+        const TWO_DAYS = 48 * 60 * 60 * 1000;
+        let recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < TWO_DAYS);
+        if (recent.length < 3) {
+          recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
         }
         const sorted = [...recent].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate)).slice(0, 8);
         setLatestCoverage(sorted);

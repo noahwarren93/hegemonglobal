@@ -834,6 +834,25 @@ export function isRelevantToCountry(title, description, countryName) {
   return inDesc;
 }
 
+// Strict headline-only matching — for country modal to avoid source-name false positives
+export function isHeadlineAboutCountry(headline, countryName) {
+  if (!headline || !countryName) return false;
+  // Strip trailing " - Source Name" (Google News format)
+  let clean = headline;
+  const dashIdx = clean.lastIndexOf(' - ');
+  if (dashIdx > 0 && dashIdx > clean.length - 50) {
+    clean = clean.substring(0, dashIdx);
+  }
+  const headlineLower = clean.toLowerCase();
+  const countryLower = countryName.toLowerCase();
+  const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
+  const allTerms = [countryLower, ...countryTerms];
+  return allTerms.some(term => {
+    const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+    return regex.test(headlineLower);
+  });
+}
+
 // ============================================================
 // RSS Fetching
 // ============================================================
@@ -1025,12 +1044,12 @@ export async function fetchCountryNews(countryName) {
     qualityScore: scoreHeadlineQuality(a.title || a.headline)
   });
 
-  // 2. DAILY_BRIEFING articles (7 day window)
+  // 2. DAILY_BRIEFING articles (7 day window, strict headline-only matching)
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
     DAILY_BRIEFING.forEach(article => {
       const d = article.pubDate || article.time;
       if (d && (now - new Date(d).getTime()) > MAX_AGE_MS) return;
-      if (isRelevantToCountry(article.title || article.headline, article.description || '', countryName)) {
+      if (isHeadlineAboutCountry(article.title || article.headline, countryName)) {
         addArticle(formatBriefingArticle(article));
       }
     });

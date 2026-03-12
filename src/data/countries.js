@@ -2662,7 +2662,7 @@ export const COUNTRY_DEMONYMS = {
     'Ukraine': ['ukrainian', 'kyiv', 'zelensky'],
     'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi'],
     'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster'],
-    'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
+    'United States': ['u.s.', 'american', 'biden', 'trump', 'congress', 'white house', 'pentagon', 'washington d.c.'],
     'Uruguay': ['uruguayan', 'montevideo'],
     'Uzbekistan': ['uzbek', 'tashkent'],
     'Vanuatu': ['ni-vanuatu', 'port vila'],
