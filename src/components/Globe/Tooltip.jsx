@@ -40,7 +40,18 @@ export default function Tooltip({ data, mousePos }) {
       id="tooltip"
       style={{ display: data ? 'block' : 'none' }}
     >
-      {data && (
+      {data && data.threatGroup ? (
+        <>
+          <div className="tooltip-name" style={{ color: '#ef4444' }}>
+            {data.name}
+          </div>
+          <div className="tooltip-region">{data.title} • {data.region}</div>
+          {data.strength && <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: 2 }}>Strength: {data.strength}</div>}
+          {data.activities && <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: 1 }}>Activities: {data.activities}</div>}
+          {data.articleCount > 0 && <div style={{ fontSize: '9px', color: '#06b6d4', marginTop: 2 }}>{data.articleCount} recent article{data.articleCount > 1 ? 's' : ''}</div>}
+          <div className="tooltip-hint">Click for intel</div>
+        </>
+      ) : data ? (
         <>
           <div className="tooltip-name">
             <CountryFlag flag={data.flag} /> {data.name}{' '}
@@ -55,7 +66,7 @@ export default function Tooltip({ data, mousePos }) {
           </div>
           <div className="tooltip-hint">{data.military ? 'Click for intel' : 'Click for details'}</div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

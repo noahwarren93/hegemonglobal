@@ -14,6 +14,9 @@ import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
 import MilitaryInfoPanel from '../components/Military/MilitaryInfoPanel';
 import MilitaryBasesPanel from '../components/Military/MilitaryBasesPanel';
 import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
+import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
+import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
+import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS } from '../data/threatGroupData';
 
 const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
 const TOSModal = lazy(() => import('../components/Modals/TOSModal'));
@@ -202,7 +205,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, militaryMode, onToggleMilitary }) {
+function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, militaryMode, onToggleMilitary, threatGroupsActive, onToggleThreatGroups }) {
   const watchlistCountries = useMemo(() => {
     return Object.entries(COUNTRIES)
       .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
@@ -238,6 +241,10 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
         <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={onToggleMilitary}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
           Military
+        </button>
+        <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={onToggleThreatGroups}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Threat Groups
         </button>
       </div>
     </div>
@@ -329,6 +336,11 @@ export default function HomePage() {
   const [militaryInfoOpen, setMilitaryInfoOpen] = useState(false);
   const [selectedInstallation, setSelectedInstallation] = useState(null);
 
+  // --- Threat groups overlay ---
+  const [threatGroupsActive, setThreatGroupsActive] = useState(false);
+  const [selectedThreatGroup, setSelectedThreatGroup] = useState(null);
+  const [threatGroupPanelOpen, setThreatGroupPanelOpen] = useState(false);
+
   // --- Search ---
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -361,6 +373,9 @@ export default function HomePage() {
 
   // --- Military overlay hook ---
   const { showMilitary, hideMilitary } = useMilitaryOverlay();
+
+  // --- Threat groups overlay hook ---
+  const { showThreatGroups, hideThreatGroups } = useThreatGroupOverlay();
 
   // ============================================================
   // Initialize on mount
@@ -481,6 +496,15 @@ export default function HomePage() {
     return () => { delete window._onMilitaryClick; };
   }, []);
 
+  // Register threat group click callback on window
+  useEffect(() => {
+    window._onThreatGroupClick = (group) => {
+      setSelectedThreatGroup(group);
+      setThreatGroupPanelOpen(true);
+    };
+    return () => { delete window._onThreatGroupClick; };
+  }, []);
+
   // ============================================================
   // Handlers
   // ============================================================
@@ -541,7 +565,7 @@ export default function HomePage() {
     setTradeRoutesActive(newState);
     window.tradeRoutesActive = newState;
     if (newState) {
-      // Deactivate compare mode and military mode
+      // Deactivate compare mode, military mode, and threat groups
       setCompareMode(false);
       setCompareCountries([]);
       if (militaryMode) {
@@ -550,13 +574,19 @@ export default function HomePage() {
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
       }
+      if (threatGroupsActive) {
+        setThreatGroupsActive(false);
+        hideThreatGroups();
+        setThreatGroupPanelOpen(false);
+        setSelectedThreatGroup(null);
+      }
       showTradeRoutes();
     } else {
       hideTradeRoutes();
       setTradeInfoCountry(null);
       setTradeInfoOpen(false);
     }
-  }, [tradeRoutesActive, militaryMode, showTradeRoutes, hideTradeRoutes, hideMilitary]);
+  }, [tradeRoutesActive, militaryMode, threatGroupsActive, showTradeRoutes, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
   // Toggle compare mode
   const handleToggleCompare = useCallback(() => {
@@ -566,7 +596,7 @@ export default function HomePage() {
         setCompareCountries([]);
         return false;
       }
-      // Turning on — deactivate trade routes and military
+      // Turning on — deactivate trade routes, military, and threat groups
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
@@ -581,16 +611,22 @@ export default function HomePage() {
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
       }
+      if (threatGroupsActive) {
+        setThreatGroupsActive(false);
+        hideThreatGroups();
+        setThreatGroupPanelOpen(false);
+        setSelectedThreatGroup(null);
+      }
       return true;
     });
-  }, [tradeRoutesActive, militaryMode, hideTradeRoutes, hideMilitary]);
+  }, [tradeRoutesActive, militaryMode, threatGroupsActive, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
   // Toggle military overlay
   const handleToggleMilitary = useCallback(() => {
     const newState = !militaryMode;
     setMilitaryMode(newState);
     if (newState) {
-      // Deactivate trade routes and compare mode
+      // Deactivate trade routes, compare mode, and threat groups
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
@@ -602,6 +638,12 @@ export default function HomePage() {
         setCompareMode(false);
         setCompareCountries([]);
       }
+      if (threatGroupsActive) {
+        setThreatGroupsActive(false);
+        hideThreatGroups();
+        setThreatGroupPanelOpen(false);
+        setSelectedThreatGroup(null);
+      }
       showMilitary();
       setMilitaryPanelOpen(true);
     } else {
@@ -610,7 +652,39 @@ export default function HomePage() {
       setMilitaryInfoOpen(false);
       setSelectedInstallation(null);
     }
-  }, [militaryMode, tradeRoutesActive, compareMode, showMilitary, hideMilitary, hideTradeRoutes]);
+  }, [militaryMode, tradeRoutesActive, compareMode, threatGroupsActive, showMilitary, hideMilitary, hideTradeRoutes, hideThreatGroups]);
+
+  // Toggle threat groups overlay
+  const handleToggleThreatGroups = useCallback(() => {
+    const newState = !threatGroupsActive;
+    setThreatGroupsActive(newState);
+    if (newState) {
+      // Deactivate other overlays
+      if (tradeRoutesActive) {
+        setTradeRoutesActive(false);
+        window.tradeRoutesActive = false;
+        hideTradeRoutes();
+        setTradeInfoCountry(null);
+        setTradeInfoOpen(false);
+      }
+      if (compareMode) {
+        setCompareMode(false);
+        setCompareCountries([]);
+      }
+      if (militaryMode) {
+        setMilitaryMode(false);
+        setMilitaryPanelOpen(false);
+        hideMilitary();
+        setMilitaryInfoOpen(false);
+        setSelectedInstallation(null);
+      }
+      showThreatGroups();
+    } else {
+      hideThreatGroups();
+      setThreatGroupPanelOpen(false);
+      setSelectedThreatGroup(null);
+    }
+  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, showThreatGroups, hideThreatGroups, hideTradeRoutes, hideMilitary]);
 
   // Fly globe to a lat/lng and open military info panel
   const handleMilitaryBaseSelect = useCallback((installation) => {
@@ -680,6 +754,7 @@ export default function HomePage() {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
+        if (threatGroupPanelOpen) { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); return; }
         if (militaryInfoOpen) { setMilitaryInfoOpen(false); setSelectedInstallation(null); return; }
         if (statPopupOpen) { setStatPopupOpen(false); return; }
         if (stocksModalOpen) { setStocksModalOpen(false); return; }
@@ -695,7 +770,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, threatGroupPanelOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -752,6 +827,8 @@ export default function HomePage() {
             compareCountries={compareCountries}
             militaryMode={militaryMode}
             onToggleMilitary={handleToggleMilitary}
+            threatGroupsActive={threatGroupsActive}
+            onToggleThreatGroups={handleToggleThreatGroups}
           />
 
           {/* Risk Legend (always visible on desktop) */}
@@ -773,6 +850,10 @@ export default function HomePage() {
             <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={handleToggleMilitary}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
               Military
+            </button>
+            <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={handleToggleThreatGroups}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Threats
             </button>
           </div>
 
@@ -845,6 +926,26 @@ export default function HomePage() {
             isOpen={militaryInfoOpen}
             onClose={() => { setMilitaryInfoOpen(false); setSelectedInstallation(null); }}
           />
+
+          {/* Threat Group Panel */}
+          <ThreatGroupPanel
+            group={selectedThreatGroup}
+            isOpen={threatGroupPanelOpen}
+            onClose={() => { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); }}
+          />
+
+          {/* Threat Groups Legend */}
+          {threatGroupsActive && (
+            <div className="threat-legend">
+              <div className="threat-legend-title">THREAT GROUPS</div>
+              {Object.entries(THREAT_TYPE_COLORS).map(([type, color]) => (
+                <div key={type} className="threat-legend-item">
+                  <div className="threat-legend-dot" style={{ background: color }} />
+                  {THREAT_TYPE_LABELS[type]}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Stat Popup */}
           <StatPopup

@@ -34,6 +34,7 @@
       .watchlist { width: 145px; }
       .legend { display: none; }
       .nuclear-arsenals-box { display: none; }
+      .threat-legend { display: none; }
       .stats { left: 175px; gap: 4px; }
       .stat-popup { left: 175px; }
       .stat-card { padding: 6px 8px; min-width: 55px; }
@@ -87,6 +88,10 @@
       /* Military bases list panel on mobile — starts at 50% from top, globe visible above */
       .mil-bases-panel { position: fixed; left: 0; top: 50%; bottom: 0; width: 100%; max-height: none; border-radius: 12px 12px 0 0; z-index: 50; display: flex; flex-direction: column; overflow: hidden; }
       .mil-bases-body { flex: 1; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+      /* Threat group panel on mobile */
+      .threat-group-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
+      .threat-legend { display: none; }
 
       /* Nuclear arsenals box hidden on mobile (inline badges in mil panel instead) */
       .nuclear-arsenals-box { display: none; }

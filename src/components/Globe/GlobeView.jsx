@@ -565,6 +565,17 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         return null; // Block all country dot clicks in military mode
       }
 
+      // 0.5) Threat group zones — check but don't block country clicks
+      if (window.threatGroupsActive && window.threatGroupMeshes && window.threatGroupMeshes.length > 0) {
+        const tgHits = raycaster.intersectObjects(window.threatGroupMeshes);
+        if (tgHits.length > 0 && tgHits[0].object.userData.threatGroup) {
+          if (typeof window._onThreatGroupClick === 'function') {
+            window._onThreatGroupClick(tgHits[0].object.userData.threatGroup);
+          }
+          return 'threatGroup';
+        }
+      }
+
       // 1) Direct marker hit — always wins
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
@@ -656,6 +667,29 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           return;
         } else {
           if (typeof window.hideTradeRouteTooltip === 'function') window.hideTradeRouteTooltip();
+        }
+      }
+
+      // Check threat group zone hover
+      if (window.threatGroupsActive && window.threatGroupMeshes && window.threatGroupMeshes.length > 0) {
+        const tgHits = raycaster.intersectObjects(window.threatGroupMeshes);
+        if (tgHits.length > 0 && tgHits[0].object.userData.threatGroup) {
+          const tg = tgHits[0].object.userData.threatGroup;
+          const count = tgHits[0].object.userData.articleCount || 0;
+          setTooltipData({
+            name: tg.name,
+            flag: null,
+            risk: null,
+            region: tg.territory,
+            title: tg.type.charAt(0).toUpperCase() + tg.type.slice(1),
+            threatGroup: true,
+            strength: tg.strength,
+            activities: tg.activities,
+            articleCount: count,
+          });
+          setMousePos({ x: event.clientX, y: event.clientY });
+          renderer.domElement.style.cursor = 'pointer';
+          return;
         }
       }
 
@@ -868,6 +902,17 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           }
         }
       }
+      // Pulse threat group zones
+      if (window.threatGroupsActive && window.threatGroupMeshes) {
+        const t = now * 0.001;
+        for (let i = 0; i < window.threatGroupMeshes.length; i++) {
+          const m = window.threatGroupMeshes[i];
+          if (m.userData.baseOpacity) {
+            m.material.opacity = m.userData.baseOpacity * (0.85 + 0.15 * Math.sin(t + i));
+          }
+        }
+      }
+
       animateConflictZones();
       renderer.render(scene, camera);
     }
