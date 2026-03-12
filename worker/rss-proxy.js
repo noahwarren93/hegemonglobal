@@ -905,10 +905,57 @@ const TIMELINE_PAKAFG_KW = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 't
 const TIMELINE_ACTION_KW = ['strike', 'struck', 'attack', 'missile', 'bomb', 'troops', 'casualt', 'offensive', 'airstrike', 'military', 'defense', 'defence', 'killed', 'destroy', 'combat', 'invasion', 'ceasefire', 'frontline', 'artillery', 'drone', 'naval', 'weapon', 'nuclear', 'shoot', 'shot down', 'shell', 'rocket', 'intercept', 'siege', 'blockade', 'retreat', 'captur', 'deploy', 'incursion', 'escalat', 'retaliat', 'surrender', 'wounded', 'death toll', 'warship', 'torpedo', 'displaced', 'evacuat', 'famine', 'atrocit', 'genocide', 'war crime', 'sanction', 'clash', 'raid', 'launch', 'target', 'blast', 'explosi', 'ground forces'];
 
 const TIMELINE_CONFLICTS = {
-  iran: { name: 'US-Israel War on Iran', keywords: TIMELINE_IRAN_KW },
-  ukraine: { name: 'Russia-Ukraine War', keywords: TIMELINE_UKRAINE_KW },
-  sudan: { name: 'Sudan Civil War', keywords: TIMELINE_SUDAN_KW },
-  pakafg: { name: 'Pakistan-Afghanistan War', keywords: TIMELINE_PAKAFG_KW },
+  iran: {
+    name: 'US-Israel War on Iran',
+    keywords: TIMELINE_IRAN_KW,
+    statsPrompt: `For stats, extract CUMULATIVE casualty figures from headlines AND descriptions. Scan every headline for death toll numbers. Examples: "7th U.S. military death" means us_killed="7". "death toll surpasses 1,332" means iranian_killed="1,332+". "bringing Israeli deaths to 11+" means israeli_killed="11+". NEVER return null if a number is mentioned anywhere in the articles — even in a headline.
+Return stats with EXACTLY these keys (use the highest number found, or null ONLY if truly not mentioned):
+{
+  "iranian_killed": "highest cumulative Iranian death toll mentioned",
+  "us_killed": "highest cumulative US military deaths mentioned",
+  "israeli_killed": "highest cumulative Israeli deaths mentioned",
+  "iranian_displaced": "displaced Iranians if mentioned",
+  "targets_struck": "total targets struck if mentioned",
+  "strait_of_hormuz_status": "open/closed/restricted"
+}`
+  },
+  ukraine: {
+    name: 'Russia-Ukraine War',
+    keywords: TIMELINE_UKRAINE_KW,
+    statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned.
+Return stats with EXACTLY these keys (use null if not mentioned):
+{
+  "total_casualties": "combined casualties both sides",
+  "russian_killed": "cumulative Russian military deaths",
+  "ukrainian_killed": "cumulative Ukrainian military deaths",
+  "displaced": "total displaced persons",
+  "territory_occupied_pct": "percentage of Ukraine occupied by Russia"
+}`
+  },
+  sudan: {
+    name: 'Sudan Civil War',
+    keywords: TIMELINE_SUDAN_KW,
+    statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned.
+Return stats with EXACTLY these keys (use null if not mentioned):
+{
+  "total_killed": "cumulative total deaths (e.g. '150,000+')",
+  "civilian_killed": "cumulative civilian deaths",
+  "displaced": "total displaced persons (e.g. '13.6 million')",
+  "rsf_territory": "territory held by RSF if mentioned"
+}`
+  },
+  pakafg: {
+    name: 'Pakistan-Afghanistan War',
+    keywords: TIMELINE_PAKAFG_KW,
+    statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned.
+Return stats with EXACTLY these keys (use null if not mentioned):
+{
+  "afghan_civilian_killed": "cumulative Afghan civilian deaths (e.g. '110+')",
+  "taliban_killed": "cumulative Taliban deaths (e.g. '527+')",
+  "displaced": "total displaced persons (e.g. '115,000')",
+  "pakistani_killed": "cumulative Pakistani military deaths"
+}`
+  },
 };
 
 // Primary Country Extraction (ported from eventsService.js)
@@ -2204,8 +2251,12 @@ export default {
                 messages: [{
                   role: 'user',
                   content: `You are a military intelligence analyst. Given these recent news articles about the ${conflict.name}, extract:
-1. A list of timeline entries — each should be a single sentence describing a concrete event (strike, casualty report, diplomatic move, military operation). No opinion pieces, photo galleries, or commentary. Include the approximate timestamp from the article.
-2. Updated casualty/stats figures: total deaths (by side), displaced persons, missiles launched, targets struck — whatever key metrics are trackable from these articles. Return as JSON.
+
+1. TIMELINE ENTRIES: A list of concrete events — each a single sentence describing a strike, casualty report, diplomatic move, or military operation. No opinion pieces, photo galleries, or commentary. Include the approximate timestamp from the article.
+
+2. CUMULATIVE STATS: Extract the LATEST CUMULATIVE casualty figures mentioned in these articles. Look for RUNNING TOTAL death tolls, NOT per-incident numbers. For example, if an article says "death toll surpasses 1,332" that means the cumulative killed figure is "1,332+". If an article says "7th US soldier killed" that means us_killed is "7". Always return the HIGHEST cumulative number you find for each category.
+
+${conflict.statsPrompt}
 
 Articles:
 ${articleText}
@@ -2213,7 +2264,7 @@ ${articleText}
 Return ONLY valid JSON in this format:
 {
   "timeline_entries": [{"text": "...", "timestamp": "ISO date string"}],
-  "stats": {"key": "value"}
+  "stats": {fill in the exact keys specified above}
 }`
                 }]
               })
