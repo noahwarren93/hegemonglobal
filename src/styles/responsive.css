@@ -78,7 +78,7 @@
       .globe-reset-btn svg { width: 9px; height: 9px; }
 
       /* Sidebar content — large bottom padding so last items clear any overlapping bars */
-      .sidebar-content { padding: 12px 12px 120px 12px !important; -webkit-overflow-scrolling: touch; }
+      .sidebar-content { padding: 12px 12px 160px 12px !important; -webkit-overflow-scrolling: touch; }
 
       /* Mobile Feature Buttons — stacked vertically just above stats bar (stats top ~52px, 4px gap) */
       .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 3px; }
