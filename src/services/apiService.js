@@ -1025,8 +1025,6 @@ export async function fetchCountryNews(countryName) {
   // Collect all matching articles from multiple sources
   const allArticles = [];
   const seenHeadlines = new Set();
-  const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-  const now = Date.now();
 
   const addArticle = (article) => {
     const h = (article.headline || '').toLowerCase().substring(0, 60);
@@ -1044,24 +1042,18 @@ export async function fetchCountryNews(countryName) {
     qualityScore: scoreHeadlineQuality(a.title || a.headline)
   });
 
-  // 2. DAILY_BRIEFING articles (7 day window, strict headline-only matching)
+  // 2. DAILY_BRIEFING articles — search ALL, match headline + description
+  console.log('[Hegemon] DAILY_BRIEFING.length:', DAILY_BRIEFING ? DAILY_BRIEFING.length : 0);
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
     DAILY_BRIEFING.forEach(article => {
-      const d = article.pubDate || article.time;
-      if (d && (now - new Date(d).getTime()) > MAX_AGE_MS) return;
-      if (isHeadlineAboutCountry(article.title || article.headline, countryName)) {
+      if (isRelevantToCountry(article.title || article.headline, article.description || '', countryName)) {
         addArticle(formatBriefingArticle(article));
       }
     });
   }
+  console.log('[Hegemon] fetchCountryNews', countryName, '- from DAILY_BRIEFING:', allArticles.length);
 
-  // 3. If we have enough from DAILY_BRIEFING, return early
-  if (allArticles.length >= 5) {
-    setCachedNews(countryName, allArticles);
-    return allArticles;
-  }
-
-  // 4. Try Google News RSS
+  // 3. Google News RSS (always try, no early returns)
   try {
     const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
@@ -1073,12 +1065,7 @@ export async function fetchCountryNews(countryName) {
     console.warn('Google News RSS failed:', error.message);
   }
 
-  if (allArticles.length >= 3) {
-    setCachedNews(countryName, allArticles);
-    return allArticles;
-  }
-
-  // 5. Try backup APIs
+  // 4. Backup APIs (always try all)
   const apiOrder = ['gnews', 'newsdata', 'mediastack'];
   for (const apiName of apiOrder) {
     const api = NEWS_APIS[apiName];
@@ -1088,18 +1075,12 @@ export async function fetchCountryNews(countryName) {
     const results = await tryNewsAPI(apiName, url, api.parseResults);
     if (results) {
       formatArticlesForDisplay(results, countryName).forEach(a => addArticle(a));
-      if (allArticles.length >= 3) break;
     } else {
       apiFailures[apiName] = Date.now();
     }
   }
 
-  if (allArticles.length >= 2) {
-    setCachedNews(countryName, allArticles);
-    return allArticles;
-  }
-
-  // 6. Broader regional search
+  // 5. Broader regional search
   try {
     const countryData = COUNTRIES[countryName];
     if (countryData && countryData.region) {
@@ -1114,6 +1095,7 @@ export async function fetchCountryNews(countryName) {
     console.warn('Regional search failed:', error.message);
   }
 
+  console.log('[Hegemon] fetchCountryNews', countryName, '- total articles:', allArticles.length);
   setCachedNews(countryName, allArticles);
   return allArticles;
 }
@@ -1314,20 +1296,10 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       await yieldToMain(1);
 
-      // Age filter — reject articles older than 72 hours
-      const now = Date.now();
-      const MAX_ARTICLE_AGE_MS = 72 * 60 * 60 * 1000;
-      const freshArticles = allArticles.filter(article => {
-        if (!article.pubDate) return true;
-        return (now - new Date(article.pubDate).getTime()) < MAX_ARTICLE_AGE_MS;
-      });
-
-      await yieldToMain(1);
-
       // Filter: irrelevant, sports, domestic noise, non-English, geo score >= 1
       const relevantArticles = [];
-      for (let i = 0; i < freshArticles.length; i++) {
-        const article = freshArticles[i];
+      for (let i = 0; i < allArticles.length; i++) {
+        const article = allArticles[i];
         const title = article.title || '';
         const text = (title + ' ' + (article.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;

@@ -358,13 +358,6 @@ function parseRSSItems(data, sourceName) {
 // Incremental article processing helpers
 // ============================================================
 
-const MAX_ARTICLE_AGE_MS = 72 * 60 * 60 * 1000;
-
-function isArticleFresh(article) {
-  if (!article.pubDate) return true;
-  return (Date.now() - new Date(article.pubDate).getTime()) < MAX_ARTICLE_AGE_MS;
-}
-
 function isArticleRelevant(article) {
   const title = article.title || '';
   const text = (title + ' ' + (article.description || '')).toLowerCase();
@@ -423,8 +416,6 @@ async function processNews() {
   // Process one batch of raw articles: filter → dedup incrementally
   function processBatchArticles(rawArticles) {
     for (const article of rawArticles) {
-      if (!isArticleFresh(article)) continue;
-
       const source = formatSourceName(article.source_id);
       if (isBlockedSource(source)) continue;
 

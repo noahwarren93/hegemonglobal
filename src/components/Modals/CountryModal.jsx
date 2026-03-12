@@ -27,27 +27,45 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       fetchCountryNews(countryName).then(articles => {
         const all = articles || [];
         const nowMs = Date.now();
-        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
         const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-        // Top Stories: max 3, hard cap 7 days, prefer last 3 days
+
+        // Dedup within a list: same source + 50%+ word overlap → keep newest
+        const dedupList = (list) => {
+          const kept = [];
+          for (const article of list) {
+            const words = (article.headline || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+            const isDup = kept.some(k => {
+              if ((k.source || '').toLowerCase() !== (article.source || '').toLowerCase()) return false;
+              const kWords = (k.headline || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+              if (kWords.length === 0 || words.length === 0) return false;
+              const overlap = words.filter(w => kWords.includes(w)).length;
+              return overlap / Math.min(words.length, kWords.length) >= 0.5;
+            });
+            if (!isDup) kept.push(article);
+          }
+          return kept;
+        };
+
+        // Top Stories: IMPORTANCE — max 3, within 7 days, ranked by qualityScore (source count)
         const within7d = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
-        let topPool = within7d.filter(a => (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
-        if (topPool.length === 0) topPool = within7d;
-        const top = [...topPool].sort((a, b) => {
+        const topSorted = dedupList([...within7d].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)));
+        const top = topSorted.slice(0, 3);
+        setTopStories(top);
+
+        // Latest Coverage: RECENCY — all remaining articles, no cap, sorted newest first
+        const topUrls = new Set(top.map(a => a.url));
+        const topHeadlines = new Set(top.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
+        const remaining = all.filter(a => {
+          if (a.url && topUrls.has(a.url)) return false;
+          if (topHeadlines.has((a.headline || '').toLowerCase().substring(0, 60))) return false;
+          return true;
+        });
+        const latestSorted = dedupList([...remaining].sort((a, b) => {
           const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
           const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
-          if (db !== da) return db - da;
-          return (b.qualityScore || 0) - (a.qualityScore || 0);
-        }).slice(0, 3);
-        setTopStories(top);
-        // Latest Coverage: 48h, expand to 72h if < 3 articles
-        const TWO_DAYS = 48 * 60 * 60 * 1000;
-        let recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < TWO_DAYS);
-        if (recent.length < 3) {
-          recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
-        }
-        const sorted = [...recent].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate)).slice(0, 8);
-        setLatestCoverage(sorted);
+          return db - da;
+        }));
+        setLatestCoverage(latestSorted);
         setNewsLoading(false);
       }).catch(() => {
         setNewsLoading(false);
