@@ -77,9 +77,9 @@
       .globe-reset-btn { right: 8px; bottom: 8px; padding: 6px 10px; font-size: 8px; min-height: 44px; display: flex; align-items: center; }
       .globe-reset-btn svg { width: 9px; height: 9px; }
 
-      /* Mobile Feature Buttons — stacked vertically above stats, 44px min tap targets */
-      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 4px; }
-      .globe-feature-btn { padding: 6px 10px; font-size: 7px; min-height: 44px; display: flex; align-items: center; }
+      /* Mobile Feature Buttons — stacked vertically above stats, compact */
+      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 3px; }
+      .globe-feature-btn { padding: 4px 8px; font-size: 7px; gap: 4px; }
 
       /* Compare hint on mobile - smaller text, JS handles positioning */
       .compare-hint { font-size: 8px; padding: 5px 10px; }
@@ -97,8 +97,8 @@
       .mil-bases-close { min-width: 44px; min-height: 44px; padding: 10px; }
 
       /* Threat group panel on mobile — bottom sheet, scrollable */
-      .threat-group-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
-      .threat-group-body { -webkit-overflow-scrolling: touch; }
+      .threat-group-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; display: flex; flex-direction: column; }
+      .threat-group-body { -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; max-height: none; }
       .threat-group-close { min-width: 44px; min-height: 44px; padding: 10px; }
       .threat-legend { display: none; }
 
@@ -162,9 +162,9 @@
       .globe-reset-btn { right: 8px; bottom: 8px; padding: 4px 8px; font-size: 7px; min-height: 44px; }
       .globe-reset-btn svg { width: 8px; height: 8px; }
 
-      /* Mobile Feature Buttons — compact text, keep 44px tap targets */
-      .mobile-feature-btns { bottom: 48px; gap: 3px; }
-      .globe-feature-btn { padding: 4px 8px; font-size: 6px; gap: 3px; min-height: 44px; }
+      /* Mobile Feature Buttons — compact on small screens */
+      .mobile-feature-btns { bottom: 48px; gap: 2px; }
+      .globe-feature-btn { padding: 3px 6px; font-size: 6px; gap: 3px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
 
       /* Compare hint smaller on small screens */
