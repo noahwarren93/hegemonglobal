@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
-import { renderBiasTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity, timeAgo } from '../../utils/riskColors';
+import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity, timeAgo } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
@@ -211,7 +211,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                       </span>
                       <span className="news-time">{timeAgo(n.time)}</span>
                     </div>
-                    <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
+                    <div dangerouslySetInnerHTML={{ __html: renderCredibilityTag(displaySource) }} />
                     <div className="news-headline">{displayHeadline}</div>
                     {n.url && n.url !== '#' && (
                       <a className="news-link" href={n.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
@@ -255,7 +255,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                       </span>
                       <span className="news-time">{article.time}</span>
                     </div>
-                    <div dangerouslySetInnerHTML={{ __html: renderBiasTag(displaySource) }} />
+                    <div dangerouslySetInnerHTML={{ __html: renderCredibilityTag(displaySource) }} />
                     <div className="news-headline">{displayHeadline}</div>
                     {article.url && article.url !== '#' && (
                       <a className="news-link" href={article.url} target="_blank" rel="noopener noreferrer">Read more ↗</a>
@@ -264,7 +264,11 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                 );
               })
             ) : (
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>No major international news coverage for this country at this time. This typically indicates a period of relative stability.</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>
+                {country.analysis
+                  ? 'Intelligence assessment current. Live feed updating.'
+                  : 'Intelligence feed updating — check back shortly.'}
+              </div>
             )}
           </div>
 

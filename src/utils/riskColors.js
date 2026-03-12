@@ -11,115 +11,208 @@ export const RISK_COLORS = {
   clear: { hex: '#22c55e', glow: 0x22cc55 }
 };
 
-export const BIAS_COLORS = { 'left': '#3b82f6', 'center-left': '#60a5fa', 'center': '#a3a3a3', 'center-right': '#f97316', 'right': '#ef4444' };
+// Source credibility classification (replaces political bias L/R system)
+export const SOURCE_CREDIBILITY = {
+  // Wire services — most trusted, original reporting
+  'Reuters': 'wire', 'AP': 'wire', 'AP News': 'wire', 'Associated Press': 'wire',
+  'AFP': 'wire', 'UPI': 'wire', 'PTI': 'wire', 'ANI': 'wire', 'IANS': 'wire',
+  'DPA': 'wire', 'EFE': 'wire', 'ANSA': 'wire', 'Yonhap': 'wire', 'Kyodo': 'wire',
+  'Kyodo News': 'wire', 'NHK': 'wire', 'NHK World': 'wire', 'CNA': 'wire',
+  'Bernama': 'wire',
 
-// COMPREHENSIVE COUNTRY DATABASE WITH FULL ANALYSIS AND NEWS
+  // State media — government controlled
+  'CGTN': 'state', 'Xinhua': 'state', 'China Daily': 'state', 'Global Times': 'state',
+  'TASS': 'state', 'RT': 'state', 'RIA Novosti': 'state', 'Pravda': 'state',
+  'Tehran Times': 'state', 'Press TV': 'state', 'Mehr News': 'state',
+  'Vietnam News': 'state',
 
-export const SOURCE_BIAS = {
-  // Left (AllSides: Left)
-  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L', 'Raw Story': 'L', 'The Wire': 'L', 'Middle East Monitor': 'L', 'The Guardian': 'L', 'Guardian': 'L', 'The Atlantic': 'L',
-  // Left-Center (AllSides: Lean Left)
-  'New York Times': 'LC', 'The New York Times': 'LC', 'NY Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'TIME': 'LC', 'Politico': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'BuzzFeed News': 'LC', 'BuzzFeed': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'LA Times': 'LC', 'Daily Beast': 'LC', 'Mediaite': 'LC', 'Business Insider': 'LC', 'Insider': 'LC', 'The New Yorker': 'LC', 'NDTV': 'LC', 'India Today': 'LC', 'Hindustan Times': 'LC', 'The Print': 'LC', 'Scroll': 'LC', 'Firstpost': 'LC', 'Kyiv Independent': 'LC', 'Kyiv Post': 'LC', 'Le Monde': 'LC', 'Der Spiegel': 'LC', 'El País': 'LC', 'Middle East Eye': 'LC', 'Folha': 'LC', 'CNBC': 'LC', 'ABC Australia': 'LC', 'Sydney Morning Herald': 'LC', 'Politico EU': 'LC', 'Irish Times': 'LC', 'Deccan Herald': 'LC', 'Indian Express': 'LC', 'Asahi Shimbun': 'LC', 'Live Mint': 'LC', 'The Conversation': 'LC', 'Times of Israel': 'LC', 'Sky News': 'LC', 'Chicago Tribune': 'LC', 'Miami Herald': 'LC', 'Al Jazeera': 'LC', 'AP': 'LC', 'AP News': 'LC', 'Associated Press': 'LC', 'Axios': 'LC', 'Haaretz': 'LC', 'CBC': 'LC', 'CBC News': 'LC',
-  // Center (AllSides: Center / MBFC: Least Biased)
-  'Reuters': 'C', 'France 24': 'C', 'France24': 'C', 'DW News': 'C', 'DW': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'PBS': 'C', 'Nikkei': 'C', 'Nikkei Asia': 'C', 'FT': 'C', 'Financial Times': 'C', 'UN News': 'C', 'The Hindu': 'LC', 'Korea Times': 'C', 'Korea Herald': 'C', 'SCMP': 'C', 'South China Morning Post': 'C', 'Euronews': 'C', 'UPI': 'C', 'PTI': 'C', 'ANI': 'C', 'IANS': 'C', 'DPA': 'C', 'EFE': 'C', 'ANSA': 'C', 'Dawn': 'C', 'Express Tribune': 'C', 'Geo News': 'C', 'Pakistan Today': 'C', 'The News': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Japan Times': 'C', 'Bangkok Post': 'C', 'Bernama': 'C', 'VnExpress': 'C', 'NZ Herald': 'C', 'RNZ': 'C', 'RTÉ': 'C', 'Africa News': 'C', 'Africanews': 'C', 'Jakarta Post': 'C', 'The Jakarta Post': 'C', 'Nation Kenya': 'C', 'Semafor': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Defense One': 'C', 'Defense News': 'C', 'Breaking Defense': 'C', 'Clarín': 'C', 'Premium Times': 'C', 'News24': 'C', 'Times Live': 'C', 'Mail & Guardian': 'C', 'East African': 'C', 'Standard Media': 'C', 'Daily Nation': 'C', 'PhilStar': 'C', 'Inquirer': 'C', 'Manila Times': 'C', 'The Star Malaysia': 'C', 'Stuff NZ': 'C', 'Nine News': 'C', 'Dutch News': 'C', 'The Local': 'C', 'WION': 'C', 'Economic Times': 'C', 'Money Control': 'C', 'MarketWatch': 'C', 'Fortune': 'C', 'Barrons': 'C', 'Seeking Alpha': 'C', 'Yonhap': 'C', 'NHK World': 'C', 'NHK': 'C', 'Kyodo News': 'C', 'Kyodo': 'C', 'Google News': 'LC', 'AFP': 'C', 'Newsweek': 'C', 'The Economist': 'C', 'Forbes': 'C',
-  // Right-Center (AllSides: Lean Right)
-  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'The Dispatch': 'RC', 'RealClearPolitics': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Daily Express': 'RC', 'The Sun': 'RC', 'The Australian': 'RC', 'Jerusalem Post': 'RC', 'Daily Sabah': 'RC', 'TRT World': 'RC', 'Anadolu Agency': 'RC', 'Arab News': 'RC', 'Gulf News': 'RC', 'Al Arabiya': 'RC', 'Global Times': 'RC', 'O Globo': 'RC', 'La Nación': 'RC', 'Times of India': 'RC', 'ARY News': 'RC', 'Metro UK': 'RC', 'Evening Standard': 'RC', 'Washington Examiner': 'RC',
-  // New sources
-  'Globe and Mail': 'LC', 'Daily Star Bangladesh': 'C', 'Daily Star': 'C', 'Tempo': 'C', 'The National': 'RC', 'The National UAE': 'RC', 'Buenos Aires Herald': 'C', 'Taipei Times': 'C', 'Rappler': 'LC', 'Vietnam News': 'R',
-  // Right (AllSides: Right)
-  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'The Blaze': 'R', 'Newsmax': 'R', 'Daily Caller': 'R', 'National Review': 'R', 'The Federalist': 'R', 'New York Sun': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'CGTN': 'R', 'Tehran Times': 'R', 'Pravda': 'R', 'RIA Novosti': 'R', 'Mehr News': 'R'
+  // State-affiliated — government influence but some editorial independence
+  'Al Jazeera': 'state-affiliated', 'TRT World': 'state-affiliated',
+  'Anadolu Agency': 'state-affiliated', 'Al Arabiya': 'state-affiliated',
+  'Daily Sabah': 'state-affiliated', 'France 24': 'state-affiliated', 'France24': 'state-affiliated',
+  'DW': 'state-affiliated', 'DW News': 'state-affiliated', 'Deutsche Welle': 'state-affiliated',
+  'BBC': 'state-affiliated', 'BBC World': 'state-affiliated', 'BBC News': 'state-affiliated',
+  'ABC Australia': 'state-affiliated', 'CBC': 'state-affiliated', 'CBC News': 'state-affiliated',
+  'The National': 'state-affiliated', 'The National UAE': 'state-affiliated',
+  'Arab News': 'state-affiliated', 'Gulf News': 'state-affiliated',
+
+  // Tabloid — sensational, lower reliability
+  'Daily Mail': 'tabloid', 'Daily Mail UK': 'tabloid', 'New York Post': 'tabloid',
+  'The Sun': 'tabloid', 'Daily Express': 'tabloid', 'Metro UK': 'tabloid',
+  'Evening Standard': 'tabloid', 'HuffPost': 'tabloid', 'BuzzFeed': 'tabloid',
+  'BuzzFeed News': 'tabloid', 'Raw Story': 'tabloid',
+
+  // Specialist — niche expertise, narrow focus
+  'Defense One': 'specialist', 'Defense News': 'specialist', 'Breaking Defense': 'specialist',
+  'Foreign Affairs': 'specialist', 'Foreign Policy': 'specialist', 'Semafor': 'specialist',
+  'MarketWatch': 'specialist', 'Barrons': 'specialist', 'Seeking Alpha': 'specialist',
+  'The Economist': 'specialist', 'CNBC': 'specialist', 'Money Control': 'specialist',
+
+  // Independent — standard editorial outlets
+  'New York Times': 'independent', 'The New York Times': 'independent', 'NY Times': 'independent',
+  'Washington Post': 'independent', 'The Washington Post': 'independent',
+  'Wall Street Journal': 'independent', 'The Wall Street Journal': 'independent', 'WSJ': 'independent',
+  'CNN': 'independent', 'NPR': 'independent', 'NBC News': 'independent',
+  'CBS News': 'independent', 'ABC News': 'independent', 'Fox News': 'independent',
+  'The Guardian': 'independent', 'Guardian': 'independent', 'The Independent': 'independent',
+  'The Telegraph': 'independent', 'Sky News': 'independent',
+  'Time': 'independent', 'TIME': 'independent', 'Politico': 'independent',
+  'Bloomberg': 'independent', 'FT': 'independent', 'Financial Times': 'independent',
+  'USA Today': 'independent', 'Los Angeles Times': 'independent', 'LA Times': 'independent',
+  'Daily Beast': 'independent', 'Mediaite': 'independent',
+  'Business Insider': 'independent', 'Insider': 'independent',
+  'The New Yorker': 'independent', 'The Atlantic': 'independent',
+  'NDTV': 'independent', 'India Today': 'independent', 'Hindustan Times': 'independent',
+  'The Print': 'independent', 'Scroll': 'independent', 'Firstpost': 'independent',
+  'Kyiv Independent': 'independent', 'Kyiv Post': 'independent',
+  'Le Monde': 'independent', 'Der Spiegel': 'independent', 'El País': 'independent',
+  'Middle East Eye': 'independent', 'Middle East Monitor': 'independent',
+  'Folha': 'independent', 'Sydney Morning Herald': 'independent',
+  'Politico EU': 'independent', 'Irish Times': 'independent',
+  'Deccan Herald': 'independent', 'Indian Express': 'independent',
+  'Asahi Shimbun': 'independent', 'Live Mint': 'independent',
+  'The Conversation': 'independent', 'Times of Israel': 'independent',
+  'Chicago Tribune': 'independent', 'Miami Herald': 'independent',
+  'Axios': 'independent', 'Haaretz': 'independent',
+  'The Hill': 'independent', 'PBS': 'independent',
+  'Nikkei': 'independent', 'Nikkei Asia': 'independent',
+  'UN News': 'independent', 'The Hindu': 'independent',
+  'Korea Times': 'independent', 'Korea Herald': 'independent',
+  'SCMP': 'independent', 'South China Morning Post': 'independent',
+  'Euronews': 'independent', 'Dawn': 'independent', 'Express Tribune': 'independent',
+  'Geo News': 'independent', 'Pakistan Today': 'independent', 'The News': 'independent',
+  'Straits Times': 'independent', 'Japan Times': 'independent', 'Bangkok Post': 'independent',
+  'VnExpress': 'independent', 'NZ Herald': 'independent', 'RNZ': 'independent', 'RTÉ': 'independent',
+  'Africa News': 'independent', 'Africanews': 'independent',
+  'Jakarta Post': 'independent', 'The Jakarta Post': 'independent',
+  'Nation Kenya': 'independent', 'Clarín': 'independent',
+  'Premium Times': 'independent', 'News24': 'independent', 'Times Live': 'independent',
+  'Mail & Guardian': 'independent', 'East African': 'independent',
+  'Standard Media': 'independent', 'Daily Nation': 'independent',
+  'PhilStar': 'independent', 'Inquirer': 'independent', 'Manila Times': 'independent',
+  'The Star Malaysia': 'independent', 'Stuff NZ': 'independent', 'Nine News': 'independent',
+  'Dutch News': 'independent', 'The Local': 'independent',
+  'WION': 'independent', 'Economic Times': 'independent',
+  'Fortune': 'independent', 'Forbes': 'independent', 'Newsweek': 'independent',
+  'Google News': 'independent',
+  'Washington Times': 'independent', 'The Dispatch': 'independent',
+  'RealClearPolitics': 'independent', 'The Australian': 'independent',
+  'Jerusalem Post': 'independent', 'O Globo': 'independent', 'La Nación': 'independent',
+  'Times of India': 'independent', 'ARY News': 'independent', 'Washington Examiner': 'independent',
+  'Globe and Mail': 'independent', 'Daily Star Bangladesh': 'independent', 'Daily Star': 'independent',
+  'Tempo': 'independent', 'Buenos Aires Herald': 'independent', 'Taipei Times': 'independent',
+  'Rappler': 'independent',
+  'The Intercept': 'independent', 'Democracy Now': 'independent', 'Jacobin': 'independent',
+  'Mother Jones': 'independent', 'MSNBC': 'independent', 'Vox': 'independent', 'Slate': 'independent',
+  'The Nation': 'independent', 'The Wire': 'independent',
+  'Daily Wire': 'independent', 'Breitbart': 'independent', 'The Blaze': 'independent',
+  'Newsmax': 'independent', 'Daily Caller': 'independent', 'National Review': 'independent',
+  'The Federalist': 'independent', 'New York Sun': 'independent',
 };
 
-export function getSourceBias(source) {
+export const CREDIBILITY_COLORS = {
+  'wire': '#22c55e',
+  'state': '#ef4444',
+  'state-affiliated': '#f97316',
+  'independent': '#3b82f6',
+  'tabloid': '#eab308',
+  'specialist': '#8b5cf6'
+};
+
+const CREDIBILITY_LABELS = {
+  'wire': 'Wire Service',
+  'state': 'State Media',
+  'state-affiliated': 'State-Affiliated',
+  'independent': 'Independent',
+  'tabloid': 'Tabloid',
+  'specialist': 'Specialist'
+};
+
+// Sources to completely block from ingestion
+export const SOURCE_BLOCKLIST = new Set([
+  'beincrypto', 'wallpaper', 'dezeen', 'archdaily',
+  'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  'vogue', 'elle', 'cosmopolitan', 'glamour',
+  'tmz', 'people', 'us weekly', 'entertainment tonight',
+  'espn', 'bleacher report', 'sports illustrated',
+  'food network', 'bon appetit', 'eater',
+]);
+
+export function getSourceCredibility(source) {
   if (!source) return null;
+  // Check blocklist
+  if (SOURCE_BLOCKLIST.has(source.toLowerCase())) return 'blocked';
   // Try exact match first
-  if (SOURCE_BIAS[source]) return SOURCE_BIAS[source];
+  if (SOURCE_CREDIBILITY[source]) return SOURCE_CREDIBILITY[source];
   // Partial match - prefer longest matching key, skip short keys to avoid false positives
-  // (e.g., 'RT' matching inside 'Report', 'AP' inside 'Japan')
   const srcLower = source.toLowerCase();
   let bestKey = null, bestLen = 0;
-  Object.keys(SOURCE_BIAS).forEach(k => {
-    if (k.length < 4) return; // Short keys (RT, AP, FT, DW) only match exactly
+  Object.keys(SOURCE_CREDIBILITY).forEach(k => {
+    if (k.length < 4) return;
     const kLower = k.toLowerCase();
     if (srcLower.includes(kLower) || kLower.includes(srcLower)) {
       if (k.length > bestLen) { bestLen = k.length; bestKey = k; }
     }
   });
-  return bestKey ? SOURCE_BIAS[bestKey] : 'C';
+  return bestKey ? SOURCE_CREDIBILITY[bestKey] : 'independent';
 }
 
-export function renderBiasTag(source) {
-  if (getStateMediaLabel(source)) return ''; // State media: show label only, no bias meter
-  const bias = getSourceBias(source);
-  if (!bias) return '';
-  const labels = { 'L': 'Left Leaning', 'LC': 'Slight Left Leaning', 'C': 'Unbiased', 'RC': 'Slight Right Leaning', 'R': 'Right Leaning' };
-  const dotPos = { 'L': '8%', 'LC': '28%', 'C': '50%', 'RC': '72%', 'R': '92%' };
-  const dotColor = { 'L': '#2563eb', 'LC': '#60a5fa', 'C': '#9ca3af', 'RC': '#f87171', 'R': '#dc2626' };
-  const labelColor = { 'L': '#60a5fa', 'LC': '#93c5fd', 'C': '#9ca3af', 'RC': '#fca5a5', 'R': '#f87171' };
-  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;">`
-    + `<span style="display:inline-block;width:48px;height:4px;border-radius:2px;background:linear-gradient(to right,#2563eb 0%,#60a5fa 20%,#93c5fd 35%,#d1d5db 50%,#fca5a5 65%,#f87171 80%,#dc2626 100%);position:relative;">`
-    + `<span style="position:absolute;top:50%;left:${dotPos[bias]};width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid ${dotColor[bias]};transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,0.4);"></span>`
-    + `</span>`
-    + `<span style="font-size:7px;color:${labelColor[bias]};font-weight:600;white-space:nowrap;">${labels[bias]}</span>`
+export function renderCredibilityTag(source) {
+  const cred = getSourceCredibility(source);
+  if (!cred || cred === 'blocked') return '';
+  const color = CREDIBILITY_COLORS[cred] || '#6b7280';
+  const label = CREDIBILITY_LABELS[cred] || cred;
+  return `<span style="display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle;">`
+    + `<span style="font-size:7px;color:${color};font-weight:600;white-space:nowrap;background:${color}1a;padding:1px 5px;border-radius:3px;border:1px solid ${color}33;">${label}</span>`
     + `</span>`;
 }
 
-// Disperse bias clusters so no more than 2 consecutive same-direction articles
-export function disperseBiasArticles(articles) {
-  if (articles.length < 4) return articles;
-
-  function biasDir(source) {
-    const b = getSourceBias(source);
-    if (b === 'L' || b === 'LC') return 'left';
-    if (b === 'RC' || b === 'R') return 'right';
-    return 'center';
-  }
-
-  // Multiple passes to break up any clusters
-  for (let pass = 0; pass < 3; pass++) {
-    let changed = false;
-    for (let i = 2; i < articles.length; i++) {
-      const d0 = biasDir(articles[i - 2].source);
-      const d1 = biasDir(articles[i - 1].source);
-      const d2 = biasDir(articles[i].source);
-
-      // 3 consecutive same direction (only break up left or right, center clusters are fine)
-      if (d0 === d1 && d1 === d2 && d0 !== 'center') {
-        // Find nearest article with different direction to swap with
-        for (let j = i + 1; j < Math.min(i + 8, articles.length); j++) {
-          if (biasDir(articles[j].source) !== d0) {
-            [articles[i], articles[j]] = [articles[j], articles[i]];
-            changed = true;
-            break;
-          }
-        }
+// Legacy aliases for backward compatibility
+export const SOURCE_BIAS = SOURCE_CREDIBILITY;
+export function getSourceBias(source) { return getSourceCredibility(source); }
+export function renderBiasTag(source) { return renderCredibilityTag(source); }
+export function disperseBiasArticles(articles) { return articles; }
+export function getStateMediaLabel(source) {
+  const cred = getSourceCredibility(source);
+  if (cred === 'state') {
+    // Return country label for state media
+    const stateLabels = {
+      'CGTN': 'China · State Media', 'Xinhua': 'China · State Media',
+      'China Daily': 'China · State Media', 'Global Times': 'China · State Media',
+      'TASS': 'Russia · State Media', 'RT': 'Russia · State Media',
+      'RIA Novosti': 'Russia · State Media', 'Pravda': 'Russia · State Media',
+      'Tehran Times': 'Iran · State Media', 'Press TV': 'Iran · State Media',
+      'Mehr News': 'Iran · State Media', 'Vietnam News': 'Vietnam · State Media',
+    };
+    if (!source) return null;
+    if (stateLabels[source]) return stateLabels[source];
+    for (const key of Object.keys(stateLabels)) {
+      if (key.length >= 4 && source.toLowerCase().includes(key.toLowerCase())) {
+        return stateLabels[key];
       }
     }
-    if (!changed) break;
+    return 'State Media';
   }
-  return articles;
-}
-
-// State-controlled media labels
-export const STATE_MEDIA = {
-  'CGTN': 'China · State Media',
-  'TASS': 'Russia · State Media',
-  'Al Arabiya': 'Saudi Arabia · State Affiliated',
-  'Press TV': 'Iran · State Media',
-  'RT': 'Russia · State Media',
-  'Xinhua': 'China · State Media',
-  'Mehr News': 'Iran · State Media',
-  'Vietnam News': 'Vietnam · State Media',
-  'The National': 'UAE · State Affiliated'
-};
-
-export function getStateMediaLabel(source) {
-  if (!source) return null;
-  if (STATE_MEDIA[source]) return STATE_MEDIA[source];
-  for (const key of Object.keys(STATE_MEDIA)) {
-    if (key.length >= 4 && source.toLowerCase().includes(key.toLowerCase())) {
-      return STATE_MEDIA[key];
+  if (cred === 'state-affiliated') {
+    const affLabels = {
+      'Al Jazeera': 'Qatar · State-Affiliated', 'Al Arabiya': 'Saudi Arabia · State-Affiliated',
+      'TRT World': 'Turkey · State-Affiliated', 'Anadolu Agency': 'Turkey · State-Affiliated',
+      'Daily Sabah': 'Turkey · State-Affiliated',
+      'France 24': 'France · State-Affiliated', 'France24': 'France · State-Affiliated',
+      'DW': 'Germany · State-Affiliated', 'DW News': 'Germany · State-Affiliated', 'Deutsche Welle': 'Germany · State-Affiliated',
+      'BBC': 'UK · State-Affiliated', 'BBC World': 'UK · State-Affiliated', 'BBC News': 'UK · State-Affiliated',
+      'ABC Australia': 'Australia · State-Affiliated', 'CBC': 'Canada · State-Affiliated', 'CBC News': 'Canada · State-Affiliated',
+      'The National': 'UAE · State-Affiliated', 'The National UAE': 'UAE · State-Affiliated',
+      'Arab News': 'Saudi Arabia · State-Affiliated', 'Gulf News': 'UAE · State-Affiliated',
+    };
+    if (!source) return null;
+    if (affLabels[source]) return affLabels[source];
+    for (const key of Object.keys(affLabels)) {
+      if (key.length >= 4 && source.toLowerCase().includes(key.toLowerCase())) {
+        return affLabels[key];
+      }
     }
+    return 'State-Affiliated';
   }
   return null;
 }

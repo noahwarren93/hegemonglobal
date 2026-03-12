@@ -159,12 +159,8 @@ function extractPrimaryCountry(headline) {
     if (STOPLIST_ENTITIES.has(name)) continue;
     for (const term of terms) {
       if (STOPLIST_ENTITIES.has(term)) continue;
-      if (term.length <= 3) {
-        const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-        if (regex.test(lower)) return name;
-      } else {
-        if (lower.includes(term)) return name;
-      }
+      const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      if (regex.test(lower)) return name;
     }
   }
 
@@ -174,7 +170,8 @@ function extractPrimaryCountry(headline) {
     if (!STOPLIST_COUNTRIES.has(cl)) continue;
     const aliases = COUNTRY_DEMONYMS[country];
     for (const term of [cl, ...aliases]) {
-      if (lower.includes(term)) return '_stop_' + cl;
+      const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      if (regex.test(lower)) return '_stop_' + cl;
     }
   }
 
@@ -187,7 +184,8 @@ function extractAllCountries(text) {
   const lookup = getCountryLookup();
   for (const { name, terms } of lookup) {
     for (const term of terms) {
-      if (lower.includes(term)) { countries.add(name); break; }
+      const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      if (regex.test(lower)) { countries.add(name); break; }
     }
   }
   return countries;

@@ -180,56 +180,19 @@ function timeAgo(dateString) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-const SOURCE_BIAS = {
-  'The Intercept': 'L', 'Democracy Now': 'L', 'Jacobin': 'L', 'Mother Jones': 'L', 'MSNBC': 'L', 'HuffPost': 'L', 'Vox': 'L', 'Slate': 'L', 'The Nation': 'L', 'Raw Story': 'L', 'The Wire': 'L', 'Middle East Monitor': 'L', 'The Guardian': 'L', 'Guardian': 'L', 'The Atlantic': 'L',
-  'New York Times': 'LC', 'The New York Times': 'LC', 'NY Times': 'LC', 'Washington Post': 'LC', 'The Washington Post': 'LC', 'CNN': 'LC', 'BBC': 'LC', 'BBC World': 'LC', 'BBC News': 'LC', 'NPR': 'LC', 'NBC News': 'LC', 'CBS News': 'LC', 'ABC News': 'LC', 'Time': 'LC', 'TIME': 'LC', 'Politico': 'LC', 'Bloomberg': 'LC', 'The Independent': 'LC', 'USA Today': 'LC', 'Los Angeles Times': 'LC', 'LA Times': 'LC', 'Daily Beast': 'LC', 'Business Insider': 'LC', 'Insider': 'LC', 'CNBC': 'LC', 'ABC Australia': 'LC', 'Sydney Morning Herald': 'LC', 'Irish Times': 'LC', 'Times of Israel': 'LC', 'Al Jazeera': 'LC', 'AP': 'LC', 'AP News': 'LC', 'Associated Press': 'LC', 'Axios': 'LC', 'Haaretz': 'LC', 'CBC': 'LC', 'CBC News': 'LC', 'Google News': 'LC', 'Middle East Eye': 'LC', 'Folha': 'LC', 'Globe and Mail': 'LC', 'Rappler': 'LC',
-  'Reuters': 'C', 'France 24': 'C', 'France24': 'C', 'DW News': 'C', 'DW': 'C', 'Deutsche Welle': 'C', 'The Hill': 'C', 'PBS': 'C', 'Nikkei': 'C', 'Nikkei Asia': 'C', 'FT': 'C', 'Financial Times': 'C', 'The Hindu': 'LC', 'Korea Herald': 'C', 'SCMP': 'C', 'South China Morning Post': 'C', 'Dawn': 'C', 'Straits Times': 'C', 'CNA': 'C', 'Bangkok Post': 'C', 'VnExpress': 'C', 'Africa News': 'C', 'Africanews': 'C', 'Jakarta Post': 'C', 'The Jakarta Post': 'C', 'Nation Kenya': 'C', 'Foreign Policy': 'C', 'Foreign Affairs': 'C', 'Yonhap': 'C', 'NHK World': 'C', 'NHK': 'C', 'Kyodo News': 'C', 'Kyodo': 'C', 'AFP': 'C', 'Newsweek': 'C', 'The Economist': 'C', 'Forbes': 'C', 'Semafor': 'C', 'Daily Star Bangladesh': 'C', 'Daily Star': 'C', 'Tempo': 'C', 'Buenos Aires Herald': 'C', 'Taipei Times': 'C', 'Premium Times': 'C', 'Mail & Guardian': 'C',
-  'Wall Street Journal': 'RC', 'The Wall Street Journal': 'RC', 'WSJ': 'RC', 'The Telegraph': 'RC', 'Washington Times': 'RC', 'New York Post': 'RC', 'Daily Mail': 'RC', 'Daily Mail UK': 'RC', 'Anadolu Agency': 'RC', 'Times of India': 'RC', 'The National': 'RC', 'The National UAE': 'RC',
-  'Fox News': 'R', 'Daily Wire': 'R', 'Breitbart': 'R', 'Newsmax': 'R', 'RT': 'R', 'TASS': 'R', 'Xinhua': 'R', 'China Daily': 'R', 'CGTN': 'R', 'Mehr News': 'R', 'Vietnam News': 'R',
-};
+// Source blocklist — completely filtered from ingestion
+const SOURCE_BLOCKLIST = new Set([
+  'beincrypto', 'wallpaper', 'dezeen', 'archdaily',
+  'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  'vogue', 'elle', 'cosmopolitan', 'glamour',
+  'tmz', 'people', 'us weekly', 'entertainment tonight',
+  'espn', 'bleacher report', 'sports illustrated',
+  'food network', 'bon appetit', 'eater',
+]);
 
-function getSourceBias(source) {
-  if (!source) return null;
-  if (SOURCE_BIAS[source]) return SOURCE_BIAS[source];
-  const srcLower = source.toLowerCase();
-  let bestKey = null, bestLen = 0;
-  Object.keys(SOURCE_BIAS).forEach(k => {
-    if (k.length < 4) return;
-    const kLower = k.toLowerCase();
-    if (srcLower.includes(kLower) || kLower.includes(srcLower)) {
-      if (k.length > bestLen) { bestLen = k.length; bestKey = k; }
-    }
-  });
-  return bestKey ? SOURCE_BIAS[bestKey] : 'C';
-}
-
-function disperseBiasArticles(articles) {
-  if (articles.length < 4) return articles;
-  function biasDir(source) {
-    const b = getSourceBias(source);
-    if (b === 'L' || b === 'LC') return 'left';
-    if (b === 'RC' || b === 'R') return 'right';
-    return 'center';
-  }
-  for (let pass = 0; pass < 3; pass++) {
-    let changed = false;
-    for (let i = 2; i < articles.length; i++) {
-      const d0 = biasDir(articles[i - 2].source);
-      const d1 = biasDir(articles[i - 1].source);
-      const d2 = biasDir(articles[i].source);
-      if (d0 === d1 && d1 === d2 && d0 !== 'center') {
-        for (let j = i + 1; j < Math.min(i + 8, articles.length); j++) {
-          if (biasDir(articles[j].source) !== d0) {
-            [articles[i], articles[j]] = [articles[j], articles[i]];
-            changed = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!changed) break;
-  }
-  return articles;
+function isBlockedSource(source) {
+  if (!source) return false;
+  return SOURCE_BLOCKLIST.has(source.toLowerCase());
 }
 
 const NON_WESTERN_SOURCES = new Set([
@@ -395,11 +358,11 @@ function parseRSSItems(data, sourceName) {
 // Incremental article processing helpers
 // ============================================================
 
-const STALENESS_MS = 48 * 60 * 60 * 1000;
+const MAX_ARTICLE_AGE_MS = 72 * 60 * 60 * 1000;
 
 function isArticleFresh(article) {
   if (!article.pubDate) return true;
-  return (Date.now() - new Date(article.pubDate).getTime()) < STALENESS_MS;
+  return (Date.now() - new Date(article.pubDate).getTime()) < MAX_ARTICLE_AGE_MS;
 }
 
 function isArticleRelevant(article) {
@@ -461,9 +424,12 @@ async function processNews() {
   function processBatchArticles(rawArticles) {
     for (const article of rawArticles) {
       if (!isArticleFresh(article)) continue;
-      if (!isArticleRelevant(article)) continue;
 
       const source = formatSourceName(article.source_id);
+      if (isBlockedSource(source)) continue;
+
+      if (!isArticleRelevant(article)) continue;
+
       const normalized = normalizeForDedup(article.title);
       if (isDuplicate(normalized, source, seenEntries)) continue;
 
@@ -514,28 +480,8 @@ async function processNews() {
     };
   });
 
-  // 6. Political diversity — ensure right-leaning sources
-  const rcCount = newArticles.filter(a => { const b = getSourceBias(a.source); return b === 'RC' || b === 'R'; }).length;
-  if (rcCount < 3) {
-    const rightFallbacks = DAILY_BRIEFING_FALLBACK.filter(a => {
-      const b = getSourceBias(a.source);
-      return b === 'RC' || b === 'R';
-    });
-    const needed = Math.min(4 - rcCount, rightFallbacks.length);
-    if (needed > 0) {
-      const interval = Math.max(1, Math.floor(newArticles.length / (needed + 1)));
-      for (let i = 0; i < needed; i++) {
-        const pos = Math.min((i + 1) * interval + i, newArticles.length);
-        newArticles.splice(pos, 0, rightFallbacks[i]);
-      }
-    }
-  }
-
-  // 7. Disperse bias clusters
-  const dispersed = disperseBiasArticles(newArticles);
-
-  // 8. Balance western/non-western sources
-  const balanced = balanceSourceOrigins(dispersed);
+  // 6. Balance western/non-western sources (geographic diversity)
+  const balanced = balanceSourceOrigins(newArticles);
 
   // 9. Demote low-priority stories out of top 10
   const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];

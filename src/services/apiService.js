@@ -6,7 +6,7 @@ import {
   DOMESTIC_NOISE_PATTERNS, ESCALATION_KEYWORDS,
   DEESCALATION_KEYWORDS, CATEGORY_WEIGHTS, COUNTRY_DEMONYMS
 } from '../data/countries';
-import { formatSourceName, timeAgo, getSourceBias, disperseBiasArticles, balanceSourceOrigins } from '../utils/riskColors';
+import { formatSourceName, timeAgo, SOURCE_BLOCKLIST, balanceSourceOrigins } from '../utils/riskColors';
 import { clusterArticles } from './eventsService';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
@@ -753,15 +753,19 @@ export async function updateDynamicRisks(articles) {
     const chunk = countryNames.slice(i, i + CHUNK);
 
     for (const countryName of chunk) {
-      // Fast relevance check: only match country names/demonyms
+      // Fast relevance check: only match country names/demonyms with word boundaries
       // (articles are already pre-filtered by Worker, no need to re-check IRRELEVANT_KEYWORDS)
       const countryLower = countryName.toLowerCase();
       const terms = COUNTRY_DEMONYMS[countryName] || [countryLower];
       const allTerms = [countryLower, ...terms];
+      // Pre-compile regex for all terms (avoids re-creating per article)
+      const termRegexes = allTerms.map(term =>
+        new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b')
+      );
 
       const relevant = [];
       for (const p of prepared) {
-        if (allTerms.some(term => p.text.includes(term))) {
+        if (termRegexes.some(rx => rx.test(p.text))) {
           relevant.push(p.article);
         }
       }
@@ -817,10 +821,16 @@ export function isRelevantToCountry(title, description, countryName) {
   const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
   const allTerms = [countryLower, ...countryTerms];
 
-  const inTitle = allTerms.some(term => titleLower.includes(term));
+  const inTitle = allTerms.some(term => {
+    const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+    return regex.test(titleLower);
+  });
   if (inTitle) return true;
 
-  const inDesc = allTerms.some(term => descLower.includes(term));
+  const inDesc = allTerms.some(term => {
+    const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+    return regex.test(descLower);
+  });
   return inDesc;
 }
 
@@ -1283,12 +1293,12 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       await yieldToMain(1);
 
-      // Staleness filter — reject articles older than 48 hours
+      // Age filter — reject articles older than 72 hours
       const now = Date.now();
-      const STALENESS_MS = 48 * 60 * 60 * 1000;
+      const MAX_ARTICLE_AGE_MS = 72 * 60 * 60 * 1000;
       const freshArticles = allArticles.filter(article => {
         if (!article.pubDate) return true;
-        return (now - new Date(article.pubDate).getTime()) < STALENESS_MS;
+        return (now - new Date(article.pubDate).getTime()) < MAX_ARTICLE_AGE_MS;
       });
 
       await yieldToMain(1);
@@ -1326,6 +1336,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       for (let i = 0; i < relevantArticles.length; i++) {
         const article = relevantArticles[i];
         const source = formatSourceName(article.source_id);
+        if (SOURCE_BLOCKLIST.has(source.toLowerCase())) continue;
         const normalized = (article.title || '').toLowerCase()
           .replace(/[^a-z0-9 ]/g, '')
           .replace(/\b(the|a|an|in|on|at|to|for|of|and|is|are|was|were|has|have|had|with|from|by)\b/g, '')
@@ -1372,28 +1383,8 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         };
       });
 
-      // Ensure political diversity
-      const rcCount = newArticles.filter(a => { const b = getSourceBias(a.source); return b === 'RC' || b === 'R'; }).length;
-      if (rcCount < 3) {
-        const rightFallbacks = DAILY_BRIEFING_FALLBACK.filter(a => {
-          const b = getSourceBias(a.source);
-          return b === 'RC' || b === 'R';
-        });
-        const needed = Math.min(4 - rcCount, rightFallbacks.length);
-        if (needed > 0) {
-          const interval = Math.max(1, Math.floor(newArticles.length / (needed + 1)));
-          for (let i = 0; i < needed; i++) {
-            const pos = Math.min((i + 1) * interval + i, newArticles.length);
-            newArticles.splice(pos, 0, rightFallbacks[i]);
-          }
-        }
-      }
-
-      // Disperse bias clusters
-      const dispersed = disperseBiasArticles(newArticles);
-
-      // Balance western/non-western source ratio
-      const balanced = balanceSourceOrigins(dispersed);
+      // Balance western/non-western source ratio (geographic diversity)
+      const balanced = balanceSourceOrigins(newArticles);
 
       // Demote low-priority stories out of top 10
       const DEMOTE_KEYWORDS = ['switzerland', 'swiss', 'nightclub', 'club fire', 'nightlife'];
