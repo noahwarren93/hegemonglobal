@@ -961,12 +961,13 @@ function formatArticlesForDisplay(articles, countryName) {
   const scored = toUse.map(a => ({ article: a, score: scoreHeadlineQuality(a.title) }));
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, 15).map(({ article }) => ({
+  return scored.slice(0, 15).map(({ article, score }) => ({
     headline: article.title,
     source: formatSourceName(article.source_id),
-    time: timeAgo(article.pubDate),
+    pubDate: article.pubDate || '',
     url: article.link || '',
-    category: detectCategory(article.title, article.description)
+    category: detectCategory(article.title, article.description),
+    qualityScore: score
   }));
 }
 
@@ -1002,66 +1003,84 @@ export async function fetchCountryNews(countryName) {
   const cached = getCachedNews(countryName);
   if (cached) return cached;
 
-  // 2. Check DAILY_BRIEFING for relevant articles (72h max age)
-  const MAX_AGE_MS = 72 * 60 * 60 * 1000;
+  // Collect all matching articles from multiple sources
+  const allArticles = [];
+  const seenHeadlines = new Set();
+  const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
   const now = Date.now();
-  const isRecentArticle = (a) => {
-    const d = a.pubDate || a.time;
-    if (!d) return true;
-    return (now - new Date(d).getTime()) < MAX_AGE_MS;
+
+  const addArticle = (article) => {
+    const h = (article.headline || '').toLowerCase().substring(0, 60);
+    if (seenHeadlines.has(h)) return;
+    seenHeadlines.add(h);
+    allArticles.push(article);
   };
+
+  const formatBriefingArticle = (a) => ({
+    headline: a.title || a.headline,
+    source: formatSourceName(a.source_id || a.source || 'News'),
+    pubDate: a.pubDate || a.time || '',
+    url: a.link || a.url || '',
+    category: a.category || detectCategory(a.title || a.headline, a.description || ''),
+    qualityScore: scoreHeadlineQuality(a.title || a.headline)
+  });
+
+  // 2. DAILY_BRIEFING articles (7 day window)
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
-    const briefingRelevant = DAILY_BRIEFING.filter(article =>
-      isRecentArticle(article) && isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
-    );
-    if (briefingRelevant.length >= 2) {
-      briefingRelevant.sort((a, b) =>
-        scoreHeadlineQuality(b.title || b.headline) - scoreHeadlineQuality(a.title || a.headline)
-      );
-      const result = briefingRelevant.slice(0, 10).map(article => ({
-        headline: article.title || article.headline,
-        source: formatSourceName(article.source_id || article.source || 'News'),
-        time: timeAgo(article.pubDate || article.time),
-        url: article.link || article.url || '',
-        category: article.category || detectCategory(article.title || article.headline, article.description || '')
-      }));
-      setCachedNews(countryName, result);
-      return result;
-    }
+    DAILY_BRIEFING.forEach(article => {
+      const d = article.pubDate || article.time;
+      if (d && (now - new Date(d).getTime()) > MAX_AGE_MS) return;
+      if (isRelevantToCountry(article.title || article.headline, article.description || '', countryName)) {
+        addArticle(formatBriefingArticle(article));
+      }
+    });
   }
 
-  // 3. Try Google News RSS
+  // 3. If we have enough from DAILY_BRIEFING, return early
+  if (allArticles.length >= 5) {
+    setCachedNews(countryName, allArticles);
+    return allArticles;
+  }
+
+  // 4. Try Google News RSS
   try {
     const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
     if (articles && articles.length > 0) {
-      const result = formatArticlesForDisplay(articles, countryName);
-      if (result.length > 0) { setCachedNews(countryName, result); return result; }
+      const formatted = formatArticlesForDisplay(articles, countryName);
+      formatted.forEach(a => addArticle(a));
     }
   } catch (error) {
     console.warn('Google News RSS failed:', error.message);
   }
 
-  // 4. Try backup APIs in sequence
+  if (allArticles.length >= 3) {
+    setCachedNews(countryName, allArticles);
+    return allArticles;
+  }
+
+  // 5. Try backup APIs
   const apiOrder = ['gnews', 'newsdata', 'mediastack'];
   for (const apiName of apiOrder) {
     const api = NEWS_APIS[apiName];
     if (!api || !api.key) continue;
-
     if (apiFailures[apiName] && (Date.now() - apiFailures[apiName]) < 5 * 60 * 1000) continue;
-
     const url = api.buildUrl(api.key, countryName);
     const results = await tryNewsAPI(apiName, url, api.parseResults);
-
     if (results) {
-      const formatted = formatArticlesForDisplay(results, countryName);
-      if (formatted.length > 0) { setCachedNews(countryName, formatted); return formatted; }
+      formatArticlesForDisplay(results, countryName).forEach(a => addArticle(a));
+      if (allArticles.length >= 3) break;
     } else {
       apiFailures[apiName] = Date.now();
     }
   }
 
-  // 5. Try broader regional search
+  if (allArticles.length >= 2) {
+    setCachedNews(countryName, allArticles);
+    return allArticles;
+  }
+
+  // 6. Broader regional search
   try {
     const countryData = COUNTRIES[countryName];
     if (countryData && countryData.region) {
@@ -1069,39 +1088,15 @@ export async function fetchCountryNews(countryName) {
       const regionUrl = RSS_FEEDS.search(regionQuery);
       const articles = await fetchRSS(regionUrl, 'Google News');
       if (articles && articles.length > 0) {
-        const result = formatArticlesForDisplay(articles, countryName);
-        if (result.length > 0) { setCachedNews(countryName, result); return result; }
+        formatArticlesForDisplay(articles, countryName).forEach(a => addArticle(a));
       }
     }
   } catch (error) {
     console.warn('Regional search failed:', error.message);
   }
 
-  // 6. Last resort: any DAILY_BRIEFING articles (72h max age)
-  if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
-    const anyRelevant = DAILY_BRIEFING.filter(article =>
-      isRecentArticle(article) && isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
-    );
-    if (anyRelevant.length > 0) {
-      anyRelevant.sort((a, b) =>
-        scoreHeadlineQuality(b.title || b.headline) - scoreHeadlineQuality(a.title || a.headline)
-      );
-      const result = anyRelevant.slice(0, 10).map(article => ({
-        headline: article.title || article.headline,
-        source: formatSourceName(article.source_id || article.source || 'News'),
-        time: timeAgo(article.pubDate || article.time),
-        url: article.link || article.url || '',
-        category: article.category || detectCategory(article.title || article.headline, article.description || '')
-      }));
-      setCachedNews(countryName, result);
-      return result;
-    }
-  }
-
-  // 7. No news found
-  const emptyResult = [];
-  setCachedNews(countryName, emptyResult);
-  return emptyResult;
+  setCachedNews(countryName, allArticles);
+  return allArticles;
 }
 
 // Lightweight country extraction for Worker events (Worker strips _primaryCountry)

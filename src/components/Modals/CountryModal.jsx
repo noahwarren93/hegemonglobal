@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
-import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, enforceSourceDiversity, timeAgo } from '../../utils/riskColors';
+import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
 export default function CountryModal({ countryName, isOpen, onClose }) {
-  const [news, setNews] = useState([]);
+  const [topStories, setTopStories] = useState([]);
+  const [latestCoverage, setLatestCoverage] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [sanctionsOpen, setSanctionsOpen] = useState(false);
   const [casualtiesExpanded, setCasualtiesExpanded] = useState(false);
@@ -15,15 +16,29 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   const country = countryName ? COUNTRIES[countryName] : null;
 
   /* eslint-disable react-hooks/set-state-in-effect */
-  // Fetch news when modal opens
+  // Fetch news when modal opens, split into Top Stories + Latest Coverage
   useEffect(() => {
     if (isOpen && countryName) {
-      setNews([]);
+      setTopStories([]);
+      setLatestCoverage([]);
       setNewsLoading(true);
       setSanctionsOpen(false);
       setCasualtiesExpanded(false);
       fetchCountryNews(countryName).then(articles => {
-        setNews(articles || []);
+        const all = articles || [];
+        // Top Stories: sorted by quality score, up to 5
+        const top = [...all].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)).slice(0, 5);
+        setTopStories(top);
+        // Latest Coverage: most recent by date (3 days, expand to 6)
+        const nowMs = Date.now();
+        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+        const SIX_DAYS = 6 * 24 * 60 * 60 * 1000;
+        let recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
+        if (recent.length === 0) {
+          recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SIX_DAYS);
+        }
+        const sorted = [...recent].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate)).slice(0, 8);
+        setLatestCoverage(sorted);
         setNewsLoading(false);
       }).catch(() => {
         setNewsLoading(false);
@@ -65,6 +80,49 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       if (country.analysis.next) analysisBlocks.push({ num: 3, title: 'What Might Happen', text: country.analysis.next });
     }
   }
+
+  // Helper: clean Google News headline/source extraction
+  const cleanNewsDisplay = (article) => {
+    let displayHeadline = article.headline;
+    let displaySource = article.source;
+    if (displaySource && displaySource.includes('Google News') && displayHeadline) {
+      const dashIdx = displayHeadline.lastIndexOf(' - ');
+      if (dashIdx > 0) {
+        displaySource = displayHeadline.substring(dashIdx + 3).trim();
+        displayHeadline = displayHeadline.substring(0, dashIdx).trim();
+      }
+    }
+    return { ...article, headline: displayHeadline, source: displaySource };
+  };
+
+  // Helper: render a single news item
+  const renderNewsItem = (article, i) => {
+    const stateLabel = getStateMediaLabel(article.source);
+    return (
+      <div key={i} className="news-item">
+        <div className="news-meta">
+          {article.category && (
+            <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
+          )}
+          <span className="news-source">
+            {article.source}
+            {stateLabel && (
+              <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
+                {stateLabel}
+              </span>
+            )}
+          </span>
+          <span className="news-time">{article.pubDate ? timeAgo(article.pubDate) : (article.time || '')}</span>
+        </div>
+        <span dangerouslySetInnerHTML={{ __html: renderCredibilityTag(article.source) }} />
+        <div className="news-headline">
+          {article.url && article.url !== '#' ? (
+            <a href={article.url} target="_blank" rel="noopener noreferrer" className="news-link" style={{ fontSize: '12px' }}>{article.headline}</a>
+          ) : article.headline}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -183,92 +241,34 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </>
           )}
 
-          {/* Top Stories — always show hardcoded country news */}
-          {country.news && country.news.length > 0 && (
+          {/* Top Stories — biggest stories from last 7 days, sorted by quality */}
+          {newsLoading && (
             <div style={{ marginTop: '16px' }}>
               <div className="section-title">Top Stories</div>
-              {enforceSourceDiversity(country.news).map((n, i) => {
-                let displayHeadline = n.headline;
-                let displaySource = n.source;
-                if (displaySource && displaySource.includes('Google News') && displayHeadline) {
-                  const dashIdx = displayHeadline.lastIndexOf(' - ');
-                  if (dashIdx > 0) {
-                    displaySource = displayHeadline.substring(dashIdx + 3).trim();
-                    displayHeadline = displayHeadline.substring(0, dashIdx).trim();
-                  }
-                }
-                const stateLabel = getStateMediaLabel(displaySource);
-                return (
-                  <div key={i} className="news-item">
-                    <div className="news-meta">
-                      <span className="news-source">
-                        {displaySource}
-                        {stateLabel && (
-                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                            {stateLabel}
-                          </span>
-                        )}
-                      </span>
-                      <span className="news-time">{timeAgo(n.time)}</span>
-                    </div>
-                    <span dangerouslySetInnerHTML={{ __html: renderCredibilityTag(displaySource) }} />
-                    <div className="news-headline">
-                      {n.url && n.url !== '#' ? (
-                        <a href={n.url} target="_blank" rel="noopener noreferrer" className="news-link" style={{ fontSize: '12px' }}>{displayHeadline}</a>
-                      ) : displayHeadline}
-                    </div>
-                  </div>
-                );
-              })}
+              <div style={{ color: '#6b7280', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                Loading...
+              </div>
+            </div>
+          )}
+          {!newsLoading && topStories.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div className="section-title">Top Stories</div>
+              {topStories.map((article, i) => renderNewsItem(cleanNewsDisplay(article), i))}
+            </div>
+          )}
+          {!newsLoading && topStories.length === 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div className="section-title">Top Stories</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>No recent developments</div>
             </div>
           )}
 
-          {/* Latest Coverage — fetched from DAILY_BRIEFING, hide if empty */}
-          {newsLoading && (
+          {/* Latest Coverage — most recent articles, sorted by date */}
+          {!newsLoading && latestCoverage.length > 0 && (
             <div className="country-news-section">
               <div className="country-news-title">Latest Coverage</div>
-              <div className="country-news-loading">Loading latest news...</div>
-            </div>
-          )}
-          {!newsLoading && news.length > 0 && (
-            <div className="country-news-section">
-              <div className="country-news-title">Latest Coverage</div>
-              {enforceSourceDiversity(news).map((article, i) => {
-                let displayHeadline = article.headline;
-                let displaySource = article.source;
-                if (displaySource && displaySource.includes('Google News') && displayHeadline) {
-                  const dashIdx = displayHeadline.lastIndexOf(' - ');
-                  if (dashIdx > 0) {
-                    displaySource = displayHeadline.substring(dashIdx + 3).trim();
-                    displayHeadline = displayHeadline.substring(0, dashIdx).trim();
-                  }
-                }
-                const stateLabel = getStateMediaLabel(displaySource);
-                return (
-                  <div key={i} className="news-item">
-                    <div className="news-meta">
-                      {article.category && (
-                        <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
-                      )}
-                      <span className="news-source">
-                        {displaySource}
-                        {stateLabel && (
-                          <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                            {stateLabel}
-                          </span>
-                        )}
-                      </span>
-                      <span className="news-time">{article.time}</span>
-                    </div>
-                    <span dangerouslySetInnerHTML={{ __html: renderCredibilityTag(displaySource) }} />
-                    <div className="news-headline">
-                      {article.url && article.url !== '#' ? (
-                        <a href={article.url} target="_blank" rel="noopener noreferrer" className="news-link" style={{ fontSize: '12px' }}>{displayHeadline}</a>
-                      ) : displayHeadline}
-                    </div>
-                  </div>
-                );
-              })}
+              {latestCoverage.map((article, i) => renderNewsItem(cleanNewsDisplay(article), i))}
             </div>
           )}
 
