@@ -55,26 +55,31 @@
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
 
+      /* Sidebar tabs — horizontal scroll, never wrap */
+      .tabs { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; justify-content: flex-start; gap: 0; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab { font-size: 7.5px; letter-spacing: 0.3px; flex-shrink: 0; padding: 10px 10px; min-width: 0; }
+
       /* Stats (Critical, High, Stable, Countries) - bottom left, compact */
       .stats { bottom: 8px; left: 8px; right: auto; gap: 4px; flex-wrap: nowrap; max-width: 55%; }
-      .stat-card { padding: 6px 8px; min-width: 44px; }
+      .stat-card { padding: 6px 8px; min-width: 44px; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .stat-value { font-size: 14px; }
       .stat-label { font-size: 6px; }
       .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .stat-popup.active { transform: translate(-50%, -50%); }
 
-      /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column */
+      /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column, 44px tap targets */
       .globe-tools { right: 8px; bottom: 42px; top: auto; flex-direction: column; }
-      .globe-tool-btn { width: 28px; height: 28px; padding: 6px; }
-      .globe-tool-btn-labeled { padding: 4px 8px; font-size: 8px; gap: 4px; }
+      .globe-tool-btn { width: 44px; height: 44px; padding: 6px; }
+      .globe-tool-btn-labeled { width: auto; padding: 6px 10px; font-size: 8px; gap: 4px; min-height: 44px; }
 
-      /* Reset button - bottom right, below globe-tools */
-      .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 7px; font-size: 8px; }
+      /* Reset button - bottom right, below globe-tools, 44px tap */
+      .globe-reset-btn { right: 8px; bottom: 8px; padding: 6px 10px; font-size: 8px; min-height: 44px; display: flex; align-items: center; }
       .globe-reset-btn svg { width: 9px; height: 9px; }
 
-      /* Mobile Feature Buttons (Trade Routes, Compare Mode) - stacked vertically above stats */
+      /* Mobile Feature Buttons — stacked vertically above stats, 44px min tap targets */
       .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 4px; }
-      .globe-feature-btn { padding: 5px 8px; font-size: 7px; }
+      .globe-feature-btn { padding: 6px 10px; font-size: 7px; min-height: 44px; display: flex; align-items: center; }
 
       /* Compare hint on mobile - smaller text, JS handles positioning */
       .compare-hint { font-size: 8px; padding: 5px 10px; }
@@ -84,13 +89,17 @@
 
       /* Trade info panel on mobile */
       .trade-info-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
+      .trade-info-body { -webkit-overflow-scrolling: touch; }
 
       /* Military bases list panel on mobile — starts at 50% from top, globe visible above */
       .mil-bases-panel { position: fixed; left: 0; top: 50%; bottom: 0; width: 100%; max-height: none; border-radius: 12px 12px 0 0; z-index: 50; display: flex; flex-direction: column; overflow: hidden; }
       .mil-bases-body { flex: 1; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      .mil-bases-close { min-width: 44px; min-height: 44px; padding: 10px; }
 
-      /* Threat group panel on mobile */
+      /* Threat group panel on mobile — bottom sheet, scrollable */
       .threat-group-panel { left: 10px; top: auto; bottom: 10px; width: calc(100% - 20px); max-height: 40vh; }
+      .threat-group-body { -webkit-overflow-scrolling: touch; }
+      .threat-group-close { min-width: 44px; min-height: 44px; padding: 10px; }
       .threat-legend { display: none; }
 
       /* Nuclear arsenals box hidden on mobile (inline badges in mil panel instead) */
@@ -102,13 +111,14 @@
       .compare-panel.active { transform: translateY(0); }
       .compare-panel.expanded { max-height: 65vh; overflow-y: auto; }
 
-      .tab { font-size: 7.5px; letter-spacing: 0.3px; }
+      /* Modal — ensure scrollable, no overflow */
       .modal { width: 95%; max-height: 85vh; margin: 10px; }
       .modal-header { padding: 12px; }
       .modal-title { font-size: 16px; }
-      .modal-body { padding: 12px; }
+      .modal-body { padding: 12px; -webkit-overflow-scrolling: touch; }
+      .modal-close { min-width: 44px; min-height: 44px; }
       .country-tag { font-size: 7px; padding: 1px 4px; }
-      .research-link { padding: 6px 8px; }
+      .research-link { padding: 6px 8px; min-height: 44px; display: flex; align-items: center; }
       .research-name { font-size: 10px; }
       .research-desc { font-size: 9px; }
       .casualties-total { font-size: 14px; }
@@ -118,6 +128,10 @@
       .breaking-banner { padding: 6px 10px; }
       .breaking-text { font-size: 10px; }
       .tos-close { min-width: 44px; min-height: 44px; padding: 10px; font-size: 22px; }
+
+      /* Trade panel close buttons — 44px tap target */
+      .trade-info-close { min-width: 44px; min-height: 44px; padding: 10px; }
+
       body { overflow-x: hidden; }
     }
 
@@ -129,24 +143,28 @@
       .date { font-size: 10px; }
       .legend { display: none; }
 
-      /* Stats even more compact */
+      /* Stats even more compact but keep 44px tap targets */
       .stats { max-width: 50%; gap: 3px; }
-      .stat-card { padding: 5px 6px; min-width: 44px; }
+      .stat-card { padding: 5px 6px; min-width: 40px; min-height: 44px; }
       .stat-value { font-size: 12px; }
       .stat-label { font-size: 5.5px; }
-      .tab { font-size: 7.5px; letter-spacing: 0.3px; }
 
+      /* Tabs — slightly smaller on narrow screens */
+      .tab { font-size: 7px; letter-spacing: 0.2px; padding: 10px 8px; }
+
+      /* Globe tools — keep 44px tap targets, reduce visual size */
       .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
-      .globe-tool-btn { width: 26px; height: 26px; }
-      .globe-tool-btn-labeled { padding: 3px 6px; font-size: 7px; gap: 3px; }
+      .globe-tool-btn { width: 44px; height: 44px; }
+      .globe-tool-btn svg { width: 12px; height: 12px; }
+      .globe-tool-btn-labeled { padding: 4px 8px; font-size: 7px; gap: 3px; min-height: 44px; }
 
-      /* Reset button even smaller on small screens */
-      .globe-reset-btn { right: 8px; bottom: 8px; padding: 3px 6px; font-size: 7px; }
+      /* Reset button even smaller on small screens but keep tap area */
+      .globe-reset-btn { right: 8px; bottom: 8px; padding: 4px 8px; font-size: 7px; min-height: 44px; }
       .globe-reset-btn svg { width: 8px; height: 8px; }
 
-      /* Mobile Feature Buttons - even more compact on small screens */
+      /* Mobile Feature Buttons — compact text, keep 44px tap targets */
       .mobile-feature-btns { bottom: 48px; gap: 3px; }
-      .globe-feature-btn { padding: 4px 6px; font-size: 6px; gap: 3px; }
+      .globe-feature-btn { padding: 4px 8px; font-size: 6px; gap: 3px; min-height: 44px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
 
       /* Compare hint smaller on small screens */
@@ -155,4 +173,7 @@
       .globe-container { height: 52vh; }
       .sidebar { height: 48vh; }
       .search-overlay { right: 8px; width: 220px; bottom: 130px; }
+
+      /* Threat group panel — slightly less max height on small phones */
+      .threat-group-panel { max-height: 38vh; }
     }
