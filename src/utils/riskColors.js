@@ -111,7 +111,7 @@ export const SOURCE_CREDIBILITY = {
 };
 
 export const CREDIBILITY_COLORS = {
-  'wire': '#22c55e',
+  'wire': '#059669',
   'state': '#ef4444',
   'state-affiliated': '#f97316',
   'independent': '#3b82f6',
@@ -120,7 +120,7 @@ export const CREDIBILITY_COLORS = {
 };
 
 const CREDIBILITY_LABELS = {
-  'wire': 'Wire Service',
+  'wire': 'Verified',
   'state': 'State Media',
   'state-affiliated': 'State-Affiliated',
   'independent': 'Independent',

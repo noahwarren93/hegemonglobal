@@ -14,29 +14,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
 
   const country = countryName ? COUNTRIES[countryName] : null;
 
-  const [recentStaticNews, setRecentStaticNews] = useState(null);
-
   /* eslint-disable react-hooks/set-state-in-effect */
-  // Filter static country.news to 72h max age
-  useEffect(() => {
-    if (!isOpen || !country?.news?.length) {
-      setRecentStaticNews(null);
-      return;
-    }
-    const MAX_AGE = 72 * 60 * 60 * 1000;
-    const nowMs = Date.now();
-    const recent = country.news.filter(n => {
-      if (!n.time) return true;
-      return (nowMs - new Date(n.time).getTime()) < MAX_AGE;
-    });
-    if (recent.length > 0) {
-      setRecentStaticNews({ articles: recent, stale: false });
-    } else {
-      const latest = country.news.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
-      setRecentStaticNews({ articles: [], stale: true, lastUpdated: latest.time });
-    }
-  }, [isOpen, country]);
-
   // Fetch news when modal opens
   useEffect(() => {
     if (isOpen && countryName) {
@@ -205,19 +183,11 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </>
           )}
 
-          {/* Recent Coverage (cached news from country data, 72h max) */}
-          {recentStaticNews && recentStaticNews.stale && (
+          {/* Top Stories — always show hardcoded country news */}
+          {country.news && country.news.length > 0 && (
             <div style={{ marginTop: '16px' }}>
-              <div className="section-title">Recent Coverage</div>
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>
-                No recent coverage — last updated {timeAgo(recentStaticNews.lastUpdated)}
-              </div>
-            </div>
-          )}
-          {recentStaticNews && !recentStaticNews.stale && recentStaticNews.articles.length > 0 && (
-            <div style={{ marginTop: '16px' }}>
-              <div className="section-title">Recent Coverage</div>
-              {enforceSourceDiversity(recentStaticNews.articles).map((n, i) => {
+              <div className="section-title">Top Stories</div>
+              {enforceSourceDiversity(country.news).map((n, i) => {
                 let displayHeadline = n.headline;
                 let displaySource = n.source;
                 if (displaySource && displaySource.includes('Google News') && displayHeadline) {
@@ -253,13 +223,17 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             </div>
           )}
 
-          {/* Live News */}
-          <div className="country-news-section">
-            <div className="country-news-title">LIVE NEWS FOR {countryName.toUpperCase()}</div>
-            {newsLoading ? (
+          {/* Latest Coverage — fetched from DAILY_BRIEFING, hide if empty */}
+          {newsLoading && (
+            <div className="country-news-section">
+              <div className="country-news-title">Latest Coverage</div>
               <div className="country-news-loading">Loading latest news...</div>
-            ) : news.length > 0 ? (
-              enforceSourceDiversity(news).map((article, i) => {
+            </div>
+          )}
+          {!newsLoading && news.length > 0 && (
+            <div className="country-news-section">
+              <div className="country-news-title">Latest Coverage</div>
+              {enforceSourceDiversity(news).map((article, i) => {
                 let displayHeadline = article.headline;
                 let displaySource = article.source;
                 if (displaySource && displaySource.includes('Google News') && displayHeadline) {
@@ -294,15 +268,9 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                     </div>
                   </div>
                 );
-              })
-            ) : (
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>
-                {country.analysis
-                  ? 'Intelligence assessment current. Live feed updating.'
-                  : 'Intelligence feed updating — check back shortly.'}
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          )}
 
           {/* Sanctions - always shown */}
           <div className="sanctions-section">
