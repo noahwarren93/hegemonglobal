@@ -13,6 +13,7 @@ import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
 import MilitaryInfoPanel from '../components/Military/MilitaryInfoPanel';
 import MilitaryBasesPanel from '../components/Military/MilitaryBasesPanel';
+import MilitaryCountryPopup from '../components/Military/MilitaryCountryPopup';
 import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
 import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
 import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
@@ -244,7 +245,7 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
         </button>
         <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={onToggleThreatGroups}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Threat Groups
+          Non-State Actors
         </button>
       </div>
     </div>
@@ -335,6 +336,8 @@ export default function HomePage() {
   const [militaryPanelOpen, setMilitaryPanelOpen] = useState(false);
   const [militaryInfoOpen, setMilitaryInfoOpen] = useState(false);
   const [selectedInstallation, setSelectedInstallation] = useState(null);
+  const [milCountryPopupOpen, setMilCountryPopupOpen] = useState(false);
+  const [milCountryPopupName, setMilCountryPopupName] = useState(null);
 
   // --- Threat groups overlay ---
   const [threatGroupsActive, setThreatGroupsActive] = useState(false);
@@ -496,6 +499,15 @@ export default function HomePage() {
     return () => { delete window._onMilitaryClick; };
   }, []);
 
+  // Register military country click callback on window
+  useEffect(() => {
+    window._onMilitaryCountryClick = (countryName) => {
+      setMilCountryPopupName(countryName);
+      setMilCountryPopupOpen(true);
+    };
+    return () => { delete window._onMilitaryCountryClick; };
+  }, []);
+
   // Register threat group click callback on window
   useEffect(() => {
     window._onThreatGroupClick = (group) => {
@@ -515,6 +527,9 @@ export default function HomePage() {
 
     // Military mode: block all country interactions
     if (militaryMode) return;
+
+    // Non-state actors mode: block all country interactions
+    if (threatGroupsActive) return;
 
     // Compare mode: toggle or add to comparison (matching original addCountryToCompare)
     if (compareMode) {
@@ -550,7 +565,7 @@ export default function HomePage() {
     // Default: open country modal
     setSelectedCountry(countryName);
     setModalOpen(true);
-  }, [compareMode, tradeRoutesActive, militaryMode, handleTradeClick]);
+  }, [compareMode, tradeRoutesActive, militaryMode, threatGroupsActive, handleTradeClick]);
 
   // Open modal by type
   // Open stocks detail modal
@@ -573,6 +588,8 @@ export default function HomePage() {
         hideMilitary();
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
+        setMilCountryPopupOpen(false);
+        setMilCountryPopupName(null);
       }
       if (threatGroupsActive) {
         setThreatGroupsActive(false);
@@ -610,6 +627,8 @@ export default function HomePage() {
         hideMilitary();
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
+        setMilCountryPopupOpen(false);
+        setMilCountryPopupName(null);
       }
       if (threatGroupsActive) {
         setThreatGroupsActive(false);
@@ -651,6 +670,8 @@ export default function HomePage() {
       setMilitaryPanelOpen(false);
       setMilitaryInfoOpen(false);
       setSelectedInstallation(null);
+      setMilCountryPopupOpen(false);
+      setMilCountryPopupName(null);
     }
   }, [militaryMode, tradeRoutesActive, compareMode, threatGroupsActive, showMilitary, hideMilitary, hideTradeRoutes, hideThreatGroups]);
 
@@ -677,6 +698,8 @@ export default function HomePage() {
         hideMilitary();
         setMilitaryInfoOpen(false);
         setSelectedInstallation(null);
+        setMilCountryPopupOpen(false);
+        setMilCountryPopupName(null);
       }
       showThreatGroups();
     } else {
@@ -755,6 +778,7 @@ export default function HomePage() {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
         if (threatGroupPanelOpen) { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); return; }
+        if (milCountryPopupOpen) { setMilCountryPopupOpen(false); setMilCountryPopupName(null); return; }
         if (militaryInfoOpen) { setMilitaryInfoOpen(false); setSelectedInstallation(null); return; }
         if (statPopupOpen) { setStatPopupOpen(false); return; }
         if (stocksModalOpen) { setStocksModalOpen(false); return; }
@@ -770,7 +794,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, threatGroupPanelOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -831,8 +855,8 @@ export default function HomePage() {
             onToggleThreatGroups={handleToggleThreatGroups}
           />
 
-          {/* Risk Legend (always visible on desktop) */}
-          <RiskLegend />
+          {/* Risk Legend (hidden when non-state actors overlay is active) */}
+          {!threatGroupsActive && <RiskLegend />}
 
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">
@@ -853,7 +877,7 @@ export default function HomePage() {
             </button>
             <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={handleToggleThreatGroups}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Threats
+              Actors
             </button>
           </div>
 
@@ -927,6 +951,13 @@ export default function HomePage() {
             onClose={() => { setMilitaryInfoOpen(false); setSelectedInstallation(null); }}
           />
 
+          {/* Military Country Popup */}
+          <MilitaryCountryPopup
+            countryName={milCountryPopupName}
+            isOpen={milCountryPopupOpen}
+            onClose={() => { setMilCountryPopupOpen(false); setMilCountryPopupName(null); }}
+          />
+
           {/* Threat Group Panel */}
           <ThreatGroupPanel
             group={selectedThreatGroup}
@@ -937,7 +968,7 @@ export default function HomePage() {
           {/* Threat Groups Legend */}
           {threatGroupsActive && (
             <div className="threat-legend">
-              <div className="threat-legend-title">THREAT GROUPS</div>
+              <div className="threat-legend-title">NON-STATE ACTORS</div>
               {Object.entries(THREAT_TYPE_COLORS).map(([type, color]) => (
                 <div key={type} className="threat-legend-item">
                   <div className="threat-legend-dot" style={{ background: color }} />

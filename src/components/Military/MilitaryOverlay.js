@@ -61,7 +61,7 @@ export function useMilitaryOverlay() {
     ALL_MILITARY_INSTALLATIONS.forEach(installation => {
       const isCarrier = installation.type === 'carrier';
       const isUK = installation.country === 'United Kingdom';
-      const baseSize = isCarrier ? 0.018 : 0.011;
+      const baseSize = isCarrier ? 0.04 : 0.025;
       const pos = latLngToVector3(installation.lat, installation.lng, 1.025);
 
       // UK markers: dark outline mesh behind the white marker

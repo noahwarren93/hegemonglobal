@@ -551,7 +551,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       mouseRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouseRef.current, camera);
 
-      // 0) Military mode — only military markers are interactive
+      // 0) Military mode — military markers first, then country surface click
       if (window.militaryMode) {
         if (window.militaryMeshes && window.militaryMeshes.length > 0) {
           const milHits = raycaster.intersectObjects(window.militaryMeshes);
@@ -562,18 +562,43 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
             return 'military';
           }
         }
-        return null; // Block all country dot clicks in military mode
+        // No base hit — check globe surface for country military popup
+        const milGlobeHits = raycaster.intersectObject(globe);
+        if (milGlobeHits.length > 0) {
+          const ll = vector3ToLatLng(milGlobeHits[0].point, globe);
+          const country = findNearestCountry(ll.lat, ll.lng, 8);
+          if (country && typeof window._onMilitaryCountryClick === 'function') {
+            window._onMilitaryCountryClick(country);
+          }
+          return country || null;
+        }
+        return null;
       }
 
-      // 0.5) Threat group zones — check but don't block country clicks
-      if (window.threatGroupsActive && window.threatGroupMeshes && window.threatGroupMeshes.length > 0) {
-        const tgHits = raycaster.intersectObjects(window.threatGroupMeshes);
-        if (tgHits.length > 0 && tgHits[0].object.userData.threatGroup) {
-          if (typeof window._onThreatGroupClick === 'function') {
-            window._onThreatGroupClick(tgHits[0].object.userData.threatGroup);
+      // 0.5) Threat group mode — distance-based click detection on globe surface
+      if (window.threatGroupsActive) {
+        const globeHitsTG = raycaster.intersectObject(globe);
+        if (globeHitsTG.length > 0 && window.threatGroupZones && window.threatGroupZones.length > 0) {
+          const ll = vector3ToLatLng(globeHitsTG[0].point, globe);
+          let bestDist = Infinity;
+          let bestGroup = null;
+          for (const zone of window.threatGroupZones) {
+            const dLat = ll.lat - zone.lat;
+            const dLng = ll.lng - zone.lng;
+            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            // Use generous radius: zone radius in degrees (radiusKm / 111) + 5 degree tolerance
+            const tolerance = (zone.radiusKm / 111) + 5;
+            if (dist < tolerance && dist < bestDist) {
+              bestDist = dist;
+              bestGroup = zone.threatGroup;
+            }
           }
-          return 'threatGroup';
+          if (bestGroup && typeof window._onThreatGroupClick === 'function') {
+            window._onThreatGroupClick(bestGroup);
+            return 'threatGroup';
+          }
         }
+        return null; // Block all country clicks when non-state actors active
       }
 
       // 1) Direct marker hit — always wins
@@ -670,27 +695,48 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // Check threat group zone hover
-      if (window.threatGroupsActive && window.threatGroupMeshes && window.threatGroupMeshes.length > 0) {
-        const tgHits = raycaster.intersectObjects(window.threatGroupMeshes);
-        if (tgHits.length > 0 && tgHits[0].object.userData.threatGroup) {
-          const tg = tgHits[0].object.userData.threatGroup;
-          const count = tgHits[0].object.userData.articleCount || 0;
-          setTooltipData({
-            name: tg.name,
-            flag: null,
-            risk: null,
-            region: tg.territory,
-            title: tg.type.charAt(0).toUpperCase() + tg.type.slice(1),
-            threatGroup: true,
-            strength: tg.strength,
-            activities: tg.activities,
-            articleCount: count,
-          });
-          setMousePos({ x: event.clientX, y: event.clientY });
-          renderer.domElement.style.cursor = 'pointer';
-          return;
+      // Check threat group zone hover (distance-based)
+      if (window.threatGroupsActive && window.threatGroupZones && window.threatGroupZones.length > 0) {
+        const gHits = raycaster.intersectObject(globe);
+        if (gHits.length > 0) {
+          const ll = vector3ToLatLng(gHits[0].point, globe);
+          let bestDist = Infinity;
+          let bestZone = null;
+          for (const zone of window.threatGroupZones) {
+            const dLat = ll.lat - zone.lat;
+            const dLng = ll.lng - zone.lng;
+            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            const tolerance = (zone.radiusKm / 111) + 3;
+            if (dist < tolerance && dist < bestDist) {
+              bestDist = dist;
+              bestZone = zone;
+            }
+          }
+          if (bestZone) {
+            const tg = bestZone.threatGroup;
+            setTooltipData({
+              name: tg.name,
+              flag: null,
+              risk: null,
+              region: tg.territory,
+              title: tg.type.charAt(0).toUpperCase() + tg.type.slice(1),
+              threatGroup: true,
+              strength: tg.strength,
+              activities: tg.activities,
+              articleCount: bestZone.articleCount || 0,
+            });
+            setMousePos({ x: event.clientX, y: event.clientY });
+            renderer.domElement.style.cursor = 'pointer';
+            return;
+          }
         }
+      }
+
+      // When non-state actors overlay is active, skip country hover entirely
+      if (window.threatGroupsActive) {
+        setTooltipData(null);
+        renderer.domElement.style.cursor = 'grab';
+        return;
       }
 
       if (intersects.length > 0) {
@@ -902,17 +948,6 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           }
         }
       }
-      // Pulse threat group zones
-      if (window.threatGroupsActive && window.threatGroupMeshes) {
-        const t = now * 0.001;
-        for (let i = 0; i < window.threatGroupMeshes.length; i++) {
-          const m = window.threatGroupMeshes[i];
-          if (m.userData.baseOpacity) {
-            m.material.opacity = m.userData.baseOpacity * (0.85 + 0.15 * Math.sin(t + i));
-          }
-        }
-      }
-
       animateConflictZones();
       renderer.render(scene, camera);
     }
