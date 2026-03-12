@@ -157,13 +157,19 @@ export function getSourceCredibility(source) {
   return bestKey ? SOURCE_CREDIBILITY[bestKey] : 'independent';
 }
 
+const CREDIBILITY_TEXT_COLORS = {
+  'wire': '#fff', 'state': '#fff', 'state-affiliated': '#000',
+  'independent': '#fff', 'tabloid': '#fff', 'specialist': '#fff'
+};
+
 export function renderCredibilityTag(source) {
   const cred = getSourceCredibility(source);
   if (!cred || cred === 'blocked') return '';
-  const color = CREDIBILITY_COLORS[cred] || '#6b7280';
+  const bg = CREDIBILITY_COLORS[cred] || '#6b7280';
+  const text = CREDIBILITY_TEXT_COLORS[cred] || '#fff';
   const label = CREDIBILITY_LABELS[cred] || cred;
   return `<span style="display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle;">`
-    + `<span style="font-size:7px;color:${color};font-weight:600;white-space:nowrap;background:${color}1a;padding:1px 5px;border-radius:3px;border:1px solid ${color}33;">${label}</span>`
+    + `<span style="font-size:8px;color:${text};font-weight:600;white-space:nowrap;background:${bg};padding:2px 6px;border-radius:3px;">${label}</span>`
     + `</span>`;
 }
 
