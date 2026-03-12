@@ -286,7 +286,7 @@ export const COUNTRIES = {
   },
 
   // ==================== SEVERE ====================
-  'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'severe', tags: ['Authoritarian Crackdown', 'Territorial Dispute'], region: 'East Asia', pop: '1.4B', gdp: '$19.4T', leader: 'Xi Jinping', title: 'Economic Slowdown',
+  'China': { lat: 35.86, lng: 104.20, flag: '🇨🇳', risk: 'stormy', tags: ['Authoritarian Crackdown', 'Territorial Dispute'], region: 'East Asia', pop: '1.4B', gdp: '$19.4T', leader: 'Xi Jinping', title: 'Economic Slowdown',
     nuclear: { warheads: '~500', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~24 ICBMs on alert — rapid expansion underway' },
     analysis: {
       what: 'China faces its most serious economic challenges in decades. The property sector—30% of GDP—is in crisis with major developers defaulting. Youth unemployment exceeded 20% before data publication stopped. Consumer confidence has collapsed. Deflation concerns have emerged. Local government debt is dangerous. Xi Jinping has consolidated unprecedented power while cracking down on tech giants and civil society. US-China tensions have intensified with semiconductor export controls.',
@@ -336,7 +336,7 @@ export const COUNTRIES = {
 
   },
 
-  'Turkey': { lat: 38.96, lng: 35.24, flag: '🇹🇷', risk: 'severe', tags: ['Political Instability'], region: 'Middle East', pop: '85M', gdp: '$906B', leader: 'Recep Erdoğan', title: 'Economic Crisis',
+  'Turkey': { lat: 38.96, lng: 35.24, flag: '🇹🇷', risk: 'stormy', tags: ['Political Instability'], region: 'Middle East', pop: '85M', gdp: '$906B', leader: 'Recep Erdoğan', title: 'Economic Crisis',
     analysis: {
       what: 'Turkey faces severe economic crisis with inflation exceeding 60%, currency collapse, and unorthodox monetary policy that deterred investment. Erdoğan won 2023 elections despite the economy, consolidating power further. Relations with the West are strained over S-400 missiles, Syria policy, and NATO enlargement. Devastating earthquakes in 2023 killed 50,000+. Kurdish conflict continues.',
       why: 'Turkey controls the Bosphorus straits critical to Black Sea shipping. It\'s a NATO ally but often at odds with Western interests. Turkey hosts 4 million Syrian refugees affecting European migration. Its drone technology is globally significant. Erdoğan\'s balancing between Russia and the West creates uncertainty.',
@@ -409,7 +409,7 @@ export const COUNTRIES = {
 
   },
 
-  'Tunisia': { lat: 33.89, lng: 9.54, flag: '🇹🇳', risk: 'severe', tags: ['Political Instability', 'Economic Crisis'], region: 'North Africa', pop: '12M', gdp: '$47B', leader: 'Kais Saied', title: 'Democratic Backsliding',
+  'Tunisia': { lat: 33.89, lng: 9.54, flag: '🇹🇳', risk: 'stormy', tags: ['Political Instability', 'Economic Crisis'], region: 'North Africa', pop: '12M', gdp: '$47B', leader: 'Kais Saied', title: 'Democratic Backsliding',
     analysis: {
       what: 'President Kais Saied has dismantled Tunisia\'s democracy—the only success of the Arab Spring—by suspending parliament, rewriting the constitution, and jailing opponents. The economy is in crisis requiring IMF intervention. Migration to Europe has surged. Critics and journalists face prosecution. The opposition is fragmented and suppressed.',
       why: 'Tunisia\'s democratic collapse is a cautionary tale for the region. Migration pressure affects Europe. Economic failure creates instability near Libya. The country was seen as proof that Arab democracy was possible.',
@@ -427,7 +427,7 @@ export const COUNTRIES = {
 
   },
 
-  'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'severe', tags: ['Political Instability'], region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Mikheil Kavelashvili', title: 'Pro-Russia Turn',
+  'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'stormy', tags: ['Political Instability'], region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Mikheil Kavelashvili', title: 'Pro-Russia Turn',
     analysis: {
       what: 'Georgia\'s ruling Georgian Dream party has shifted toward Russia, passing a "foreign agents" law modeled on Russian legislation and cracking down on protests. The EU froze Georgia\'s membership candidacy. Mass protests erupted but were suppressed. President Zourabichvili opposes the government but has limited power. The 2024 elections were disputed.',
       why: 'Georgia was a pro-Western success story in the post-Soviet space—its reversal is significant. It borders Russia, which occupies 20% of its territory. The shift affects the South Caucasus corridor between Europe and Asia.',
@@ -436,7 +436,7 @@ export const COUNTRIES = {
 
   },
 
-  'Armenia': { lat: 40.07, lng: 45.04, flag: '🇦🇲', risk: 'severe', tags: ['Territorial Dispute'], region: 'Caucasus', pop: '2.8M', gdp: '$20B', leader: 'Nikol Pashinyan', title: 'Post-Karabakh Crisis',
+  'Armenia': { lat: 40.07, lng: 45.04, flag: '🇦🇲', risk: 'stormy', tags: ['Territorial Dispute'], region: 'Caucasus', pop: '2.8M', gdp: '$20B', leader: 'Nikol Pashinyan', title: 'Post-Karabakh Crisis',
     analysis: {
       what: 'Armenia suffered a devastating defeat in the 2020 Nagorno-Karabakh war and lost the territory entirely in 2023 when Azerbaijan seized it, forcing 100,000 Armenians to flee. PM Pashinyan faces anger over the losses. Relations with Russia have soured as Moscow failed to protect Armenia. The country is pivoting toward the West. Azerbaijan may push for further concessions.',
       why: 'The Karabakh outcome shows the limits of Russian security guarantees—significant for other post-Soviet states. Armenia\'s Western pivot could reshape South Caucasus geopolitics. The humanitarian crisis of displaced Karabakh Armenians is ongoing.',
@@ -454,7 +454,7 @@ export const COUNTRIES = {
 
   },
 
-  'Moldova': { lat: 47.41, lng: 28.37, flag: '🇲🇩', risk: 'severe', tags: ['Political Instability', 'Territorial Dispute'], region: 'Eastern Europe', pop: '2.6M', gdp: '$15B', leader: 'Maia Sandu', title: 'Russia Pressure',
+  'Moldova': { lat: 47.41, lng: 28.37, flag: '🇲🇩', risk: 'stormy', tags: ['Political Instability', 'Territorial Dispute'], region: 'Eastern Europe', pop: '2.6M', gdp: '$15B', leader: 'Maia Sandu', title: 'Russia Pressure',
     analysis: {
       what: 'Pro-European President Maia Sandu faces Russian destabilization efforts including: support for separatist Transnistria, energy blackmail, disinformation campaigns, and alleged coup plots. Moldova gained EU candidate status but faces challenges implementing reforms. The Transnistria region hosts Russian troops. Economic dependence on remittances makes the country vulnerable.',
       why: 'Moldova is a frontline state in the Russia-West confrontation, sandwiched between Ukraine and NATO member Romania. Its EU integration would be a strategic defeat for Moscow. Russian troops in Transnistria are 50km from Odesa.',
@@ -472,7 +472,7 @@ export const COUNTRIES = {
 
   },
 
-  'Nicaragua': { lat: 12.87, lng: -85.21, flag: '🇳🇮', risk: 'severe', tags: ['Authoritarian Crackdown'], region: 'Central America', pop: '7M', gdp: '$15B', leader: 'Daniel Ortega', title: 'Authoritarian Rule',
+  'Nicaragua': { lat: 12.87, lng: -85.21, flag: '🇳🇮', risk: 'stormy', tags: ['Authoritarian Crackdown'], region: 'Central America', pop: '7M', gdp: '$15B', leader: 'Daniel Ortega', title: 'Authoritarian Rule',
     analysis: {
       what: 'Daniel Ortega has transformed Nicaragua into a family dictatorship. Opposition leaders have been jailed or exiled. NGOs and media have been shut down. The Catholic Church is persecuted with bishops imprisoned. Elections are shams. The country has aligned with Russia, China, and Iran. Thousands have fled.',
       why: 'Nicaragua\'s authoritarian consolidation is complete, joining Cuba and Venezuela as regional dictatorships. Its alignment with US adversaries is concerning. Migration affects Central American stability. Democratic norms in the region are weakened.',
@@ -511,7 +511,7 @@ export const COUNTRIES = {
 
   },
 
-  'Brazil': { lat: -14.24, lng: -51.93, flag: '🇧🇷', risk: 'cloudy', tags: ['Political Instability'], region: 'South America', pop: '215M', gdp: '$2.26T', leader: 'Lula da Silva', title: 'Amazon & Politics',
+  'Brazil': { lat: -14.24, lng: -51.93, flag: '🇧🇷', risk: 'clear', tags: ['Political Instability'], region: 'South America', pop: '215M', gdp: '$2.26T', leader: 'Lula da Silva', title: 'Amazon & Politics',
     analysis: {
       what: 'President Lula returned to power in 2023 after defeating Bolsonaro, whose supporters stormed government buildings. Amazon deforestation has declined under Lula\'s policies. The economy is growing moderately with inflation controlled. But political polarization remains intense and Bolsonaro retains significant support despite legal troubles.',
       why: 'Brazil is the world\'s largest rainforest nation—its Amazon policies affect global climate. It\'s Latin America\'s largest economy. Lula has sought to rebuild Brazil\'s global diplomatic role. Political stability here affects the entire region.',
@@ -520,7 +520,7 @@ export const COUNTRIES = {
 
   },
 
-  'Mexico': { lat: 23.63, lng: -102.55, flag: '🇲🇽', risk: 'stormy', tags: ['Gang Warfare'], region: 'North America', pop: '130M', gdp: '$1.3T', leader: 'Claudia Sheinbaum', title: 'Cartel Violence',
+  'Mexico': { lat: 23.63, lng: -102.55, flag: '🇲🇽', risk: 'severe', tags: ['Gang Warfare'], region: 'North America', pop: '130M', gdp: '$1.3T', leader: 'Claudia Sheinbaum', title: 'Cartel Violence',
     analysis: {
       what: 'Mexico faces entrenched cartel violence with over 30,000 homicides annually. President Sheinbaum, the first female president, continues her predecessor\'s "hugs not bullets" approach despite criticism. Fentanyl trafficking to the US dominates bilateral relations. Nearshoring is boosting manufacturing as companies leave China. Democratic institutions face pressure.',
       why: 'Mexico is the US\'s largest trading partner and shares a 2,000-mile border. Migration and drug trafficking are central to US politics. Nearshoring makes Mexico increasingly important to supply chains. Instability would directly affect the US.',
@@ -529,7 +529,7 @@ export const COUNTRIES = {
 
   },
 
-  'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'stormy', tags: ['Sectarian Violence'], region: 'South Asia', pop: '1.4B', gdp: '$4.13T', leader: 'Narendra Modi', title: 'Rising Power',
+  'India': { lat: 20.59, lng: 78.96, flag: '🇮🇳', risk: 'cloudy', tags: ['Sectarian Violence'], region: 'South Asia', pop: '1.4B', gdp: '$4.13T', leader: 'Narendra Modi', title: 'Rising Power',
     nuclear: { warheads: '~172', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: 'Estimated 172 warheads — triad capability' },
     analysis: {
       what: 'India is the world\'s fastest-growing major economy and most populous country. PM Modi won a third term but with reduced majority, requiring coalition partners. Hindu nationalism has risen, with concerns about Muslim minority treatment. Relations with China remain tense after border clashes. India is courted by both the US and Russia.',
@@ -576,7 +576,7 @@ export const COUNTRIES = {
 
   },
 
-  'Colombia': { lat: 4.57, lng: -74.30, flag: '🇨🇴', risk: 'stormy', tags: ['Gang Warfare'], region: 'South America', pop: '52M', gdp: '$314B', leader: 'Gustavo Petro', title: 'Peace Process',
+  'Colombia': { lat: 4.57, lng: -74.30, flag: '🇨🇴', risk: 'severe', tags: ['Gang Warfare'], region: 'South America', pop: '52M', gdp: '$314B', leader: 'Gustavo Petro', title: 'Peace Process',
     analysis: {
       what: 'President Petro, Colombia\'s first leftist leader, has pursued "total peace"—negotiations with multiple armed groups. Results are mixed: talks with ELN guerrillas have stalled, while some groups have demobilized. Coca production remains at record levels. Relations with the US are strained. Economic reforms have been controversial.',
       why: 'Colombia is the world\'s largest cocaine producer. Its stability affects the entire region. The country hosts 2+ million Venezuelan refugees. US-Colombia relations are historically close but now tested. The peace process outcome will determine security for decades.',
@@ -612,7 +612,7 @@ export const COUNTRIES = {
 
   },
 
-  'Hungary': { lat: 47.16, lng: 19.50, flag: '🇭🇺', risk: 'stormy', tags: ['Political Instability'], region: 'Eastern Europe', pop: '10M', gdp: '$188B', leader: 'Viktor Orbán', title: 'Democratic Backsliding',
+  'Hungary': { lat: 47.16, lng: 19.50, flag: '🇭🇺', risk: 'cloudy', tags: ['Political Instability'], region: 'Eastern Europe', pop: '10M', gdp: '$188B', leader: 'Viktor Orbán', title: 'Democratic Backsliding',
     analysis: {
       what: 'PM Viktor Orbán has built what he calls "illiberal democracy"—concentrating power, capturing media, and undermining judicial independence. Hungary regularly clashes with the EU over rule of law, blocking Ukraine aid and migration policies. Orbán maintains close ties with Putin and has visited Moscow. The economy struggles with high inflation and EU funding freezes.',
       why: 'Hungary demonstrates democratic backsliding within the EU, challenging the bloc\'s values. Its veto power blocks EU decisions on Ukraine and other issues. Orbán is a model for right-wing populists globally. Hungary\'s position complicates NATO unity.',
@@ -621,7 +621,7 @@ export const COUNTRIES = {
 
   },
 
-  'Serbia': { lat: 44.02, lng: 21.01, flag: '🇷🇸', risk: 'stormy', tags: [], region: 'Balkans', pop: '7M', gdp: '$63B', leader: 'Aleksandar Vučić', title: 'Kosovo Tensions',
+  'Serbia': { lat: 44.02, lng: 21.01, flag: '🇷🇸', risk: 'cloudy', tags: [], region: 'Balkans', pop: '7M', gdp: '$63B', leader: 'Aleksandar Vučić', title: 'Kosovo Tensions',
     analysis: {
       what: 'President Vučić maintains strong grip on power with control over media and institutions. Serbia refuses to recognize Kosovo\'s independence and tensions remain high, including recent violent incidents. The country seeks EU membership but won\'t align with sanctions on Russia. It has close ties with both Russia and China while negotiating with the West.',
       why: 'Serbia\'s relations with Kosovo are a potential flashpoint in Europe. Its balancing act between East and West complicates regional integration. Weapons flowing from Serbia have appeared in various conflicts. The country is key to Balkan stability.',
@@ -1103,16 +1103,16 @@ export const COUNTRIES = {
   'Cyprus': { lat: 35.17, lng: 33.36, flag: '🇨🇾', risk: 'cloudy', tags: ['Territorial Dispute'], region: 'Europe', pop: '1.3M', gdp: '$32B', leader: 'Christodoulides', title: 'Divided Island', analysis: { what: 'Cyprus remains divided between Greek south and Turkish-occupied north. Reunification talks have repeatedly failed. During the 2026 US-Israeli strikes on Iran, Iranian retaliatory missiles landed in and near Cypriot territory, raising alarm about the island\'s proximity to Middle Eastern conflict zones.', why: 'Division affects EU-Turkey relations. Gas discoveries in eastern Mediterranean raise stakes.', next: 'Reunification prospects remain dim.' } },
   'Bulgaria': { lat: 42.73, lng: 25.49, flag: '🇧🇬', risk: 'cloudy', tags: [], region: 'Europe', pop: '6.5M', gdp: '$100B', leader: 'Zhelezkov', title: 'EU Member', analysis: { what: 'Bulgaria has faced repeated political instability with multiple elections. Corruption remains endemic.', why: 'Poorest EU member struggles with rule of law. Russian influence historically significant.', next: 'Achieving political stability.' } },
   'Slovakia': { lat: 48.67, lng: 19.70, flag: '🇸🇰', risk: 'cloudy', tags: [], region: 'Europe', pop: '5.4M', gdp: '$133B', leader: 'Fico', title: 'EU Dissent', analysis: { what: 'PM Fico returned to power with pro-Russian rhetoric and opposition to Ukraine aid. Assassination attempt in 2024 shocked the country.', why: 'Breaking EU consensus on Ukraine matters. Rule of law concerns affect EU relations.', next: 'Watching democratic trajectory.' } },
-  'Cameroon': { lat: 5.95, lng: 10.15, flag: '🇨🇲', risk: 'severe', tags: ['Sectarian Violence', 'Political Instability'], region: 'Africa', pop: '28M', gdp: '$46B', leader: 'Biya', title: 'Anglophone Crisis', analysis: { what: 'President Biya has ruled since 1982. Anglophone regions face violent separatist conflict.', why: 'Anglophone crisis has killed thousands and displaced millions. Biya\'s age creates succession uncertainty.', next: 'Succession planning is overdue.' } },
+  'Cameroon': { lat: 5.95, lng: 10.15, flag: '🇨🇲', risk: 'stormy', tags: ['Sectarian Violence', 'Political Instability'], region: 'Africa', pop: '28M', gdp: '$46B', leader: 'Biya', title: 'Anglophone Crisis', analysis: { what: 'President Biya has ruled since 1982. Anglophone regions face violent separatist conflict.', why: 'Anglophone crisis has killed thousands and displaced millions. Biya\'s age creates succession uncertainty.', next: 'Succession planning is overdue.' } },
   'Chad': { lat: 15.45, lng: 18.73, flag: '🇹🇩', risk: 'severe', tags: ['Military Junta', 'Terrorism/Insurgency'], region: 'Africa', pop: '18M', gdp: '$13B', leader: 'Déby', title: 'Military Rule', analysis: { what: 'Mahamat Déby took power after his father was killed in 2021. The country hosts French and US military bases.', why: 'Strategic importance for Sahel counterterrorism is high. Refugee flows from Sudan add pressure.', next: 'Watching promised democratic transition.' } },
   'Central African Republic': { lat: 6.61, lng: 20.94, flag: '🇨🇫', risk: 'severe', tags: ['Armed Conflict', 'Humanitarian Crisis'], region: 'Africa', pop: '5M', gdp: '$2.5B', leader: 'Touadéra', title: 'Wagner Presence', analysis: { what: 'CAR has been in civil war since 2012. Russian Wagner forces support the government and exploit resources.', why: 'Wagner expansion model was tested here. Humanitarian crisis affects most of population.', next: 'Continued instability likely.' } },
   'Republic of Congo': { lat: -4.27, lng: 15.28, flag: '🇨🇬', risk: 'stormy', tags: [], region: 'Africa', pop: '6M', gdp: '$13B', leader: 'Sassou Nguesso', title: 'Oil State', analysis: { what: 'President Sassou Nguesso has ruled for most of the period since 1979. Oil revenue dominates but benefits few.', why: 'Oil dependence creates boom-bust cycles. Chinese debt is significant.', next: 'Managing oil decline and debt.' } },
   'Gabon': { lat: -0.80, lng: 11.61, flag: '🇬🇦', risk: 'stormy', tags: [], region: 'Africa', pop: '2.4M', gdp: '$21B', leader: 'Oligui Nguema', title: 'Post-Coup Transition', analysis: { what: 'Military coup in 2023 ended the Bongo family\'s 56-year rule. Junta promises democratic transition.', why: 'Coup shows fragility of dynastic rule in Africa. Transition timeline uncertain.', next: 'Watching promised democratization.' } },
   'Equatorial Guinea': { lat: 1.65, lng: 10.27, flag: '🇬🇶', risk: 'stormy', tags: [], region: 'Africa', pop: '1.7M', gdp: '$12B', leader: 'Obiang', title: 'Oil Dictatorship', analysis: { what: 'Teodoro Obiang has ruled since 1979, making him the world\'s longest-ruling president. Oil wealth benefits the elite.', why: 'Extreme inequality despite oil wealth is stark. Human rights abuses are severe.', next: 'Continued authoritarian rule expected.' } },
   'Eritrea': { lat: 15.33, lng: 38.93, flag: '🇪🇷', risk: 'severe', tags: ['Authoritarian Crackdown', 'Sanctions/Isolation'], region: 'Africa', pop: '3.6M', gdp: '$2.3B', leader: 'Isaias', title: 'Isolated State', analysis: { what: 'Eritrea is one of the world\'s most repressive states with no elections since independence. Indefinite military conscription drives mass emigration.', why: 'Tigray involvement showed regional destabilization capacity. No constitution or independent media.', next: 'Continued isolation and repression likely.' } },
-  'Djibouti': { lat: 11.59, lng: 43.15, flag: '🇩🇯', risk: 'cloudy', tags: [], region: 'Africa', pop: '1M', gdp: '$4B', leader: 'Guelleh', title: 'Strategic Port', analysis: { what: 'Djibouti hosts military bases from US, France, China, Japan, and others. Its port handles most of Ethiopia\'s trade.', why: 'Strategic location at Bab el-Mandeb strait is vital. Chinese base was their first overseas.', next: 'Maintaining strategic balancing act.' } },
+  'Djibouti': { lat: 11.59, lng: 43.15, flag: '🇩🇯', risk: 'stormy', tags: [], region: 'Africa', pop: '1M', gdp: '$4B', leader: 'Guelleh', title: 'Strategic Port', analysis: { what: 'Djibouti hosts military bases from US, France, China, Japan, and others. Its port handles most of Ethiopia\'s trade.', why: 'Strategic location at Bab el-Mandeb strait is vital. Chinese base was their first overseas.', next: 'Maintaining strategic balancing act.' } },
   'Rwanda': { lat: -1.94, lng: 29.87, flag: '🇷🇼', risk: 'stormy', tags: ['Authoritarian Crackdown'], region: 'Africa', pop: '14M', gdp: '$14B', leader: 'Kagame', title: 'Development Model', analysis: { what: 'Rwanda has achieved remarkable development under Kagame but with authoritarian control. The country is accused of backing M23 rebels in DRC.', why: 'Development success comes with democratic concerns. DRC involvement risks regional war.', next: 'Balancing development and rights.' } },
-  'Burundi': { lat: -3.37, lng: 29.36, flag: '🇧🇮', risk: 'severe', tags: ['Political Instability', 'Humanitarian Crisis'], region: 'Africa', pop: '13M', gdp: '$3B', leader: 'Ndayishimiye', title: 'Post-Crisis State', analysis: { what: 'Burundi faced political crisis in 2015. Current President has slightly eased repression. Extreme poverty persists.', why: 'Ethnic tensions mirror Rwanda\'s history. Among world\'s poorest countries.', next: 'Gradual opening or renewed repression.' } },
+  'Burundi': { lat: -3.37, lng: 29.36, flag: '🇧🇮', risk: 'stormy', tags: ['Political Instability', 'Humanitarian Crisis'], region: 'Africa', pop: '13M', gdp: '$3B', leader: 'Ndayishimiye', title: 'Post-Crisis State', analysis: { what: 'Burundi faced political crisis in 2015. Current President has slightly eased repression. Extreme poverty persists.', why: 'Ethnic tensions mirror Rwanda\'s history. Among world\'s poorest countries.', next: 'Gradual opening or renewed repression.' } },
   'Uganda': { lat: 1.37, lng: 32.29, flag: '🇺🇬', risk: 'stormy', tags: ['Authoritarian Crackdown'], region: 'Africa', pop: '48M', gdp: '$50B', leader: 'Museveni', title: 'Long-Term Rule', analysis: { what: 'Museveni has ruled since 1986. Anti-LGBTQ law drew international sanctions. Oil production is beginning.', why: 'Anti-LGBTQ law affected aid and investment. Young population could drive unrest.', next: 'Succession planning for aging ruler.' } },
   'South Sudan': { lat: 6.88, lng: 31.31, flag: '🇸🇸', risk: 'catastrophic', tags: ['Civil War', 'Humanitarian Crisis'], region: 'Africa', pop: '11M', gdp: '$4B', leader: 'Kiir', title: 'Failed State', analysis: { what: 'The world\'s newest country has been in civil war most of its existence. Peace deal has not been fully implemented.', why: 'Humanitarian crisis affects millions. State barely functions outside capital.', next: 'Elections repeatedly delayed.' } },
   'Mauritania': { lat: 18.09, lng: -15.98, flag: '🇲🇷', risk: 'cloudy', tags: [], region: 'Africa', pop: '5M', gdp: '$10B', leader: 'Ghazouani', title: 'Sahel Stability', analysis: { what: 'Mauritania has avoided the coups and jihadi violence affecting neighbors. Growing gas production could transform economy.', why: 'Relative stability in unstable region is notable. Gas potential could be transformative.', next: 'Maintaining stability amid regional turmoil.' } },
