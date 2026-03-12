@@ -1002,10 +1002,17 @@ export async function fetchCountryNews(countryName) {
   const cached = getCachedNews(countryName);
   if (cached) return cached;
 
-  // 2. Check DAILY_BRIEFING for relevant articles
+  // 2. Check DAILY_BRIEFING for relevant articles (72h max age)
+  const MAX_AGE_MS = 72 * 60 * 60 * 1000;
+  const now = Date.now();
+  const isRecentArticle = (a) => {
+    const d = a.pubDate || a.time;
+    if (!d) return true;
+    return (now - new Date(d).getTime()) < MAX_AGE_MS;
+  };
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
     const briefingRelevant = DAILY_BRIEFING.filter(article =>
-      isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
+      isRecentArticle(article) && isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
     );
     if (briefingRelevant.length >= 2) {
       briefingRelevant.sort((a, b) =>
@@ -1070,10 +1077,10 @@ export async function fetchCountryNews(countryName) {
     console.warn('Regional search failed:', error.message);
   }
 
-  // 6. Last resort: any DAILY_BRIEFING articles
+  // 6. Last resort: any DAILY_BRIEFING articles (72h max age)
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
     const anyRelevant = DAILY_BRIEFING.filter(article =>
-      isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
+      isRecentArticle(article) && isRelevantToCountry(article.title || article.headline, article.description || '', countryName)
     );
     if (anyRelevant.length > 0) {
       anyRelevant.sort((a, b) =>

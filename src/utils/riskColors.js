@@ -164,7 +164,7 @@ const CREDIBILITY_TEXT_COLORS = {
 
 export function renderCredibilityTag(source) {
   const cred = getSourceCredibility(source);
-  if (!cred || cred === 'blocked') return '';
+  if (!cred || cred === 'blocked' || cred === 'independent') return '';
   const bg = CREDIBILITY_COLORS[cred] || '#6b7280';
   const text = CREDIBILITY_TEXT_COLORS[cred] || '#fff';
   const label = CREDIBILITY_LABELS[cred] || cred;
