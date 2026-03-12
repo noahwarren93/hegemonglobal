@@ -26,11 +26,23 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       setCasualtiesExpanded(false);
       fetchCountryNews(countryName).then(articles => {
         const all = articles || [];
-        // Top Stories: sorted by quality score, up to 5
-        const top = [...all].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)).slice(0, 5);
+        const nowMs = Date.now();
+        const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+        const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+        // Top Stories: prefer last 5 days, fall back to 7 days; sort by date then quality
+        let topPool = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < FIVE_DAYS);
+        if (topPool.length === 0) {
+          topPool = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
+        }
+        if (topPool.length === 0) topPool = all;
+        const top = [...topPool].sort((a, b) => {
+          const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+          const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+          if (db !== da) return db - da;
+          return (b.qualityScore || 0) - (a.qualityScore || 0);
+        }).slice(0, 5);
         setTopStories(top);
         // Latest Coverage: most recent by date (3 days, expand to 6)
-        const nowMs = Date.now();
         const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
         const SIX_DAYS = 6 * 24 * 60 * 60 * 1000;
         let recent = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < THREE_DAYS);
