@@ -136,6 +136,19 @@ export const SOURCE_BLOCKLIST = new Set([
   'tmz', 'people', 'us weekly', 'entertainment tonight',
   'espn', 'bleacher report', 'sports illustrated',
   'food network', 'bon appetit', 'eater',
+  // College sports wire sites
+  'clemson wire', 'dawg nation', 'buckeyes wire', 'hawkeyes wire',
+  'longhorns wire', 'nittany lions wire', 'sooners wire', 'trojans wire',
+  'wolverines wire', 'badgers wire', 'razorbacks wire', 'aggies wire',
+  'tigers wire', 'gators wire', 'seminoles wire', 'wildcats wire',
+  'jayhawks wire', 'huskers wire', 'cyclones wire', 'mountaineers wire',
+  'auburn wire', 'roll tide wire', 'vols wire', 'gamecocks wire',
+  'fighting irish wire', 'ducks wire', 'utes wire', 'cougars wire',
+  'bears wire', 'horned frogs wire', 'knights wire', 'hokies wire',
+  // Other sports
+  'sbnation', 'sb nation', 'the athletic', 'cbssports', 'cbs sports',
+  'fox sports', 'nbcsports', 'nbc sports', 'yahoo sports',
+  'sporting news', 'sports reference', 'pro football talk',
 ]);
 
 export function getSourceCredibility(source) {

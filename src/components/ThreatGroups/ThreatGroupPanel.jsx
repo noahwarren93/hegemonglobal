@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS } from '../../data/threatGroupData';
 import { DAILY_BRIEFING } from '../../data/countries';
+import { fetchThreatGroupNews } from '../../services/apiService';
 
 export default function ThreatGroupPanel({ group, isOpen, onClose }) {
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -22,7 +24,17 @@ export default function ThreatGroupPanel({ group, isOpen, onClose }) {
       const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
       return db - da;
     }).slice(0, 5);
-    setArticles(matched);
+
+    if (matched.length > 0) {
+      setArticles(matched);
+    } else {
+      // Fallback: fetch from Google News RSS
+      setLoading(true);
+      fetchThreatGroupNews(group.searchTerms[0]).then(results => {
+        setArticles(results || []);
+        setLoading(false);
+      }).catch(() => { setLoading(false); });
+    }
   }, [isOpen, group]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -165,15 +177,29 @@ export default function ThreatGroupPanel({ group, isOpen, onClose }) {
 
         <div className="trade-section">
           <div className="trade-section-title" style={{ color: '#06b6d4' }}>RECENT INTELLIGENCE ({articles.length})</div>
-          {articles.length > 0 ? articles.map((a, i) => (
+          {loading && (
+            <div style={{ color: '#6b7280', fontSize: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              Loading...
+            </div>
+          )}
+          {!loading && articles.length > 0 && articles.map((a, i) => (
             <div key={i} style={{ fontSize: '8.5px', color: '#d1d5db', padding: '3px 0', borderBottom: '1px solid #1f293744', lineHeight: 1.3 }}>
-              <div>{a.headline || a.title}</div>
+              <div>
+                {(a.url || a.link) ? (
+                  <a href={a.url || a.link} target="_blank" rel="noopener noreferrer" style={{ color: '#d1d5db', textDecoration: 'none' }}
+                    onMouseEnter={e => { e.target.style.color = '#06b6d4'; }} onMouseLeave={e => { e.target.style.color = '#d1d5db'; }}>
+                    {a.headline || a.title}
+                  </a>
+                ) : (a.headline || a.title)}
+              </div>
               <div style={{ fontSize: '7px', color: '#6b7280', marginTop: 1 }}>
                 {a.source && <span>{a.source}</span>}
                 {a.pubDate && <span style={{ marginLeft: 4 }}>{new Date(a.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
               </div>
             </div>
-          )) : (
+          ))}
+          {!loading && articles.length === 0 && (
             <div style={{ fontSize: '8px', color: '#4b5563', fontStyle: 'italic' }}>No recent coverage</div>
           )}
         </div>

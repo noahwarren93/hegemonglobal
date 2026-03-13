@@ -808,6 +808,19 @@ export function computeStats() {
 // for backward compatibility with modules that import from apiService
 export { COUNTRY_DEMONYMS };
 
+// Sports keywords — if article matches an ambiguous country name AND contains these, reject it
+const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|football|basketball|baseball|soccer|nfl|nba|mlb|nhl|draft pick|playoffs|season|halftime|wide receiver|linebacker|defensive|rushing|passing|rebound|batting|pitcher|goaltender|slam dunk|free throw|field goal|punt|fumble|interception|varsity|collegiate|bowl game|march madness|final four|championship game|recruit|transfer portal|nil deal)\b/i;
+
+// Ambiguous country names that also match common person names or US states
+// These require additional context words to confirm the article is about the country
+const AMBIGUOUS_COUNTRIES = {
+  'Chad': { contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'niger', 'sudan', 'central africa'] },
+  'Jordan': { contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra'] },
+  'Georgia': { contextWords: ['tbilisi', 'georgian', 'caucasus', 'saakashvili', 'south ossetia', 'abkhazia', 'kavelashvili', 'batumi'] },
+  'Mali': { contextWords: ['bamako', 'malian', 'sahel', 'wagner', 'jnim', 'timbuktu', 'junta'] },
+  'Niger': { contextWords: ['niamey', 'nigerien', 'sahel', 'junta', 'coup', 'uranium', 'ecowas'] },
+};
+
 export function isRelevantToCountry(title, description, countryName) {
   const text = ((title || '') + ' ' + (description || '')).toLowerCase();
   const titleLower = (title || '').toLowerCase();
@@ -821,17 +834,39 @@ export function isRelevantToCountry(title, description, countryName) {
   const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
   const allTerms = [countryLower, ...countryTerms];
 
-  const inTitle = allTerms.some(term => {
+  const matchesTerm = (str) => allTerms.some(term => {
     const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-    return regex.test(titleLower);
+    return regex.test(str);
   });
-  if (inTitle) return true;
 
-  const inDesc = allTerms.some(term => {
-    const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-    return regex.test(descLower);
-  });
-  return inDesc;
+  const inTitle = matchesTerm(titleLower);
+  const inDesc = matchesTerm(descLower);
+  if (!inTitle && !inDesc) return false;
+
+  // For ambiguous country names, require context OR reject sports content
+  const ambig = AMBIGUOUS_COUNTRIES[countryName];
+  if (ambig) {
+    // If article contains sports keywords, reject it
+    if (SPORTS_KEYWORDS.test(text)) return false;
+    // Check if any context word appears — confirms it's actually about the country
+    const hasContext = ambig.contextWords.some(cw => text.includes(cw));
+    // Also accept if a demonym (not just the country name) matched
+    const demonymMatched = countryTerms.some(term => {
+      if (term === countryLower) return false; // skip the ambiguous name itself
+      const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      return regex.test(text);
+    });
+    if (!hasContext && !demonymMatched) return false;
+  }
+
+  // For all countries: reject if article has sports keywords and country name is the ONLY geo term
+  if (!ambig && SPORTS_KEYWORDS.test(text)) {
+    // Only reject if the source also looks like sports (partial check via blocklist handled elsewhere)
+    const fullText = (title || '') + ' ' + (description || '');
+    if (/\b(wire|espn|sports|athletic|sbnation)\b/i.test(fullText)) return false;
+  }
+
+  return true;
 }
 
 // Strict headline-only matching — for country modal to avoid source-name false positives
@@ -1098,6 +1133,30 @@ export async function fetchCountryNews(countryName) {
   console.log('[Hegemon] fetchCountryNews', countryName, '- total articles:', allArticles.length);
   setCachedNews(countryName, allArticles);
   return allArticles;
+}
+
+// Fetch news for non-state actor groups via Google News RSS
+const THREAT_NEWS_CACHE = {};
+export async function fetchThreatGroupNews(searchTerm) {
+  if (!searchTerm) return [];
+  const cacheKey = searchTerm.toLowerCase();
+  const cached = THREAT_NEWS_CACHE[cacheKey];
+  if (cached && (Date.now() - cached.timestamp) < 5 * 60 * 1000) return cached.data;
+  try {
+    const url = RSS_FEEDS.search(searchTerm + ' news');
+    const articles = await fetchRSS(url, 'Google News');
+    const results = (articles || []).slice(0, 5).map(a => ({
+      headline: a.title,
+      source: formatSourceName(a.source_id || a.source || 'News'),
+      pubDate: a.pubDate || '',
+      url: a.link || a.url || '',
+    }));
+    THREAT_NEWS_CACHE[cacheKey] = { data: results, timestamp: Date.now() };
+    return results;
+  } catch (e) {
+    console.warn('Threat group news fetch failed:', e.message);
+    return [];
+  }
 }
 
 // Lightweight country extraction for Worker events (Worker strips _primaryCountry)
