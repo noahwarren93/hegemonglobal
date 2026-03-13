@@ -5,18 +5,19 @@ import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { THREAT_GROUPS, THREAT_TYPE_COLORS } from '../../data/threatGroupData';
 import { latLngToVector3 } from '../Globe/GlobeView';
+import { DAILY_BRIEFING } from '../../data/countries';
 
-// Scan DAILY_BRIEFING headlines for search term matches per group
+// Scan DAILY_BRIEFING headlines + descriptions for search term matches per group
 function computeArticleCounts() {
   const counts = {};
-  const articles = window.DAILY_BRIEFING || [];
-  const headlines = articles.map(a => (a.headline || a.title || '').toLowerCase());
+  const articles = DAILY_BRIEFING || [];
+  const texts = articles.map(a => ((a.headline || a.title || '') + ' ' + (a.description || '')).toLowerCase());
 
   for (const group of THREAT_GROUPS) {
     let count = 0;
-    for (const hl of headlines) {
+    for (const text of texts) {
       for (const term of group.searchTerms) {
-        if (hl.includes(term)) { count++; break; }
+        if (text.includes(term)) { count++; break; }
       }
     }
     counts[group.id] = count;

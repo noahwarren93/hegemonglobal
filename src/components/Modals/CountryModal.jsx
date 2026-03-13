@@ -28,44 +28,65 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
         const all = articles || [];
         const nowMs = Date.now();
         const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+        const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
-        // Dedup within a list: same source + 50%+ word overlap → keep newest
-        const dedupList = (list) => {
-          const kept = [];
-          for (const article of list) {
-            const words = (article.headline || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
-            const isDup = kept.some(k => {
-              if ((k.source || '').toLowerCase() !== (article.source || '').toLowerCase()) return false;
-              const kWords = (k.headline || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
-              if (kWords.length === 0 || words.length === 0) return false;
-              const overlap = words.filter(w => kWords.includes(w)).length;
-              return overlap / Math.min(words.length, kWords.length) >= 0.5;
-            });
-            if (!isDup) kept.push(article);
-          }
-          return kept;
+        // Helper: get significant words from headline
+        const getWords = (h) => (h || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+
+        // Helper: check if two articles cover the same event (50%+ word overlap, any source)
+        const isSameEvent = (a, b) => {
+          const wa = getWords(a.headline);
+          const wb = getWords(b.headline);
+          if (wa.length === 0 || wb.length === 0) return false;
+          const overlap = wa.filter(w => wb.includes(w)).length;
+          return overlap / Math.min(wa.length, wb.length) >= 0.5;
         };
 
-        // Top Stories: IMPORTANCE — max 3, within 7 days, ranked by qualityScore (source count)
+        // Cluster articles about the same event
         const within7d = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
-        const topSorted = dedupList([...within7d].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)));
-        const top = topSorted.slice(0, 3);
+        const clusters = [];
+        for (const article of within7d) {
+          let placed = false;
+          for (const cluster of clusters) {
+            if (isSameEvent(article, cluster[0])) {
+              cluster.push(article);
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) clusters.push([article]);
+        }
+
+        // Sort clusters by source count (importance), pick best article from each
+        clusters.sort((a, b) => b.length - a.length);
+        const top = clusters.slice(0, 3).map(cluster => {
+          // Prefer wire services and major outlets
+          const sorted = [...cluster].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+          return { ...sorted[0], _sourceCount: cluster.length };
+        });
         setTopStories(top);
 
-        // Latest Coverage: RECENCY — all remaining articles, no cap, sorted newest first
+        // Latest Coverage: everything within 14 days, excluding Top Stories, deduped
         const topUrls = new Set(top.map(a => a.url));
         const topHeadlines = new Set(top.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
-        const remaining = all.filter(a => {
+        const within14d = all.filter(a => {
+          if (!a.pubDate) return false;
+          if ((nowMs - new Date(a.pubDate).getTime()) > FOURTEEN_DAYS) return false;
           if (a.url && topUrls.has(a.url)) return false;
           if (topHeadlines.has((a.headline || '').toLowerCase().substring(0, 60))) return false;
           return true;
         });
-        const latestSorted = dedupList([...remaining].sort((a, b) => {
-          const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
-          const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
-          return db - da;
-        }));
-        setLatestCoverage(latestSorted);
+
+        // Dedup Latest Coverage: same event → keep best article only
+        const deduped = [];
+        for (const article of within14d) {
+          const isDup = deduped.some(k => isSameEvent(article, k));
+          if (!isDup) deduped.push(article);
+        }
+
+        // Sort by importance (qualityScore) as primary
+        deduped.sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+        setLatestCoverage(deduped);
         setNewsLoading(false);
       }).catch(() => {
         setNewsLoading(false);
