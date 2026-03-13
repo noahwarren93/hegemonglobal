@@ -37,10 +37,38 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           return isNaN(t) ? 0 : t;
         };
 
+        // Opinion/commentary patterns — exclude from Top Stories
+        const OPINION_RE = /\b(trolls?|slams?|claps?\s*back|opinion:|editorial:|op-ed|column:|commentary:|rips|blasts|mocks|dunks on|fires back|hits back|lashes out|takes aim|sounds off)\b/i;
+
+        // Generic roundup titles — exclude from Latest Coverage
+        const GENERIC_RE = /^(morning news brief|evening roundup|daily digest|news update|daily briefing|weekly roundup|news wrap|headlines today|today'?s top stories|the daily|what happened today|news summary)\b/i;
+
+        // Check if country is the PRIMARY subject (appears in first half of headline)
+        const isPrimarySubject = (headline) => {
+          const hl = (headline || '').toLowerCase();
+          const mid = Math.ceil(hl.length / 2);
+          const firstHalf = hl.substring(0, mid);
+          const cLower = countryName.toLowerCase();
+          if (firstHalf.includes(cLower)) return true;
+          // Also check demonyms in first half
+          const demonyms = {
+            'Iran': ['iranian', 'tehran', 'hormuz', 'khamenei'],
+            'Ukraine': ['ukrainian', 'kyiv', 'zelensky'],
+            'Russia': ['russian', 'moscow', 'kremlin', 'putin'],
+            'Israel': ['israeli', 'idf', 'netanyahu'],
+            'Palestine': ['palestinian', 'gaza', 'hamas'],
+            'China': ['chinese', 'beijing', 'xi jinping'],
+            'Pakistan': ['pakistani', 'islamabad'],
+            'Sudan': ['sudanese', 'khartoum', 'darfur'],
+          };
+          const terms = demonyms[countryName] || [];
+          return terms.some(t => firstHalf.includes(t));
+        };
+
         // Helper: get significant words from headline
         const getWords = (h) => (h || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
 
-        // Helper: check if two articles cover the same event (50%+ word overlap, any source)
+        // Helper: check if two articles cover the same event (50%+ word overlap)
         const isSameEvent = (a, b) => {
           const wa = getWords(a.headline);
           const wb = getWords(b.headline);
@@ -49,13 +77,21 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           return overlap / Math.min(wa.length, wb.length) >= 0.5;
         };
 
-        // Cluster articles about the same event (within 7 days)
-        const within7d = all.filter(a => {
+        // Count unique source domains in a cluster
+        const uniqueSources = (cluster) => new Set(cluster.map(a => (a.source || '').toLowerCase())).size;
+
+        // Top Stories pool: within 7 days, primary subject, not opinion
+        const topPool = all.filter(a => {
           const t = parseDate(a.pubDate);
-          return t > 0 && (nowMs - t) < SEVEN_DAYS;
+          if (t === 0 || (nowMs - t) > SEVEN_DAYS) return false;
+          if (!isPrimarySubject(a.headline)) return false;
+          if (OPINION_RE.test(a.headline || '')) return false;
+          return true;
         });
+
+        // Cluster by event
         const clusters = [];
-        for (const article of within7d) {
+        for (const article of topPool) {
           let placed = false;
           for (const cluster of clusters) {
             if (isSameEvent(article, cluster[0])) {
@@ -67,20 +103,22 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           if (!placed) clusters.push([article]);
         }
 
-        // Sort clusters: source count first, then newest article in cluster as tiebreaker
+        // Sort clusters by UNIQUE source count, then by newest article as tiebreaker
         clusters.sort((a, b) => {
-          if (b.length !== a.length) return b.length - a.length;
+          const srcA = uniqueSources(a);
+          const srcB = uniqueSources(b);
+          if (srcB !== srcA) return srcB - srcA;
           const newestA = Math.max(...a.map(x => parseDate(x.pubDate)));
           const newestB = Math.max(...b.map(x => parseDate(x.pubDate)));
           return newestB - newestA;
         });
         const top = clusters.slice(0, 3).map(cluster => {
           const sorted = [...cluster].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
-          return { ...sorted[0], _sourceCount: cluster.length };
+          return { ...sorted[0], _sourceCount: uniqueSources(cluster) };
         });
         setTopStories(top);
 
-        // Latest Coverage: within 14 days, exclude Top Stories, dedup, sort NEWEST FIRST
+        // Latest Coverage: within 14 days, exclude Top Stories, no generics, dedup, newest first
         const topUrls = new Set(top.map(a => a.url));
         const topHeadlines = new Set(top.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
         const within14d = all.filter(a => {
@@ -89,6 +127,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           if ((nowMs - t) > FOURTEEN_DAYS) return false;
           if (a.url && topUrls.has(a.url)) return false;
           if (topHeadlines.has((a.headline || '').toLowerCase().substring(0, 60))) return false;
+          if (GENERIC_RE.test((a.headline || '').trim())) return false;
           return true;
         });
 
