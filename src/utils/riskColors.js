@@ -162,6 +162,8 @@ export const SOURCE_BLOCKLIST = new Set([
   'kayak', 'expedia', 'lonely planet', 'travel + leisure', 'condé nast traveler',
   // Gaming
   'ign', 'gamespot', 'kotaku', 'polygon', 'pc gamer',
+  // Travel content
+  'travel and tour world', 'travelandtourworld',
 ]);
 
 // Sports headline keywords — articles matching these are filtered from country modals

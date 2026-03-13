@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
-import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST } from '../../utils/riskColors';
+import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST, getSourceCredibility } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
@@ -36,6 +36,13 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           if (a.source && SOURCE_BLOCKLIST.has(a.source.toLowerCase())) return false;
           // Block generic roundup/brief titles
           if (/^(morning news brief|evening roundup|daily digest|news update|daily briefing|weekly roundup|news wrap|headlines today)\b/i.test(hl.trim())) return false;
+          // Block headlines too short to be real articles
+          if ((a.headline || '').length < 15) return false;
+          // Block celebrity/entertainment headlines
+          if (/\b(meghan markle|markle|kardashian|kim kardashian|kanye west|jenner|prince harry|royal baby|duchess of sussex|kate middleton|celebrity gossip|red carpet fashion)\b/i.test(hl)) return false;
+          // Block X.com/Twitter sourced articles (unreliable without editorial curation)
+          if (a.source && /\b(x\.com|twitter)\b/i.test(a.source)) return false;
+          if (a.url && /^https?:\/\/(x\.com|twitter\.com)\//i.test(a.url)) return false;
           return true;
         });
 
@@ -116,11 +123,16 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           if (!placed) clusters.push([article]);
         }
 
-        // Sort clusters by UNIQUE source count, then by newest article as tiebreaker
+        // Conflict keywords boost for Top Stories ranking
+        const CONFLICT_RE = /\b(killed|attacks?|strikes?|war|military|bomb(?:ed|ing)?|casualties|explosion|shooting|invasion|troops|fighting|airstrike|massacre|genocide|assassination|hostage|wounded|shelling|missile|rocket|drone strike|armed|clashes|siege|offensive)\b/i;
+
+        // Sort clusters by conflict priority + unique source count, then recency
         clusters.sort((a, b) => {
-          const srcA = uniqueSources(a);
-          const srcB = uniqueSources(b);
-          if (srcB !== srcA) return srcB - srcA;
+          const conflictA = a.some(x => CONFLICT_RE.test(x.headline || '')) ? 3 : 0;
+          const conflictB = b.some(x => CONFLICT_RE.test(x.headline || '')) ? 3 : 0;
+          const scoreA = uniqueSources(a) + conflictA;
+          const scoreB = uniqueSources(b) + conflictB;
+          if (scoreB !== scoreA) return scoreB - scoreA;
           const newestA = Math.max(...a.map(x => parseDate(x.pubDate)));
           const newestB = Math.max(...b.map(x => parseDate(x.pubDate)));
           return newestB - newestA;
@@ -131,27 +143,51 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
         });
         setTopStories(top);
 
-        // Latest Coverage: within 14 days, exclude Top Stories, no generics, dedup, newest first
+        // Latest Coverage: soft window — 14d first, expand to 30d/90d if < 3 articles
         const topUrls = new Set(top.map(a => a.url));
         const topHeadlines = new Set(top.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
-        const within14d = all.filter(a => {
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+
+        const filterByWindow = (windowMs) => all.filter(a => {
           const t = parseDate(a.pubDate);
           if (t === 0) return false;
-          if ((nowMs - t) > FOURTEEN_DAYS) return false;
+          if ((nowMs - t) > windowMs) return false;
           if (a.url && topUrls.has(a.url)) return false;
           if (topHeadlines.has((a.headline || '').toLowerCase().substring(0, 60))) return false;
           if (GENERIC_RE.test((a.headline || '').trim())) return false;
           return true;
         });
 
-        // Dedup: same event → keep the article with the newest date
+        let withinWindow = filterByWindow(FOURTEEN_DAYS);
+        if (withinWindow.length < 3) withinWindow = filterByWindow(THIRTY_DAYS);
+        if (withinWindow.length < 3) withinWindow = filterByWindow(NINETY_DAYS);
+
+        // Cluster-based dedup: group by event, collapse 3+ to most credible source
+        const CRED_RANK = { wire: 6, specialist: 5, independent: 4, 'state-affiliated': 3, tabloid: 2, state: 1 };
+        const getCredScore = (src) => CRED_RANK[getSourceCredibility(src)] || 3;
+
+        const dedupClusters = [];
+        for (const article of withinWindow) {
+          let placed = false;
+          for (const cluster of dedupClusters) {
+            if (isSameEvent(article, cluster[0])) {
+              cluster.push(article);
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) dedupClusters.push([article]);
+        }
+
         const deduped = [];
-        for (const article of within14d) {
-          const dupIdx = deduped.findIndex(k => isSameEvent(article, k));
-          if (dupIdx === -1) {
-            deduped.push(article);
-          } else if (parseDate(article.pubDate) > parseDate(deduped[dupIdx].pubDate)) {
-            deduped[dupIdx] = article;
+        for (const cluster of dedupClusters) {
+          if (cluster.length >= 3) {
+            // 3+ articles about same event → keep most credible source
+            cluster.sort((a, b) => getCredScore(b.source) - getCredScore(a.source));
+            deduped.push(cluster[0]);
+          } else {
+            deduped.push(...cluster);
           }
         }
 

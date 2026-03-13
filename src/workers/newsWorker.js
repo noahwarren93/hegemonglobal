@@ -205,6 +205,7 @@ const SOURCE_BLOCKLIST = new Set([
   'visa hq', 'visahq', 'tripadvisor', 'booking.com', 'skyscanner',
   'kayak', 'expedia', 'lonely planet', 'travel + leisure', 'condé nast traveler',
   'ign', 'gamespot', 'kotaku', 'polygon', 'pc gamer',
+  'travel and tour world', 'travelandtourworld',
 ]);
 
 function isBlockedSource(source) {
@@ -377,9 +378,13 @@ function parseRSSItems(data, sourceName) {
 
 function isArticleRelevant(article) {
   const title = article.title || '';
+  // Block headlines too short to be real articles
+  if (title.length < 15) return false;
   const text = (title + ' ' + (article.description || '')).toLowerCase();
   if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
   if (detectCategory(title, article.description) === 'SPORTS') return false;
+  // Block celebrity/entertainment headlines
+  if (/\b(meghan markle|markle|kardashian|kim kardashian|kanye west|jenner|prince harry|royal baby|duchess of sussex|kate middleton|celebrity gossip|red carpet fashion)\b/i.test(title)) return false;
   const fullText = title + ' ' + (article.description || '');
   if (DOMESTIC_NOISE_PATTERNS.some(p => p.test(fullText))) return false;
   const nonAscii = (title.match(/[^\u0020-\u007E]/g) || []).length;
