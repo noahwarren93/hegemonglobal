@@ -2007,6 +2007,142 @@ Return ONLY the JSON array, no other text.`;
 }
 
 // ============================================================
+// Daily Country Analysis Update (runs at midnight UTC)
+// ============================================================
+
+async function updateCountryAnalyses(env) {
+  console.log('[Daily] Starting country analysis update...');
+  const startTime = Date.now();
+
+  const apiKey = env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('[Daily] No ANTHROPIC_API_KEY');
+    return;
+  }
+
+  // Load latest briefing articles from KV
+  const eventsRaw = await env.HEGEMON_CACHE.get('latest_events');
+  if (!eventsRaw) {
+    console.log('[Daily] No events data, skipping');
+    return;
+  }
+
+  const eventsData = JSON.parse(eventsRaw);
+  const briefing = eventsData.briefing || [];
+
+  // Group articles by country
+  const countryArticles = {};
+  for (const article of briefing) {
+    const headline = article.headline || '';
+    const country = extractPrimaryCountry(headline);
+    if (!country) continue;
+    const realCountry = country.startsWith('_stop_') ? country.replace('_stop_', '') : country;
+    if (!countryArticles[realCountry]) countryArticles[realCountry] = [];
+    countryArticles[realCountry].push(article);
+  }
+
+  // Get countries with articles, sorted by article count (most active first)
+  const activeCountries = Object.entries(countryArticles)
+    .filter(([, articles]) => articles.length >= 1)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 50);
+
+  console.log(`[Daily] Found ${activeCountries.length} countries with recent articles`);
+  if (activeCountries.length === 0) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const analyses = {};
+
+  // Batch countries into groups of 10 for Claude calls
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < activeCountries.length; i += BATCH_SIZE) {
+    const batch = activeCountries.slice(i, i + BATCH_SIZE);
+
+    const countryDescriptions = batch.map(([country, articles]) => {
+      const articleList = articles.slice(0, 5).map(a =>
+        `  - "${a.headline}" (${a.source}) ${a.pubDate || ''}`
+      ).join('\n');
+      return `COUNTRY: ${country}\nRecent articles:\n${articleList}`;
+    }).join('\n\n');
+
+    const prompt = `You are a geopolitical analyst for Hegemon, a global risk monitoring platform. Today is ${today}.
+
+For each country below, write a concise situation analysis based on the recent articles provided. Each analysis has exactly 3 sections:
+
+1. what: 2-3 sentences. Key developments in the last 24-48 hours. Cite specific events, names, numbers.
+2. why: 1-2 sentences. Strategic significance, regional implications, what's at stake.
+3. next: 1-2 sentences. Near-term outlook, escalation or de-escalation paths, next steps to watch.
+
+RULES:
+- Be specific and factual. Use the article details provided.
+- Never say "limited information" or "details are emerging".
+- Keep total analysis under 100 words per country.
+- Write in present tense for ongoing situations.
+
+${countryDescriptions}
+
+Return a JSON object with country names as keys:
+{
+  "country_name": {
+    "what": "What happened text...",
+    "why": "Why it matters text...",
+    "next": "What might happen text..."
+  }
+}
+
+Return ONLY the JSON, no other text.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 6000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        console.error(`[Daily] Claude API error: ${response.status}`);
+        continue;
+      }
+
+      const aiData = await response.json();
+      const aiText = aiData.content?.[0]?.text || '';
+
+      try {
+        const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          Object.assign(analyses, parsed);
+        }
+      } catch (parseErr) {
+        console.error(`[Daily] Parse error: ${parseErr.message}`);
+      }
+
+      console.log(`[Daily] Generated analyses for batch ${Math.floor(i / BATCH_SIZE) + 1}`);
+    } catch (err) {
+      console.error(`[Daily] Claude call failed: ${err.message}`);
+    }
+  }
+
+  // Store in KV
+  if (Object.keys(analyses).length > 0) {
+    await env.HEGEMON_CACHE.put('country_analyses', JSON.stringify({
+      analyses,
+      lastUpdated: Date.now()
+    }), { expirationTtl: 172800 }); // 48h TTL
+
+    console.log(`[Daily] Stored ${Object.keys(analyses).length} country analyses in KV (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
+  }
+}
+
+// ============================================================
 // Worker Export: fetch + scheduled handlers
 // ============================================================
 
@@ -2591,6 +2727,30 @@ Return ONLY the JSON array, no other text.`;
       }
     }
 
+    // ============================================================
+    // GET /analyses — serve daily country analyses from KV
+    // ============================================================
+    if (url.pathname === '/analyses' && request.method === 'GET') {
+      try {
+        const data = await env.HEGEMON_CACHE.get('country_analyses');
+        if (!data) {
+          return new Response(
+            JSON.stringify({ analyses: {}, lastUpdated: null }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(data, {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: 'Analyses fetch error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // 404
     return new Response(
       JSON.stringify({ error: 'Not found' }),
@@ -2604,6 +2764,16 @@ Return ONLY the JSON array, no other text.`;
   // stores everything in KV for instant client access via GET /events
   // ============================================================
   async scheduled(event, env) {
+    // Daily cron: update country analyses
+    if (event.cron === '0 0 * * *') {
+      try {
+        await updateCountryAnalyses(env);
+      } catch (err) {
+        console.error('[Daily] Fatal error:', err.message, err.stack);
+      }
+      return;
+    }
+
     try {
       console.log('[Cron] Starting event generation...');
       const startTime = Date.now();

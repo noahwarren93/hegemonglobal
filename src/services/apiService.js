@@ -1285,6 +1285,62 @@ async function fetchPreGeneratedEvents() {
 }
 
 // ============================================================
+// Fetch Country Analyses — daily AI-generated situation reports
+// ============================================================
+
+async function fetchCountryAnalyses() {
+  try {
+    const cached = localStorage.getItem('country_analyses_cache');
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Date.now() - ts < 3 * 60 * 60 * 1000) { // 3h cache
+        applyAnalyses(data);
+        return;
+      }
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch(`${RSS_PROXY_BASE}/analyses`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) return;
+    const result = await response.json();
+    if (!result || !result.analyses) return;
+
+    applyAnalyses(result.analyses);
+    localStorage.setItem('country_analyses_cache', JSON.stringify({
+      data: result.analyses,
+      ts: Date.now()
+    }));
+  } catch (err) {
+    console.warn('[Hegemon] Country analyses fetch failed:', err.message);
+  }
+}
+
+function applyAnalyses(analyses) {
+  for (const [countryName, analysis] of Object.entries(analyses)) {
+    // Try exact match first, then case-insensitive
+    let entry = COUNTRIES[countryName];
+    if (!entry) {
+      const key = Object.keys(COUNTRIES).find(k => k.toLowerCase() === countryName.toLowerCase());
+      if (key) entry = COUNTRIES[key];
+    }
+    if (entry && analysis.what) {
+      entry.analysis = {
+        ...entry.analysis,
+        what: analysis.what,
+        why: analysis.why || entry.analysis?.why || '',
+        next: analysis.next || entry.analysis?.next || ''
+      };
+    }
+  }
+}
+
+// ============================================================
 // Fetch Live News — tries pre-generated first, falls back to RSS
 // ============================================================
 
@@ -1301,6 +1357,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       seedPastBriefingIfEmpty();
     }, 50);
     setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
+    setTimeout(() => fetchCountryAnalyses(), 1000);
     setTimeout(() => fetchTimelineUpdates(), 2000);
 
     if (onStatusUpdate) onStatusUpdate('complete');
