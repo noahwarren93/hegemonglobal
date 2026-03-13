@@ -1071,7 +1071,7 @@ export async function fetchCountryNews(countryName) {
   const formatBriefingArticle = (a) => ({
     headline: a.title || a.headline,
     source: formatSourceName(a.source_id || a.source || 'News'),
-    pubDate: a.pubDate || a.time || '',
+    pubDate: a.pubDate || '', // Never use a.time — it's a relative string like "30m ago"
     url: a.link || a.url || '',
     category: a.category || detectCategory(a.title || a.headline, a.description || ''),
     qualityScore: scoreHeadlineQuality(a.title || a.headline)

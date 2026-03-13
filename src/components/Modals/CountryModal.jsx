@@ -30,6 +30,13 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
         const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
         const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
 
+        // Robust date parser — returns ms timestamp or 0
+        const parseDate = (d) => {
+          if (!d) return 0;
+          const t = new Date(d).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+
         // Helper: get significant words from headline
         const getWords = (h) => (h || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
 
@@ -42,8 +49,11 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           return overlap / Math.min(wa.length, wb.length) >= 0.5;
         };
 
-        // Cluster articles about the same event
-        const within7d = all.filter(a => a.pubDate && (nowMs - new Date(a.pubDate).getTime()) < SEVEN_DAYS);
+        // Cluster articles about the same event (within 7 days)
+        const within7d = all.filter(a => {
+          const t = parseDate(a.pubDate);
+          return t > 0 && (nowMs - t) < SEVEN_DAYS;
+        });
         const clusters = [];
         for (const article of within7d) {
           let placed = false;
@@ -57,35 +67,44 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           if (!placed) clusters.push([article]);
         }
 
-        // Sort clusters by source count (importance), pick best article from each
-        clusters.sort((a, b) => b.length - a.length);
+        // Sort clusters: source count first, then newest article in cluster as tiebreaker
+        clusters.sort((a, b) => {
+          if (b.length !== a.length) return b.length - a.length;
+          const newestA = Math.max(...a.map(x => parseDate(x.pubDate)));
+          const newestB = Math.max(...b.map(x => parseDate(x.pubDate)));
+          return newestB - newestA;
+        });
         const top = clusters.slice(0, 3).map(cluster => {
-          // Prefer wire services and major outlets
           const sorted = [...cluster].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
           return { ...sorted[0], _sourceCount: cluster.length };
         });
         setTopStories(top);
 
-        // Latest Coverage: everything within 14 days, excluding Top Stories, deduped
+        // Latest Coverage: within 14 days, exclude Top Stories, dedup, sort NEWEST FIRST
         const topUrls = new Set(top.map(a => a.url));
         const topHeadlines = new Set(top.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
         const within14d = all.filter(a => {
-          if (!a.pubDate) return false;
-          if ((nowMs - new Date(a.pubDate).getTime()) > FOURTEEN_DAYS) return false;
+          const t = parseDate(a.pubDate);
+          if (t === 0) return false;
+          if ((nowMs - t) > FOURTEEN_DAYS) return false;
           if (a.url && topUrls.has(a.url)) return false;
           if (topHeadlines.has((a.headline || '').toLowerCase().substring(0, 60))) return false;
           return true;
         });
 
-        // Dedup Latest Coverage: same event → keep best article only
+        // Dedup: same event → keep the article with the newest date
         const deduped = [];
         for (const article of within14d) {
-          const isDup = deduped.some(k => isSameEvent(article, k));
-          if (!isDup) deduped.push(article);
+          const dupIdx = deduped.findIndex(k => isSameEvent(article, k));
+          if (dupIdx === -1) {
+            deduped.push(article);
+          } else if (parseDate(article.pubDate) > parseDate(deduped[dupIdx].pubDate)) {
+            deduped[dupIdx] = article;
+          }
         }
 
-        // Sort by importance (qualityScore) as primary
-        deduped.sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+        // Sort strictly by date, newest first
+        deduped.sort((a, b) => parseDate(b.pubDate) - parseDate(a.pubDate));
         setLatestCoverage(deduped);
         setNewsLoading(false);
       }).catch(() => {
