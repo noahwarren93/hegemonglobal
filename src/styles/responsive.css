@@ -55,10 +55,10 @@
       .legend-title { font-size: 7px; }
       .legend-item { font-size: 8px; }
 
-      /* Sidebar tabs — horizontal scroll, never wrap */
+      /* Sidebar tabs — horizontal scroll, never wrap, compact vertical */
       .tabs { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; justify-content: flex-start; gap: 0; }
       .tabs::-webkit-scrollbar { display: none; }
-      .tab { font-size: 7.5px; letter-spacing: 0.3px; flex-shrink: 0; padding: 10px 10px; min-width: 0; }
+      .tab { font-size: 7.5px; letter-spacing: 0.3px; flex-shrink: 0; padding: 7px 10px; min-width: 0; }
 
       /* Stats (Critical, High, Stable, Countries) - bottom left, compact */
       .stats { bottom: 8px; left: 8px; right: auto; gap: 4px; flex-wrap: nowrap; max-width: 55%; }
@@ -68,20 +68,25 @@
       .stat-popup { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; max-height: 60vh; }
       .stat-popup.active { transform: translate(-50%, -50%); }
 
-      /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column, 44px tap targets */
-      .globe-tools { right: 8px; bottom: 42px; top: auto; flex-direction: column; }
-      .globe-tool-btn { width: 44px; height: 44px; padding: 6px; }
-      .globe-tool-btn-labeled { width: auto; padding: 6px 10px; font-size: 8px; gap: 4px; min-height: 44px; }
+      /* Globe tool buttons (TOS, Search, Rotate) - bottom right, vertical column, compact */
+      .globe-tools { right: 8px; bottom: 36px; top: auto; flex-direction: column; gap: 4px; }
+      .globe-tool-btn { width: 32px; height: 32px; padding: 4px; border-radius: 6px; }
+      .globe-tool-btn svg { width: 12px; height: 12px; }
+      .globe-tool-btn-labeled { width: auto; height: 32px; padding: 4px 8px; font-size: 7px; gap: 3px; min-height: 32px; }
+      .globe-tool-btn-labeled svg { width: 10px; height: 10px; }
 
-      /* Reset button - bottom right, below globe-tools, 44px tap */
-      .globe-reset-btn { right: 8px; bottom: 8px; padding: 6px 10px; font-size: 8px; min-height: 44px; display: flex; align-items: center; }
-      .globe-reset-btn svg { width: 9px; height: 9px; }
+      /* Reset button - bottom right, below globe-tools, compact */
+      .globe-reset-btn { right: 8px; bottom: 8px; padding: 4px 8px; font-size: 7px; height: 28px; min-height: 28px; display: flex; align-items: center; }
+      .globe-reset-btn svg { width: 8px; height: 8px; }
 
-      /* Sidebar content — large bottom padding so last items clear any overlapping bars */
-      .sidebar-content { padding: 12px 12px 160px 12px !important; -webkit-overflow-scrolling: touch; }
+      /* Status bar — compact on mobile to reduce gap below tabs */
+      .sidebar-status-bar { padding: 2px 10px !important; }
 
-      /* Mobile Feature Buttons — stacked vertically just above stats bar (stats top ~52px, 4px gap) */
-      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 3px; }
+      /* Sidebar content — compact top padding, large bottom padding for overlapping bars */
+      .sidebar-content { padding: 8px 12px 160px 12px !important; -webkit-overflow-scrolling: touch; }
+
+      /* Mobile Feature Buttons — stacked vertically just above stats bar */
+      .mobile-feature-btns { display: flex; flex-direction: column; position: absolute; bottom: 56px; left: 8px; z-index: 10; gap: 3px; max-width: calc(100% - 60px); }
       .globe-feature-btn { padding: 4px 8px; font-size: 7px; gap: 4px; }
 
       /* Compare hint on mobile - smaller text, JS handles positioning */
@@ -155,18 +160,19 @@
       /* Tabs — slightly smaller on narrow screens */
       .tab { font-size: 7px; letter-spacing: 0.2px; padding: 10px 8px; }
 
-      /* Globe tools — keep 44px tap targets, reduce visual size */
-      .globe-tools { right: 8px; bottom: 38px; gap: 4px; }
-      .globe-tool-btn { width: 44px; height: 44px; }
-      .globe-tool-btn svg { width: 12px; height: 12px; }
-      .globe-tool-btn-labeled { padding: 4px 8px; font-size: 7px; gap: 3px; min-height: 44px; }
+      /* Globe tools — compact on small screens */
+      .globe-tools { right: 6px; bottom: 32px; gap: 3px; }
+      .globe-tool-btn { width: 28px; height: 28px; padding: 3px; }
+      .globe-tool-btn svg { width: 10px; height: 10px; }
+      .globe-tool-btn-labeled { height: 28px; padding: 3px 6px; font-size: 6px; gap: 2px; min-height: 28px; }
+      .globe-tool-btn-labeled svg { width: 9px; height: 9px; }
 
-      /* Reset button even smaller on small screens but keep tap area */
-      .globe-reset-btn { right: 8px; bottom: 8px; padding: 4px 8px; font-size: 7px; min-height: 44px; }
-      .globe-reset-btn svg { width: 8px; height: 8px; }
+      /* Reset button — compact */
+      .globe-reset-btn { right: 6px; bottom: 6px; padding: 3px 6px; font-size: 6px; height: 24px; min-height: 24px; }
+      .globe-reset-btn svg { width: 7px; height: 7px; }
 
-      /* Mobile Feature Buttons — compact on small screens, tight with stats */
-      .mobile-feature-btns { bottom: 56px; gap: 2px; }
+      /* Mobile Feature Buttons — compact on small screens, no overlap with right buttons */
+      .mobile-feature-btns { bottom: 56px; gap: 2px; max-width: calc(100% - 50px); }
       .globe-feature-btn { padding: 3px 6px; font-size: 6px; gap: 3px; }
       .globe-feature-btn svg { width: 10px; height: 10px; }
 

@@ -2106,7 +2106,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         </div>
 
         {/* Status + Font Controls Row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
+        <div className="sidebar-status-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', background: '#0a0a0f', borderBottom: '1px solid #1f2937' }}>
           <div style={{ fontSize: '10px', color: '#6b7280' }}>
             {newsTimestamp ? (
               <>{newsTimestamp}</>
