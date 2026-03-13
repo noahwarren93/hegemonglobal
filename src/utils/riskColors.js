@@ -130,13 +130,25 @@ const CREDIBILITY_LABELS = {
 
 // Sources to completely block from ingestion
 export const SOURCE_BLOCKLIST = new Set([
-  'beincrypto', 'wallpaper', 'dezeen', 'archdaily',
-  'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  // Crypto
+  'beincrypto', 'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  // Architecture/design
+  'wallpaper', 'dezeen', 'archdaily',
+  // Fashion/lifestyle
   'vogue', 'elle', 'cosmopolitan', 'glamour',
+  // Entertainment/celebrity
   'tmz', 'people', 'us weekly', 'entertainment tonight',
-  'espn', 'bleacher report', 'sports illustrated',
+  // Food
   'food network', 'bon appetit', 'eater',
-  // College sports wire sites
+  // Sports — major outlets
+  'espn', 'bleacher report', 'sports illustrated',
+  'sbnation', 'sb nation', 'the athletic', 'cbssports', 'cbs sports',
+  'fox sports', 'nbcsports', 'nbc sports', 'yahoo sports',
+  'sporting news', 'sports reference', 'pro football talk',
+  'sport news africa', 'foot africa', 'i sport connect', 'isportconnect',
+  'bein sports', 'dazn', 'the score', 'marca', 'as.com', 'l\'equipe',
+  'sky sports', 'bt sport', 'eurosport', 'sportstar', 'olympics.com',
+  // Sports — college wire sites
   'clemson wire', 'dawg nation', 'buckeyes wire', 'hawkeyes wire',
   'longhorns wire', 'nittany lions wire', 'sooners wire', 'trojans wire',
   'wolverines wire', 'badgers wire', 'razorbacks wire', 'aggies wire',
@@ -145,11 +157,16 @@ export const SOURCE_BLOCKLIST = new Set([
   'auburn wire', 'roll tide wire', 'vols wire', 'gamecocks wire',
   'fighting irish wire', 'ducks wire', 'utes wire', 'cougars wire',
   'bears wire', 'horned frogs wire', 'knights wire', 'hokies wire',
-  // Other sports
-  'sbnation', 'sb nation', 'the athletic', 'cbssports', 'cbs sports',
-  'fox sports', 'nbcsports', 'nbc sports', 'yahoo sports',
-  'sporting news', 'sports reference', 'pro football talk',
+  // Travel/visa booking
+  'visa hq', 'visahq', 'tripadvisor', 'booking.com', 'skyscanner',
+  'kayak', 'expedia', 'lonely planet', 'travel + leisure', 'condé nast traveler',
+  // Gaming
+  'ign', 'gamespot', 'kotaku', 'polygon', 'pc gamer',
 ]);
+
+// Sports headline keywords — articles matching these are filtered from country modals
+export const SPORTS_HEADLINE_RE = /\b(athletics|championship(?:s)?|indoor championships|sporting hub|football|soccer|basketball|cricket|rugby|tennis|olympic(?:s)?|fifa|world cup|marathon|tournament|league table|roster|striker|goalkeeper|match\s?day|halftime|standings|playoffs|medal(?:s|ist)?|sprint|relay|dominates|premier league|la liga|serie a|bundesliga|champions league|europa league|world athletics|grand prix|grand slam|super bowl|batting|bowling|wicket|innings|UCI|cycling|swimming|gymnastics|pole vault|javelin|shot put|high jump|long jump|discus|hurdles|decathlon|pentathlon|triathlon|4x100|4x400|steeplechase)\b/i;
+
 
 export function getSourceCredibility(source) {
   if (!source) return null;

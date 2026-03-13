@@ -182,12 +182,18 @@ function timeAgo(dateString) {
 
 // Source blocklist — completely filtered from ingestion
 const SOURCE_BLOCKLIST = new Set([
-  'beincrypto', 'wallpaper', 'dezeen', 'archdaily',
-  'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  'beincrypto', 'coindesk', 'cointelegraph', 'cryptonews', 'decrypt',
+  'wallpaper', 'dezeen', 'archdaily',
   'vogue', 'elle', 'cosmopolitan', 'glamour',
   'tmz', 'people', 'us weekly', 'entertainment tonight',
-  'espn', 'bleacher report', 'sports illustrated',
   'food network', 'bon appetit', 'eater',
+  'espn', 'bleacher report', 'sports illustrated',
+  'sbnation', 'sb nation', 'the athletic', 'cbssports', 'cbs sports',
+  'fox sports', 'nbcsports', 'nbc sports', 'yahoo sports',
+  'sporting news', 'sports reference', 'pro football talk',
+  'sport news africa', 'foot africa', 'i sport connect', 'isportconnect',
+  'bein sports', 'dazn', 'the score', 'marca', 'as.com', "l'equipe",
+  'sky sports', 'bt sport', 'eurosport', 'sportstar', 'olympics.com',
   'clemson wire', 'dawg nation', 'buckeyes wire', 'hawkeyes wire',
   'longhorns wire', 'nittany lions wire', 'sooners wire', 'trojans wire',
   'wolverines wire', 'badgers wire', 'razorbacks wire', 'aggies wire',
@@ -196,9 +202,9 @@ const SOURCE_BLOCKLIST = new Set([
   'auburn wire', 'roll tide wire', 'vols wire', 'gamecocks wire',
   'fighting irish wire', 'ducks wire', 'utes wire', 'cougars wire',
   'bears wire', 'horned frogs wire', 'knights wire', 'hokies wire',
-  'sbnation', 'sb nation', 'the athletic', 'cbssports', 'cbs sports',
-  'fox sports', 'nbcsports', 'nbc sports', 'yahoo sports',
-  'sporting news', 'sports reference', 'pro football talk',
+  'visa hq', 'visahq', 'tripadvisor', 'booking.com', 'skyscanner',
+  'kayak', 'expedia', 'lonely planet', 'travel + leisure', 'condé nast traveler',
+  'ign', 'gamespot', 'kotaku', 'polygon', 'pc gamer',
 ]);
 
 function isBlockedSource(source) {

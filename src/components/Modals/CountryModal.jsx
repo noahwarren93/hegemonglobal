@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
-import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo } from '../../utils/riskColors';
+import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
@@ -25,7 +25,20 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
       setSanctionsOpen(false);
       setCasualtiesExpanded(false);
       fetchCountryNews(countryName).then(articles => {
-        const all = articles || [];
+        const raw = articles || [];
+
+        // Pre-filter: remove sports headlines and blocked sources from entire pool
+        const all = raw.filter(a => {
+          const hl = (a.headline || '').toLowerCase();
+          // Block sports headlines
+          if (SPORTS_HEADLINE_RE.test(hl)) return false;
+          // Block known non-news sources
+          if (a.source && SOURCE_BLOCKLIST.has(a.source.toLowerCase())) return false;
+          // Block generic roundup/brief titles
+          if (/^(morning news brief|evening roundup|daily digest|news update|daily briefing|weekly roundup|news wrap|headlines today)\b/i.test(hl.trim())) return false;
+          return true;
+        });
+
         const nowMs = Date.now();
         const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
         const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
