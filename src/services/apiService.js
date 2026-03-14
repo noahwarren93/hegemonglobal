@@ -880,6 +880,16 @@ export function isRelevantToCountry(title, description, countryName) {
     if (!hasContext && !demonymMatched) return false;
   }
 
+  // Israel: reject if "Israel" only appears as part of a worship name (Temple Israel, Beth Israel, etc.)
+  if (countryName === 'Israel') {
+    const WORSHIP_RE = /\b(temple israel|beth israel|congregation israel|bnai israel|b'nai israel|house of israel|ohev israel)\b/i;
+    if (WORSHIP_RE.test(text)) {
+      // Only keep if genuine Israel-country keywords also appear
+      const ISRAEL_COUNTRY_RE = /\b(idf|netanyahu|tel aviv|jerusalem|gaza|west bank|hezbollah|hamas|knesset|mossad|shin bet|iron dome|kibbutz|intifada|zionist|settler|golan|negev|likud|palestinian|ramallah)\b/i;
+      if (!ISRAEL_COUNTRY_RE.test(text)) return false;
+    }
+  }
+
   // For all countries: reject if article has sports keywords and country name is the ONLY geo term
   if (!ambig && SPORTS_KEYWORDS.test(text)) {
     // Only reject if the source also looks like sports (partial check via blocklist handled elsewhere)
@@ -923,6 +933,15 @@ export function isHeadlineAboutCountry(headline, countryName) {
       return regex.test(headlineLower);
     });
     if (!hasContext && !demonymMatched) return false;
+  }
+
+  // Israel: reject if "Israel" only appears as part of a worship name
+  if (countryName === 'Israel') {
+    const WORSHIP_RE = /\b(temple israel|beth israel|congregation israel|bnai israel|b'nai israel|house of israel|ohev israel)\b/i;
+    if (WORSHIP_RE.test(headlineLower)) {
+      const ISRAEL_COUNTRY_RE = /\b(idf|netanyahu|tel aviv|jerusalem|gaza|west bank|hezbollah|hamas|knesset|mossad|shin bet|iron dome|kibbutz|intifada|zionist|settler|golan|negev|likud|palestinian|ramallah)\b/i;
+      if (!ISRAEL_COUNTRY_RE.test(headlineLower)) return false;
+    }
   }
   return true;
 }

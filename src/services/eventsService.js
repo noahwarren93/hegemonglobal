@@ -166,7 +166,15 @@ const AMBIGUOUS_COUNTRY_RULES = {
 // Demonyms that are themselves ambiguous (also refer to US state/person contexts)
 const AMBIGUOUS_DEMONYMS = new Set(['georgian']);
 
+// Worship-name false positives: "Temple Israel", "Beth Israel" etc. are not about Israel the country
+const WORSHIP_NAME_RE = /\b(temple israel|beth israel|congregation israel|bnai israel|b'nai israel|house of israel|ohev israel)\b/;
+const ISRAEL_COUNTRY_RE = /\b(idf|netanyahu|tel aviv|jerusalem|gaza|west bank|hezbollah|hamas|knesset|mossad|shin bet|iron dome|kibbutz|intifada|zionist|settler|golan|negev|likud|palestinian|ramallah)\b/;
+
 function passesAmbiguityCheck(countryLower, text, matchedTerm) {
+  // Israel: reject if "Israel" only appears as part of a worship/institution name
+  if (countryLower === 'israel' && WORSHIP_NAME_RE.test(text) && !ISRAEL_COUNTRY_RE.test(text)) {
+    return false;
+  }
   const rules = AMBIGUOUS_COUNTRY_RULES[countryLower];
   if (!rules) return true; // not ambiguous
   // Reject if any exclude word appears
