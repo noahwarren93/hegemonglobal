@@ -813,12 +813,28 @@ const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|fo
 
 // Ambiguous country names that also match common person names or US states
 // These require additional context words to confirm the article is about the country
+// excludeWords: if ANY of these appear, article is NOT about the country
 const AMBIGUOUS_COUNTRIES = {
-  'Chad': { contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'niger', 'sudan', 'central africa'] },
-  'Jordan': { contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra'] },
-  'Georgia': { contextWords: ['tbilisi', 'georgian', 'caucasus', 'saakashvili', 'south ossetia', 'abkhazia', 'kavelashvili', 'batumi'] },
-  'Mali': { contextWords: ['bamako', 'malian', 'sahel', 'wagner', 'jnim', 'timbuktu', 'junta'] },
-  'Niger': { contextWords: ['niamey', 'nigerien', 'sahel', 'junta', 'coup', 'uranium', 'ecowas'] },
+  'Chad': {
+    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan'],
+    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman']
+  },
+  'Jordan': {
+    contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra', 'aqaba', 'zarqa', 'irbid', 'arab league'],
+    excludeWords: ['michael jordan', 'jordan peele', 'jordan love', 'jordan spieth', 'jordan poole', 'jordan clarkson', 'jordan davis', 'jordan peterson', 'jordan brand', 'air jordan']
+  },
+  'Georgia': {
+    contextWords: ['tbilisi', 'caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
+    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams']
+  },
+  'Mali': {
+    contextWords: ['bamako', 'malian', 'sahel', 'wagner', 'jnim', 'timbuktu', 'junta', 'tuareg', 'azawad', 'minusma', 'french troops', 'gao', 'kidal', 'mopti', 'saharan'],
+    excludeWords: ['mali malibu']
+  },
+  'Niger': {
+    contextWords: ['niamey', 'nigerien', 'sahel', 'junta', 'coup', 'uranium', 'ecowas', 'bazoum', 'tchiani', 'french base', 'agadez', 'diffa', 'zinder', 'saharan'],
+    excludeWords: []
+  },
 };
 
 export function isRelevantToCountry(title, description, countryName) {
@@ -843,16 +859,21 @@ export function isRelevantToCountry(title, description, countryName) {
   const inDesc = matchesTerm(descLower);
   if (!inTitle && !inDesc) return false;
 
-  // For ambiguous country names, require context OR reject sports content
+  // For ambiguous country names, require context OR reject sports/exclusion content
   const ambig = AMBIGUOUS_COUNTRIES[countryName];
   if (ambig) {
     // If article contains sports keywords, reject it
     if (SPORTS_KEYWORDS.test(text)) return false;
+    // If article contains exclusion words (US state context, person names), reject it
+    if (ambig.excludeWords && ambig.excludeWords.some(ew => text.includes(ew))) return false;
     // Check if any context word appears — confirms it's actually about the country
     const hasContext = ambig.contextWords.some(cw => text.includes(cw));
-    // Also accept if a demonym (not just the country name) matched
+    // Also accept if an unambiguous demonym (not just the country name) matched
+    // "georgian" is itself ambiguous (US state vs country), so don't let it bypass context
+    const AMBIG_DEMONYMS = new Set(['georgian']);
     const demonymMatched = countryTerms.some(term => {
       if (term === countryLower) return false; // skip the ambiguous name itself
+      if (AMBIG_DEMONYMS.has(term)) return false; // skip ambiguous demonyms
       const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
       return regex.test(text);
     });
@@ -882,10 +903,28 @@ export function isHeadlineAboutCountry(headline, countryName) {
   const countryLower = countryName.toLowerCase();
   const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
   const allTerms = [countryLower, ...countryTerms];
-  return allTerms.some(term => {
+  const matched = allTerms.some(term => {
     const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
     return regex.test(headlineLower);
   });
+  if (!matched) return false;
+
+  // Apply disambiguation for ambiguous country names
+  const ambig = AMBIGUOUS_COUNTRIES[countryName];
+  if (ambig) {
+    if (SPORTS_KEYWORDS.test(headlineLower)) return false;
+    if (ambig.excludeWords && ambig.excludeWords.some(ew => headlineLower.includes(ew))) return false;
+    const hasContext = ambig.contextWords.some(cw => headlineLower.includes(cw));
+    const AMBIG_DEMONYMS = new Set(['georgian']);
+    const demonymMatched = countryTerms.some(term => {
+      if (term === countryLower) return false;
+      if (AMBIG_DEMONYMS.has(term)) return false;
+      const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      return regex.test(headlineLower);
+    });
+    if (!hasContext && !demonymMatched) return false;
+  }
+  return true;
 }
 
 // ============================================================

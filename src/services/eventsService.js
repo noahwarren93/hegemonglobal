@@ -138,6 +138,45 @@ function getCountryLookup() {
   return _countryLookup;
 }
 
+// Ambiguous country names — must match context words AND must NOT match exclude words
+// Shared with apiService but duplicated here to avoid circular imports
+const AMBIGUOUS_COUNTRY_RULES = {
+  'georgia': {
+    contextWords: ['tbilisi', 'caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
+    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams']
+  },
+  'chad': {
+    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan'],
+    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman']
+  },
+  'jordan': {
+    contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra', 'aqaba', 'zarqa', 'irbid', 'arab league'],
+    excludeWords: ['michael jordan', 'jordan peele', 'jordan love', 'jordan spieth', 'jordan poole', 'jordan clarkson', 'jordan davis', 'jordan peterson', 'jordan brand', 'air jordan']
+  },
+  'mali': {
+    contextWords: ['bamako', 'malian', 'sahel', 'wagner', 'jnim', 'timbuktu', 'junta', 'tuareg', 'azawad', 'minusma', 'french troops', 'gao', 'kidal', 'mopti', 'saharan'],
+    excludeWords: []
+  },
+  'niger': {
+    contextWords: ['niamey', 'nigerien', 'sahel', 'junta', 'coup', 'uranium', 'ecowas', 'bazoum', 'tchiani', 'french base', 'agadez', 'diffa', 'zinder', 'saharan'],
+    excludeWords: []
+  }
+};
+
+// Demonyms that are themselves ambiguous (also refer to US state/person contexts)
+const AMBIGUOUS_DEMONYMS = new Set(['georgian']);
+
+function passesAmbiguityCheck(countryLower, text, matchedTerm) {
+  const rules = AMBIGUOUS_COUNTRY_RULES[countryLower];
+  if (!rules) return true; // not ambiguous
+  // Reject if any exclude word appears
+  if (rules.excludeWords.length > 0 && rules.excludeWords.some(ew => text.includes(ew))) return false;
+  // Accept if an unambiguous demonym (not the bare country name) matched
+  if (matchedTerm && matchedTerm !== countryLower && !AMBIGUOUS_DEMONYMS.has(matchedTerm)) return true;
+  // Require at least one context word
+  return rules.contextWords.some(cw => text.includes(cw));
+}
+
 /**
  * Extract the PRIMARY country from a headline.
  * Returns lowercase country name or null.
@@ -160,7 +199,10 @@ function extractPrimaryCountry(headline) {
     for (const term of terms) {
       if (STOPLIST_ENTITIES.has(term)) continue;
       const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-      if (regex.test(lower)) return name;
+      if (regex.test(lower)) {
+        if (!passesAmbiguityCheck(name, lower, term)) continue;
+        return name;
+      }
     }
   }
 
@@ -185,7 +227,11 @@ function extractAllCountries(text) {
   for (const { name, terms } of lookup) {
     for (const term of terms) {
       const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-      if (regex.test(lower)) { countries.add(name); break; }
+      if (regex.test(lower)) {
+        if (!passesAmbiguityCheck(name, lower, term)) break;
+        countries.add(name);
+        break;
+      }
     }
   }
   return countries;
