@@ -429,7 +429,7 @@ export const COUNTRIES = {
 
   'Georgia': { lat: 42.32, lng: 43.36, flag: '🇬🇪', risk: 'stormy', tags: ['Political Instability'], region: 'Caucasus', pop: '3.7M', gdp: '$25B', leader: 'Mikheil Kavelashvili', title: 'Pro-Russia Turn',
     analysis: {
-      what: 'Georgia\'s ruling Georgian Dream party has shifted toward Russia, passing a "foreign agents" law modeled on Russian legislation and cracking down on protests. The EU froze Georgia\'s membership candidacy. Mass protests erupted but were suppressed. President Zourabichvili opposes the government but has limited power. The 2024 elections were disputed.',
+      what: 'Georgia\'s ruling Georgian Dream party has shifted toward Russia, passing a "foreign agents" law modeled on Russian legislation and cracking down on protests. The EU froze Georgia\'s membership candidacy. Mass protests erupted but were suppressed. President Kavelashvili, installed by Georgian Dream in late 2024, replaced pro-Western Zourabichvili. The 2024 elections were disputed.',
       why: 'Georgia was a pro-Western success story in the post-Soviet space—its reversal is significant. It borders Russia, which occupies 20% of its territory. The shift affects the South Caucasus corridor between Europe and Asia.',
       next: 'The government appears committed to its pro-Russia turn despite public opposition. Watch for: protest dynamics, EU relations, Russian influence, and any political change. Democratic backsliding continues.'
     },

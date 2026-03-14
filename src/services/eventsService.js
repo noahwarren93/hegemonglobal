@@ -142,8 +142,8 @@ function getCountryLookup() {
 // Shared with apiService but duplicated here to avoid circular imports
 const AMBIGUOUS_COUNTRY_RULES = {
   'georgia': {
-    contextWords: ['tbilisi', 'caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
-    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams']
+    contextWords: ['tbilisi', 'caucasus', 'south caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
+    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams', "buc-ee", 'special election', 'oscars', 'film industry', 'dolton', 'bbb rating', '14th district', 'film tax', 'georgia film', 'piedmont', 'macon', 'albany ga', 'georgia power', 'georgia lottery']
   },
   'chad': {
     contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan'],

@@ -824,8 +824,8 @@ const AMBIGUOUS_COUNTRIES = {
     excludeWords: ['michael jordan', 'jordan peele', 'jordan love', 'jordan spieth', 'jordan poole', 'jordan clarkson', 'jordan davis', 'jordan peterson', 'jordan brand', 'air jordan']
   },
   'Georgia': {
-    contextWords: ['tbilisi', 'caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
-    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams']
+    contextWords: ['tbilisi', 'caucasus', 'south caucasus', 'south ossetia', 'abkhazia', 'georgian dream', 'saakashvili', 'black sea', 'ivanishvili', 'nato', 'kavelashvili', 'batumi', 'zourabichvili', 'eu candidacy', 'foreign agents law', 'kutaisi', 'gori'],
+    excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams', "buc-ee", 'special election', 'oscars', 'film industry', 'dolton', 'bbb rating', '14th district', 'film tax', 'georgia film', 'piedmont', 'macon', 'albany ga', 'georgia power', 'georgia lottery']
   },
   'Mali': {
     contextWords: ['bamako', 'malian', 'sahel', 'wagner', 'jnim', 'timbuktu', 'junta', 'tuareg', 'azawad', 'minusma', 'french troops', 'gao', 'kidal', 'mopti', 'saharan'],
@@ -1047,8 +1047,10 @@ function scoreHeadlineQuality(title) {
 // ============================================================
 
 function formatArticlesForDisplay(articles, countryName) {
+  const isAmbiguous = countryName in AMBIGUOUS_COUNTRIES;
   const relevant = articles.filter(a => isRelevantToCountry(a.title, a.description, countryName));
-  const toUse = relevant.length > 0 ? relevant : articles;
+  // For ambiguous countries, NEVER fall back to unfiltered articles — that defeats disambiguation
+  const toUse = relevant.length > 0 ? relevant : (isAmbiguous ? [] : articles);
 
   // Score and sort: factual/conflict headlines first, opinion/reaction last
   const scored = toUse.map(a => ({ article: a, score: scoreHeadlineQuality(a.title) }));
@@ -1128,8 +1130,17 @@ export async function fetchCountryNews(countryName) {
   console.log('[Hegemon] fetchCountryNews', countryName, '- from DAILY_BRIEFING:', allArticles.length);
 
   // 3. Google News RSS (always try, no early returns)
+  // For ambiguous country names, add disambiguation to search query
+  const AMBIGUOUS_SEARCH_QUALIFIERS = {
+    'Georgia': 'Georgia Caucasus Tbilisi country',
+    'Chad': 'Chad Africa N\'Djamena country',
+    'Jordan': 'Jordan Middle East Amman country',
+    'Mali': 'Mali Africa Bamako country',
+    'Niger': 'Niger Africa Niamey country',
+  };
   try {
-    const googleNewsUrl = RSS_FEEDS.search(countryName + ' news');
+    const searchQuery = AMBIGUOUS_SEARCH_QUALIFIERS[countryName] || (countryName + ' news');
+    const googleNewsUrl = RSS_FEEDS.search(searchQuery);
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
     if (articles && articles.length > 0) {
       const formatted = formatArticlesForDisplay(articles, countryName);
@@ -1140,12 +1151,13 @@ export async function fetchCountryNews(countryName) {
   }
 
   // 4. Backup APIs (always try all)
+  const apiSearchQuery = AMBIGUOUS_SEARCH_QUALIFIERS[countryName] || countryName;
   const apiOrder = ['gnews', 'newsdata', 'mediastack'];
   for (const apiName of apiOrder) {
     const api = NEWS_APIS[apiName];
     if (!api || !api.key) continue;
     if (apiFailures[apiName] && (Date.now() - apiFailures[apiName]) < 5 * 60 * 1000) continue;
-    const url = api.buildUrl(api.key, countryName);
+    const url = api.buildUrl(api.key, apiSearchQuery);
     const results = await tryNewsAPI(apiName, url, api.parseResults);
     if (results) {
       formatArticlesForDisplay(results, countryName).forEach(a => addArticle(a));
