@@ -816,7 +816,7 @@ const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|fo
 // excludeWords: if ANY of these appear, article is NOT about the country
 const AMBIGUOUS_COUNTRIES = {
   'Chad': {
-    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan'],
+    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan', 'border with chad', 'chad border'],
     excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman']
   },
   'Jordan': {

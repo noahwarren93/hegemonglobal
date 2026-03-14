@@ -64,6 +64,7 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
         const GENERIC_RE = /^(morning news brief|evening roundup|daily digest|news update|daily briefing|weekly roundup|news wrap|headlines today|today'?s top stories|the daily|what happened today|news summary)\b/i;
 
         // Check if country is the PRIMARY subject (appears in first half of headline)
+        // OR is mentioned in a border/proximity context anywhere in the headline
         const isPrimarySubject = (headline) => {
           const hl = (headline || '').toLowerCase();
           const mid = Math.ceil(hl.length / 2);
@@ -82,7 +83,11 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
             'Sudan': ['sudanese', 'khartoum', 'darfur'],
           };
           const terms = demonyms[countryName] || [];
-          return terms.some(t => firstHalf.includes(t));
+          if (terms.some(t => firstHalf.includes(t))) return true;
+          // Border/proximity mentions anywhere in headline count for both countries
+          const borderRe = new RegExp('\\b(border(?:s|ing)?\\s+(?:with|of|near|between|region)\\s+' + cLower + '|' + cLower + '(?:\'s|\\s+)border|near\\s+(?:the\\s+)?' + cLower + ')\\b');
+          if (borderRe.test(hl)) return true;
+          return false;
         };
 
         // Helper: get significant words from headline
@@ -137,10 +142,25 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
           const newestB = Math.max(...b.map(x => parseDate(x.pubDate)));
           return newestB - newestA;
         });
-        const top = clusters.slice(0, 3).map(cluster => {
+        let top = clusters.slice(0, 3).map(cluster => {
           const sorted = [...cluster].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
           return { ...sorted[0], _sourceCount: uniqueSources(cluster) };
         });
+
+        // If no top stories but we have articles, always show at least one
+        // Relax filters: drop isPrimarySubject, widen to 14 days, then take best from all
+        if (top.length === 0 && all.length > 0) {
+          const relaxedPool = all.filter(a => {
+            const t = parseDate(a.pubDate);
+            if (t > 0 && (nowMs - t) > FOURTEEN_DAYS) return false;
+            if (OPINION_RE.test(a.headline || '')) return false;
+            return true;
+          });
+          const fallbackPool = relaxedPool.length > 0 ? relaxedPool : all;
+          // Pick the highest quality article
+          const best = [...fallbackPool].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+          top = [{ ...best[0], _sourceCount: 1 }];
+        }
         setTopStories(top);
 
         // Latest Coverage: soft window — 14d first, expand to 30d/90d if < 3 articles

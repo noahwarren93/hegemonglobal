@@ -146,7 +146,7 @@ const AMBIGUOUS_COUNTRY_RULES = {
     excludeWords: ['atlanta', 'peach state', 'governor kemp', 'kemp', 'warnock', 'fulton county', 'gop', 'senate race', 'georgia bulldogs', 'georgia tech', 'uga', 'sec championship', 'dawgs', 'kirby smart', 'georgia runoff', 'dekalb county', 'cobb county', 'savannah', 'augusta national', 'georgia primary', 'georgia voter', 'georgia election law', 'stacey abrams', "buc-ee", 'special election', 'oscars', 'film industry', 'dolton', 'bbb rating', '14th district', 'film tax', 'georgia film', 'piedmont', 'macon', 'albany ga', 'georgia power', 'georgia lottery']
   },
   'chad': {
-    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan'],
+    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan', 'border with chad', 'chad border'],
     excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman']
   },
   'jordan': {
