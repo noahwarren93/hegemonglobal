@@ -908,7 +908,7 @@ const TIMELINE_CONFLICTS = {
   iran: {
     name: 'US-Israel War on Iran',
     keywords: TIMELINE_IRAN_KW,
-    statsPrompt: `For stats, extract CUMULATIVE casualty figures from headlines AND descriptions. Scan every headline for death toll numbers. Examples: "7th U.S. military death" means us_killed="7". "death toll surpasses 1,332" means iranian_killed="1,332+". "bringing Israeli deaths to 11+" means israeli_killed="11+". NEVER return null if a number is mentioned anywhere in the articles — even in a headline.
+    statsPrompt: `For stats, extract CUMULATIVE casualty figures from headlines AND descriptions. Scan every headline for death toll numbers. Examples: "6th U.S. military death" means us_killed="6". "death toll surpasses 1,332" means iranian_killed="1,332+". "bringing Israeli deaths to 14+" means israeli_killed="14+". NEVER return null if a number is mentioned anywhere in the articles — even in a headline.
 Return stats with EXACTLY these keys (use the highest number found, or null ONLY if truly not mentioned):
 {
   "iranian_killed": "highest cumulative Iranian death toll mentioned",
@@ -2433,6 +2433,54 @@ Return ONLY valid JSON in this format:
 
         // Store article hashes for skip-empty-conflicts on next call
         result._articleHashes = newHashes;
+
+        // ============================================================
+        // Auto-updating death toll floors
+        // Load previous floors from KV, merge with new AI stats (only update upward),
+        // save back. This ensures death tolls never go stale or decrease.
+        // ============================================================
+        const FLOOR_KV_KEY = 'death_toll_floors';
+        let floors = {};
+        try {
+          const floorRaw = await env.HEGEMON_CACHE.get(FLOOR_KV_KEY);
+          if (floorRaw) floors = JSON.parse(floorRaw);
+        } catch { /* first run */ }
+
+        const parseFloorNum = (val) => {
+          if (val == null) return NaN;
+          const s = String(val).replace(/[^0-9.]/g, '');
+          return parseFloat(s) || NaN;
+        };
+
+        // Merge each conflict's stats into floors (only upward)
+        for (const [key, conflictData] of Object.entries(result)) {
+          if (!conflictData?.stats || typeof conflictData.stats !== 'object') continue;
+          if (!floors[key]) floors[key] = {};
+          for (const [statKey, statVal] of Object.entries(conflictData.stats)) {
+            if (statVal == null || statVal === '') continue;
+            const newNum = parseFloorNum(statVal);
+            const oldNum = parseFloorNum(floors[key][statKey]);
+            if (!isNaN(newNum) && (isNaN(oldNum) || newNum > oldNum)) {
+              floors[key][statKey] = String(statVal);
+            }
+          }
+          // Apply floors back into the result stats (so client gets highest-ever values)
+          for (const [statKey, floorVal] of Object.entries(floors[key])) {
+            const currentNum = parseFloorNum(conflictData.stats[statKey]);
+            const floorNum = parseFloorNum(floorVal);
+            if (!isNaN(floorNum) && (isNaN(currentNum) || floorNum > currentNum)) {
+              conflictData.stats[statKey] = floorVal;
+            }
+          }
+        }
+
+        // Persist updated floors (no expiration — permanent)
+        try {
+          await env.HEGEMON_CACHE.put(FLOOR_KV_KEY, JSON.stringify(floors));
+        } catch (e) { console.error('[Timeline] Failed to save floors:', e.message); }
+
+        // Include floors in response so client can use them
+        result._floors = floors;
 
         // Cache in KV with 3h TTL
         await env.HEGEMON_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 10800 });

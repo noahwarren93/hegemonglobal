@@ -1722,6 +1722,7 @@ const TIMELINE_AI_LS_KEY = 'hegemon_timeline_ai';
 const TIMELINE_AI_TTL = 3 * 60 * 60 * 1000; // 3 hours
 
 export const AI_TIMELINE_DATA = { iran: null, ukraine: null, sudan: null, pakafg: null };
+export const AI_DEATH_TOLL_FLOORS = {};
 
 export async function fetchTimelineUpdates() {
   // Check localStorage cache
@@ -1731,6 +1732,7 @@ export async function fetchTimelineUpdates() {
       const cached = JSON.parse(raw);
       if (cached.ts && Date.now() - cached.ts < TIMELINE_AI_TTL && cached.data) {
         Object.assign(AI_TIMELINE_DATA, cached.data);
+        if (cached.floors) Object.assign(AI_DEATH_TOLL_FLOORS, cached.floors);
         console.log('[Hegemon] Timeline AI data loaded from cache');
         notifyEventsUpdated();
         return cached.data;
@@ -1764,6 +1766,9 @@ export async function fetchTimelineUpdates() {
     if (data.sudan) AI_TIMELINE_DATA.sudan = data.sudan;
     if (data.pakafg) AI_TIMELINE_DATA.pakafg = data.pakafg;
 
+    // Store server-side death toll floors (auto-updating, never decrease)
+    if (data._floors) Object.assign(AI_DEATH_TOLL_FLOORS, data._floors);
+
     // Debug: log stats so we can verify key names
     for (const [key, val] of Object.entries(AI_TIMELINE_DATA)) {
       if (val?.stats && Object.keys(val.stats).length > 0) {
@@ -1775,7 +1780,8 @@ export async function fetchTimelineUpdates() {
     try {
       localStorage.setItem(TIMELINE_AI_LS_KEY, JSON.stringify({
         ts: Date.now(),
-        data: { iran: data.iran, ukraine: data.ukraine, sudan: data.sudan, pakafg: data.pakafg }
+        data: { iran: data.iran, ukraine: data.ukraine, sudan: data.sudan, pakafg: data.pakafg },
+        floors: data._floors || {}
       }));
     } catch { /* storage full */ }
 

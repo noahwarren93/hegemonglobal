@@ -5,7 +5,7 @@ import { COUNTRIES, RECENT_ELECTIONS, ELECTIONS, FORECASTS, HORIZON_EVENTS, DAIL
 import { REVERSE_CITY_INDEX, TRAVEL_INFO, getTravelSafety, REGIONAL_THREATS, CITY_RISKS, LEVEL_META, POPULAR_DESTINATIONS } from '../../data/travelData';
 import { RISK_COLORS, timeAgo } from '../../utils/riskColors';
 import { renderNewsletter } from '../../services/newsService';
-import { onEventsUpdated, AI_TIMELINE_DATA } from '../../services/apiService';
+import { onEventsUpdated, AI_TIMELINE_DATA, AI_DEATH_TOLL_FLOORS } from '../../services/apiService';
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
@@ -238,7 +238,7 @@ const IRAN_WAR_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'mojtaba', 'irgc',
 const TIMELINE_EXCLUDE = ['gaza ceasefire', 'ceasefire gains', 'aid workers', 'humanitarian corridor'];
 
 const WAR_INTEL = {
-  what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 3,000+ targets have been struck across 24 of 31 Iranian provinces with 6,000+ weapons. Supreme Leader Khamenei was killed along with 40+ senior officials including Chief of Staff Mousavi and former President Ahmadinejad. The Iranian death toll has surpassed 1,332 (Tasnim), with some estimates exceeding 7,000 (HRANA). A strike on a girls\' school in Minab killed 175+ students and staff. The Assembly of Experts has reportedly selected Mojtaba Khamenei as the new Supreme Leader. Iran retaliated across 9+ countries with 22+ waves of Operation True Promise IV \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 11+. Six US service members have been killed. A US submarine torpedoed the Iranian frigate IRIS Dena off Sri Lanka, killing 148+ \u2014 the first submarine sinking of a warship since the Falklands War. The IRGC declared the Strait of Hormuz closed and insurance has been withdrawn for all transit. QatarEnergy declared force majeure after Iranian drones hit the Ras Laffan LNG complex \u2014 20% of global LNG supply offline. Iranian drones struck Azerbaijan\'s Nakhchivan airport, expanding the conflict to 10+ countries. WHO reports 13 Iranian health facilities hit. The IDF launched a ground incursion into southern Lebanon.',
+  what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 3,000+ targets have been struck across 24 of 31 Iranian provinces with 6,000+ weapons. Supreme Leader Khamenei was killed along with 40+ senior officials including Chief of Staff Mousavi and former President Ahmadinejad. The Iranian death toll has surpassed 1,332 (Tasnim), with some estimates exceeding 7,000 (HRANA). A strike on a girls\' school in Minab killed 175+ students and staff. The Assembly of Experts has reportedly selected Mojtaba Khamenei as the new Supreme Leader. Iran retaliated across 9+ countries with 22+ waves of Operation True Promise IV \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 14+. Six US service members have been killed. A US submarine torpedoed the Iranian frigate IRIS Dena off Sri Lanka, killing 148+ \u2014 the first submarine sinking of a warship since the Falklands War. The IRGC declared the Strait of Hormuz closed and insurance has been withdrawn for all transit. QatarEnergy declared force majeure after Iranian drones hit the Ras Laffan LNG complex \u2014 20% of global LNG supply offline. Iranian drones struck Azerbaijan\'s Nakhchivan airport, expanding the conflict to 10+ countries. WHO reports 13 Iranian health facilities hit. The IDF launched a ground incursion into southern Lebanon.',
   why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years \u2014 the Assembly of Experts has reportedly selected his son Mojtaba as successor, though Trump demands a role in choosing Iran\'s next leader. The IRGC is the de facto power center. The Strait of Hormuz is commercially closed \u2014 insurance withdrawal has achieved what a physical blockade could not, with 20% of global oil transit blocked. Brent crude has spiked to $92/barrel with VLCC rates hitting an all-time record of $423,736/day. QatarEnergy\'s force majeure on Ras Laffan has taken 20% of global LNG offline, sending European gas prices up 45%. The conflict has expanded to 10+ countries with France actively shooting down Iranian drones and the US sinking an Iranian warship in the Indian Ocean. Iranian proxies are activated: Hezbollah resumed hostilities from Lebanon (77+ killed in Israeli retaliatory strikes), the IDF launched a ground incursion with evacuation warnings south of the Litani, Iraqi Shia militias declared war on US positions, Houthis threatening renewed Red Sea attacks, and the CIA arming Kurdish insurgents along the Iraq-Iran border.',
   outlook: 'Full regional war is the baseline scenario. Trump declares "no time limits" on the conflict. Active fronts: IRGC has launched 22+ waves of retaliatory strikes against Gulf infrastructure, a US submarine sank the IRIS Dena in the Indian Ocean, IDF ground forces operating in southern Lebanon with evacuation warnings south of the Litani, Houthis preparing Red Sea shipping attacks (dual Hormuz + Red Sea blockade would be unprecedented), Iranian drones hitting Azerbaijan for the first time, and the CIA arming Kurdish insurgents. France has deployed the aircraft carrier Charles de Gaulle. The Assembly of Experts has reportedly selected Mojtaba Khamenei as successor \u2014 Trump calls this "unacceptable." Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
 };
@@ -403,13 +403,22 @@ function findStatWholeWord(stats, entity, metricKeywords) {
 }
 
 // Return the higher of AI stat vs hardcoded floor — AI can never decrease stats
-function floorStat(aiVal, hardcodedFloor) {
+// Also checks server-side persistent floors (from KV) as an intermediate layer
+function floorStat(aiVal, hardcodedFloor, serverFloorVal) {
   const aiNum = parseStatNum(aiVal);
   const floorNum = parseStatNum(hardcodedFloor);
-  if (isNaN(aiNum)) return hardcodedFloor;
-  if (isNaN(floorNum)) return aiVal || hardcodedFloor;
-  if (aiNum >= floorNum) return aiVal;
-  return hardcodedFloor;
+  const serverNum = parseStatNum(serverFloorVal);
+  // Effective floor = max of hardcoded and server-persisted floor
+  let effectiveFloor = floorNum;
+  let effectiveVal = hardcodedFloor;
+  if (!isNaN(serverNum) && serverNum > effectiveFloor) {
+    effectiveFloor = serverNum;
+    effectiveVal = serverFloorVal;
+  }
+  if (isNaN(aiNum)) return effectiveVal;
+  if (isNaN(effectiveFloor)) return aiVal || hardcodedFloor;
+  if (aiNum >= effectiveFloor) return aiVal;
+  return effectiveVal;
 }
 
 // Filter DAILY_BRIEFING articles into timeline entries for a given conflict
@@ -677,10 +686,11 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderPakAfgCard = () => {
     const pakStats = AI_TIMELINE_DATA.pakafg?.stats || {};
+    const pakFloors = AI_DEATH_TOLL_FLOORS.pakafg || {};
     if (AI_TIMELINE_DATA.pakafg?.stats) console.log('[Hegemon] AI PakAfg stats:', JSON.stringify(pakStats));
-    const afgCivKilled = floorStat(findStat(pakStats, ['afghan', 'civilian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '110+');
-    const displaced = floorStat(findStat(pakStats, ['displac', 'refugee'], ['displac', 'total', 'number', 'people']) || findStat(pakStats, [''], ['displac']), '115,000');
-    const talibanKilled = floorStat(findStat(pakStats, ['taliban'], ['killed', 'deaths', 'dead', 'casualties']), '527+');
+    const afgCivKilled = floorStat(findStat(pakStats, ['afghan', 'civilian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '110+', pakFloors.afghan_civilian_killed);
+    const displaced = floorStat(findStat(pakStats, ['displac', 'refugee'], ['displac', 'total', 'number', 'people']) || findStat(pakStats, [''], ['displac']), '115,000', pakFloors.displaced);
+    const talibanKilled = floorStat(findStat(pakStats, ['taliban'], ['killed', 'deaths', 'dead', 'casualties']), '527+', pakFloors.taliban_killed);
     const preview = 'Operation Ghazab Lil Haq. 62 PAF strikes in single day. 527+ Taliban killed (claimed). 115,000 displaced. 11 nations urge ceasefire \u2014 Day 10.';
 
     return (
@@ -746,8 +756,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderUkrRusCard = () => {
     const ukrStats = AI_TIMELINE_DATA.ukraine?.stats || {};
+    const ukrFloors = AI_DEATH_TOLL_FLOORS.ukraine || {};
     if (AI_TIMELINE_DATA.ukraine?.stats) console.log('[Hegemon] AI Ukraine stats:', JSON.stringify(ukrStats));
-    const totalCasualties = floorStat(findStat(ukrStats, ['total', 'combined', 'overall'], ['casualties', 'killed', 'losses']), '~2M');
+    const totalCasualties = floorStat(findStat(ukrStats, ['total', 'combined', 'overall'], ['casualties', 'killed', 'losses']), '~2M', ukrFloors.total_casualties);
     const preview = '4 years. ~2M casualties. 500-for-500 POW swap completed. Kharkiv apartment hit \u2014 10 killed. Abu Dhabi talks postponed. Ukraine recaptures more ground than lost in Feb.';
 
     return (
@@ -809,9 +820,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderSudanCard = () => {
     const sudanStats = AI_TIMELINE_DATA.sudan?.stats || {};
+    const sudanFloors = AI_DEATH_TOLL_FLOORS.sudan || {};
     if (AI_TIMELINE_DATA.sudan?.stats) console.log('[Hegemon] AI Sudan stats:', JSON.stringify(sudanStats));
-    const killed = floorStat(findStat(sudanStats, ['total', 'estimated', 'civilian'], ['killed', 'deaths', 'dead', 'toll']), '400,000+');
-    const displaced = floorStat(findStat(sudanStats, ['displac', 'total', 'internal'], ['displac', 'people', 'million']), '13.6M');
+    const killed = floorStat(findStat(sudanStats, ['total', 'estimated', 'civilian'], ['killed', 'deaths', 'dead', 'toll']), '400,000+', sudanFloors.total_killed);
+    const displaced = floorStat(findStat(sudanStats, ['displac', 'total', 'internal'], ['displac', 'people', 'million']), '13.6M', sudanFloors.displaced);
     const preview = 'SAF vs RSF. ~1,000 days. SAF retakes Bara. RSF drones hit hospital, black out El-Obeid. WFP food stocks running out. 169 killed in South Sudan cross-border attack. Famine spreading.';
 
     return (
@@ -879,15 +891,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderBreakingCard = () => {
     const iranStats = AI_TIMELINE_DATA.iran?.stats || {};
+    const iranFloors = AI_DEATH_TOLL_FLOORS.iran || {};
     if (AI_TIMELINE_DATA.iran?.stats) console.log('[Hegemon] AI Iran stats:', JSON.stringify(iranStats));
-    const iranKilled = floorStat(findStat(iranStats, ['iran', 'iranian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '1,332+');
-    const israelKilled = floorStat(findStat(iranStats, ['israel'], ['killed', 'deaths', 'dead', 'casualties']), '11');
+    const iranKilled = floorStat(findStat(iranStats, ['iran', 'iranian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '1,332+', iranFloors.iranian_killed);
+    const israelKilled = floorStat(findStat(iranStats, ['israel'], ['killed', 'deaths', 'dead', 'casualties']), '14', iranFloors.israeli_killed);
     // "us" is too short — match "u.s", "us_", "american", "united states", or key containing "us" as whole word
     const usKilled = floorStat(
       findStat(iranStats, ['u.s', 'american', 'united states'], ['killed', 'deaths', 'dead', 'service']) ||
       findStat(iranStats, ['us '], ['killed', 'deaths', 'dead']) ||
       findStatWholeWord(iranStats, 'us', ['killed', 'deaths', 'dead', 'service']),
-      '7'
+      '6',
+      iranFloors.us_killed
     );
     const preview = '3,000+ targets struck. 1,332+ killed. Tehran oil depots hit. Iran strikes Haifa refinery. Mojtaba delivers first address. Bekaa Valley operation. $92/barrel. Iraq votes to expel US \u2014 Day 9.';
 
