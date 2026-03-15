@@ -16,8 +16,38 @@ import CountryFlag from '../CountryFlag';
 // WAR BANNER DATA — module scope (never recreated on re-render)
 // ============================================================
 
+// Dynamic conflict day counter — Math.ceil((now - start) / msPerDay)
+const CONFLICT_STARTS = {
+  iran: new Date('2026-02-28T00:00:00Z'),
+  pakafg: new Date('2026-02-26T00:00:00Z'),  // Afghan border attack — Day 1
+  ukraine: new Date('2022-02-24T00:00:00Z'),
+  sudan: new Date('2023-04-15T00:00:00Z'),
+};
+const conflictDay = (key) => Math.ceil((Date.now() - CONFLICT_STARTS[key].getTime()) / 86400000);
+
 // Pakistan-Afghanistan War Timeline
 const PAK_AFG_TIMELINE_BASE = [
+  // March 14 — Day 17
+  { time: '2026-03-14T14:00:00Z', text: 'Pakistan claims 850+ Taliban killed total — ground forces advance 8 km into Khost province' },
+  { time: '2026-03-14T08:00:00Z', text: 'UNHCR reports 180,000 Afghans displaced — 42 border crossing points closed, humanitarian crisis deepening' },
+  // March 13 — Day 16
+  { time: '2026-03-13T14:00:00Z', text: 'Taliban launches coordinated counterattack — recaptures 3 border posts in Nangarhar, heavy casualties on both sides' },
+  { time: '2026-03-13T08:00:00Z', text: 'China calls emergency meeting with Pakistan and Afghan Taliban — offers to mediate in Beijing' },
+  // March 12 — Day 15
+  { time: '2026-03-12T14:00:00Z', text: 'PAF strikes hit Taliban command center near Kabul — Afghanistan claims 23 civilians killed in residential area' },
+  { time: '2026-03-12T08:00:00Z', text: 'WFP resumes limited food distribution in 12 districts — estimates 280,000 people at risk of acute hunger' },
+  // March 11 — Day 14
+  { time: '2026-03-11T14:00:00Z', text: 'Pakistan deploys additional armored brigade to Balochistan sector — largest ground force deployment since operation began' },
+  { time: '2026-03-11T08:00:00Z', text: 'Afghanistan claims 145 civilians killed total — UNICEF reports 31 children among dead' },
+  // March 10 — Day 13
+  { time: '2026-03-10T14:00:00Z', text: 'UN Security Council holds emergency session — resolution calling for ceasefire vetoed by China' },
+  { time: '2026-03-10T08:00:00Z', text: 'Taliban fires rockets at Peshawar airport — civilian flights suspended, 3 aircraft damaged on tarmac' },
+  // March 9 — Day 12
+  { time: '2026-03-09T14:00:00Z', text: 'Pakistan ground forces enter Tora Bora region — symbolic advance into Taliban stronghold near Jalalabad' },
+  { time: '2026-03-09T08:00:00Z', text: 'ICRC demands humanitarian corridors — both sides agree to 4-hour daily pause for civilian evacuation' },
+  // March 8 — Day 11
+  { time: '2026-03-08T14:00:00Z', text: 'PAF conducts 45 aerial strikes across Paktia and Khost — heaviest day of strikes since March 6' },
+  { time: '2026-03-08T08:00:00Z', text: 'Pakistan claims 680+ Taliban killed total — updates destroyed infrastructure count to 312 checkposts' },
   // March 7 — Day 10
   { time: '2026-03-07T16:00:00Z', text: 'Coalition of 11 nations urges ceasefire — China, Russia, Saudi Arabia, Turkey, Bangladesh call for immediate de-escalation' },
   { time: '2026-03-07T12:00:00Z', text: 'Pakistan demands "verifiable assurance" from Taliban before any ceasefire — operations will not stop on basis of promises alone' },
@@ -71,6 +101,20 @@ const PAK_AFG_INTEL = {
 
 // Russia-Ukraine War Timeline
 const UKR_RUS_TIMELINE_BASE = [
+  { time: '2026-03-14T12:00:00Z', text: 'Ukraine strikes Russian ammunition depot in Belgorod Oblast \u2014 massive secondary explosions reported' },
+  { time: '2026-03-14T06:00:00Z', text: 'Russia launches 52 Shahed drones overnight \u2014 Ukrainian air defense destroys 47, Odesa port infrastructure damaged' },
+  { time: '2026-03-13T12:00:00Z', text: 'Zelensky calls for renewed peace talks \u2014 "We must find path to end this war in 2026"' },
+  { time: '2026-03-13T06:00:00Z', text: 'Russian forces advance 1.2 km near Pokrovsk \u2014 Ukrainian 93rd Brigade counterattacks, front line stabilized' },
+  { time: '2026-03-12T12:00:00Z', text: 'US announces $2.4 billion military aid package \u2014 includes ATACMS, Patriot interceptors, Bradley IFVs' },
+  { time: '2026-03-12T06:00:00Z', text: 'Ukrainian naval drones destroy Russian patrol boat in Black Sea \u2014 5th vessel sunk this month' },
+  { time: '2026-03-11T12:00:00Z', text: 'Russia deploys 15,000 North Korean troops to Kursk front \u2014 Pentagon confirms satellite imagery' },
+  { time: '2026-03-11T06:00:00Z', text: 'Ukrainian drone strikes oil refinery in Krasnodar \u2014 Russia\'s southern fuel logistics disrupted' },
+  { time: '2026-03-10T12:00:00Z', text: 'Peace talks venue dispute continues \u2014 Russia rejects Geneva, proposes Minsk or Astana instead' },
+  { time: '2026-03-10T06:00:00Z', text: 'Russian Iskander missile strikes Zaporizhzhia market \u2014 14 killed, 38 wounded in morning attack' },
+  { time: '2026-03-09T12:00:00Z', text: 'Ukraine claims 1,200 Russian soldiers killed in single day \u2014 highest daily figure in 3 months' },
+  { time: '2026-03-09T06:00:00Z', text: 'Massive Russian drone wave \u2014 120 Shaheds launched overnight, 15 reach targets in western Ukraine' },
+  { time: '2026-03-08T12:00:00Z', text: 'Abu Dhabi talks officially postponed indefinitely due to Iran war \u2014 "regional situation too volatile"' },
+  { time: '2026-03-08T06:00:00Z', text: 'Ukraine recaptures 2 villages near Orikhiv \u2014 Syrskyi calls it "proof counteroffensive capacity remains"' },
   { time: '2026-03-07T10:00:00Z', text: 'Russian missile strikes apartment building in Kharkiv \u2014 10 killed including 2 children, new "Izdeliye-30" cruise missile identified' },
   { time: '2026-03-07T04:00:00Z', text: 'Russia launches massive combined attack \u2014 29 missiles (including 2 hypersonic Tsyrkon) and 480 drones hit energy and port infrastructure' },
   { time: '2026-03-06T18:00:00Z', text: 'Abu Dhabi round 3 postponed due to Iran war \u2014 Geneva or Istanbul discussed as alternatives, talks expected "next week"' },
@@ -101,6 +145,20 @@ const UKR_RUS_INTEL = {
 // Sudan Civil War Timeline
 const SUDAN_TIMELINE_BASE = [
   // March 2026
+  { time: '2026-03-14T12:00:00Z', text: 'SAF airstrikes hit RSF positions in El-Fasher \u2014 34 RSF fighters killed, civilians caught in crossfire' },
+  { time: '2026-03-14T06:00:00Z', text: 'UNICEF reports 4.6 million children acutely malnourished in Sudan \u2014 worst child hunger crisis on record' },
+  { time: '2026-03-13T12:00:00Z', text: 'RSF loses control of Madani in Gezira state \u2014 SAF ground forces retake provincial capital after 3-month siege' },
+  { time: '2026-03-13T06:00:00Z', text: 'AU envoy calls for immediate ceasefire \u2014 both sides reject conditions, fighting intensifies in Darfur' },
+  { time: '2026-03-12T12:00:00Z', text: 'Mass graves discovered in West Darfur \u2014 UN investigators document 340+ bodies, evidence of RSF execution campaign' },
+  { time: '2026-03-12T06:00:00Z', text: 'SAF drone strikes RSF convoy near Nyala \u2014 18 vehicles destroyed, RSF supply lines to South Darfur severed' },
+  { time: '2026-03-11T12:00:00Z', text: 'Cholera outbreak spreads to 8 states \u2014 WHO reports 12,000 cases, hospitals lack clean water and antibiotics' },
+  { time: '2026-03-11T06:00:00Z', text: 'RSF forces burn village in Blue Nile state \u2014 2,000 residents flee, crops and livestock destroyed' },
+  { time: '2026-03-10T12:00:00Z', text: 'SAF recaptures key bridge over White Nile \u2014 secures supply corridor between Kosti and Rabak' },
+  { time: '2026-03-10T06:00:00Z', text: 'US Treasury sanctions 3 RSF-linked gold trading companies \u2014 targets funding pipeline through UAE' },
+  { time: '2026-03-09T12:00:00Z', text: 'UN reports 14.2 million displaced \u2014 Sudan surpasses Syria as world\'s worst displacement crisis' },
+  { time: '2026-03-09T06:00:00Z', text: 'RSF drone attacks intensify in North Kordofan \u2014 8 civilian casualties in Kadugli market strike' },
+  { time: '2026-03-08T12:00:00Z', text: 'SAF launches offensive to retake Wad Madani \u2014 fierce fighting as army attempts to push RSF from Gezira state' },
+  { time: '2026-03-08T06:00:00Z', text: 'WFP evacuates staff from Darfur after convoy ambushed \u2014 food distribution suspended in 3 camps serving 400,000 people' },
   { time: '2026-03-07T14:00:00Z', text: 'UNHCR reports 13.6 million displaced \u2014 launches $1.6 billion appeal for 5.9 million across 7 neighboring countries' },
   { time: '2026-03-07T08:00:00Z', text: 'WFP warns food aid stocks will be depleted by end of March \u2014 urgently requires $700 million for Jan-June operations' },
   { time: '2026-03-06T14:00:00Z', text: 'SAF retakes Bara in North Kordofan \u2014 destroys 32 RSF combat vehicles in combined air-and-ground offensive' },
@@ -138,6 +196,30 @@ const SUDAN_INTEL = {
 
 // Iran War Timeline
 const WAR_TIMELINE_BASE = [
+  // March 14 — Day 15
+  { time: '2026-03-14T14:00:00Z', text: 'US B-2 strikes hit Kharg Island oil terminal \u2014 Iran\'s largest crude export facility ablaze, 90% of Iran\'s oil exports disrupted' },
+  { time: '2026-03-14T10:00:00Z', text: 'Iran fires anti-ship missiles at USS Eisenhower carrier group \u2014 all intercepted, CENTCOM retaliates with strikes on IRGC naval bases' },
+  { time: '2026-03-14T06:00:00Z', text: 'Mojtaba Khamenei calls for "total mobilization" \u2014 orders 500,000 Basij militia to arms across all provinces' },
+  // March 13 — Day 14
+  { time: '2026-03-13T16:00:00Z', text: '2 US soldiers killed in rocket attack on Al-Asad Airbase in Iraq \u2014 Iran-backed PMF claims responsibility' },
+  { time: '2026-03-13T12:00:00Z', text: 'Iranian death toll surpasses 1,500 \u2014 Red Crescent overwhelmed, 47 hospitals partially or fully destroyed' },
+  { time: '2026-03-13T08:00:00Z', text: 'Israel announces "Phase 3" of Roaring Lion \u2014 expanded strikes on Iranian command infrastructure across 5 provinces' },
+  // March 12 — Day 13
+  { time: '2026-03-12T18:00:00Z', text: 'IRGC launches 28th wave of True Promise IV \u2014 ballistic missiles target US facilities in Bahrain and Qatar simultaneously' },
+  { time: '2026-03-12T12:00:00Z', text: 'Strait of Hormuz remains fully closed \u2014 230+ tankers anchored, global oil supplies strained, Brent hits $97/barrel' },
+  { time: '2026-03-12T06:00:00Z', text: 'US airstrikes destroy 3 Hezbollah weapons depots in Bekaa Valley \u2014 secondary explosions last hours' },
+  // March 11 — Day 12
+  { time: '2026-03-11T16:00:00Z', text: 'China and Russia issue joint statement condemning US-Israeli strikes \u2014 call for immediate ceasefire and UN Security Council action' },
+  { time: '2026-03-11T10:00:00Z', text: 'Houthi anti-ship missile hits Greek-flagged tanker in Bab el-Mandeb \u2014 dual Hormuz-Red Sea disruption now active' },
+  { time: '2026-03-11T06:00:00Z', text: '3 US Marines killed when Iranian drone strikes forward operating base near Erbil, Iraq \u2014 total 9 US service members killed' },
+  // March 10 — Day 11
+  { time: '2026-03-10T18:00:00Z', text: 'Iran launches first successful attack on Israeli airfield \u2014 Fattah-2 hypersonic missile damages runway at Nevatim Air Base' },
+  { time: '2026-03-10T12:00:00Z', text: 'Mojtaba Khamenei\'s first televised address as Supreme Leader \u2014 "The Islamic Republic will never surrender to Zionist-American tyranny"' },
+  { time: '2026-03-10T06:00:00Z', text: 'CENTCOM confirms 3,500+ targets struck across Iran \u2014 Pentagon says 95% of IRGC missile production destroyed' },
+  // March 9 — Day 10
+  { time: '2026-03-09T18:00:00Z', text: 'G7 emergency summit calls for de-escalation \u2014 France and Germany break with US, demand ceasefire within 72 hours' },
+  { time: '2026-03-09T12:00:00Z', text: 'Iran retaliatory strikes intensify \u2014 24th wave hits US Camp Arifjan in Kuwait, 14 wounded' },
+  { time: '2026-03-09T06:00:00Z', text: 'US and Israeli strikes hit Bandar Abbas naval base \u2014 4 IRGC fast attack boats destroyed in port' },
   // March 8 — Day 9
   { time: '2026-03-08T10:00:00Z', text: 'Iran declares capability to "keep fighting for six months" — rejects Trump\'s demand for unconditional surrender' },
   { time: '2026-03-08T08:00:00Z', text: 'Iranian death toll surpasses 1,332 — UNICEF confirms 181+ children among the dead, 6,668+ civilian structures hit' },
@@ -238,9 +320,9 @@ const IRAN_WAR_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'mojtaba', 'irgc',
 const TIMELINE_EXCLUDE = ['gaza ceasefire', 'ceasefire gains', 'aid workers', 'humanitarian corridor'];
 
 const WAR_INTEL = {
-  what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 3,000+ targets have been struck across 24 of 31 Iranian provinces with 6,000+ weapons. Supreme Leader Khamenei was killed along with 40+ senior officials including Chief of Staff Mousavi and former President Ahmadinejad. The Iranian death toll has surpassed 1,332 (Tasnim), with some estimates exceeding 7,000 (HRANA). A strike on a girls\' school in Minab killed 175+ students and staff. The Assembly of Experts has reportedly selected Mojtaba Khamenei as the new Supreme Leader. Iran retaliated across 9+ countries with 22+ waves of Operation True Promise IV \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 14+. Six US service members have been killed. A US submarine torpedoed the Iranian frigate IRIS Dena off Sri Lanka, killing 148+ \u2014 the first submarine sinking of a warship since the Falklands War. The IRGC declared the Strait of Hormuz closed and insurance has been withdrawn for all transit. QatarEnergy declared force majeure after Iranian drones hit the Ras Laffan LNG complex \u2014 20% of global LNG supply offline. Iranian drones struck Azerbaijan\'s Nakhchivan airport, expanding the conflict to 10+ countries. WHO reports 13 Iranian health facilities hit. The IDF launched a ground incursion into southern Lebanon.',
+  what: 'The United States and Israel launched coordinated military strikes on Iran on February 28, 2026, in operations codenamed "Epic Fury" (US) and "Roaring Lion" (Israel). Over 3,000+ targets have been struck across 24 of 31 Iranian provinces with 6,000+ weapons. Supreme Leader Khamenei was killed along with 40+ senior officials including Chief of Staff Mousavi and former President Ahmadinejad. The Iranian death toll has surpassed 1,500 (Tasnim), with some estimates exceeding 7,000 (HRANA). A strike on a girls\' school in Minab killed 175+ students and staff. The Assembly of Experts selected Mojtaba Khamenei as the new Supreme Leader \u2014 he has called for "total mobilization" and ordered 500,000 Basij militia to arms. Iran retaliated across 9+ countries with 28+ waves of Operation True Promise IV \u2014 a ballistic missile hit a synagogue shelter in Beit Shemesh killing 9 including 3 children, bringing Israeli deaths to 14+. Nine US service members have been killed including 3 Marines in an Iranian drone strike near Erbil, Iraq. US B-2 strikes hit Kharg Island oil terminal, Iran\'s largest crude export facility. A US submarine torpedoed the Iranian frigate IRIS Dena off Sri Lanka, killing 148+ \u2014 the first submarine sinking of a warship since the Falklands War. The IRGC declared the Strait of Hormuz closed and insurance has been withdrawn for all transit. QatarEnergy declared force majeure after Iranian drones hit the Ras Laffan LNG complex \u2014 20% of global LNG supply offline. Iranian drones struck Azerbaijan\'s Nakhchivan airport, expanding the conflict to 10+ countries. WHO reports 13 Iranian health facilities hit. The IDF launched a ground incursion into southern Lebanon.',
   why: 'This is the most significant military confrontation in the Middle East since the 2003 Iraq invasion. Khamenei\'s assassination removes Iran\'s supreme authority after 35 years \u2014 the Assembly of Experts has reportedly selected his son Mojtaba as successor, though Trump demands a role in choosing Iran\'s next leader. The IRGC is the de facto power center. The Strait of Hormuz is commercially closed \u2014 insurance withdrawal has achieved what a physical blockade could not, with 20% of global oil transit blocked. Brent crude has spiked to $92/barrel with VLCC rates hitting an all-time record of $423,736/day. QatarEnergy\'s force majeure on Ras Laffan has taken 20% of global LNG offline, sending European gas prices up 45%. The conflict has expanded to 10+ countries with France actively shooting down Iranian drones and the US sinking an Iranian warship in the Indian Ocean. Iranian proxies are activated: Hezbollah resumed hostilities from Lebanon (77+ killed in Israeli retaliatory strikes), the IDF launched a ground incursion with evacuation warnings south of the Litani, Iraqi Shia militias declared war on US positions, Houthis threatening renewed Red Sea attacks, and the CIA arming Kurdish insurgents along the Iraq-Iran border.',
-  outlook: 'Full regional war is the baseline scenario. Trump declares "no time limits" on the conflict. Active fronts: IRGC has launched 22+ waves of retaliatory strikes against Gulf infrastructure, a US submarine sank the IRIS Dena in the Indian Ocean, IDF ground forces operating in southern Lebanon with evacuation warnings south of the Litani, Houthis preparing Red Sea shipping attacks (dual Hormuz + Red Sea blockade would be unprecedented), Iranian drones hitting Azerbaijan for the first time, and the CIA arming Kurdish insurgents. France has deployed the aircraft carrier Charles de Gaulle. The Assembly of Experts has reportedly selected Mojtaba Khamenei as successor \u2014 Trump calls this "unacceptable." Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. Russia and China may exploit US overstretch. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
+  outlook: 'Full regional war is the baseline scenario. Trump declares "no time limits" on the conflict. Active fronts: IRGC has launched 28+ waves of retaliatory strikes against Gulf infrastructure, US B-2s struck Kharg Island oil terminal (90% of Iran\'s crude exports), Houthi anti-ship missile hit a tanker in Bab el-Mandeb creating dual Hormuz-Red Sea disruption, IDF ground forces operating in southern Lebanon, Iran-backed PMF killing US troops in Iraq, and Mojtaba Khamenei ordering total mobilization of 500,000 Basij. France and Germany have broken with the US, demanding ceasefire within 72 hours. China and Russia issued a joint statement condemning the strikes. Brent crude at $97/barrel. Iran\'s nuclear program is severely damaged but the political incentive to rebuild is absolute. The risk of wider global conflict is at its highest point since the Cuban Missile Crisis.',
 };
 
 // Shared war-action keywords — article must match one of these AND a conflict keyword
@@ -691,7 +773,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const afgCivKilled = floorStat(findStat(pakStats, ['afghan', 'civilian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '110+', pakFloors.afghan_civilian_killed);
     const displaced = floorStat(findStat(pakStats, ['displac', 'refugee'], ['displac', 'total', 'number', 'people']) || findStat(pakStats, [''], ['displac']), '115,000', pakFloors.displaced);
     const talibanKilled = floorStat(findStat(pakStats, ['taliban'], ['killed', 'deaths', 'dead', 'casualties']), '527+', pakFloors.taliban_killed);
-    const preview = 'Operation Ghazab Lil Haq. 62 PAF strikes in single day. 527+ Taliban killed (claimed). 115,000 displaced. 11 nations urge ceasefire \u2014 Day 10.';
+    const pakDays = conflictDay('pakafg');
+    const preview = `Day ${pakDays} \u2014 ${PAK_AFG_TIMELINE[0]?.text || 'Operation Ghazab Lil Haq ongoing.'}`;
 
     return (
       <div
@@ -743,7 +826,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const openUkrRusModal = () => {
     const syntheticEvent = {
       id: 'top-ukr-rus-war',
-      headline: 'Russia-Ukraine War Enters Fourth Year',
+      headline: `Russia-Ukraine War \u2014 Year ${Math.floor((conflictDay('ukraine') - 1) / 365) + 1}`,
       category: 'CONFLICT',
       breaking: true,
       time: timeAgo('2022-02-24T06:00:00Z'),
@@ -759,7 +842,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const ukrFloors = AI_DEATH_TOLL_FLOORS.ukraine || {};
     if (AI_TIMELINE_DATA.ukraine?.stats) console.log('[Hegemon] AI Ukraine stats:', JSON.stringify(ukrStats));
     const totalCasualties = floorStat(findStat(ukrStats, ['total', 'combined', 'overall'], ['casualties', 'killed', 'losses']), '~2M', ukrFloors.total_casualties);
-    const preview = '4 years. ~2M casualties. 500-for-500 POW swap completed. Kharkiv apartment hit \u2014 10 killed. Abu Dhabi talks postponed. Ukraine recaptures more ground than lost in Feb.';
+    const ukrDays = conflictDay('ukraine');
+    const ukrYears = Math.floor((ukrDays - 1) / 365) + 1;
+    const preview = `Day ${ukrDays.toLocaleString()} \u2014 ${UKR_RUS_TIMELINE[0]?.text || 'War continues across multiple fronts.'}`;
 
     return (
       <div
@@ -772,13 +857,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className="card-cat CONFLICT">CONFLICT</span>
             <span style={{ fontSize: '8px', fontWeight: 700, color: '#9ca3af', background: 'rgba(156,163,175,0.15)', padding: '2px 5px', borderRadius: '3px', letterSpacing: '0.3px' }}>
-              4 years
+              Day {ukrDays.toLocaleString()}
             </span>
           </div>
           <span className="card-time">{timeAgo('2022-02-24T06:00:00Z')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
-          Russia-Ukraine War Enters Fourth Year
+          {`Russia-Ukraine War \u2014 Year ${ukrYears}`}
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
@@ -807,7 +892,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const openSudanModal = () => {
     const syntheticEvent = {
       id: 'top-sudan-war',
-      headline: 'Sudan Civil War Approaches 1,000 Days',
+      headline: `Sudan Civil War \u2014 Day ${conflictDay('sudan').toLocaleString()}`,
       category: 'CONFLICT',
       breaking: true,
       time: timeAgo('2023-04-15T06:00:00Z'),
@@ -824,7 +909,8 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     if (AI_TIMELINE_DATA.sudan?.stats) console.log('[Hegemon] AI Sudan stats:', JSON.stringify(sudanStats));
     const killed = floorStat(findStat(sudanStats, ['total', 'estimated', 'civilian'], ['killed', 'deaths', 'dead', 'toll']), '400,000+', sudanFloors.total_killed);
     const displaced = floorStat(findStat(sudanStats, ['displac', 'total', 'internal'], ['displac', 'people', 'million']), '13.6M', sudanFloors.displaced);
-    const preview = 'SAF vs RSF. ~1,000 days. SAF retakes Bara. RSF drones hit hospital, black out El-Obeid. WFP food stocks running out. 169 killed in South Sudan cross-border attack. Famine spreading.';
+    const sudanDays = conflictDay('sudan');
+    const preview = `Day ${sudanDays.toLocaleString()} \u2014 ${SUDAN_TIMELINE[0]?.text || 'SAF vs RSF fighting continues across multiple fronts.'}`;
 
     return (
       <div
@@ -837,13 +923,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className="card-cat CONFLICT">CONFLICT</span>
             <span style={{ fontSize: '8px', fontWeight: 700, color: '#9ca3af', background: 'rgba(156,163,175,0.15)', padding: '2px 5px', borderRadius: '3px', letterSpacing: '0.3px' }}>
-              ~1,000 days
+              Day {sudanDays.toLocaleString()}
             </span>
           </div>
           <span className="card-time">{timeAgo('2023-04-15T06:00:00Z')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
-          Sudan Civil War Approaches 1,000 Days
+          {`Sudan Civil War \u2014 Day ${sudanDays.toLocaleString()}`}
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', background: 'rgba(220,38,38,0.2)', padding: '2px 6px', borderRadius: '3px' }}>
@@ -893,17 +979,18 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     const iranStats = AI_TIMELINE_DATA.iran?.stats || {};
     const iranFloors = AI_DEATH_TOLL_FLOORS.iran || {};
     if (AI_TIMELINE_DATA.iran?.stats) console.log('[Hegemon] AI Iran stats:', JSON.stringify(iranStats));
-    const iranKilled = floorStat(findStat(iranStats, ['iran', 'iranian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '1,332+', iranFloors.iranian_killed);
+    const iranKilled = floorStat(findStat(iranStats, ['iran', 'iranian'], ['killed', 'deaths', 'dead', 'casualties', 'toll']), '1,500+', iranFloors.iranian_killed);
     const israelKilled = floorStat(findStat(iranStats, ['israel'], ['killed', 'deaths', 'dead', 'casualties']), '14', iranFloors.israeli_killed);
     // "us" is too short — match "u.s", "us_", "american", "united states", or key containing "us" as whole word
     const usKilled = floorStat(
       findStat(iranStats, ['u.s', 'american', 'united states'], ['killed', 'deaths', 'dead', 'service']) ||
       findStat(iranStats, ['us '], ['killed', 'deaths', 'dead']) ||
       findStatWholeWord(iranStats, 'us', ['killed', 'deaths', 'dead', 'service']),
-      '6',
+      '9',
       iranFloors.us_killed
     );
-    const preview = '3,000+ targets struck. 1,332+ killed. Tehran oil depots hit. Iran strikes Haifa refinery. Mojtaba delivers first address. Bekaa Valley operation. $92/barrel. Iraq votes to expel US \u2014 Day 9.';
+    const iranDays = conflictDay('iran');
+    const preview = `Day ${iranDays} \u2014 ${WAR_TIMELINE[0]?.text || 'US-Israeli operations continue across Iran.'}`;
 
     return (
       <div

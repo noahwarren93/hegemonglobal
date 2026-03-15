@@ -908,7 +908,7 @@ const TIMELINE_CONFLICTS = {
   iran: {
     name: 'US-Israel War on Iran',
     keywords: TIMELINE_IRAN_KW,
-    statsPrompt: `For stats, extract CUMULATIVE casualty figures from headlines AND descriptions. Scan every headline for death toll numbers. Examples: "6th U.S. military death" means us_killed="6". "death toll surpasses 1,332" means iranian_killed="1,332+". "bringing Israeli deaths to 14+" means israeli_killed="14+". NEVER return null if a number is mentioned anywhere in the articles — even in a headline.
+    statsPrompt: `For stats, extract CUMULATIVE casualty figures from headlines AND descriptions. Scan every headline for death toll numbers. Examples: "9th U.S. military death" means us_killed="9". "death toll surpasses 1,500" means iranian_killed="1,500+". "bringing Israeli deaths to 14+" means israeli_killed="14+". NEVER return null if a number is mentioned anywhere in the articles — even in a headline.
 Return stats with EXACTLY these keys (use the highest number found, or null ONLY if truly not mentioned):
 {
   "iranian_killed": "highest cumulative Iranian death toll mentioned",
@@ -2341,8 +2341,11 @@ export default {
             const hl = (article.headline || article.title || '').toLowerCase();
             if (!hl) return false;
             const hasCountry = conflict.keywords.some(kw => hl.includes(kw));
-            const hasAction = TIMELINE_ACTION_KW.some(kw => hl.includes(kw));
-            return hasCountry && hasAction;
+            if (!hasCountry) return false;
+            // Accept if headline has action keyword OR description mentions action
+            const desc = (article.description || '').toLowerCase();
+            const hasAction = TIMELINE_ACTION_KW.some(kw => hl.includes(kw) || desc.includes(kw));
+            return hasAction || hl.includes('ceasefire') || hl.includes('humanitarian') || hl.includes('refugee') || hl.includes('peace talk') || hl.includes('sanction') || hl.includes('diplomat');
           });
 
           // Hash current articles for this conflict to detect changes
@@ -2362,7 +2365,7 @@ export default {
           }
 
           // Build article text for Claude
-          const articleText = matching.slice(0, 20).map((a, i) => {
+          const articleText = matching.slice(0, 30).map((a, i) => {
             const hl = a.headline || a.title || '';
             const desc = a.description || '';
             const time = a.pubDate || a.time || '';
@@ -2371,7 +2374,7 @@ export default {
 
           try {
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
+            const timeout = setTimeout(() => controller.abort(), 25000);
 
             const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
@@ -2383,12 +2386,20 @@ export default {
               signal: controller.signal,
               body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
+                max_tokens: 2000,
                 messages: [{
                   role: 'user',
                   content: `You are a military intelligence analyst. Given these recent news articles about the ${conflict.name}, extract:
 
-1. TIMELINE ENTRIES: A list of concrete events — each a single sentence describing a strike, casualty report, diplomatic move, or military operation. No opinion pieces, photo galleries, or commentary. Include the approximate timestamp from the article.
+1. TIMELINE ENTRIES: Extract EVERY concrete event — each a single factual sentence describing a strike, casualty report, diplomatic move, military operation, humanitarian crisis update, troop movement, or weapons deployment. Include ALL of these categories:
+   - Military strikes and airstrikes (targets, casualties, weapons used)
+   - Troop movements and ground operations
+   - Casualty reports and death tolls
+   - Diplomatic efforts, ceasefire calls, peace talks
+   - Civilian impact, displacement, humanitarian crises
+   - Economic impacts (oil prices, sanctions, trade disruption)
+   - International reactions and statements
+   No opinion pieces, photo galleries, or commentary. Include the approximate timestamp from the article. Generate at least one entry per article if it describes a concrete event.
 
 2. CUMULATIVE STATS: Extract the LATEST CUMULATIVE casualty figures mentioned in these articles. Look for RUNNING TOTAL death tolls, NOT per-incident numbers. For example, if an article says "death toll surpasses 1,332" that means the cumulative killed figure is "1,332+". If an article says "7th US soldier killed" that means us_killed is "7". Always return the HIGHEST cumulative number you find for each category.
 
