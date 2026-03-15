@@ -24,6 +24,16 @@ const CONFLICT_STARTS = {
   sudan: new Date('2023-04-15T00:00:00Z'),    // SAF vs RSF fighting erupts
 };
 const conflictDay = (key) => Math.floor((Date.now() - CONFLICT_STARTS[key].getTime()) / 86400000) + 1;
+// Derive "X ago" label from the SAME day count so they never disagree
+const conflictTimeAgo = (key) => {
+  const d = conflictDay(key) - 1; // elapsed days since Day 1
+  if (d === 0) return 'Today';
+  if (d === 1) return '1 day ago';
+  if (d < 30) return d + ' days ago';
+  if (d < 365) { const m = Math.floor(d / 30); return m === 1 ? '1 month ago' : m + ' months ago'; }
+  const y = Math.floor(d / 365);
+  return y === 1 ? '1 year ago' : y + ' years ago';
+};
 
 // Pakistan-Afghanistan War Timeline
 const PAK_AFG_TIMELINE_BASE = [
@@ -758,7 +768,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       headline: 'Pakistan Declares Open War on Afghanistan',
       category: 'CONFLICT',
       breaking: true,
-      time: timeAgo('2026-02-27T12:00:00Z'),
+      time: conflictTimeAgo('pakafg'),
       warIntel: PAK_AFG_INTEL,
       warTimeline: PAK_AFG_TIMELINE,
       articles: [],
@@ -791,7 +801,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             }}>BREAKING</span>
             <span className="card-cat CONFLICT">CONFLICT</span>
           </div>
-          <span className="card-time">{timeAgo('2026-02-27T12:00:00Z')}</span>
+          <span className="card-time">{conflictTimeAgo('pakafg')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
           Pakistan Declares Open War on Afghanistan
@@ -829,7 +839,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       headline: `Russia-Ukraine War \u2014 Year ${Math.floor((conflictDay('ukraine') - 1) / 365) + 1}`,
       category: 'CONFLICT',
       breaking: true,
-      time: timeAgo('2022-02-24T06:00:00Z'),
+      time: conflictTimeAgo('ukraine'),
       warIntel: UKR_RUS_INTEL,
       warTimeline: UKR_RUS_TIMELINE,
       articles: [],
@@ -860,7 +870,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
               Day {ukrDays.toLocaleString()}
             </span>
           </div>
-          <span className="card-time">{timeAgo('2022-02-24T06:00:00Z')}</span>
+          <span className="card-time">{conflictTimeAgo('ukraine')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
           {`Russia-Ukraine War \u2014 Year ${ukrYears}`}
@@ -895,7 +905,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       headline: `Sudan Civil War \u2014 Day ${conflictDay('sudan').toLocaleString()}`,
       category: 'CONFLICT',
       breaking: true,
-      time: timeAgo('2023-04-15T06:00:00Z'),
+      time: conflictTimeAgo('sudan'),
       warIntel: SUDAN_INTEL,
       warTimeline: SUDAN_TIMELINE,
       articles: [],
@@ -926,7 +936,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
               Day {sudanDays.toLocaleString()}
             </span>
           </div>
-          <span className="card-time">{timeAgo('2023-04-15T06:00:00Z')}</span>
+          <span className="card-time">{conflictTimeAgo('sudan')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 600 }}>
           {`Sudan Civil War \u2014 Day ${sudanDays.toLocaleString()}`}
@@ -967,7 +977,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       headline: 'US and Israel at War with Iran',
       category: 'CONFLICT',
       breaking: true,
-      time: timeAgo('2026-02-28T06:15:00Z'),
+      time: conflictTimeAgo('iran'),
       warIntel: WAR_INTEL,
       warTimeline: WAR_TIMELINE,
       articles: [],
@@ -986,7 +996,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       findStat(iranStats, ['u.s', 'american', 'united states'], ['killed', 'deaths', 'dead', 'service']) ||
       findStat(iranStats, ['us '], ['killed', 'deaths', 'dead']) ||
       findStatWholeWord(iranStats, 'us', ['killed', 'deaths', 'dead', 'service']),
-      '9',
+      '13',
       iranFloors.us_killed
     );
     const iranDays = conflictDay('iran');
@@ -1007,7 +1017,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             }}>BREAKING</span>
             <span className="card-cat CONFLICT">CONFLICT</span>
           </div>
-          <span className="card-time">{timeAgo('2026-02-28T06:15:00Z')}</span>
+          <span className="card-time">{conflictTimeAgo('iran')}</span>
         </div>
         <div className="card-headline" style={{ fontWeight: 700, color: '#fca5a5' }}>
           US and Israel at War with Iran
