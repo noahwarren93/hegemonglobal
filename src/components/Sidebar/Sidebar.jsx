@@ -16,14 +16,14 @@ import CountryFlag from '../CountryFlag';
 // WAR BANNER DATA — module scope (never recreated on re-render)
 // ============================================================
 
-// Dynamic conflict day counter — Math.ceil((now - start) / msPerDay)
+// Dynamic conflict day counter — start date = Day 1
 const CONFLICT_STARTS = {
-  iran: new Date('2026-02-28T00:00:00Z'),
-  pakafg: new Date('2026-02-26T00:00:00Z'),  // Afghan border attack — Day 1
-  ukraine: new Date('2022-02-24T00:00:00Z'),
-  sudan: new Date('2023-04-15T00:00:00Z'),
+  iran: new Date('2026-02-28T00:00:00Z'),     // Operation Epic Fury launched
+  pakafg: new Date('2026-02-27T00:00:00Z'),   // Pakistan declares open war
+  ukraine: new Date('2022-02-24T00:00:00Z'),  // Russia invades Ukraine
+  sudan: new Date('2023-04-15T00:00:00Z'),    // SAF vs RSF fighting erupts
 };
-const conflictDay = (key) => Math.ceil((Date.now() - CONFLICT_STARTS[key].getTime()) / 86400000);
+const conflictDay = (key) => Math.floor((Date.now() - CONFLICT_STARTS[key].getTime()) / 86400000) + 1;
 
 // Pakistan-Afghanistan War Timeline
 const PAK_AFG_TIMELINE_BASE = [
