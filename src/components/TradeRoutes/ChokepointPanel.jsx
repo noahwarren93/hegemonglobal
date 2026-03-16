@@ -28,13 +28,21 @@ export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isOpen || !chokepoint) { setArticles([]); return; }
-    const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
-    const nowMs = Date.now();
+
+    // Build search terms: explicit searchTerms + significant words from chokepoint name
+    const STOP = new Set(['of', 'the', 'and', 'a', 'an', 'in', 'at', 'to', 'for', 'on', 'by', 'al', 'el']);
+    const nameWords = chokepoint.name.toLowerCase().split(/[\s-]+/)
+      .filter(w => w.length >= 4 && !STOP.has(w));
+    const terms = [...new Set([
+      ...(chokepoint.searchTerms || []).map(t => t.toLowerCase()),
+      ...nameWords,
+    ])];
+
     const matched = (DAILY_BRIEFING || []).filter(a => {
-      const d = a.pubDate || a.time;
-      if (d && (nowMs - new Date(d).getTime()) > FOURTEEN_DAYS) return false;
+      // Skip placeholder fallback articles
+      if (a.url === '#' || a.link === '#') return false;
       const text = ((a.headline || a.title || '') + ' ' + (a.description || '')).toLowerCase();
-      return chokepoint.searchTerms.some(t => text.includes(t.toLowerCase()));
+      return terms.some(t => text.includes(t));
     }).sort((a, b) => {
       const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
       const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -116,7 +124,7 @@ export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
         </div>
 
         <div className="trade-section">
-          <div className="trade-section-title" style={{ color: typeColor }}>CURRENT DISRUPTIONS ({articles.length})</div>
+          <div className="trade-section-title" style={{ color: typeColor }}>RECENT DISRUPTIONS ({articles.length})</div>
           {articles.length > 0 && articles.map((a, i) => (
             <div key={i} style={{ fontSize: '8.5px', color: '#d1d5db', padding: '3px 0', borderBottom: '1px solid #1f293744', lineHeight: 1.3 }}>
               <div>
@@ -134,7 +142,7 @@ export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
             </div>
           ))}
           {articles.length === 0 && (
-            <div style={{ fontSize: '8px', color: '#4b5563', fontStyle: 'italic' }}>No recent disruption coverage</div>
+            <div style={{ fontSize: '8px', color: '#4b5563', fontStyle: 'italic' }}>No recent disruptions reported.</div>
           )}
         </div>
       </div>

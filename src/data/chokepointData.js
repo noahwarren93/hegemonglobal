@@ -18,7 +18,7 @@ export const CHOKEPOINTS = [
     status: 'CLOSED',
     dependentCountries: ['Japan', 'South Korea', 'China', 'India', 'EU'],
     strategicSummary: 'Iran has repeatedly threatened closure during periods of escalation. IRGC Navy maintains fast-attack craft and anti-ship missile batteries along the northern shore. US Fifth Fleet based in Bahrain provides deterrence.',
-    searchTerms: ['hormuz', 'strait of hormuz', 'persian gulf', 'irgc navy'],
+    searchTerms: ['hormuz', 'strait of hormuz', 'persian gulf', 'irgc navy', 'iran oil', 'iran tanker', 'gulf shipping', 'iran strait', 'iran navy'],
   },
   {
     id: 'malacca',
@@ -50,7 +50,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['EU', 'Egypt', 'Turkey', 'India'],
     strategicSummary: 'Suez Canal traffic has declined sharply due to Houthi attacks in the southern Red Sea approach. The 2021 Ever Given blockage demonstrated the fragility of this single-point-of-failure route.',
-    searchTerms: ['suez canal', 'suez', 'ever given', 'canal blockage'],
+    searchTerms: ['suez canal', 'suez', 'ever given', 'canal blockage', 'red sea shipping', 'shipping reroute', 'houthi suez'],
   },
   {
     id: 'bab-el-mandeb',
@@ -66,7 +66,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['EU', 'Egypt', 'Saudi Arabia', 'Israel'],
     strategicSummary: 'Houthi anti-ship missile and drone attacks have forced major shipping lines to reroute around the Cape of Good Hope. US/UK naval forces conducting active patrols.',
-    searchTerms: ['bab al-mandab', 'bab el-mandeb', 'red sea', 'houthi', 'gulf of aden'],
+    searchTerms: ['bab al-mandab', 'bab el-mandeb', 'red sea', 'houthi', 'gulf of aden', 'red sea attack', 'houthi missile', 'houthi drone', 'yemen shipping', 'red sea ship'],
   },
   {
     id: 'panama',
@@ -82,7 +82,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['United States', 'China', 'Japan', 'South Korea'],
     strategicSummary: 'Severe drought has reduced Gatun Lake water levels, forcing draft restrictions and cutting daily transits by ~40%. LNG and container vessels most impacted. Long-term climate projections raise concerns about structural viability.',
-    searchTerms: ['panama canal', 'panama', 'gatun lake', 'canal drought'],
+    searchTerms: ['panama canal', 'panama', 'gatun lake', 'canal drought', 'panama shipping', 'canal transit', 'panama restriction'],
   },
   {
     id: 'cape',
@@ -130,7 +130,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['Russia', 'Ukraine', 'Romania', 'Georgia'],
     strategicSummary: 'Turkey controls transit under the Montreux Convention (1936), which restricts warship passage. Since Russia\'s invasion of Ukraine, Turkey has invoked Montreux to limit naval vessel transits. Ukrainian grain exports depend on this route.',
-    searchTerms: ['bosphorus', 'dardanelles', 'turkish straits', 'montreux', 'black sea'],
+    searchTerms: ['bosphorus', 'dardanelles', 'turkish straits', 'montreux', 'black sea', 'ukraine grain', 'black sea shipping', 'turkey strait'],
   },
   {
     id: 'denmark',
@@ -162,7 +162,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['Taiwan', 'Japan', 'South Korea', 'China'],
     strategicSummary: 'PLA military exercises have periodically disrupted commercial shipping. A blockade or conflict would devastate global semiconductor supply chains (TSMC). US Navy conducts regular freedom-of-navigation transits.',
-    searchTerms: ['taiwan strait', 'taiwan', 'tsmc', 'pla navy'],
+    searchTerms: ['taiwan strait', 'taiwan', 'tsmc', 'pla navy', 'china taiwan', 'taiwan military', 'taiwan blockade', 'semiconductor'],
   },
   {
     id: 'mozambique',
@@ -226,7 +226,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['South Korea', 'Japan', 'China', 'Russia'],
     strategicSummary: 'Critical for Japanese and Korean energy imports. North Korean provocations in nearby waters add instability. US Navy and allied forces maintain constant presence.',
-    searchTerms: ['korea strait', 'tsushima strait', 'sea of japan', 'east china sea'],
+    searchTerms: ['korea strait', 'tsushima strait', 'sea of japan', 'east china sea', 'north korea missile', 'north korea launch'],
   },
   {
     id: 'dover',
@@ -390,7 +390,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['Germany', 'Poland', 'Czech Republic', 'Hungary', 'Slovakia'],
     strategicSummary: 'EU sanctions have severely reduced Russian oil flows through Druzhba, though some Central European nations obtained exemptions due to infrastructure dependency. Pipeline sabotage concerns elevated since Nord Stream attacks.',
-    searchTerms: ['druzhba pipeline', 'druzhba', 'friendship pipeline', 'russian oil pipeline'],
+    searchTerms: ['druzhba pipeline', 'druzhba', 'friendship pipeline', 'russian oil pipeline', 'russia oil europe', 'russian crude', 'nord stream'],
   },
   {
     id: 'btc',
@@ -438,7 +438,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['China', 'Japan', 'South Korea', 'India', 'EU'],
     strategicSummary: 'Ras Tanura is the crown jewel of Saudi oil infrastructure. Past Houthi drone and missile attacks have targeted the facility. Any sustained disruption would send oil prices spiraling. Saudi air defense systems provide protection.',
-    searchTerms: ['ras tanura', 'saudi oil', 'aramco terminal', 'saudi oil exports'],
+    searchTerms: ['ras tanura', 'saudi oil', 'aramco terminal', 'saudi oil exports', 'saudi aramco', 'houthi saudi'],
   },
   {
     id: 'ras-laffan',
@@ -454,7 +454,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['Japan', 'South Korea', 'China', 'India', 'United Kingdom'],
     strategicSummary: 'Ras Laffan produces roughly 30% of global LNG. Qatar is investing $29B in the North Field Expansion to increase capacity by 60% by 2027. Any disruption would cause a global energy crisis. Proximity to Iran/Hormuz is a vulnerability.',
-    searchTerms: ['ras laffan', 'qatar lng', 'north field', 'qatar gas'],
+    searchTerms: ['ras laffan', 'qatar lng', 'north field', 'qatar gas', 'qatar energy', 'lng export'],
   },
   {
     id: 'rotterdam',
@@ -550,7 +550,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['EU', 'Japan', 'South Korea'],
     strategicSummary: 'Bonny Island LNG supplies ~5% of global LNG trade. Nigeria\'s oil theft and pipeline vandalism in the Niger Delta periodically threaten output. EU has increased purchases to replace Russian gas. Shell, TotalEnergies, and Eni are stakeholders.',
-    searchTerms: ['bonny island', 'nigeria lng', 'nlng', 'bonny lng'],
+    searchTerms: ['bonny island', 'nigeria lng', 'nlng', 'bonny lng', 'niger delta', 'nigeria oil'],
   },
   {
     id: 'hassi-messaoud',
@@ -582,7 +582,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['United States', 'EU', 'India'],
     strategicSummary: 'Escravos is one of Nigeria\'s most disruption-prone terminals. Niger Delta militants have repeatedly attacked pipelines and infrastructure. Oil theft ("bunkering") diverts significant volumes. Chevron operates the terminal with military escort. Bonny Light crude is a premium grade traded globally.',
-    searchTerms: ['escravos terminal', 'escravos', 'niger delta oil', 'chevron nigeria'],
+    searchTerms: ['escravos terminal', 'escravos', 'niger delta oil', 'chevron nigeria', 'niger delta militant', 'nigeria pipeline'],
   },
   {
     id: 'punto-fijo',
@@ -598,7 +598,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['Venezuela', 'Cuba', 'Caribbean nations'],
     strategicSummary: 'Years of underinvestment under Maduro have reduced output to a fraction of capacity. US sanctions restrict oil exports. Frequent explosions and accidents. China and Russia are primary remaining customers. The complex symbolizes Venezuela\'s oil industry collapse.',
-    searchTerms: ['punto fijo', 'amuay', 'cardon refinery', 'venezuela refinery', 'paraguana'],
+    searchTerms: ['punto fijo', 'amuay', 'cardon refinery', 'venezuela refinery', 'paraguana', 'venezuela oil', 'maduro oil'],
   },
   {
     id: 'angra-dos-reis',
@@ -698,7 +698,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['Pakistan', 'Afghanistan'],
     strategicSummary: 'The Khyber Pass was NATO\'s primary ground supply route into Afghanistan for 20 years. Taliban control of Afghanistan has altered trade dynamics. Pakistan-Afghanistan border tensions frequently lead to closures. Smuggling corridor for weapons and narcotics.',
-    searchTerms: ['khyber pass', 'khyber', 'torkham', 'afghanistan pakistan border'],
+    searchTerms: ['khyber pass', 'khyber', 'torkham', 'afghanistan pakistan border', 'pakistan border', 'afghanistan border'],
   },
   {
     id: 'karakoram',
@@ -714,7 +714,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['China', 'Pakistan'],
     strategicSummary: 'Centerpiece of CPEC (China-Pakistan Economic Corridor), a $62B Belt and Road flagship. China seeks overland access to the Indian Ocean via Gwadar Port. Landslides, avalanches, and separatist attacks in Balochistan threaten reliability.',
-    searchTerms: ['karakoram highway', 'khunjerab pass', 'cpec', 'china pakistan corridor'],
+    searchTerms: ['karakoram highway', 'khunjerab pass', 'cpec', 'china pakistan corridor', 'china pakistan', 'balochistan attack'],
   },
   {
     id: 'transsib',
@@ -778,7 +778,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['Lithuania', 'Latvia', 'Estonia', 'Poland', 'NATO'],
     strategicSummary: 'If Russia seized the Suwalki Gap, the Baltic states would be cut off from NATO allies by land. NATO has reinforced the corridor with multinational battlegroups. The gap is NATO\'s most studied and war-gamed scenario for Article 5 invocation.',
-    searchTerms: ['suwalki gap', 'suwalki', 'kaliningrad corridor', 'nato baltic'],
+    searchTerms: ['suwalki gap', 'suwalki', 'kaliningrad corridor', 'nato baltic', 'kaliningrad', 'russia baltic', 'baltic states'],
   },
   {
     id: 'laredo',
@@ -794,7 +794,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['United States', 'Mexico'],
     strategicSummary: 'Laredo is critical to North American manufacturing supply chains, especially automotive and electronics. Border shutdowns or enhanced inspections cause immediate production halts at US factories. Cartel violence in Nuevo Laredo periodically disrupts operations. Nearshoring trends are increasing traffic volume.',
-    searchTerms: ['laredo border', 'laredo crossing', 'us mexico border trade', 'laredo texas'],
+    searchTerms: ['laredo border', 'laredo crossing', 'us mexico border trade', 'laredo texas', 'us mexico trade', 'border crossing trade'],
   },
   {
     id: 'mombasa-corridor',
@@ -826,7 +826,7 @@ export const CHOKEPOINTS = [
     status: 'RESTRICTED',
     dependentCountries: ['Niger', 'Libya', 'Algeria', 'Nigeria'],
     strategicSummary: 'Agadez sits at the junction of trans-Saharan routes connecting West Africa to Libya and Algeria. The city became a major migration hub for African migrants heading to Europe. The US operated a drone base (Air Base 201) nearby until Niger\'s 2023 coup expelled American forces. Russia\'s Wagner Group now has presence in the region. Gold mining and uranium transport pass through this corridor.',
-    searchTerms: ['agadez', 'trans-saharan', 'niger trade route', 'air base 201'],
+    searchTerms: ['agadez', 'trans-saharan', 'niger trade route', 'air base 201', 'sahel', 'niger coup', 'wagner sahel'],
   },
   {
     id: 'dakar-port',
@@ -858,7 +858,7 @@ export const CHOKEPOINTS = [
     status: 'OPEN',
     dependentCountries: ['Djibouti', 'Ethiopia', 'Somalia'],
     strategicSummary: 'Djibouti hosts the only permanent US military base in Africa (Camp Lemonnier), China\'s first overseas military base, plus French and Japanese facilities. The port handles 95% of Ethiopia\'s trade. China invested $3.5B in port expansion and the Addis Ababa-Djibouti Railway. A critical node for Red Sea security.',
-    searchTerms: ['djibouti port', 'djibouti', 'camp lemonnier', 'horn of africa trade'],
+    searchTerms: ['djibouti port', 'djibouti', 'camp lemonnier', 'horn of africa trade', 'ethiopia trade', 'horn of africa'],
   },
   {
     id: 'dar-es-salaam',
