@@ -2765,28 +2765,34 @@ async function updateCountryAnalyses(env) {
       return `COUNTRY: ${country}\nRecent articles:\n${articleList}`;
     }).join('\n\n');
 
-    const prompt = `You are a geopolitical analyst for Hegemon, a global risk monitoring platform. Today is ${today}.
+    const prompt = `You are a senior geopolitical analyst writing CIA World Factbook-style situation briefs for Hegemon, a global risk monitoring platform. Today is ${today}.
 
-For each country below, write a concise situation analysis based on the recent articles provided. Each analysis has exactly 3 sections:
+For each country below, write a BROAD geopolitical overview covering ALL of these dimensions — not just the recent headlines. Use the articles as context for what is currently newsworthy, but your analysis must go far beyond them:
 
-1. what: 2-3 sentences. Key developments in the last 24-48 hours. Cite specific events, names, numbers.
-2. why: 1-2 sentences. Strategic significance, regional implications, what's at stake.
-3. next: 1-2 sentences. Near-term outlook, escalation or de-escalation paths, next steps to watch.
+Each analysis has exactly 3 sections:
+
+1. what: 3-4 sentences. Start with the country's current political situation (who governs, stability, recent elections/transitions). Then cover: major foreign policy positions, key alliances and rivalries, economic conditions (growth/recession, major industries, trade relationships), security situation (internal conflicts, terrorism, border disputes), and any recent notable events from the articles. This should read like a broad intelligence brief, NOT a news summary of one event.
+
+2. why: 2-3 sentences. The country's strategic significance: regional role, importance to global trade/energy/security, key relationships with major powers (US, China, Russia, EU), membership in international organizations, and what makes this country matter on the world stage.
+
+3. next: 2-3 sentences. Near-term outlook across multiple dimensions: political trajectory, economic forecast, security trends, upcoming elections or diplomatic events, escalation or de-escalation paths. What should analysts watch for in the coming weeks/months?
 
 RULES:
-- Be specific and factual. Use the article details provided.
+- Write a BROAD geopolitical overview, not a narrow news recap. Cover government, economy, security, and foreign policy.
+- Be specific: name leaders, cite GDP figures, mention specific alliances and treaties.
 - Never say "limited information" or "details are emerging".
-- Keep total analysis under 100 words per country.
+- Keep total analysis under 200 words per country.
 - Write in present tense for ongoing situations.
+- If articles only cover one topic (e.g. a single attack), still provide the full geopolitical picture — the article topic should be ONE element of a broader brief.
 
 ${countryDescriptions}
 
 Return a JSON object with country names as keys:
 {
   "country_name": {
-    "what": "What happened text...",
-    "why": "Why it matters text...",
-    "next": "What might happen text..."
+    "what": "Broad situation overview...",
+    "why": "Strategic significance...",
+    "next": "Outlook and what to watch..."
   }
 }
 
@@ -2802,7 +2808,7 @@ Return ONLY the JSON, no other text.`;
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 6000,
+          max_tokens: 12000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -3211,6 +3217,27 @@ export default {
         }));
         return new Response(
           JSON.stringify({ status: 'ok', lastUpdated: data.lastUpdated, minutesAgo, eventCount, summaryCount, briefingCount, topHeadlines }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /trigger-analyses — manually trigger country analysis regeneration
+    // ============================================================
+    if (url.pathname === '/trigger-analyses' && request.method === 'GET') {
+      try {
+        await updateCountryAnalyses(env);
+        const raw = await env.HEGEMON_CACHE.get('country_analyses');
+        const data = raw ? JSON.parse(raw) : {};
+        const count = data.analyses ? Object.keys(data.analyses).length : 0;
+        return new Response(
+          JSON.stringify({ status: 'ok', countryCount: count, lastUpdated: data.lastUpdated }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (err) {

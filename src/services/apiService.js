@@ -1467,10 +1467,15 @@ async function fetchCountryAnalyses() {
 
 function applyAnalyses(analyses) {
   for (const [countryName, analysis] of Object.entries(analyses)) {
-    // Try exact match first, then case-insensitive
+    // Try exact match first, then case-insensitive, then underscored
     let entry = COUNTRIES[countryName];
     if (!entry) {
       const key = Object.keys(COUNTRIES).find(k => k.toLowerCase() === countryName.toLowerCase());
+      if (key) entry = COUNTRIES[key];
+    }
+    if (!entry) {
+      const spaced = countryName.replace(/_/g, ' ');
+      const key = Object.keys(COUNTRIES).find(k => k.toLowerCase() === spaced.toLowerCase());
       if (key) entry = COUNTRIES[key];
     }
     if (entry && analysis.what) {
