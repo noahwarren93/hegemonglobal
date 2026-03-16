@@ -678,12 +678,18 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
       // 1) Direct marker hit — pick the dot whose CENTER is closest to the click ray
       //    This prevents large dots (catastrophic) from blocking clicks on nearby smaller dots
-      const intersects = raycaster.intersectObjects(countryMeshesRef.current);
-      if (intersects.length > 0) {
+      //    Filter out dots on the far side of the globe (facing away from camera)
+      const intersectsClick = raycaster.intersectObjects(countryMeshesRef.current);
+      const visibleClickHits = intersectsClick.filter(hit => {
+        const dotPos = hit.object.position.clone().normalize();
+        const camDir = camera.position.clone().normalize();
+        return dotPos.dot(camDir) > 0.05;
+      });
+      if (visibleClickHits.length > 0) {
         let bestName = null;
         let bestDist = Infinity;
-        for (let i = 0; i < intersects.length; i++) {
-          const obj = intersects[i].object;
+        for (let i = 0; i < visibleClickHits.length; i++) {
+          const obj = visibleClickHits[i].object;
           if (!obj.userData.name) continue;
           const center = obj.position.clone();
           globe.localToWorld(center);
@@ -843,8 +849,15 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         return;
       }
 
-      if (intersects.length > 0) {
-        const ud = intersects[0].object.userData;
+      // Filter intersects to only dots on the visible (camera-facing) side of the globe
+      const visibleIntersects = intersects.filter(hit => {
+        const dotPos = hit.object.position.clone().normalize();
+        const camDir = camera.position.clone().normalize();
+        return dotPos.dot(camDir) > 0.05; // positive = facing camera
+      });
+
+      if (visibleIntersects.length > 0) {
+        const ud = visibleIntersects[0].object.userData;
         if (ud && ud.data && ud.name) {
           setTooltipData({ name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title });
           setMousePos({ x: event.clientX, y: event.clientY });
