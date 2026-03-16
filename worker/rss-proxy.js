@@ -949,7 +949,56 @@ const COUNTRY_DEMONYMS = {
   'Vietnam': ['vietnamese', 'hanoi', 'ho chi minh'],
   'Yemen': ['yemeni', 'sanaa', 'houthi', 'aden', 'marib', 'hodeidah', 'ansar allah', 'yemen'],
   'Zambia': ['zambian', 'lusaka', 'hichilema'],
-  'Zimbabwe': ['zimbabwean', 'harare', 'mnangagwa', 'zimbabwe', 'bulawayo', 'zanu-pf', 'chamisa']
+  'Zimbabwe': ['zimbabwean', 'harare', 'mnangagwa', 'zimbabwe', 'bulawayo', 'zanu-pf', 'chamisa'],
+  // Tiny nations / micro-states
+  'Antigua and Barbuda': ['antiguan', 'barbudan', 'antigua'],
+  'Andorra': ['andorran', 'andorra la vella'],
+  'Bahamas': ['bahamian', 'nassau bahamas'],
+  'Barbados': ['barbadian', 'bridgetown barbados'],
+  'Belize': ['belizean', 'belmopan', 'belize'],
+  'Benin': ['beninese', 'porto-novo', 'cotonou'],
+  'Bhutan': ['bhutanese', 'thimphu', 'bhutan'],
+  'Botswana': ['botswanan', 'gaborone', 'botswana'],
+  'Brunei': ['bruneian', 'bandar seri begawan', 'brunei'],
+  'Burundi': ['burundian', 'bujumbura', 'gitega'],
+  'Cape Verde': ['cape verdean', 'praia cape verde'],
+  'Comoros': ['comorian', 'moroni comoros'],
+  'Djibouti': ['djiboutian', 'djibouti'],
+  'Dominica': ['dominican dominica', 'roseau dominica'],
+  'Equatorial Guinea': ['equatoguinean', 'malabo', 'equatorial guinea'],
+  'Eswatini': ['swazi', 'mbabane', 'eswatini', 'swaziland'],
+  'Fiji': ['fijian', 'suva fiji', 'fiji'],
+  'Gambia': ['gambian', 'banjul', 'gambia'],
+  'Grenada': ['grenadian', 'grenada'],
+  'Guinea-Bissau': ['bissau-guinean', 'guinea-bissau', 'bissau'],
+  'Kiribati': ['i-kiribati', 'tarawa', 'kiribati'],
+  'Lesotho': ['basotho', 'maseru', 'lesotho'],
+  'Liberia': ['liberian', 'monrovia', 'liberia'],
+  'Liechtenstein': ['liechtensteiner', 'vaduz', 'liechtenstein'],
+  'Luxembourg': ['luxembourgish', 'luxembourg'],
+  'Maldives': ['maldivian', 'male maldives', 'maldives'],
+  'Marshall Islands': ['marshallese', 'majuro', 'marshall islands'],
+  'Mauritius': ['mauritian', 'port louis', 'mauritius'],
+  'Micronesia': ['micronesian', 'palikir', 'micronesia'],
+  'Monaco': ['monegasque', 'monaco'],
+  'Nauru': ['nauruan', 'nauru'],
+  'Palau': ['palauan', 'ngerulmud', 'palau'],
+  'Saint Kitts and Nevis': ['kittitian', 'basseterre', 'saint kitts'],
+  'Saint Lucia': ['saint lucian', 'castries', 'saint lucia'],
+  'Saint Vincent and the Grenadines': ['vincentian', 'kingstown', 'saint vincent'],
+  'Samoa': ['samoan', 'apia samoa', 'samoa'],
+  'San Marino': ['sammarinese', 'san marino'],
+  'Sao Tome and Principe': ['santomean', 'sao tome'],
+  'Seychelles': ['seychellois', 'victoria seychelles', 'seychelles'],
+  'Solomon Islands': ['solomon islander', 'honiara', 'solomon islands'],
+  'Suriname': ['surinamese', 'paramaribo', 'suriname'],
+  'Timor-Leste': ['timorese', 'dili', 'timor-leste', 'east timor'],
+  'Togo': ['togolese', 'lome', 'togo'],
+  'Tonga': ['tongan', 'nukualofa', 'tonga'],
+  'Trinidad and Tobago': ['trinidadian', 'port of spain', 'trinidad'],
+  'Tuvalu': ['tuvaluan', 'funafuti', 'tuvalu'],
+  'Vanuatu': ['ni-vanuatu', 'port vila', 'vanuatu'],
+  'Western Sahara': ['sahrawi', 'western sahara', 'polisario']
 };
 
 // ============================================================
@@ -1546,8 +1595,22 @@ async function buildCountryNewsFeeds(rawArticles, env) {
 
   // Supplement sparse countries with Google News (limit to 75 per run)
   if (sparse.length > 0) {
-    const toSupplement = sparse.slice(0, 75);
+    const toSupplement = sparse.slice(0, 150);
     console.log(`[Cron] Supplementing ${toSupplement.length}/${sparse.length} sparse countries with Google News`);
+
+    // Tiny nations: use no date restriction (remove "when:7d") since coverage is sparse
+    const TINY_NATIONS = new Set([
+      'Tuvalu', 'Tonga', 'Kiribati', 'Samoa', 'Fiji', 'Solomon Islands', 'Vanuatu',
+      'Palau', 'Nauru', 'Marshall Islands', 'Micronesia', 'Timor-Leste', 'Bhutan',
+      'Brunei', 'Maldives', 'Suriname', 'Belize', 'Bahamas', 'Barbados',
+      'Trinidad and Tobago', 'Djibouti', 'Burundi', 'Gambia', 'Guinea-Bissau',
+      'Liberia', 'Togo', 'Benin', 'Cape Verde', 'Mauritius', 'Seychelles',
+      'Equatorial Guinea', 'Comoros', 'Eswatini', 'Lesotho', 'Botswana',
+      'Western Sahara', 'Andorra', 'Liechtenstein', 'Monaco', 'San Marino',
+      'Luxembourg', 'Antigua and Barbuda', 'Dominica', 'Grenada',
+      'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines',
+      'Sao Tome and Principe', 'Somaliland'
+    ]);
 
     const GOOGLE_SEARCH_QUALIFIERS = {
       'Georgia': 'Georgia country Caucasus Tbilisi',
@@ -1604,11 +1667,16 @@ async function buildCountryNewsFeeds(rawArticles, env) {
     const supplementResults = await Promise.allSettled(
       toSupplement.map(async (country) => {
         const query = GOOGLE_SEARCH_QUALIFIERS[country] || (country + ' news');
-        const gnUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}+when:7d&hl=en-US&gl=US&ceid=US:en`;
+        // Tiny nations: no date restriction since English coverage is sparse
+        const dateFilter = TINY_NATIONS.has(country) ? '' : '+when:7d';
+        const gnUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}${dateFilter}&hl=en-US&gl=US&ceid=US:en`;
         const articles = await fetchSingleFeed(gnUrl, 'Google News');
         return { country, articles };
       })
     );
+
+    // Collect non-English headlines for batch translation
+    const toTranslate = []; // { country, feedIndex, headline }
 
     for (const result of supplementResults) {
       if (result.status !== 'fulfilled' || !result.value.articles?.length) continue;
@@ -1627,10 +1695,10 @@ async function buildCountryNewsFeeds(rawArticles, env) {
         const artText = (title + ' ' + (art.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => artText.includes(kw))) continue;
         if (isCountryNewsFalsePositive(title, country, art.source)) continue;
-        // Non-English filter
-        const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
-        if (title.length > 10 && nonAscii / title.length > 0.15) continue;
         existingHLs.add(hl);
+        const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
+        const isNonEnglish = title.length > 10 && nonAscii / title.length > 0.15;
+        const feedIndex = feed.length;
         feed.push({
           headline: title,
           source: art.source || 'Google News',
@@ -1640,9 +1708,73 @@ async function buildCountryNewsFeeds(rawArticles, env) {
           category: detectCategory(title, art.description || ''),
           importance: 'medium'
         });
+        if (isNonEnglish) {
+          toTranslate.push({ country, feedIndex, headline: title });
+        }
       }
 
       merged[country] = feed.slice(0, MAX_PER_COUNTRY);
+    }
+
+    // Batch translate non-English headlines via Claude API
+    if (toTranslate.length > 0 && env.ANTHROPIC_API_KEY) {
+      try {
+        const batch = toTranslate.slice(0, 50); // Cap at 50 to control costs
+        const headlineList = batch.map((t, i) => `${i + 1}. [${t.country}] ${t.headline}`).join('\n');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 2000,
+            messages: [{
+              role: 'user',
+              content: `Translate each headline to English. Return ONLY a JSON array of strings, one per headline, in the same order. If already English, return as-is.\n\n${headlineList}`
+            }]
+          })
+        });
+        clearTimeout(timeout);
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = (data.content || []).map(b => b.text || '').join('');
+          const jsonMatch = text.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const translations = JSON.parse(jsonMatch[0]);
+            for (let i = 0; i < Math.min(batch.length, translations.length); i++) {
+              const t = batch[i];
+              const feed = merged[t.country];
+              if (feed && feed[t.feedIndex] && translations[i]) {
+                feed[t.feedIndex].headline = translations[i];
+              }
+            }
+          }
+        }
+        console.log(`[Cron] Translated ${batch.length} non-English headlines`);
+      } catch (err) {
+        // Fallback: replace non-English headlines with generic English
+        console.error(`[Cron] Translation failed: ${err.message}, using fallback`);
+        for (const t of toTranslate) {
+          const feed = merged[t.country];
+          if (feed && feed[t.feedIndex]) {
+            feed[t.feedIndex].headline = `${t.country}: Latest developments`;
+          }
+        }
+      }
+    } else if (toTranslate.length > 0) {
+      // No API key: use fallback
+      for (const t of toTranslate) {
+        const feed = merged[t.country];
+        if (feed && feed[t.feedIndex]) {
+          feed[t.feedIndex].headline = `${t.country}: Latest developments`;
+        }
+      }
     }
   }
 
