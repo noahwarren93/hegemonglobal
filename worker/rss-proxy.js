@@ -856,7 +856,7 @@ const COUNTRY_DEMONYMS = {
   'Kazakhstan': ['kazakh', 'astana', 'almaty', 'tokayev'],
   'Kenya': ['kenyan', 'nairobi', 'ruto', 'mombasa'],
   'Kosovo': ['kosovar', 'pristina', 'kurti'],
-  'Kuwait': ['kuwaiti', 'kuwait city'],
+  'Kuwait': ['kuwaiti', 'kuwait city', 'kuwait', 'camp arifjan'],
   'Kyrgyzstan': ['kyrgyz', 'bishkek', 'japarov'],
   'Laos': ['laotian', 'vientiane'],
   'Latvia': ['latvian', 'riga'],
@@ -869,7 +869,7 @@ const COUNTRY_DEMONYMS = {
   'Mali': ['malian', 'bamako', 'timbuktu', 'jnim', 'goita'],
   'Malta': ['maltese', 'valletta'],
   'Mauritania': ['mauritanian', 'nouakchott'],
-  'Mexico': ['mexican', 'mexico city', 'sheinbaum', 'guadalajara', 'monterrey', 'cartel', 'juarez', 'tijuana', 'sinaloa'],
+  'Mexico': ['mexican', 'mexico city', 'sheinbaum', 'guadalajara', 'monterrey', 'cartel', 'juarez', 'tijuana', 'sinaloa', 'amlo', 'cancun', 'chiapas', 'oaxaca'],
   'Moldova': ['moldovan', 'chisinau', 'sandu', 'transnistria'],
   'Mongolia': ['mongolian', 'ulaanbaatar'],
   'Montenegro': ['montenegrin', 'podgorica'],
@@ -887,12 +887,12 @@ const COUNTRY_DEMONYMS = {
   'North Macedonia': ['macedonian', 'skopje'],
   'Norway': ['norwegian', 'oslo'],
   'Oman': ['omani', 'muscat'],
-  'Pakistan': ['pakistani', 'islamabad', 'karachi', 'lahore', 'peshawar', 'balochistan', 'sharif'],
+  'Pakistan': ['pakistani', 'islamabad', 'karachi', 'lahore', 'peshawar', 'balochistan', 'sharif', 'pakistan', 'imran khan', 'kpk', 'rawalpindi', 'quetta'],
   'Palestine': ['gaza', 'palestinian', 'west bank', 'ramallah', 'hamas', 'fatah', 'khan younis', 'rafah'],
   'Panama': ['panamanian', 'panama city', 'panama canal'],
   'Papua New Guinea': ['papua new guinean', 'port moresby'],
   'Paraguay': ['paraguayan', 'asuncion'],
-  'Peru': ['peruvian', 'lima', 'boluarte'],
+  'Peru': ['peruvian', 'lima', 'boluarte', 'cusco', 'arequipa', 'machu picchu', 'peruvian congress'],
   'Philippines': ['filipino', 'philippine', 'manila', 'marcos', 'duterte', 'mindanao'],
   'Poland': ['polish', 'warsaw', 'tusk'],
   'Portugal': ['portuguese', 'lisbon'],
@@ -900,7 +900,7 @@ const COUNTRY_DEMONYMS = {
   'Romania': ['romanian', 'bucharest'],
   'Russia': ['russian', 'moscow', 'kremlin', 'putin', 'st. petersburg'],
   'Rwanda': ['rwandan', 'kigali', 'kagame'],
-  'Saudi Arabia': ['saudi', 'riyadh', 'mbs', 'mohammed bin salman', 'jeddah'],
+  'Saudi Arabia': ['saudi', 'riyadh', 'mbs', 'mohammed bin salman', 'jeddah', 'aramco', 'mecca', 'medina', 'saudi arabia', 'neom'],
   'Senegal': ['senegalese', 'dakar', 'faye'],
   'Serbia': ['serbian', 'belgrade', 'vucic'],
   'Sierra Leone': ['sierra leonean', 'freetown'],
@@ -908,15 +908,16 @@ const COUNTRY_DEMONYMS = {
   'Slovakia': ['slovak', 'bratislava', 'fico'],
   'Slovenia': ['slovenian', 'ljubljana'],
   'Somalia': ['somali', 'mogadishu', 'al-shabaab', 'puntland'],
+  'Somaliland': ['somalilander', 'hargeisa', 'somaliland'],
   'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town', 'ramaphosa', 'anc'],
   'South Korea': ['south korean', 'seoul', 'korean'],
   'South Sudan': ['south sudanese', 'juba', 'kiir'],
   'Spain': ['spanish', 'madrid', 'barcelona', 'sanchez'],
-  'Sri Lanka': ['sri lankan', 'colombo'],
+  'Sri Lanka': ['sri lankan', 'colombo', 'sri lanka', 'sinhalese', 'tamil tigers'],
   'Sudan': ['sudanese', 'khartoum', 'darfur', 'rsf', 'rapid support', 'al-burhan', 'hemedti', 'el-fasher', 'port sudan', 'omdurman'],
   'Sweden': ['swedish', 'stockholm'],
   'Switzerland': ['swiss', 'bern', 'zurich', 'geneva'],
-  'Syria': ['syrian', 'damascus', 'assad', 'aleppo', 'idlib', 'al-sharaa'],
+  'Syria': ['syrian', 'damascus', 'assad', 'aleppo', 'idlib', 'al-sharaa', 'hts', 'hayat tahrir', 'sdf', 'latakia', 'homs', 'deir ez-zor', 'raqqa', 'tartus'],
   'Taiwan': ['taiwanese', 'taipei', 'tsai ing-wen', 'lai ching-te'],
   'Tanzania': ['tanzanian', 'dodoma', 'dar es salaam'],
   'Thailand': ['thai', 'bangkok'],
@@ -925,14 +926,14 @@ const COUNTRY_DEMONYMS = {
   'Turkmenistan': ['turkmen', 'ashgabat'],
   'Uganda': ['ugandan', 'kampala', 'museveni'],
   'Ukraine': ['ukrainian', 'kyiv', 'zelensky', 'zelenskyy', 'kharkiv', 'odesa', 'syrskyi', 'bakhmut'],
-  'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi'],
+  'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi', 'al dhafra', 'fujairah', 'united arab emirates', 'sharjah'],
   'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster', 'starmer'],
   'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
   'Uruguay': ['uruguayan', 'montevideo'],
   'Uzbekistan': ['uzbek', 'tashkent', 'mirziyoyev'],
   'Venezuela': ['venezuelan', 'caracas', 'maduro', 'guaido'],
   'Vietnam': ['vietnamese', 'hanoi', 'ho chi minh'],
-  'Yemen': ['yemeni', 'sanaa', 'houthi', 'aden', 'marib'],
+  'Yemen': ['yemeni', 'sanaa', 'houthi', 'aden', 'marib', 'hodeidah', 'ansar allah', 'yemen'],
   'Zambia': ['zambian', 'lusaka', 'hichilema'],
   'Zimbabwe': ['zimbabwean', 'harare', 'mnangagwa']
 };
@@ -1139,6 +1140,18 @@ const AMBIGUOUS_EXCLUDE = {
   'chad': /\bchad\s+(?:johnson|ochocinco|kelly|pennington|henne|wolf|gable|smith|michael|reed|green|brown|hurley|kroeger|daniels|benson|coleman|lowe|powers|morris|hart|harris|boseman|jordan|stahelski|everett)\b/i,
   'georgia': /\b(?:georgia\s+(?:tech|bulldogs|state\s+university|peach|primary|runoff|senate\s+race|football)|(?:atlanta|savannah|augusta|macon)[,\s]+georgia)\b/i,
   'jordan': /\b(?:michael\s+jordan|jordan\s+(?:peele|brand|peterson|spieth|love|clarkson|pickford|henderson|fisher|chiles|walsh|neely|poole|davis|thompson|travis))\b/i,
+  'niger': /\b(?:nigeria|nigerian)\b/i,
+};
+
+// Country-level false positive filters — reject articles from a country feed
+// if they clearly aren't about that country
+const COUNTRY_FALSE_POSITIVE_FILTERS = {
+  // Niger: exclude articles that mention Nigeria/Nigerian but NOT Niger-specific terms
+  'Niger': (text) => {
+    const hasNigeria = /\bnigeria|nigerian\b/i.test(text);
+    const hasNigerSpecific = /\bniamey|nigerien|niger republic|tiani|niger\s+(?:military|junta|coup|sahel)\b/i.test(text);
+    return hasNigeria && !hasNigerSpecific;
+  },
 };
 
 let _properCaseMap = null;
@@ -1189,6 +1202,47 @@ function matchArticleToCountries(article) {
   }
 
   return matched;
+}
+
+// Patterns that indicate an article is NOT genuinely about a country's affairs
+const COUNTRY_NEWS_JUNK_PATTERNS = [
+  // Sports results — WBC, cricket, T20, soccer friendlies, qualifiers, club elections
+  /\b(?:wbc|world baseball classic|world cup qualifier|t20|cricket|odi|test match|ipl|serie a|la liga)\b/i,
+  /\b(?:beats?|defeats?|routs?|tops?|edges?|shuts? down|advances?|eliminates?)\b.*\b(?:in \d|[-–]\d|\d[-–])/i,
+  /\b(?:semifinal|quarterfinal|pool [a-d]|group stage|round of 16|championship game)\b/i,
+  /\bwins?\s+(?:gold|silver|bronze|medal|title|trophy|cup|race)\b/i,
+  // Crime in OTHER countries — "[nationality] man in [city]", deportation stories
+  /\b(?:arrested|charged|sentenced|deported|detained|accused)\b.*\b(?:in (?:new york|nyc|los angeles|chicago|miami|boston|london|toronto))\b/i,
+  /\bice\s+(?:arrests?|detains?|deports?)\b/i,
+  /\b(?:deported to|deportation to|deport\w+ from)\b/i,
+  // Archaeology / ancient history
+  /\b(?:ancient|3,?\d00-year|archaeological|excavat|pharaoh|mummy|artifact|tomb|ruins|fossil)\b/i,
+  // Pet stories
+  /\b(?:french bulldog|labrador|golden retriever|puppy learns|dog learns|cat learns|rescue animal)\b/i,
+  // Parade/festival in OTHER country
+  /\bst\.?\s*patrick'?s?\s+(?:day|parade)\b/i,
+  // Product reviews, travel guides, food
+  /\b(?:honest review|stayed at the|best hotels|travel guide|vacation in)\b/i,
+  // "Finalissima" type cancelled match stories (about the cancellation, not the country)
+  /\bfinalissima\b/i,
+  // Reindeer racing, cherry blossoms, etc — local color not geopolitics
+  /\b(?:reindeer racing|cherry blossom|sakura season)\b/i,
+];
+
+// Check if article is likely a false positive for country news
+function isCountryNewsFalsePositive(headline, countryName) {
+  const lower = (headline || '').toLowerCase();
+
+  // Check junk patterns
+  for (const pattern of COUNTRY_NEWS_JUNK_PATTERNS) {
+    if (pattern.test(lower)) return true;
+  }
+
+  // Check per-country false positive filters
+  const filter = COUNTRY_FALSE_POSITIVE_FILTERS[countryName];
+  if (filter && filter(lower)) return true;
+
+  return false;
 }
 
 // Build per-country news feeds and store in KV
@@ -1244,6 +1298,8 @@ async function buildCountryNewsFeeds(rawArticles, env) {
 
     for (const countryLower of countries) {
       const countryName = properCase[countryLower] || countryLower;
+      // Skip false positives (sports results, crime in other countries, etc.)
+      if (isCountryNewsFalsePositive(title, countryName)) continue;
       if (!countryFeeds[countryName]) countryFeeds[countryName] = [];
       countryFeeds[countryName].push({
         headline: title,
@@ -1314,6 +1370,13 @@ async function buildCountryNewsFeeds(rawArticles, env) {
 
   // Identify sparse countries for Google News supplement
   const sparse = [];
+  // CATASTROPHIC/EXTREME countries ALWAYS get supplemented if < 10 articles
+  const CRITICAL_COUNTRIES = new Set([
+    'Afghanistan', 'Ukraine', 'Iran', 'Israel', 'Palestine', 'Sudan', 'Myanmar',
+    'Haiti', 'Lebanon', 'DRC', 'Democratic Republic of Congo',
+    'Yemen', 'Syria', 'Somalia', 'Pakistan', 'North Korea', 'Taiwan',
+    'South Sudan', 'Burkina Faso', 'Niger', 'Mali', 'Cuba', 'Venezuela', 'Iraq'
+  ]);
   // Priority countries that should be supplemented first (active conflicts + high risk)
   const PRIORITY_COUNTRIES = new Set([
     'Sudan', 'Somalia', 'Libya', 'Jordan', 'Mozambique', 'Nigeria', 'Niger', 'Mali',
@@ -1323,32 +1386,55 @@ async function buildCountryNewsFeeds(rawArticles, env) {
     'North Korea', 'Taiwan', 'Venezuela', 'Mexico', 'Colombia', 'Ecuador',
     'Kenya', 'Uganda', 'Rwanda', 'Eritrea', 'Tunisia', 'Algeria', 'Egypt',
     'Saudi Arabia', 'Cuba', 'Nicaragua', 'Serbia', 'Kosovo', 'Georgia', 'Moldova',
-    'Armenia', 'Azerbaijan', 'Kazakhstan', 'Kyrgyzstan'
+    'Armenia', 'Azerbaijan', 'Kazakhstan', 'Kyrgyzstan', 'Kuwait',
+    'United Arab Emirates', 'Bahrain', 'Belarus', 'Bangladesh'
   ]);
   for (const country of Object.keys(COUNTRY_DEMONYMS)) {
     const count = (merged[country] || []).length;
-    if (count < 3) sparse.push(country);
+    // CATASTROPHIC/EXTREME: supplement if < 10 articles (every run)
+    if (CRITICAL_COUNTRIES.has(country) && count < 10) {
+      sparse.push(country);
+    // All others: supplement if < 3 articles
+    } else if (count < 3) {
+      sparse.push(country);
+    }
   }
-  // Sort: priority countries first, then by current article count (fewest first)
+  // Sort: critical countries first, then priority, then by article count
   sparse.sort((a, b) => {
+    const aCritical = CRITICAL_COUNTRIES.has(a) ? 0 : 1;
+    const bCritical = CRITICAL_COUNTRIES.has(b) ? 0 : 1;
+    if (aCritical !== bCritical) return aCritical - bCritical;
     const aPriority = PRIORITY_COUNTRIES.has(a) ? 0 : 1;
     const bPriority = PRIORITY_COUNTRIES.has(b) ? 0 : 1;
     if (aPriority !== bPriority) return aPriority - bPriority;
     return (merged[a] || []).length - (merged[b] || []).length;
   });
 
-  // Supplement sparse countries with Google News (limit to 30 per run)
+  // Supplement sparse countries with Google News (limit to 50 per run)
   if (sparse.length > 0) {
-    const toSupplement = sparse.slice(0, 30);
+    const toSupplement = sparse.slice(0, 50);
     console.log(`[Cron] Supplementing ${toSupplement.length}/${sparse.length} sparse countries with Google News`);
 
     const GOOGLE_SEARCH_QUALIFIERS = {
       'Georgia': 'Georgia country Caucasus Tbilisi',
-      'Chad': 'Chad country Africa',
+      'Chad': 'Chad country Africa N\'Djamena',
       'Jordan': 'Jordan country Middle East Amman',
-      'Niger': 'Niger country Africa Niamey',
+      'Niger': 'Niger country Africa Niamey Sahel',
       'Mali': 'Mali country Africa Bamako',
       'Guinea': 'Guinea country Africa Conakry',
+      'United Arab Emirates': 'UAE Dubai Abu Dhabi Emirati',
+      'Kuwait': 'Kuwait Middle East military',
+      'Saudi Arabia': 'Saudi Arabia Riyadh Aramco MBS',
+      'Syria': 'Syria Damascus Aleppo Idlib HTS',
+      'Yemen': 'Yemen Houthi Sanaa Aden war',
+      'Pakistan': 'Pakistan Islamabad Karachi military',
+      'Mexico': 'Mexico cartel Sheinbaum security',
+      'Palestine': 'Gaza Palestinian West Bank',
+      'Venezuela': 'Venezuela Maduro Caracas crisis',
+      'Libya': 'Libya Tripoli Benghazi Haftar',
+      'Ecuador': 'Ecuador Noboa security operations',
+      'Peru': 'Peru Lima Boluarte politics',
+      'Somaliland': 'Somaliland Hargeisa Horn of Africa',
     };
 
     const supplementResults = await Promise.allSettled(
@@ -1366,17 +1452,25 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       const feed = merged[country] || [];
       const existingHLs = new Set(feed.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
 
-      for (const art of articles.slice(0, 10)) {
-        const hl = (art.headline || art.title || '').toLowerCase().substring(0, 60);
+      for (const art of articles.slice(0, 15)) {
+        const title = art.headline || art.title || '';
+        const hl = title.toLowerCase().substring(0, 60);
         if (existingHLs.has(hl)) continue;
+        // Apply same filters as main pipeline
+        const artText = (title + ' ' + (art.description || '')).toLowerCase();
+        if (IRRELEVANT_KEYWORDS.some(kw => artText.includes(kw))) continue;
+        if (isCountryNewsFalsePositive(title, country)) continue;
+        // Non-English filter
+        const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
+        if (title.length > 10 && nonAscii / title.length > 0.15) continue;
         existingHLs.add(hl);
         feed.push({
-          headline: art.headline || art.title || '',
+          headline: title,
           source: art.source || 'Google News',
           description: (art.description || '').substring(0, 300),
           url: art.url || art.link || '',
           pubDate: art.pubDate || '',
-          category: detectCategory(art.headline || art.title || '', art.description || ''),
+          category: detectCategory(title, art.description || ''),
           importance: 'medium'
         });
       }
@@ -3643,6 +3737,14 @@ Return ONLY the JSON array, no other text.`;
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      // Map frontend country names to worker COUNTRY_DEMONYMS keys
+      const COUNTRY_ALIASES = {
+        'UAE': 'United Arab Emirates',
+        'DRC': 'Democratic Republic of Congo',
+        'Somaliland': 'Somaliland',
+        'Republic of Congo': 'Republic of Congo',
+      };
+      const resolvedCountry = COUNTRY_ALIASES[country] || country;
       try {
         const raw = await env.HEGEMON_CACHE.get('all_country_news');
         if (!raw) {
@@ -3652,7 +3754,7 @@ Return ONLY the JSON array, no other text.`;
           );
         }
         const allFeeds = JSON.parse(raw);
-        const articles = allFeeds[country] || [];
+        const articles = allFeeds[resolvedCountry] || allFeeds[country] || [];
         return new Response(
           JSON.stringify({ articles, country }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'max-age=120' } }
