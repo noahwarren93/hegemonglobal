@@ -490,6 +490,10 @@ export function loadNewsFromLocalStorage() {
 const NEWS_CACHE = {};
 const NEWS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes per country
 
+// Pre-computed country→articles map from DAILY_BRIEFING (populated on load)
+const COUNTRY_NEWS_PRECACHE = {};
+let _precacheReady = false;
+
 function getCachedNews(countryName) {
   const cached = NEWS_CACHE[countryName];
   if (cached && (Date.now() - cached.timestamp) < NEWS_CACHE_TTL) {
@@ -500,6 +504,46 @@ function getCachedNews(countryName) {
 
 function setCachedNews(countryName, data) {
   NEWS_CACHE[countryName] = { data, timestamp: Date.now() };
+}
+
+// Pre-compute country news from DAILY_BRIEFING — fast demonym matching only
+export function preComputeCountryNews() {
+  if (!DAILY_BRIEFING || DAILY_BRIEFING.length === 0) return;
+  const countryNames = Object.keys(COUNTRIES);
+
+  // Pre-compute lowercase text once per article
+  const prepared = DAILY_BRIEFING.map(a => ({
+    article: a,
+    text: ((a.title || a.headline || '') + ' ' + (a.description || '')).toLowerCase()
+  }));
+
+  for (const countryName of countryNames) {
+    const countryLower = countryName.toLowerCase();
+    const terms = COUNTRY_DEMONYMS[countryName] || [countryLower];
+    const allTerms = [countryLower, ...terms];
+    const termRegexes = allTerms.map(term =>
+      new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b')
+    );
+
+    const matches = [];
+    for (const p of prepared) {
+      if (termRegexes.some(rx => rx.test(p.text))) {
+        matches.push({
+          headline: p.article.title || p.article.headline,
+          source: formatSourceName(p.article.source_id || p.article.source || 'News'),
+          pubDate: p.article.pubDate || '',
+          url: p.article.link || p.article.url || '',
+          category: p.article.category || detectCategory(p.article.title || p.article.headline, p.article.description || ''),
+          qualityScore: scoreHeadlineQuality(p.article.title || p.article.headline)
+        });
+      }
+    }
+    if (matches.length > 0) {
+      COUNTRY_NEWS_PRECACHE[countryName] = matches;
+    }
+  }
+  _precacheReady = true;
+  console.log('[Hegemon] Country news precache ready:', Object.keys(COUNTRY_NEWS_PRECACHE).length, 'countries');
 }
 
 // ============================================================
@@ -1113,9 +1157,19 @@ async function tryNewsAPI(apiName, url, parseResults, timeoutMs = 8000) {
 
 export async function fetchCountryNews(countryName) {
 
-  // 1. Check cache
+  // 1. Check cache (full enriched cache from previous modal open)
   const cached = getCachedNews(countryName);
   if (cached) return cached;
+
+  // 1b. Serve precache instantly if available (DAILY_BRIEFING matches — no network wait)
+  if (_precacheReady && COUNTRY_NEWS_PRECACHE[countryName] && COUNTRY_NEWS_PRECACHE[countryName].length > 0) {
+    const precached = [...COUNTRY_NEWS_PRECACHE[countryName]];
+    // Cache these so subsequent opens are instant too
+    setCachedNews(countryName, precached);
+    // Enrich with network sources in background (updates cache for next open)
+    _enrichCountryNewsBackground(countryName, precached);
+    return precached;
+  }
 
   // Collect all matching articles from multiple sources
   const allArticles = [];
@@ -1203,6 +1257,45 @@ export async function fetchCountryNews(countryName) {
   console.log('[Hegemon] fetchCountryNews', countryName, '- total articles:', allArticles.length);
   setCachedNews(countryName, allArticles);
   return allArticles;
+}
+
+// Background enrichment — fetches network sources and updates cache silently
+async function _enrichCountryNewsBackground(countryName, precachedArticles) {
+  try {
+    const seenHeadlines = new Set(precachedArticles.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
+    const extra = [];
+    const addExtra = (article) => {
+      const h = (article.headline || '').toLowerCase().substring(0, 60);
+      if (seenHeadlines.has(h)) return;
+      seenHeadlines.add(h);
+      extra.push(article);
+    };
+
+    const AMBIGUOUS_SEARCH_QUALIFIERS = {
+      'Georgia': 'Georgia Caucasus Tbilisi country',
+      'Chad': 'Chad Africa N\'Djamena country',
+      'Jordan': 'Jordan Middle East Amman country',
+      'Mali': 'Mali Africa Bamako country',
+      'Niger': 'Niger Africa Niamey country',
+    };
+
+    // Google News RSS
+    try {
+      const searchQuery = AMBIGUOUS_SEARCH_QUALIFIERS[countryName] || (countryName + ' news');
+      const googleNewsUrl = RSS_FEEDS.search(searchQuery);
+      const articles = await fetchRSS(googleNewsUrl, 'Google News');
+      if (articles && articles.length > 0) {
+        formatArticlesForDisplay(articles, countryName).forEach(a => addExtra(a));
+      }
+    } catch { /* silent */ }
+
+    if (extra.length > 0) {
+      const merged = [...precachedArticles, ...extra];
+      setCachedNews(countryName, merged);
+    }
+  } catch {
+    // Background enrichment is best-effort
+  }
 }
 
 // Fetch news for non-state actor groups via Google News RSS
@@ -1515,6 +1608,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
     setTimeout(() => fetchCountryAnalyses(), 1000);
     setTimeout(() => fetchDataCorrections(), 1500);
+    setTimeout(() => preComputeCountryNews(), 1800);
     setTimeout(() => fetchTimelineUpdates(), 2000);
     setTimeout(() => pushCountrySnapshot(), 3000);
 
@@ -1719,6 +1813,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
 
       // Dynamic risk analysis (chunked, non-blocking)
       setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
+      setTimeout(() => preComputeCountryNews(), 1500);
 
       // Fetch only truly uncached summaries AFTER events are displayed
       setTimeout(() => fetchEventSummaries(), 2000);
