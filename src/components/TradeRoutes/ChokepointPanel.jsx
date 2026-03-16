@@ -7,6 +7,19 @@ const STATUS_COLORS = {
   CLOSED: '#ef4444',
   RESTRICTED: '#f59e0b',
   OPEN: '#22c55e',
+  DESTROYED: '#ef4444',
+};
+
+const TYPE_COLORS = {
+  maritime: '#3b82f6',
+  energy: '#f97316',
+  land: '#22c55e',
+};
+
+const TYPE_LABELS = {
+  maritime: 'Maritime Chokepoint',
+  energy: 'Energy Chokepoint',
+  land: 'Land Corridor',
 };
 
 export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
@@ -43,14 +56,16 @@ export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
   if (!isOpen || !chokepoint) return null;
 
   const statusColor = STATUS_COLORS[chokepoint.status] || '#6b7280';
+  const typeColor = TYPE_COLORS[chokepoint.type] || '#f59e0b';
+  const typeLabel = TYPE_LABELS[chokepoint.type] || 'Chokepoint';
 
   return (
     <div className="threat-group-panel active">
-      <div className="threat-group-header" style={{ borderBottom: '1px solid #f59e0b33' }}>
+      <div className="threat-group-header" style={{ borderBottom: `1px solid ${typeColor}33` }}>
         <div>
-          <div className="threat-group-name" style={{ color: '#f59e0b' }}>{chokepoint.name}</div>
-          <span className="threat-group-type-badge" style={{ background: '#f59e0b22', color: '#f59e0b', borderColor: '#f59e0b' }}>
-            Maritime Chokepoint
+          <div className="threat-group-name" style={{ color: typeColor }}>{chokepoint.name}</div>
+          <span className="threat-group-type-badge" style={{ background: typeColor + '22', color: typeColor, borderColor: typeColor }}>
+            {typeLabel}
           </span>
         </div>
         <button className="threat-group-close" onClick={onClose}>&times;</button>
@@ -101,13 +116,13 @@ export default function ChokepointPanel({ chokepoint, isOpen, onClose }) {
         </div>
 
         <div className="trade-section">
-          <div className="trade-section-title" style={{ color: '#f59e0b' }}>CURRENT DISRUPTIONS ({articles.length})</div>
+          <div className="trade-section-title" style={{ color: typeColor }}>CURRENT DISRUPTIONS ({articles.length})</div>
           {articles.length > 0 && articles.map((a, i) => (
             <div key={i} style={{ fontSize: '8.5px', color: '#d1d5db', padding: '3px 0', borderBottom: '1px solid #1f293744', lineHeight: 1.3 }}>
               <div>
                 {(a.url || a.link) ? (
                   <a href={a.url || a.link} target="_blank" rel="noopener noreferrer" style={{ color: '#d1d5db', textDecoration: 'none' }}
-                    onMouseEnter={e => { e.target.style.color = '#f59e0b'; }} onMouseLeave={e => { e.target.style.color = '#d1d5db'; }}>
+                    onMouseEnter={e => { e.target.style.color = typeColor; }} onMouseLeave={e => { e.target.style.color = '#d1d5db'; }}>
                     {a.headline || a.title}
                   </a>
                 ) : (a.headline || a.title)}

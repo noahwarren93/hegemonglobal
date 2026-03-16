@@ -1091,8 +1091,13 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     window.showChokepointTooltip = (cp, x, y) => {
       const tt = tradeTooltipRef.current;
       if (!tt) return;
+      const typeColors = { maritime: '#3b82f6', energy: '#f97316', land: '#22c55e' };
+      const cpColor = typeColors[cp.type] || '#f59e0b';
+      const typeLabels = { maritime: 'Maritime', energy: 'Energy', land: 'Land Corridor' };
+      const cpType = typeLabels[cp.type] || 'Chokepoint';
       tt.innerHTML =
-        '<div style="font-size:11px;font-weight:700;color:#f59e0b;">\u25C6 ' + cp.name + '</div>' +
+        '<div style="font-size:11px;font-weight:700;color:' + cpColor + ';">\u25C6 ' + cp.name + '</div>' +
+        '<div style="font-size:7px;color:' + cpColor + ';opacity:0.7;margin-top:1px;">' + cpType + '</div>' +
         '<div style="color:#9ca3af;font-size:9px;margin-top:3px;">' + (cp.tooltipLine || cp.summary) + '</div>';
       tt.style.display = 'block';
       const offset = 15;

@@ -16,6 +16,7 @@ import MilitaryCountryPopup from '../components/Military/MilitaryCountryPopup';
 import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
 import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
 import ChokepointPanel from '../components/TradeRoutes/ChokepointPanel';
+import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
 import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS } from '../data/threatGroupData';
 
@@ -346,6 +347,10 @@ export default function HomePage() {
   const [selectedChokepoint, setSelectedChokepoint] = useState(null);
   const [chokepointPanelOpen, setChokepointPanelOpen] = useState(false);
 
+  // --- Trade info panel (country trade data when trade routes active) ---
+  const [tradeInfoCountry, setTradeInfoCountry] = useState(null);
+  const [tradeInfoPanelOpen, setTradeInfoPanelOpen] = useState(false);
+
   // --- Search ---
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -542,6 +547,13 @@ export default function HomePage() {
     // Non-state actors mode: block all country interactions
     if (threatGroupsActive) return;
 
+    // Trade routes mode: show trade info panel instead of country modal
+    if (tradeRoutesActive) {
+      setTradeInfoCountry(countryName);
+      setTradeInfoPanelOpen(true);
+      return;
+    }
+
     // Compare mode: toggle or add to comparison (matching original addCountryToCompare)
     if (compareMode) {
       setCompareCountries(prev => {
@@ -558,10 +570,10 @@ export default function HomePage() {
       return;
     }
 
-    // Default: open country modal (works in normal mode and trade routes mode)
+    // Default: open country modal
     setSelectedCountry(countryName);
     setModalOpen(true);
-  }, [compareMode, militaryMode, threatGroupsActive]);
+  }, [compareMode, militaryMode, threatGroupsActive, tradeRoutesActive]);
 
   // Open modal by type
   // Open stocks detail modal
@@ -598,6 +610,8 @@ export default function HomePage() {
       hideTradeRoutes();
       setChokepointPanelOpen(false);
       setSelectedChokepoint(null);
+      setTradeInfoPanelOpen(false);
+      setTradeInfoCountry(null);
     }
   }, [tradeRoutesActive, militaryMode, threatGroupsActive, showTradeRoutes, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
@@ -767,6 +781,7 @@ export default function HomePage() {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
+        if (tradeInfoPanelOpen) { setTradeInfoPanelOpen(false); setTradeInfoCountry(null); return; }
         if (chokepointPanelOpen) { setChokepointPanelOpen(false); setSelectedChokepoint(null); return; }
         if (threatGroupPanelOpen) { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); return; }
         if (milCountryPopupOpen) { setMilCountryPopupOpen(false); setMilCountryPopupName(null); return; }
@@ -784,7 +799,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, chokepointPanelOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen]);
+  }, [searchOpen, tradeInfoPanelOpen, chokepointPanelOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen]);
 
   // ============================================================
   // Render
@@ -845,8 +860,8 @@ export default function HomePage() {
             onToggleThreatGroups={handleToggleThreatGroups}
           />
 
-          {/* Risk Legend (hidden when non-state actors overlay is active) */}
-          {!threatGroupsActive && <RiskLegend />}
+          {/* Risk Legend (hidden when non-state actors or trade routes overlay is active) */}
+          {!threatGroupsActive && !tradeRoutesActive && <RiskLegend />}
 
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">
@@ -946,6 +961,32 @@ export default function HomePage() {
             isOpen={chokepointPanelOpen}
             onClose={() => { setChokepointPanelOpen(false); setSelectedChokepoint(null); }}
           />
+
+          {/* Trade Info Panel (country trade data when trade routes active) */}
+          <TradeInfoPanel
+            country={tradeInfoCountry}
+            isOpen={tradeInfoPanelOpen}
+            onClose={() => { setTradeInfoPanelOpen(false); setTradeInfoCountry(null); }}
+          />
+
+          {/* Trade Routes Legend */}
+          {tradeRoutesActive && (
+            <div className="threat-legend" style={{ bottom: '60px' }}>
+              <div className="threat-legend-title" style={{ color: '#06b6d4' }}>CHOKEPOINTS</div>
+              <div className="threat-legend-item">
+                <div className="threat-legend-dot" style={{ background: '#3b82f6', borderRadius: 0, transform: 'rotate(45deg)', width: 7, height: 7 }} />
+                Maritime
+              </div>
+              <div className="threat-legend-item">
+                <div className="threat-legend-dot" style={{ background: '#f97316', borderRadius: 0, transform: 'rotate(45deg)', width: 7, height: 7 }} />
+                Energy
+              </div>
+              <div className="threat-legend-item">
+                <div className="threat-legend-dot" style={{ background: '#22c55e', borderRadius: 0, transform: 'rotate(45deg)', width: 7, height: 7 }} />
+                Land Corridor
+              </div>
+            </div>
+          )}
 
           {/* Threat Groups Legend */}
           {threatGroupsActive && (

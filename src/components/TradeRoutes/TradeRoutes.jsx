@@ -32,7 +32,11 @@ const COORD_FALLBACKS = {
   'Singapore': { lat: 1.35, lng: 103.82 },
   'Qatar': { lat: 25.29, lng: 51.53 },
   'Nigeria': { lat: 9.08, lng: 7.49 },
-  'South Africa': { lat: -25.75, lng: 28.23 }
+  'South Africa': { lat: -25.75, lng: 28.23 },
+  'Chile': { lat: -33.45, lng: -70.67 },
+  'Peru': { lat: -12.05, lng: -77.04 },
+  'Norway': { lat: 59.91, lng: 10.75 },
+  'Azerbaijan': { lat: 40.41, lng: 49.87 },
 };
 
 function getCountryCoords(name) {
@@ -54,6 +58,13 @@ function createArcPoints(start, end, segs = 50, h = 0.15) {
   }
   return pts;
 }
+
+// Chokepoint type colors
+const CHOKEPOINT_COLORS = {
+  maritime: 0x3b82f6,  // blue
+  energy: 0xf97316,    // orange
+  land: 0x22c55e,      // green
+};
 
 // ============================================================
 // Trade Routes Manager (imperative Three.js)
@@ -190,11 +201,12 @@ export function useTradeRoutes() {
       }
     });
 
-    // Chokepoint diamond markers
+    // Chokepoint diamond markers — color-coded by type
     chokepointMeshesRef.current = [];
     CHOKEPOINTS.forEach(cp => {
+      const color = CHOKEPOINT_COLORS[cp.type] || 0xf59e0b;
       const geom = new THREE.OctahedronGeometry(0.03);
-      const mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+      const mat = new THREE.MeshBasicMaterial({ color });
       const mesh = new THREE.Mesh(geom, mat);
       const pos = latLngToVector3(cp.lat, cp.lng, 1.035);
       mesh.position.copy(pos);
