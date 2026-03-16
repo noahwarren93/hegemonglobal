@@ -1296,6 +1296,18 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       }
     }
 
+    // Search by region (e.g., "Middle East", "Africa", "South Asia")
+    for (const [name, cd] of Object.entries(COUNTRIES)) {
+      if (cd.region && cd.region.toLowerCase().includes(q)) {
+        const regionLower = cd.region.toLowerCase();
+        const score = regionLower === q ? 6 : (regionLower.startsWith(q) ? 3 : 1);
+        const existing = matches.get(name);
+        if (!existing || score > existing.score) {
+          matches.set(name, { score, matchedCity: null, cityRisk: null, matchedTerm: cd.region });
+        }
+      }
+    }
+
     return [...matches.entries()]
       .sort((a, b) => b[1].score - a[1].score)
       .slice(0, 8)
