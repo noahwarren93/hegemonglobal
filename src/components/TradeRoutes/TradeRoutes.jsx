@@ -66,6 +66,7 @@ export function useTradeRoutes() {
   const tradeAnimFrame = useRef(null);
   const highlightedCountryRef = useRef(null);
   const chokepointMeshesRef = useRef([]);
+  const hiddenDotsRef = useRef([]);
 
   const startTradeAnimation = useCallback(() => {
     if (tradeAnimFrame.current) cancelAnimationFrame(tradeAnimFrame.current);
@@ -85,13 +86,6 @@ export function useTradeRoutes() {
           p.y + (np.y - p.y) * frac,
           p.z + (np.z - p.z) * frac
         );
-      });
-      // Pulse chokepoint markers
-      const pulse = 1.0 + 0.25 * Math.sin(Date.now() * 0.003);
-      const opPulse = 0.7 + 0.25 * Math.sin(Date.now() * 0.003);
-      chokepointMeshesRef.current.forEach(m => {
-        m.scale.set(pulse, pulse, pulse);
-        if (m.material) m.material.opacity = opPulse;
       });
     }
     animateDots();
@@ -115,6 +109,11 @@ export function useTradeRoutes() {
       });
       tradeRouteGroup.current = null;
     }
+    // Restore hidden country dots
+    for (const child of hiddenDotsRef.current) {
+      child.visible = true;
+    }
+    hiddenDotsRef.current = [];
     tradeRouteMeshes.current = [];
     tradeDotGroups.current = [];
     chokepointMeshesRef.current = [];
@@ -127,6 +126,17 @@ export function useTradeRoutes() {
     if (!globeView?.globe || !globeView?.scene) return;
 
     hideTradeRoutes();
+
+    // Hide country dots, rings, and conflict zones (same as Military overlay)
+    const hidden = [];
+    for (const child of globeView.globe.children) {
+      if (child.isMesh && !child.userData.militaryBase) {
+        child.visible = false;
+        hidden.push(child);
+      }
+    }
+    hiddenDotsRef.current = hidden;
+
     tradeRouteGroup.current = new THREE.Group();
     tradeRouteMeshes.current = [];
     tradeDotGroups.current = [];
@@ -184,7 +194,7 @@ export function useTradeRoutes() {
     chokepointMeshesRef.current = [];
     CHOKEPOINTS.forEach(cp => {
       const geom = new THREE.OctahedronGeometry(0.03);
-      const mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 });
+      const mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
       const mesh = new THREE.Mesh(geom, mat);
       const pos = latLngToVector3(cp.lat, cp.lng, 1.035);
       mesh.position.copy(pos);

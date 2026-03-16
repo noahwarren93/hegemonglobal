@@ -1091,13 +1091,9 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     window.showChokepointTooltip = (cp, x, y) => {
       const tt = tradeTooltipRef.current;
       if (!tt) return;
-      const statusColor = cp.status === 'CLOSED' ? '#ef4444' : cp.status === 'RESTRICTED' ? '#f59e0b' : '#22c55e';
       tt.innerHTML =
-        '<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:#f59e0b;">\u25C6 ' + cp.name + '</div>' +
-        '<div style="color:#d1d5db;margin-bottom:6px;font-size:9px;">' + cp.summary.slice(0, 120) + '...</div>' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Status:</span><span style="color:' + statusColor + ';font-weight:600;">' + cp.status + '</span></div>' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Daily Vessels:</span><span style="color:#e5e7eb;font-weight:600;">' + cp.dailyVessels + '</span></div>' +
-        '<div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Oil Volume:</span><span style="color:#e5e7eb;font-weight:600;">' + cp.oilVolume + '</span></div>';
+        '<div style="font-size:11px;font-weight:700;color:#f59e0b;">\u25C6 ' + cp.name + '</div>' +
+        '<div style="color:#9ca3af;font-size:9px;margin-top:3px;">' + (cp.tooltipLine || cp.summary) + '</div>';
       tt.style.display = 'block';
       const offset = 15;
       const vw = window.innerWidth;
@@ -1114,9 +1110,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       tt.style.top = posTop + 'px';
     };
     window.hideChokepointTooltip = () => {
-      // Only hide if not showing a trade route tooltip
       const tt = tradeTooltipRef.current;
-      if (tt && tt.innerHTML.includes('\u25C6')) tt.style.display = 'none';
+      if (tt) tt.style.display = 'none';
     };
     return () => {
       delete window.showChokepointTooltip;

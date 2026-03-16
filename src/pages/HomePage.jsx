@@ -9,7 +9,6 @@ import { loadStockData } from '../services/stocksService';
 
 import GlobeView from '../components/Globe/GlobeView';
 import Sidebar from '../components/Sidebar/Sidebar';
-import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useTradeRoutes } from '../components/TradeRoutes/TradeRoutes';
 import MilitaryInfoPanel from '../components/Military/MilitaryInfoPanel';
 import MilitaryBasesPanel from '../components/Military/MilitaryBasesPanel';
@@ -329,8 +328,6 @@ export default function HomePage() {
 
   // --- Trade routes ---
   const [tradeRoutesActive, setTradeRoutesActive] = useState(false);
-  const [tradeInfoCountry, setTradeInfoCountry] = useState(null);
-  const [tradeInfoOpen, setTradeInfoOpen] = useState(false);
 
   // --- Military overlay ---
   const [militaryMode, setMilitaryMode] = useState(false);
@@ -377,7 +374,7 @@ export default function HomePage() {
   const [currentDate, setCurrentDate] = useState('');
 
   // --- Trade routes hook ---
-  const { showTradeRoutes, hideTradeRoutes, handleTradeClick, highlightedCountryRef } = useTradeRoutes();
+  const { showTradeRoutes, hideTradeRoutes } = useTradeRoutes();
 
   // --- Military overlay hook ---
   const { showMilitary, hideMilitary } = useMilitaryOverlay();
@@ -561,25 +558,10 @@ export default function HomePage() {
       return;
     }
 
-    // Trade routes mode: highlight country routes
-    if (tradeRoutesActive) {
-      const result = handleTradeClick(countryName, true);
-      if (result) {
-        if (result.highlighted) {
-          setTradeInfoCountry(countryName);
-          setTradeInfoOpen(true);
-        } else {
-          setTradeInfoCountry(null);
-          setTradeInfoOpen(false);
-        }
-        return;
-      }
-    }
-
-    // Default: open country modal
+    // Default: open country modal (works in normal mode and trade routes mode)
     setSelectedCountry(countryName);
     setModalOpen(true);
-  }, [compareMode, tradeRoutesActive, militaryMode, threatGroupsActive, handleTradeClick]);
+  }, [compareMode, militaryMode, threatGroupsActive]);
 
   // Open modal by type
   // Open stocks detail modal
@@ -614,8 +596,6 @@ export default function HomePage() {
       showTradeRoutes();
     } else {
       hideTradeRoutes();
-      setTradeInfoCountry(null);
-      setTradeInfoOpen(false);
       setChokepointPanelOpen(false);
       setSelectedChokepoint(null);
     }
@@ -634,8 +614,6 @@ export default function HomePage() {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
         hideTradeRoutes();
-        setTradeInfoCountry(null);
-        setTradeInfoOpen(false);
       }
       if (militaryMode) {
         setMilitaryMode(false);
@@ -666,8 +644,6 @@ export default function HomePage() {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
         hideTradeRoutes();
-        setTradeInfoCountry(null);
-        setTradeInfoOpen(false);
       }
       if (compareMode) {
         setCompareMode(false);
@@ -701,8 +677,6 @@ export default function HomePage() {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
         hideTradeRoutes();
-        setTradeInfoCountry(null);
-        setTradeInfoOpen(false);
       }
       if (compareMode) {
         setCompareMode(false);
@@ -801,7 +775,6 @@ export default function HomePage() {
         if (stocksModalOpen) { setStocksModalOpen(false); return; }
         if (modalOpen) { setModalOpen(false); return; }
         if (tosOpen) { setTosOpen(false); return; }
-        if (tradeInfoOpen) { setTradeInfoOpen(false); return; }
       }
       // Ctrl/Cmd+K for search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -811,7 +784,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, chokepointPanelOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, chokepointPanelOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen]);
 
   // ============================================================
   // Render
@@ -937,21 +910,6 @@ export default function HomePage() {
             isOpen={searchOpen}
             onClose={() => setSearchOpen(false)}
             onSelect={handleCountryClick}
-          />
-
-          {/* Trade Info Panel */}
-          <TradeInfoPanel
-            country={tradeInfoCountry}
-            isOpen={tradeInfoOpen}
-            onClose={() => {
-              setTradeInfoOpen(false);
-              setTradeInfoCountry(null);
-              // Reset trade routes to full visibility (undo highlight dimming)
-              if (tradeRoutesActive) {
-                highlightedCountryRef.current = null;
-                showTradeRoutes();
-              }
-            }}
           />
 
           {/* Military Bases List Panel */}
