@@ -860,8 +860,8 @@ const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|fo
 // excludeWords: if ANY of these appear, article is NOT about the country
 const AMBIGUOUS_COUNTRIES = {
   'Chad': {
-    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan', 'border with chad', 'chad border'],
-    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman']
+    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan', 'border with chad', 'chad border', 'abeche', 'moundou', 'sarh', 'faya', 'tibesti', 'kanem', 'wadai', 'ouaddai', 'zakouma', 'minusma', 'g5 sahel', 'chadian troops', 'chadian army', 'multinational joint task force'],
+    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman', 'chad wolf', 'chad daybell', 'chad kroeger', 'chad reed', 'chad hurley', 'chad powers', 'chad le clos', 'chad daniels', 'chad green', 'chad bettis', 'chad pennington', 'chad brown']
   },
   'Jordan': {
     contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra', 'aqaba', 'zarqa', 'irbid', 'arab league'],

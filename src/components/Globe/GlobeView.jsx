@@ -183,6 +183,22 @@ const COUNTRY_ANCHORS = {
     { lat: 19, lng: 30 },       // Northern
     { lat: 10, lng: 32 },       // Southern
   ],
+  'Vietnam': [
+    { lat: 21, lng: 106 },      // Hanoi
+    { lat: 16, lng: 108 },      // Da Nang
+    { lat: 11, lng: 107 },      // Ho Chi Minh City
+  ],
+  'Chile': [
+    { lat: -33, lng: -71 },     // Santiago
+    { lat: -23, lng: -70 },     // Atacama
+    { lat: -39, lng: -72 },     // Southern
+    { lat: -50, lng: -73 },     // Patagonia
+  ],
+  'Norway': [
+    { lat: 60, lng: 5 },        // Bergen
+    { lat: 69, lng: 18 },       // Tromsø
+    { lat: 63, lng: 10 },       // Trondheim
+  ],
 };
 
 // Distance helper (degrees, dateline-aware)
@@ -328,6 +344,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
   const [tooltipData, setTooltipData] = useState(null);
   const [mousePos, setMousePos] = useState(null);
   const tradeTooltipRef = useRef(null);
+  const borderLinesRef = useRef(null);
+  const [bordersVisible, setBordersVisible] = useState(true);
 
   // --------------------------------------------------------
   // Smooth reset view animation
@@ -544,6 +562,51 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     // Conflict zone overlays
     addConflictZones(globe, latLngToVector3);
 
+    // ---- Country borders (fetched from TopoJSON, dual-layer LineSegments for visible thickness) ----
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(r => r.json())
+      .then(topo => {
+        if (!topo.arcs || !topo.transform) return;
+        const { scale, translate } = topo.transform;
+        const arcs = topo.arcs.map(arc => {
+          let x = 0, y = 0;
+          return arc.map(([dx, dy]) => {
+            x += dx; y += dy;
+            return [x * scale[0] + translate[0], y * scale[1] + translate[1]];
+          });
+        });
+        // Three-layer borders: dark outline + two cyan layers for visibility on any terrain
+        // All radii below country dots (1.02) so dots always render on top
+        const borderGroup = new THREE.Group();
+        const layers = [
+          { radius: 1.002, color: 0x0a0a1a, transparent: true, opacity: 0.5 },
+          { radius: 1.003, color: 0x06b6d4, transparent: false },
+          { radius: 1.005, color: 0x06b6d4, transparent: false },
+        ];
+        layers.forEach((layer) => {
+          const verts = [];
+          for (let a = 0; a < arcs.length; a++) {
+            const arc = arcs[a];
+            for (let i = 0; i < arc.length - 1; i++) {
+              const p1 = latLngToVector3(arc[i][1], arc[i][0], layer.radius);
+              const p2 = latLngToVector3(arc[i + 1][1], arc[i + 1][0], layer.radius);
+              verts.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+            }
+          }
+          const geom = new THREE.BufferGeometry();
+          geom.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+          const matOpts = { color: layer.color, transparent: layer.transparent, depthTest: true };
+          if (layer.opacity !== undefined) matOpts.opacity = layer.opacity;
+          const lines = new THREE.LineSegments(geom, new THREE.LineBasicMaterial(matOpts));
+          lines.renderOrder = 1;
+          borderGroup.add(lines);
+        });
+        borderLinesRef.current = borderGroup;
+        globe.add(borderGroup);
+        console.log('[Hegemon] Country borders loaded:', arcs.length, 'arcs (3-layer)');
+      })
+      .catch(err => { console.error('[Hegemon] Failed to load country borders:', err); });
+
     // Core click logic — shared by mouse click and touch tap
     // Click a dot directly or click the general area around it to open that country
     function handleCountrySelection(clientX, clientY) {
@@ -613,14 +676,27 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         }
       }
 
-      // 1) Direct marker hit — always wins
+      // 1) Direct marker hit — pick the dot whose CENTER is closest to the click ray
+      //    This prevents large dots (catastrophic) from blocking clicks on nearby smaller dots
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
-        const clickedName = intersects[0].object.userData.name;
-        if (clickedName && onCountryClickRef.current) {
-          onCountryClickRef.current(clickedName);
+        let bestName = null;
+        let bestDist = Infinity;
+        for (let i = 0; i < intersects.length; i++) {
+          const obj = intersects[i].object;
+          if (!obj.userData.name) continue;
+          const center = obj.position.clone();
+          globe.localToWorld(center);
+          const dist = raycaster.ray.distanceToPoint(center);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestName = obj.userData.name;
+          }
         }
-        return clickedName;
+        if (bestName && onCountryClickRef.current) {
+          onCountryClickRef.current(bestName);
+        }
+        return bestName;
       }
 
       // 2) Globe surface hit — find nearest country with generous radius
@@ -802,6 +878,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // ---- Click ----
     function handleClick(event) {
+      if (event.target.closest && event.target.closest('.globe-bottom-controls')) return;
       clickSuppressUntil = Date.now() + 200;
 
       // Check if this was a drag (skip click after drag)
@@ -816,6 +893,8 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // ---- Double-click on empty space → reset view ----
     function handleDblClick(event) {
+      // Ignore clicks on UI controls overlaid on the globe
+      if (event.target.closest && event.target.closest('.globe-bottom-controls')) return;
       const rect = renderer.domElement.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -856,6 +935,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
 
     // ---- Mouse drag rotation ----
     function handleMouseDown(e) {
+      if (e.target.closest && e.target.closest('.globe-bottom-controls')) return;
       isDraggingRef.current = true;
       velocityRef.current = { x: 0, y: 0 };
       prevMouseRef.current = { x: e.clientX, y: e.clientY };
@@ -928,7 +1008,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     function handleWheel(e) {
       e.preventDefault();
       if (!camera) return;
-      const delta = e.deltaY * 0.002;
+      const delta = e.deltaY * 0.004;
       camera.position.z = Math.max(1.5, Math.min(5.0, camera.position.z + delta));
     }
 
@@ -1130,18 +1210,36 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         <div className="globe-spinner" />
       </div>
       <Tooltip data={tooltipData} mousePos={mousePos} />
-      {/* Reset Button */}
-      <button
-        className="globe-reset-btn"
-        onClick={resetView}
-        title="Reset View"
-      >
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12a9 9 0 1 1 3 6.9"/>
-          <polyline points="3 22 3 12 13 12"/>
-        </svg>
-        Reset
-      </button>
+      {/* Globe bottom-right controls */}
+      <div className="globe-bottom-controls" onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onDoubleClick={e => e.stopPropagation()}>
+        <button
+          className={`globe-reset-btn${bordersVisible ? ' active' : ''}`}
+          onClick={() => {
+            const next = !bordersVisible;
+            setBordersVisible(next);
+            if (borderLinesRef.current) borderLinesRef.current.visible = next;
+          }}
+          title="Toggle Borders"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="12" y1="3" x2="12" y2="21"/>
+          </svg>
+          Borders
+        </button>
+        <button
+          className="globe-reset-btn"
+          onClick={resetView}
+          title="Reset View"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 1 3 6.9"/>
+            <polyline points="3 22 3 12 13 12"/>
+          </svg>
+          Reset
+        </button>
+      </div>
       <div
         ref={tradeTooltipRef}
         id="tradeTooltip"

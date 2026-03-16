@@ -75,8 +75,9 @@
       .globe-tool-btn-labeled { width: auto; height: 32px; padding: 4px 8px; font-size: 7px; gap: 3px; min-height: 32px; }
       .globe-tool-btn-labeled svg { width: 10px; height: 10px; }
 
-      /* Reset button - bottom right, above tab bar */
-      .globe-reset-btn { right: 8px; bottom: 38px; padding: 4px 8px; font-size: 7px; height: 28px; min-height: 28px; display: flex; align-items: center; }
+      /* Bottom controls - bottom right, above tab bar */
+      .globe-bottom-controls { right: 8px; bottom: 38px; gap: 4px; }
+      .globe-reset-btn { padding: 3px 6px; font-size: 7px; height: 26px; min-height: 26px; display: flex; align-items: center; gap: 3px; }
       .globe-reset-btn svg { width: 8px; height: 8px; }
 
       /* Status bar — compact on mobile to reduce gap below tabs */
@@ -167,8 +168,9 @@
       .globe-tool-btn-labeled { height: 28px; padding: 3px 6px; font-size: 6px; gap: 2px; min-height: 28px; }
       .globe-tool-btn-labeled svg { width: 9px; height: 9px; }
 
-      /* Reset button — compact, above tab bar */
-      .globe-reset-btn { right: 6px; bottom: 32px; padding: 3px 6px; font-size: 6px; height: 24px; min-height: 24px; }
+      /* Bottom controls — compact, above tab bar */
+      .globe-bottom-controls { right: 6px; bottom: 32px; gap: 3px; }
+      .globe-reset-btn { padding: 2px 5px; font-size: 6px; height: 22px; min-height: 22px; gap: 2px; }
       .globe-reset-btn svg { width: 7px; height: 7px; }
 
       /* Mobile Feature Buttons — compact on small screens, no overlap with right buttons */
@@ -185,4 +187,20 @@
 
       /* Threat group panel — slightly less max height on small phones */
       .threat-group-panel { max-height: 38vh; }
+    }
+
+    /* === Short viewport: prevent stats/controls overlap === */
+    @media (max-height: 700px) {
+      .globe-bottom-controls { bottom: 10px; right: 10px; gap: 4px; }
+      .globe-reset-btn { padding: 3px 6px; font-size: 8px; height: 24px; min-height: 24px; }
+      .globe-reset-btn svg { width: 8px; height: 8px; }
+      .stats { bottom: 10px; }
+      .stat-card { padding: 6px 8px; min-width: 50px; }
+      .stat-value { font-size: 14px; }
+      .stat-label { font-size: 6px; }
+    }
+
+    @media (max-height: 700px) and (max-width: 1100px) {
+      .globe-bottom-controls { bottom: 8px; flex-direction: column; gap: 3px; }
+      .stats { max-width: calc(100% - 100px); }
     }
