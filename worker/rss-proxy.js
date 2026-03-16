@@ -1170,9 +1170,15 @@ const COUNTRY_FALSE_POSITIVE_FILTERS = {
     const hasNigerSpecific = /\bniamey|nigerien|niger republic|tiani|niger\s+(?:military|junta|coup|sahel)\b/i.test(text);
     return hasNigeria && !hasNigerSpecific;
   },
+  // Denmark: exclude US domestic stories (Denmark is a town name in several US states)
+  'Denmark': (text) => {
+    const hasUSDenmark = /\b(?:virginia|south carolina|wisconsin|maine)\b/i.test(text);
+    const hasDenmarkCountry = /\b(?:danish|copenhagen|danish government|frederiksen|greenland|nordic)\b/i.test(text);
+    return hasUSDenmark && !hasDenmarkCountry;
+  },
   // Panama: exclude US "Panama City Beach" / Florida references
   'Panama': (text) => {
-    const hasUSPanama = /\bpanama city beach|panama city[,\s]+fl|panhandle|bay county|gulf coast.*panama|waffle house.*panama|panama city news herald|panama city.*florida|dolphins.*panhandle|daylight saving.*panama|ten bay|bay restaurants/i.test(text);
+    const hasUSPanama = /\bpanama city beach|panama city[,\s]+fl|panhandle|bay county|gulf coast.*panama|waffle house.*panama|panama city news herald|panama city.*florida|dolphins.*panhandle|daylight saving.*panama|ten bay|bay restaurants|school merger.*panama|panama.*school merger|panama emphasizes support/i.test(text);
     const hasPanamaCountry = /\bpanama canal|mulino|darien|panamanian|latin america|central america/i.test(text);
     return hasUSPanama && !hasPanamaCountry;
   },
@@ -1237,7 +1243,7 @@ const COUNTRY_NEWS_JUNK_PATTERNS = [
   /\b(?:classic final|advances in|nailbiter|shuts down.*stars|team usa advances|advances to final)\b/i,
   /\b(?:club election|club president|elected president of)\b/i,
   /\b(?:wickets?|bowled|innings|pitching|batting|run chase|lbw|stumped|maiden over|six-wicket)\b/i,
-  /\b(?:striker|goalkeeper|midfielder|hat-?trick|penalty kick|red card|yellow card|offside|stoppage time)\b/i,
+  /\b(?:striker|goalkeeper|midfielder|hat-?trick|penalty kick|red card|yellow card|offside|stoppage time|earns high rating|player rating)\b/i,
   // Crime in OTHER countries — "[nationality] man in [city/county]", deportation stories
   /\b(?:arrested|charged|sentenced|deported|detained|accused|seized|smuggling)\b.*\b(?:in (?:new york|nyc|los angeles|chicago|miami|boston|london|toronto|houston|dallas|phoenix|san antonio|san diego|philadelphia|ohio|texas|florida|california|stark county|cuyahoga|hamilton county))\b/i,
   /\bice\s+(?:arrests?|detains?|deports?)\b/i,
@@ -1266,6 +1272,18 @@ const COUNTRY_NEWS_JUNK_PATTERNS = [
   // Weather forecasts (not weather disasters)
   /\b(?:weather forecast|pollen forecast|5-day forecast|7-day forecast|10-day forecast|hourly forecast|weekend forecast)\b/i,
   /\b(?:msn weather|accuweather|weather\.com)\b/i,
+  // Wine/food/lifestyle
+  /\b(?:wine pairing|dessert pairing|best wines)\b/i,
+  // Art exhibits / gallery (not geopolitics)
+  /\b(?:art exhibit|gallery opening|exhibits work)\b/i,
+  // School board / merger (US local governance, not country news)
+  /\b(?:school merger|school board)\b/i,
+  // MLS / US domestic sports with "signs" pattern
+  /\b(?:sporting kc|sporting kansas|mls)\b.*\bsigns?\b/i,
+  // ROTC / US military domestic
+  /\brotc\b.*\b(?:killed|instructor|cadet)\b/i,
+  // Headlines that are just dates (no content)
+  /^(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4}$/i,
 ];
 
 // Sources that should never appear in country news feeds (encyclopedias, reference)
@@ -1437,6 +1455,15 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       if (isCountryNewsFalsePositive(hl, country, a.source)) return false;
       const artUrl = (a.url || '').toLowerCase();
       if (/britannica\.com|encyclopedia|wikipedia\.org|accuweather\.com|weather\.com/.test(artUrl)) return false;
+      // Targeted purge: specific mismatched articles from KV
+      const countryLower = country.toLowerCase();
+      const hlLower = hl.toLowerCase();
+      // Germany: Ghana articles (GhanaWeb sports match on "Berlin" in "Union Berlin")
+      if (countryLower === 'germany' && /\bghana\b/i.test(hl) && !/\bgerman|bundestag|bundeswehr\b/i.test(hlLower)) return false;
+      // UK: parliament articles about other countries (old "parliament" demonym)
+      if (countryLower === 'united kingdom' && /\bparliament|westminster\b/i.test(hlLower) && /\bmyanmar|vietnam|kyrgyzstan|azerbaijan|indonesia|kenya|nigeria|uganda|india\b/i.test(hlLower) && !/\buk|britain|british|london|starmer\b/i.test(hlLower)) return false;
+      // Angola: Sporting KC / MLS
+      if (countryLower === 'angola' && /\bsporting kc|sporting kansas|mls\b/i.test(hlLower)) return false;
       return true;
     });
 
