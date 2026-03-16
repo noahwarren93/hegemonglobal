@@ -162,6 +162,9 @@ export const SOURCE_BLOCKLIST = new Set([
   'kayak', 'expedia', 'lonely planet', 'travel + leisure', 'condé nast traveler',
   // Gaming
   'ign', 'gamespot', 'kotaku', 'polygon', 'pc gamer',
+  // TV listings / schedules
+  'tv guide', 'tvguide', 'tv insider', 'tv tonight', 'zap2it', 'tv passport',
+  'digiguide', 'on tv tonight', 'what to watch', 'tvline',
   // Travel content
   'travel and tour world', 'travelandtourworld',
 ]);

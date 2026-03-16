@@ -506,16 +506,33 @@ function setCachedNews(countryName, data) {
   NEWS_CACHE[countryName] = { data, timestamp: Date.now() };
 }
 
-// Pre-compute country news from DAILY_BRIEFING — fast demonym matching only
+// Geopolitical priority scoring — higher = more geopolitically relevant
+const GEO_PRIORITY_RE = /\b(tariff|nato|military|sanction|trade war|trade deal|diplomat|summit|war|conflict|treaty|election|coup|protest|nuclear|missile|invasion|ceasefire|embargo|annex|occupation|insurgent|terrorism|rebel|drone strike|airstrikes|genocide|ethnic cleansing|refugee|humanitarian|famine|blockade|arms deal|defense pact|intelligence|espionage|cyber attack|assassination|martial law)\b/i;
+const DOMESTIC_NOISE_RE = /\b(arrested|robbery|car crash|drunk driving|house fire|local police|missing person|obituary|real estate|weather forecast|recipe|horoscope|lottery|pet|wedding|birthday|graduation|prom)\b/i;
+
+function scoreGeoPriority(headline) {
+  const lower = (headline || '').toLowerCase();
+  let score = 0;
+  if (GEO_PRIORITY_RE.test(lower)) score += 10;
+  if (DOMESTIC_NOISE_RE.test(lower)) score -= 5;
+  score += scoreHeadlineQuality(headline);
+  return score;
+}
+
+// Pre-compute country news from DAILY_BRIEFING — fast demonym matching
 export function preComputeCountryNews() {
   if (!DAILY_BRIEFING || DAILY_BRIEFING.length === 0) return;
   const countryNames = Object.keys(COUNTRIES);
 
   // Pre-compute lowercase text once per article
-  const prepared = DAILY_BRIEFING.map(a => ({
-    article: a,
-    text: ((a.title || a.headline || '') + ' ' + (a.description || '')).toLowerCase()
-  }));
+  const prepared = DAILY_BRIEFING.map(a => {
+    const title = a.title || a.headline || '';
+    return {
+      article: a,
+      title,
+      text: (title + ' ' + (a.description || '')).toLowerCase()
+    };
+  });
 
   for (const countryName of countryNames) {
     const countryLower = countryName.toLowerCase();
@@ -527,18 +544,25 @@ export function preComputeCountryNews() {
 
     const matches = [];
     for (const p of prepared) {
+      // TV listings filter
+      if (TV_LISTING_RE.test(p.title)) continue;
+      if (TV_SOURCE_RE.test(p.text)) continue;
       if (termRegexes.some(rx => rx.test(p.text))) {
+        const headline = p.article.title || p.article.headline;
         matches.push({
-          headline: p.article.title || p.article.headline,
+          headline,
           source: formatSourceName(p.article.source_id || p.article.source || 'News'),
           pubDate: p.article.pubDate || '',
           url: p.article.link || p.article.url || '',
-          category: p.article.category || detectCategory(p.article.title || p.article.headline, p.article.description || ''),
-          qualityScore: scoreHeadlineQuality(p.article.title || p.article.headline)
+          category: p.article.category || detectCategory(headline, p.article.description || ''),
+          qualityScore: scoreHeadlineQuality(headline),
+          geoPriority: scoreGeoPriority(headline)
         });
       }
     }
     if (matches.length > 0) {
+      // Sort: geopolitical articles first, domestic noise last
+      matches.sort((a, b) => b.geoPriority - a.geoPriority);
       COUNTRY_NEWS_PRECACHE[countryName] = matches;
     }
   }
@@ -852,16 +876,24 @@ export function computeStats() {
 // for backward compatibility with modules that import from apiService
 export { COUNTRY_DEMONYMS };
 
+// TV listings / schedule filter — reject articles that are TV schedules
+const TV_LISTING_RE = /^\d{1,2}\/\d{1,2}\/\d{2,4}\s*:/;
+const TV_SOURCE_RE = /\b(tv guide|tvguide|tv insider|tv tonight|what's on tv|zap2it|tv passport|digiguide|on tv tonight)\b/i;
+
 // Sports keywords — if article matches an ambiguous country name AND contains these, reject it
-const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|football|basketball|baseball|soccer|nfl|nba|mlb|nhl|draft pick|playoffs|season|halftime|wide receiver|linebacker|defensive|rushing|passing|rebound|batting|pitcher|goaltender|slam dunk|free throw|field goal|punt|fumble|interception|varsity|collegiate|bowl game|march madness|final four|championship game|recruit|transfer portal|nil deal)\b/i;
+const SPORTS_KEYWORDS = /\b(coach|offensive|quarterback|touchdown|roster|ncaa|football|basketball|baseball|soccer|nfl|nba|mlb|nhl|draft pick|playoffs|season|halftime|wide receiver|linebacker|defensive|rushing|passing|rebound|batting|pitcher|goaltender|slam dunk|free throw|field goal|punt|fumble|interception|varsity|collegiate|bowl game|march madness|final four|championship game|recruit|transfer portal|nil deal|paralympics|paralympian|winter olympics|summer olympics)\b/i;
+
+// Geopolitical context — if article has these alongside Olympic/Paralympic keywords, keep it
+const GEO_CONTEXT_RE = /\b(boycott|sanctions|diplomatic|protest|geopolit|ban|doping scandal|state.?sponsor|politiciz|withdraw|cold war|propaganda)\b/i;
 
 // Ambiguous country names that also match common person names or US states
 // These require additional context words to confirm the article is about the country
 // excludeWords: if ANY of these appear, article is NOT about the country
 const AMBIGUOUS_COUNTRIES = {
   'Chad': {
-    contextWords: ["n'djamena", 'chadian', 'sahel', 'lake chad', 'déby', 'deby', 'boko haram', 'cameroon', 'sudan', 'central africa', 'french military', 'saharan', 'border with chad', 'chad border', 'abeche', 'moundou', 'sarh', 'faya', 'tibesti', 'kanem', 'wadai', 'ouaddai', 'zakouma', 'minusma', 'g5 sahel', 'chadian troops', 'chadian army', 'multinational joint task force'],
-    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman', 'chad wolf', 'chad daybell', 'chad kroeger', 'chad reed', 'chad hurley', 'chad powers', 'chad le clos', 'chad daniels', 'chad green', 'chad bettis', 'chad pennington', 'chad brown']
+    negativeOnly: true, // No context requirement — just exclude person-name matches
+    contextWords: [],
+    excludeWords: ['chad johnson', 'chad ochocinco', 'chad gable', 'chad kelly', 'chad henne', 'chad smith', 'chad michael murray', 'chad boseman', 'chad wolf', 'chad daybell', 'chad kroeger', 'chad reed', 'chad hurley', 'chad powers', 'chad le clos', 'chad daniels', 'chad green', 'chad bettis', 'chad pennington', 'chad brown', 'chad coleman', 'chad lowe', 'chad everett', 'chad stahelski', 'chad mendes', 'chad ford', 'chad curtis', 'chad ocho']
   },
   'Jordan': {
     contextWords: ['amman', 'jordanian', 'hashemite', 'king abdullah', 'west bank', 'dead sea', 'petra', 'aqaba', 'zarqa', 'irbid', 'arab league'],
@@ -887,6 +919,10 @@ export function isRelevantToCountry(title, description, countryName) {
   const descLower = (description || '').toLowerCase();
   const countryLower = countryName.toLowerCase();
 
+  // TV listings filter — reject date-prefixed TV schedules and TV guide sources
+  if (TV_LISTING_RE.test(title || '')) return false;
+  if (TV_SOURCE_RE.test(text)) return false;
+
   for (const kw of IRRELEVANT_KEYWORDS) {
     if (text.includes(kw)) return false;
   }
@@ -906,10 +942,12 @@ export function isRelevantToCountry(title, description, countryName) {
   // For ambiguous country names, require context OR reject sports/exclusion content
   const ambig = AMBIGUOUS_COUNTRIES[countryName];
   if (ambig) {
-    // If article contains sports keywords, reject it
-    if (SPORTS_KEYWORDS.test(text)) return false;
+    // If article contains sports keywords, reject it (unless geopolitical context)
+    if (SPORTS_KEYWORDS.test(text) && !GEO_CONTEXT_RE.test(text)) return false;
     // If article contains exclusion words (US state context, person names), reject it
     if (ambig.excludeWords && ambig.excludeWords.some(ew => text.includes(ew))) return false;
+    // negativeOnly mode (Chad): excludeWords filtering is enough, skip context requirement
+    if (ambig.negativeOnly) return true;
     // Check if any context word appears — confirms it's actually about the country
     const hasContext = ambig.contextWords.some(cw => text.includes(cw));
     // Also accept if an unambiguous demonym (not just the country name) matched
@@ -932,6 +970,11 @@ export function isRelevantToCountry(title, description, countryName) {
       const ISRAEL_COUNTRY_RE = /\b(idf|netanyahu|tel aviv|jerusalem|gaza|west bank|hezbollah|hamas|knesset|mossad|shin bet|iron dome|kibbutz|intifada|zionist|settler|golan|negev|likud|palestinian|ramallah)\b/i;
       if (!ISRAEL_COUNTRY_RE.test(text)) return false;
     }
+  }
+
+  // Paralympics/Olympics: reject if ONLY sports context (no geopolitical angle)
+  if (/\b(paralympics|paralympian|winter olympics|summer olympics|olympic games)\b/i.test(text)) {
+    if (!GEO_CONTEXT_RE.test(text)) return false;
   }
 
   // For all countries: reject if article has sports keywords and country name is the ONLY geo term
@@ -1111,12 +1154,17 @@ function scoreHeadlineQuality(title) {
 
 function formatArticlesForDisplay(articles, countryName) {
   const isAmbiguous = countryName in AMBIGUOUS_COUNTRIES;
-  const relevant = articles.filter(a => isRelevantToCountry(a.title, a.description, countryName));
+  const relevant = articles.filter(a => {
+    // TV listings filter
+    if (TV_LISTING_RE.test(a.title || '')) return false;
+    if (TV_SOURCE_RE.test(((a.title || '') + ' ' + (a.description || '')).toLowerCase())) return false;
+    return isRelevantToCountry(a.title, a.description, countryName);
+  });
   // For ambiguous countries, NEVER fall back to unfiltered articles — that defeats disambiguation
   const toUse = relevant.length > 0 ? relevant : (isAmbiguous ? [] : articles);
 
-  // Score and sort: factual/conflict headlines first, opinion/reaction last
-  const scored = toUse.map(a => ({ article: a, score: scoreHeadlineQuality(a.title) }));
+  // Score and sort: geopolitical articles first, domestic noise last
+  const scored = toUse.map(a => ({ article: a, score: scoreGeoPriority(a.title) }));
   scored.sort((a, b) => b.score - a.score);
 
   return scored.slice(0, 15).map(({ article, score }) => ({
@@ -1125,7 +1173,8 @@ function formatArticlesForDisplay(articles, countryName) {
     pubDate: article.pubDate || '',
     url: article.link || '',
     category: detectCategory(article.title, article.description),
-    qualityScore: score
+    qualityScore: score,
+    geoPriority: score
   }));
 }
 
@@ -1182,14 +1231,18 @@ export async function fetchCountryNews(countryName) {
     allArticles.push(article);
   };
 
-  const formatBriefingArticle = (a) => ({
-    headline: a.title || a.headline,
-    source: formatSourceName(a.source_id || a.source || 'News'),
-    pubDate: a.pubDate || '', // Never use a.time — it's a relative string like "30m ago"
-    url: a.link || a.url || '',
-    category: a.category || detectCategory(a.title || a.headline, a.description || ''),
-    qualityScore: scoreHeadlineQuality(a.title || a.headline)
-  });
+  const formatBriefingArticle = (a) => {
+    const headline = a.title || a.headline;
+    return {
+      headline,
+      source: formatSourceName(a.source_id || a.source || 'News'),
+      pubDate: a.pubDate || '', // Never use a.time — it's a relative string like "30m ago"
+      url: a.link || a.url || '',
+      category: a.category || detectCategory(headline, a.description || ''),
+      qualityScore: scoreHeadlineQuality(headline),
+      geoPriority: scoreGeoPriority(headline)
+    };
+  };
 
   // 2. DAILY_BRIEFING articles — search ALL, match headline + description
   console.log('[Hegemon] DAILY_BRIEFING.length:', DAILY_BRIEFING ? DAILY_BRIEFING.length : 0);
@@ -1253,6 +1306,9 @@ export async function fetchCountryNews(countryName) {
   } catch (error) {
     console.warn('Regional search failed:', error.message);
   }
+
+  // Sort by geopolitical priority
+  allArticles.sort((a, b) => (b.geoPriority || 0) - (a.geoPriority || 0));
 
   console.log('[Hegemon] fetchCountryNews', countryName, '- total articles:', allArticles.length);
   setCachedNews(countryName, allArticles);
