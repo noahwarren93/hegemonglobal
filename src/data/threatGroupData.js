@@ -35,9 +35,9 @@ export const THREAT_GROUPS = [
     activities: 'IED attacks, territorial control, extortion, mass executions',
     territory: 'Eastern Syria, Western Iraq',
     funding: 'Oil smuggling, extortion, kidnapping',
-    leaders: 'Abu Hafs al-Hashimi al-Qurashi',
+    leaders: 'Abu Hafs al-Hashimi al-Qurashi (unconfirmed; reported killed 2024)',
     allies: [],
-    rivals: ['Kurdish SDF', 'Iraqi PMF', 'Syrian Army'],
+    rivals: ['Kurdish SDF', 'Iraqi PMF', 'HTS (Syria)'],
     majorAttacks: [
       { year: '2014', event: 'Seizure of Mosul and declaration of caliphate' },
       { year: '2015', event: 'Paris attacks killing 130 people' },
@@ -182,7 +182,7 @@ export const THREAT_GROUPS = [
     activities: 'Bombings, assassinations, propaganda',
     territory: 'Central and eastern Yemen',
     funding: 'Kidnapping ransoms, taxation, smuggling',
-    leaders: 'Khalid Batarfi',
+    leaders: 'Khalid Batarfi successor (Batarfi reportedly killed 2024)',
     allies: ['Al-Qaeda'],
     rivals: ['Houthis', 'US forces', 'UAE-backed STC'],
     majorAttacks: [
@@ -261,7 +261,7 @@ export const THREAT_GROUPS = [
     activities: 'Mass kidnappings, suicide bombings, village raids',
     territory: 'Northeast Nigeria, Lake Chad Basin',
     funding: 'Looting, taxation, fishing control',
-    leaders: 'Abu Musab al-Barnawi (ISWAP)',
+    leaders: 'Abu Musab al-Barnawi successor (ISWAP)',
     allies: [],
     rivals: ['Nigerian military', 'MNJTF', 'Civilian JTF'],
     majorAttacks: [
@@ -337,11 +337,11 @@ export const THREAT_GROUPS = [
     revenue: '$50-100 million annually',
     strength: '12,000-15,000 fighters',
     activities: 'Governance of Idlib, military operations',
-    territory: 'Idlib province and northwestern Syria',
+    territory: 'Most of Syria (post-December 2024 offensive)',
     funding: 'Border taxation, fuel trade, agriculture',
     leaders: 'Abu Mohammed al-Julani',
     allies: [],
-    rivals: ['Syrian regime', 'Russia', 'ISIS'],
+    rivals: ['Remnant loyalist militias', 'Russia', 'ISIS'],
     majorAttacks: [
       { year: '2024', event: 'Lightning offensive capturing Aleppo' },
       { year: '2025', event: 'Became ruling authority after Assad regime collapse' },
@@ -429,7 +429,7 @@ export const THREAT_GROUPS = [
     activities: 'Suicide bombings, international attack planning',
     territory: 'Eastern Afghanistan, Pakistan border',
     funding: 'Extortion, kidnapping, donations',
-    leaders: 'Sanaullah Ghafari',
+    leaders: 'Sanaullah Ghafari successor (Ghafari reportedly killed 2023)',
     allies: [],
     rivals: ['Taliban', 'US forces', 'Pakistani military'],
     majorAttacks: [
@@ -947,7 +947,7 @@ export const THREAT_GROUPS = [
     rivals: ['Sudanese Armed Forces', 'civilian resistance'],
     majorAttacks: [
       { year: '2023', event: 'Launch of civil war, siege of Khartoum' },
-      { year: '2024', event: 'El Geneina massacres and ethnic cleansing in Darfur' },
+      { year: '2023', event: 'El Geneina massacres and ethnic cleansing in Darfur' },
     ],
     searchTerms: ['rsf', 'rapid support forces', 'hemedti', 'janjaweed', 'rsf sudan'],
     zones: [
@@ -2296,7 +2296,7 @@ export const THREAT_GROUPS = [
     allies: [],
     rivals: ['Italian police', 'Cosa Nostra (competition)'],
     majorAttacks: [
-      { year: '1989', event: 'Duisburg massacre of rival clan members' },
+      { year: '2007', event: 'Duisburg massacre of rival clan members' },
       { year: '2023', event: 'Massive anti-mafia operations in Calabria' },
     ],
     searchTerms: ['ndrangheta', 'calabrian mafia', 'calabria organized crime'],

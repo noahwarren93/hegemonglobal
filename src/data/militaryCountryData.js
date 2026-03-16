@@ -7,7 +7,7 @@ export const MILITARY_COUNTRY_DATA = {
     personnel: { active: 1_388_000, reserve: 799_000 },
     budget: '$886 billion (2024)',
     budgetPctGdp: '3.4%',
-    nuclear: { warheads: 5_550, status: 'Major nuclear power — largest deployed arsenal', triad: true },
+    nuclear: { warheads: 5_044, status: 'Major nuclear power — largest deployed arsenal', triad: true },
     branches: ['Army', 'Navy', 'Air Force', 'Marine Corps', 'Space Force', 'Coast Guard'],
     majorWeapons: ['11 aircraft carriers', '68 nuclear submarines', '2,740+ fighter aircraft', '6,800+ tanks (incl. M1 Abrams)', '450 Minuteman III ICBMs'],
     alliances: ['NATO', 'AUKUS', 'Five Eyes', 'ANZUS', 'US-Japan Treaty', 'US-ROK Alliance'],
@@ -18,9 +18,9 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Russia': {
     personnel: { active: 1_330_000, reserve: 2_000_000 },
-    budget: '$109 billion (2024)',
-    budgetPctGdp: '5.9%',
-    nuclear: { warheads: 5_580, status: 'Largest total nuclear stockpile', triad: true },
+    budget: '$149 billion (2024)',
+    budgetPctGdp: '7.1%',
+    nuclear: { warheads: 5_460, status: 'Largest total nuclear stockpile', triad: true },
     branches: ['Ground Forces', 'Navy', 'Aerospace Forces', 'Strategic Rocket Forces', 'Airborne Forces'],
     majorWeapons: ['1 aircraft carrier', '58 submarines (11 SSBN)', '1,500+ fighter aircraft', '12,500+ tanks', '527 ICBMs (Topol-M, Yars, Sarmat)'],
     alliances: ['CSTO', 'SCO', 'CIS', 'BRICS'],
@@ -33,7 +33,7 @@ export const MILITARY_COUNTRY_DATA = {
     personnel: { active: 2_035_000, reserve: 510_000 },
     budget: '$296 billion (2024, official — estimated $450B+ actual)',
     budgetPctGdp: '1.7% (official)',
-    nuclear: { warheads: 500, status: 'Rapidly expanding nuclear arsenal — projected 1,000+ by 2030', triad: true },
+    nuclear: { warheads: 600, status: 'Rapidly expanding nuclear arsenal — projected 1,000+ by 2030', triad: true },
     branches: ['PLA Ground Force', 'PLA Navy', 'PLA Air Force', 'PLA Rocket Force', 'PLA Strategic Support Force'],
     majorWeapons: ['3 aircraft carriers (Liaoning, Shandong, Fujian)', '78 submarines (6 SSBN)', '1,900+ fighter aircraft', '5,800+ tanks', '350+ ICBMs (DF-41, DF-5B)'],
     alliances: ['SCO', 'BRICS', 'China-North Korea Friendship Treaty'],
@@ -48,7 +48,7 @@ export const MILITARY_COUNTRY_DATA = {
     budgetPctGdp: '2.4%',
     nuclear: { warheads: 172, status: 'Declared nuclear state — no-first-use policy', triad: true },
     branches: ['Indian Army', 'Indian Navy', 'Indian Air Force'],
-    majorWeapons: ['2 aircraft carriers (Vikramaditya, Vikrant)', '18 submarines (1 SSBN)', '600+ fighter aircraft (Su-30MKI, Rafale, Tejas)', '4,600+ tanks (T-90S, Arjun)', 'Agni-V ICBM'],
+    majorWeapons: ['2 aircraft carriers (Vikramaditya, Vikrant)', '18 submarines (2 SSBN)', '600+ fighter aircraft (Su-30MKI, Rafale, Tejas)', '4,600+ tanks (T-90S, Arjun)', 'Agni-V ICBM'],
     alliances: ['Quad (with US, Japan, Australia)', 'SCO', 'BRICS', 'BIMSTEC'],
     conscription: 'No — all-volunteer force',
     recentOps: ['LAC standoff with China (Ladakh, 2020-present)', 'Anti-terror operations in Kashmir', 'UN peacekeeping (largest troop contributor)'],
@@ -83,7 +83,7 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Japan': {
     personnel: { active: 247_000, reserve: 56_000 },
-    budget: '$53.6 billion (2024)',
+    budget: '$55.3 billion (2024)',
     budgetPctGdp: '1.3% (increasing to 2%)',
     nuclear: { warheads: 0, status: 'Non-nuclear state — under US nuclear umbrella', triad: false },
     branches: ['Japan Ground Self-Defense Force', 'Japan Maritime Self-Defense Force', 'Japan Air Self-Defense Force'],
@@ -109,8 +109,8 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Turkey': {
     personnel: { active: 461_000, reserve: 378_000 },
-    budget: '$16.4 billion (2024)',
-    budgetPctGdp: '1.7%',
+    budget: '$25 billion (2024)',
+    budgetPctGdp: '1.9%',
     nuclear: { warheads: 0, status: 'NATO nuclear sharing (hosts US B61 bombs)', triad: false },
     branches: ['Turkish Land Forces', 'Turkish Naval Forces', 'Turkish Air Force'],
     majorWeapons: ['270+ F-16 fighters', '2,200+ tanks (Altay, M60T, Leopard 2A4)', '13 submarines', 'Bayraktar TB2/Akinci drones', 'KAAN (5th-gen fighter in development)'],
@@ -148,7 +148,7 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Egypt': {
     personnel: { active: 440_000, reserve: 479_000 },
-    budget: '$7.7 billion (2024)',
+    budget: '$5.2 billion (2024)',
     budgetPctGdp: '1.7%',
     nuclear: { warheads: 0, status: 'Non-nuclear state', triad: false },
     branches: ['Egyptian Army', 'Egyptian Navy', 'Egyptian Air Force', 'Egyptian Air Defense Forces'],
@@ -178,7 +178,7 @@ export const MILITARY_COUNTRY_DATA = {
     budgetPctGdp: '0.7%',
     nuclear: { warheads: 0, status: 'Non-nuclear state', triad: false },
     branches: ['Indonesian Army (TNI-AD)', 'Indonesian Navy (TNI-AL)', 'Indonesian Air Force (TNI-AU)'],
-    majorWeapons: ['49 F-16/Su-27/Su-30 fighters (Rafale on order)', '400+ Leopard 2 tanks', '5 submarines', '11 frigates', 'KF-21 Boramae (joint program with South Korea)'],
+    majorWeapons: ['49 F-16/Su-27/Su-30 fighters (Rafale on order)', '~100 Leopard 2 tanks', '5 submarines', '11 frigates', 'KF-21 Boramae (joint program with South Korea)'],
     alliances: ['ASEAN', 'Non-Aligned Movement', 'OIC'],
     conscription: 'No — all-volunteer force',
     recentOps: ['Papuan insurgency counter-operations', 'Natuna Islands sovereignty patrols (South China Sea)', 'Counter-terrorism (Jemaah Islamiyah remnants)'],
@@ -187,7 +187,7 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Iran': {
     personnel: { active: 610_000, reserve: 350_000 },
-    budget: '$10.3 billion (2024, official — estimated higher)',
+    budget: '$7.9 billion (2024, SIPRI estimate)',
     budgetPctGdp: '2.5%',
     nuclear: { warheads: 0, status: 'Near-threshold nuclear capability — 60% enriched uranium stockpile', triad: false },
     branches: ['Islamic Republic of Iran Army (Artesh)', 'Islamic Revolutionary Guard Corps (IRGC)', 'IRGC Navy', 'IRGC Aerospace Force', 'Basij Militia'],
@@ -200,8 +200,8 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Germany': {
     personnel: { active: 181_600, reserve: 30_000 },
-    budget: '$73.1 billion (2024)',
-    budgetPctGdp: '1.5% (pledged 2%+)',
+    budget: '$88.5 billion (2024)',
+    budgetPctGdp: '1.9% (pledged 2%+)',
     nuclear: { warheads: 0, status: 'NATO nuclear sharing (hosts US B61 bombs)', triad: false },
     branches: ['German Army (Heer)', 'German Navy (Marine)', 'German Air Force (Luftwaffe)', 'Joint Support Service', 'Cyber and Information Domain Service'],
     majorWeapons: ['140+ Typhoon/Tornado fighters (F-35A on order)', '266 Leopard 2 tanks', '6 submarines (Type 212A)', '4 F-125 frigates', 'Patriot air defense systems'],
@@ -213,8 +213,8 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Israel': {
     personnel: { active: 170_000, reserve: 465_000 },
-    budget: '$27.5 billion (2024, pre-war surge)',
-    budgetPctGdp: '5.3%',
+    budget: '$46.5 billion (2024, wartime)',
+    budgetPctGdp: '8.3%',
     nuclear: { warheads: 90, status: 'Undeclared nuclear state — policy of nuclear ambiguity', triad: true },
     branches: ['Israel Defense Forces (IDF) — Ground Forces', 'Israeli Air Force', 'Israeli Navy', 'Intelligence Corps (Aman, Mossad, Shin Bet)'],
     majorWeapons: ['340+ F-15/F-16/F-35I fighters', '2,200+ Merkava IV tanks', '5 Dolphin-class submarines (nuclear-capable)', 'Iron Dome / David\'s Sling / Arrow-3 missile defense', 'Jericho III ballistic missiles'],
@@ -226,7 +226,7 @@ export const MILITARY_COUNTRY_DATA = {
 
   'Saudi Arabia': {
     personnel: { active: 257_000, reserve: 25_000 },
-    budget: '$75.8 billion (2024)',
+    budget: '$80.3 billion (2024)',
     budgetPctGdp: '6.8%',
     nuclear: { warheads: 0, status: 'Non-nuclear state — suspected interest in Pakistani program', triad: false },
     branches: ['Royal Saudi Land Forces', 'Royal Saudi Naval Forces', 'Royal Saudi Air Force', 'Royal Saudi Air Defense Force', 'Saudi Arabian National Guard'],
