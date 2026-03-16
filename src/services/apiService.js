@@ -1479,6 +1479,12 @@ function applyAnalyses(analyses) {
       if (key) entry = COUNTRIES[key];
     }
     if (entry && analysis.what) {
+      // Only apply AI analysis if the country has no existing static analysis
+      // Static analyses in countries.js are broad geopolitical overviews;
+      // AI analyses are event-driven and narrower — don't overwrite broad with narrow
+      if (entry.analysis && entry.analysis.what && entry.analysis.what.length > 50) {
+        continue;
+      }
       entry.analysis = {
         ...entry.analysis,
         what: analysis.what,
