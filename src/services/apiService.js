@@ -1411,6 +1411,92 @@ function applyAnalyses(analyses) {
 }
 
 // ============================================================
+// Data Corrections Overlay — weekly audit corrections from KV
+// ============================================================
+
+async function fetchDataCorrections() {
+  try {
+    const cached = localStorage.getItem('data_corrections_cache');
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Date.now() - ts < 30 * 60 * 1000) {
+        applyDataCorrections(data);
+        return;
+      }
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(`${RSS_PROXY_BASE}/data-corrections`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) return;
+    const result = await response.json();
+    if (!result || !result.corrections) return;
+
+    applyDataCorrections(result.corrections);
+    localStorage.setItem('data_corrections_cache', JSON.stringify({
+      data: result.corrections,
+      ts: Date.now()
+    }));
+  } catch (err) {
+    console.warn('[Hegemon] Data corrections fetch failed:', err.message);
+  }
+}
+
+function applyDataCorrections(corrections) {
+  for (const c of Object.values(corrections)) {
+    const entry = COUNTRIES[c.country];
+    if (!entry) continue;
+
+    if (c.field === 'leader') entry.leader = c.value;
+    else if (c.field === 'risk') entry.risk = c.value;
+    else if (c.field === 'pop') entry.pop = c.value;
+    else if (c.field === 'gdp') entry.gdp = c.value;
+    else if (c.field === 'casualties.total' && entry.casualties) entry.casualties.total = c.value;
+    else if (c.field === 'casualties.label' && entry.casualties) entry.casualties.label = c.value;
+  }
+}
+
+async function pushCountrySnapshot() {
+  try {
+    const lastPush = localStorage.getItem('country_snapshot_push_ts');
+    if (lastPush && Date.now() - parseInt(lastPush) < 24 * 60 * 60 * 1000) return;
+
+    const snapshot = {};
+    for (const [name, c] of Object.entries(COUNTRIES)) {
+      snapshot[name] = {
+        leader: c.leader || '',
+        risk: c.risk || '',
+        pop: c.pop || '',
+        gdp: c.gdp || '',
+      };
+      if (c.casualties) {
+        snapshot[name].casualties = c.casualties.total || '';
+      }
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    await fetch(`${RSS_PROXY_BASE}/country-snapshot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ snapshot }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    localStorage.setItem('country_snapshot_push_ts', String(Date.now()));
+  } catch (err) {
+    console.warn('[Hegemon] Country snapshot push failed:', err.message);
+  }
+}
+
+// ============================================================
 // Fetch Live News — tries pre-generated first, falls back to RSS
 // ============================================================
 
@@ -1428,7 +1514,9 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
     }, 50);
     setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
     setTimeout(() => fetchCountryAnalyses(), 1000);
+    setTimeout(() => fetchDataCorrections(), 1500);
     setTimeout(() => fetchTimelineUpdates(), 2000);
+    setTimeout(() => pushCountrySnapshot(), 3000);
 
     if (onStatusUpdate) onStatusUpdate('complete');
     if (onComplete) onComplete(DAILY_BRIEFING);

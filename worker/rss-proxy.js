@@ -2143,6 +2143,259 @@ Return ONLY the JSON, no other text.`;
 }
 
 // ============================================================
+// Weekly Data Verification Audit (independent from all other systems)
+// ============================================================
+
+async function logAuditEntry(env, entry) {
+  try {
+    const logRaw = await env.HEGEMON_CACHE.get('correction_log');
+    const log = logRaw ? JSON.parse(logRaw) : [];
+    log.push(entry);
+    const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    const filtered = log.filter(e => e.timestamp > cutoff);
+    await env.HEGEMON_CACHE.put('correction_log', JSON.stringify(filtered));
+  } catch (err) {
+    console.warn('[Audit] Log error:', err.message);
+  }
+}
+
+async function processPendingCorrections(env) {
+  const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+  if (!pendingRaw) return;
+  const pending = JSON.parse(pendingRaw);
+  const now = Date.now();
+  const toApply = [];
+  const remaining = {};
+
+  for (const [key, c] of Object.entries(pending)) {
+    const age = now - c.proposedAt;
+    const threshold = c.confidence === 'medium' ? 24 * 60 * 60 * 1000 : 72 * 60 * 60 * 1000;
+    if (age >= threshold) {
+      toApply.push({ key, ...c });
+    } else {
+      remaining[key] = c;
+    }
+  }
+
+  if (toApply.length > 0) {
+    const correctionsRaw = await env.HEGEMON_CACHE.get('data_corrections');
+    const corrections = correctionsRaw ? JSON.parse(correctionsRaw) : {};
+
+    for (const c of toApply) {
+      corrections[c.key] = {
+        country: c.country,
+        field: c.field,
+        value: c.correctedValue,
+        confidence: c.confidence,
+        reasoning: c.reasoning,
+        appliedAt: now,
+        source: 'weekly_audit_auto_timer'
+      };
+      await logAuditEntry(env, {
+        type: 'auto_applied',
+        country: c.country,
+        field: c.field,
+        value: c.correctedValue,
+        confidence: c.confidence,
+        timestamp: now
+      });
+    }
+
+    await env.HEGEMON_CACHE.put('data_corrections', JSON.stringify(corrections));
+    await env.HEGEMON_CACHE.put('pending_corrections', JSON.stringify(remaining));
+    console.log(`[Cron] Auto-applied ${toApply.length} pending corrections`);
+  }
+}
+
+async function handleWeeklyAudit(env) {
+  console.log('[WeeklyAudit] Starting data verification audit...');
+  const startTime = Date.now();
+
+  try {
+    // 1. Read country snapshot from KV (pushed by frontend)
+    const snapshotRaw = await env.HEGEMON_CACHE.get('country_snapshot');
+    if (!snapshotRaw) {
+      console.log('[WeeklyAudit] No country snapshot in KV, skipping');
+      return;
+    }
+    const snapshot = JSON.parse(snapshotRaw);
+
+    // 2. Read recent briefing headlines from KV
+    const eventsRaw = await env.HEGEMON_CACHE.get('latest_events');
+    let recentHeadlines = [];
+    if (eventsRaw) {
+      const eventsData = JSON.parse(eventsRaw);
+      recentHeadlines = (eventsData.briefing || []).slice(0, 50)
+        .map(a => a.headline).filter(Boolean);
+    }
+
+    // 3. Build compact country data string for prompt
+    const countryLines = Object.entries(snapshot)
+      .map(([name, d]) => {
+        let line = `${name}: leader=${d.leader}, risk=${d.risk}, pop=${d.pop}, gdp=${d.gdp}`;
+        if (d.casualties) line += `, casualties=${d.casualties}`;
+        return line;
+      });
+
+    // 4. Call Claude Sonnet ONE time
+    const today = new Date().toISOString().split('T')[0];
+    const prompt = `You are a geopolitical data verification system. Today is ${today}.
+
+Below is the current country data from our platform, followed by recent news headlines.
+
+CURRENT COUNTRY DATA:
+${countryLines.join('\n')}
+
+RECENT NEWS HEADLINES:
+${recentHeadlines.join('\n')}
+
+Your task: Identify any data that is INCORRECT or OUTDATED. Check:
+1. Country leaders — has there been a change of government? Use the most powerful leader: PM for parliamentary systems, President for presidential systems, Supreme Leader for Iran, Crown Prince for Saudi Arabia.
+2. Risk levels — does the current risk level match the situation? Valid levels: catastrophic, extreme, severe, stormy, cloudy, clear
+3. Death tolls / casualties — have published figures increased significantly?
+4. GDP figures — any major revisions from IMF/World Bank?
+5. Population figures — any significant updates?
+
+Return ONLY a JSON array of corrections needed. Each correction object must have:
+- country: string (exact country name as shown above)
+- field: string (one of: leader, risk, pop, gdp, casualties.total, casualties.label)
+- currentValue: string (what the platform currently shows)
+- correctedValue: string (what it should be)
+- confidence: "high" | "medium" | "low"
+- reasoning: string (brief explanation)
+
+Confidence guidelines:
+- HIGH: Death toll increases confirmed by multiple sources, GDP/population from IMF/World Bank, casualty figure increases from official counts
+- MEDIUM: Leader changes mentioned in major outlets, minor risk adjustments
+- LOW: Risk classification changes, politically sensitive changes involving Israel, Palestine, Taiwan, China, Kosovo, Kashmir, Western Sahara, Crimea
+
+If no corrections are needed, return: []
+Return ONLY valid JSON, no markdown fences, no explanation.`;
+
+    const apiKey = env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('[WeeklyAudit] No ANTHROPIC_API_KEY');
+      return;
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      console.error('[WeeklyAudit] Claude API error:', response.status, await response.text());
+      return;
+    }
+
+    const result = await response.json();
+    const text = (result.content?.[0]?.text || '[]').trim();
+
+    let corrections;
+    try {
+      corrections = JSON.parse(text);
+    } catch {
+      console.error('[WeeklyAudit] Failed to parse Claude response:', text.substring(0, 200));
+      return;
+    }
+
+    if (!Array.isArray(corrections) || corrections.length === 0) {
+      console.log('[WeeklyAudit] No corrections needed');
+      await logAuditEntry(env, { type: 'audit_complete', corrections: 0, timestamp: Date.now() });
+      return;
+    }
+
+    // 5. Process corrections by confidence tier
+    const now = Date.now();
+    const highConfidence = corrections.filter(c => c.confidence === 'high');
+    const medLowConfidence = corrections.filter(c => c.confidence !== 'high');
+
+    // HIGH confidence: auto-apply immediately to data_corrections
+    if (highConfidence.length > 0) {
+      const existingRaw = await env.HEGEMON_CACHE.get('data_corrections');
+      const existing = existingRaw ? JSON.parse(existingRaw) : {};
+
+      for (const c of highConfidence) {
+        const key = `${c.country}__${c.field}`;
+        existing[key] = {
+          country: c.country,
+          field: c.field,
+          value: c.correctedValue,
+          confidence: 'high',
+          reasoning: c.reasoning,
+          appliedAt: now,
+          source: 'weekly_audit_auto'
+        };
+        await logAuditEntry(env, {
+          type: 'auto_applied',
+          country: c.country,
+          field: c.field,
+          value: c.correctedValue,
+          confidence: 'high',
+          timestamp: now
+        });
+      }
+
+      await env.HEGEMON_CACHE.put('data_corrections', JSON.stringify(existing));
+    }
+
+    // MEDIUM/LOW confidence: store as pending with timestamp
+    if (medLowConfidence.length > 0) {
+      const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+      const pending = pendingRaw ? JSON.parse(pendingRaw) : {};
+
+      for (const c of medLowConfidence) {
+        const key = `${c.country}__${c.field}`;
+        pending[key] = {
+          country: c.country,
+          field: c.field,
+          currentValue: c.currentValue,
+          correctedValue: c.correctedValue,
+          confidence: c.confidence,
+          reasoning: c.reasoning,
+          proposedAt: now,
+          source: 'weekly_audit'
+        };
+        await logAuditEntry(env, {
+          type: 'proposed',
+          country: c.country,
+          field: c.field,
+          currentValue: c.currentValue,
+          correctedValue: c.correctedValue,
+          confidence: c.confidence,
+          timestamp: now
+        });
+      }
+
+      await env.HEGEMON_CACHE.put('pending_corrections', JSON.stringify(pending));
+    }
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`[WeeklyAudit] Done: ${corrections.length} corrections (${highConfidence.length} auto-applied, ${medLowConfidence.length} pending), ${elapsed}s`);
+
+    await logAuditEntry(env, {
+      type: 'audit_complete',
+      corrections: corrections.length,
+      autoApplied: highConfidence.length,
+      pending: medLowConfidence.length,
+      timestamp: now
+    });
+
+  } catch (err) {
+    console.error('[WeeklyAudit] Fatal error:', err.message, err.stack);
+  }
+}
+
+// ============================================================
 // Worker Export: fetch + scheduled handlers
 // ============================================================
 
@@ -2810,6 +3063,268 @@ Return ONLY the JSON array, no other text.`;
       }
     }
 
+    // ============================================================
+    // GET /data-corrections — frontend reads applied corrections overlay
+    // ============================================================
+    if (url.pathname === '/data-corrections' && request.method === 'GET') {
+      try {
+        const data = await env.HEGEMON_CACHE.get('data_corrections');
+        return new Response(
+          JSON.stringify({ corrections: data ? JSON.parse(data) : {} }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Failed to read corrections', corrections: {} }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /country-snapshot — frontend pushes current country data for audit
+    // ============================================================
+    if (url.pathname === '/country-snapshot' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        if (body.snapshot && typeof body.snapshot === 'object') {
+          await env.HEGEMON_CACHE.put('country_snapshot', JSON.stringify(body.snapshot));
+          return new Response(
+            JSON.stringify({ status: 'stored', count: Object.keys(body.snapshot).length }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: 'Missing snapshot object' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Snapshot store failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /review-corrections — show all pending corrections
+    // ============================================================
+    if (url.pathname === '/review-corrections' && request.method === 'GET') {
+      try {
+        const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+        const pending = pendingRaw ? JSON.parse(pendingRaw) : {};
+        const now = Date.now();
+
+        const items = Object.entries(pending).map(([id, c]) => {
+          const age = now - c.proposedAt;
+          const threshold = c.confidence === 'medium' ? 24 * 60 * 60 * 1000 : 72 * 60 * 60 * 1000;
+          const remaining = Math.max(0, threshold - age);
+          return {
+            id,
+            ...c,
+            autoApplyIn: remaining > 0 ? `${Math.round(remaining / 3600000)}h` : 'imminent',
+            autoApplyAt: new Date(c.proposedAt + threshold).toISOString()
+          };
+        });
+
+        const appliedRaw = await env.HEGEMON_CACHE.get('data_corrections');
+        const applied = appliedRaw ? JSON.parse(appliedRaw) : {};
+
+        return new Response(
+          JSON.stringify({ pending: items, appliedCount: Object.keys(applied).length }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Review failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /approve-corrections — apply ALL pending immediately
+    // ============================================================
+    if (url.pathname === '/approve-corrections' && request.method === 'POST') {
+      try {
+        const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+        if (!pendingRaw) {
+          return new Response(
+            JSON.stringify({ status: 'nothing_pending' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        const pending = JSON.parse(pendingRaw);
+        const correctionsRaw = await env.HEGEMON_CACHE.get('data_corrections');
+        const corrections = correctionsRaw ? JSON.parse(correctionsRaw) : {};
+        const now = Date.now();
+        let count = 0;
+
+        for (const [key, c] of Object.entries(pending)) {
+          corrections[key] = {
+            country: c.country,
+            field: c.field,
+            value: c.correctedValue,
+            confidence: c.confidence,
+            reasoning: c.reasoning,
+            appliedAt: now,
+            source: 'manual_approve_all'
+          };
+          await logAuditEntry(env, {
+            type: 'manually_approved',
+            country: c.country,
+            field: c.field,
+            value: c.correctedValue,
+            confidence: c.confidence,
+            timestamp: now
+          });
+          count++;
+        }
+
+        await env.HEGEMON_CACHE.put('data_corrections', JSON.stringify(corrections));
+        await env.HEGEMON_CACHE.delete('pending_corrections');
+
+        return new Response(
+          JSON.stringify({ status: 'approved', count }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Approve failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /dismiss-corrections — clear ALL pending without applying
+    // ============================================================
+    if (url.pathname === '/dismiss-corrections' && request.method === 'POST') {
+      try {
+        const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+        const count = pendingRaw ? Object.keys(JSON.parse(pendingRaw)).length : 0;
+        await env.HEGEMON_CACHE.delete('pending_corrections');
+
+        if (count > 0) {
+          await logAuditEntry(env, { type: 'dismissed_all', count, timestamp: Date.now() });
+        }
+
+        return new Response(
+          JSON.stringify({ status: 'dismissed', count }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Dismiss failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /approve-correction/:id — approve single pending correction
+    // ============================================================
+    if (url.pathname.startsWith('/approve-correction/') && request.method === 'POST') {
+      try {
+        const id = decodeURIComponent(url.pathname.replace('/approve-correction/', ''));
+        const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+        if (!pendingRaw) {
+          return new Response(
+            JSON.stringify({ error: 'No pending corrections' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        const pending = JSON.parse(pendingRaw);
+        const c = pending[id];
+        if (!c) {
+          return new Response(
+            JSON.stringify({ error: 'Correction not found', id }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const correctionsRaw = await env.HEGEMON_CACHE.get('data_corrections');
+        const corrections = correctionsRaw ? JSON.parse(correctionsRaw) : {};
+        const now = Date.now();
+
+        corrections[id] = {
+          country: c.country,
+          field: c.field,
+          value: c.correctedValue,
+          confidence: c.confidence,
+          reasoning: c.reasoning,
+          appliedAt: now,
+          source: 'manual_approve_single'
+        };
+
+        delete pending[id];
+        await env.HEGEMON_CACHE.put('data_corrections', JSON.stringify(corrections));
+        await env.HEGEMON_CACHE.put('pending_corrections', JSON.stringify(pending));
+        await logAuditEntry(env, {
+          type: 'manually_approved',
+          country: c.country,
+          field: c.field,
+          value: c.correctedValue,
+          confidence: c.confidence,
+          timestamp: now
+        });
+
+        return new Response(
+          JSON.stringify({ status: 'approved', id }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Approve failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // POST /dismiss-correction/:id — dismiss single pending correction
+    // ============================================================
+    if (url.pathname.startsWith('/dismiss-correction/') && request.method === 'POST') {
+      try {
+        const id = decodeURIComponent(url.pathname.replace('/dismiss-correction/', ''));
+        const pendingRaw = await env.HEGEMON_CACHE.get('pending_corrections');
+        if (!pendingRaw) {
+          return new Response(
+            JSON.stringify({ error: 'No pending corrections' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        const pending = JSON.parse(pendingRaw);
+        if (!pending[id]) {
+          return new Response(
+            JSON.stringify({ error: 'Correction not found', id }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const dismissed = pending[id];
+        delete pending[id];
+        await env.HEGEMON_CACHE.put('pending_corrections', JSON.stringify(pending));
+        await logAuditEntry(env, {
+          type: 'dismissed_single',
+          country: dismissed.country,
+          field: dismissed.field,
+          correctedValue: dismissed.correctedValue,
+          timestamp: Date.now()
+        });
+
+        return new Response(
+          JSON.stringify({ status: 'dismissed', id }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Dismiss failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // 404
     return new Response(
       JSON.stringify({ error: 'Not found' }),
@@ -2829,6 +3344,16 @@ Return ONLY the JSON array, no other text.`;
         await updateCountryAnalyses(env);
       } catch (err) {
         console.error('[Daily] Fatal error:', err.message, err.stack);
+      }
+      return;
+    }
+
+    // Weekly audit cron: Sunday midnight UTC
+    if (event.cron === '0 0 * * sun') {
+      try {
+        await handleWeeklyAudit(env);
+      } catch (err) {
+        console.error('[WeeklyAudit] Fatal error:', err.message, err.stack);
       }
       return;
     }
@@ -2882,6 +3407,13 @@ Return ONLY the JSON array, no other text.`;
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       const withSummary = events.filter(e => e.summary).length;
       console.log(`[Cron] Done: ${events.length} events (${withSummary} with summaries), ${processed.length} briefing articles, ${elapsed}s`);
+
+      // --- Weekly audit: check pending corrections for auto-apply timer ---
+      try {
+        await processPendingCorrections(env);
+      } catch (pendingErr) {
+        console.warn('[Cron] Pending corrections check error:', pendingErr.message);
+      }
 
     } catch (err) {
       console.error('[Cron] Fatal error:', err.message, err.stack);
