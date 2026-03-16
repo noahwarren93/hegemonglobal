@@ -37,6 +37,13 @@ const COORD_FALLBACKS = {
   'Peru': { lat: -12.05, lng: -77.04 },
   'Norway': { lat: 59.91, lng: 10.75 },
   'Azerbaijan': { lat: 40.41, lng: 49.87 },
+  'DRC': { lat: -4.32, lng: 15.32 },
+  'Colombia': { lat: 4.71, lng: -74.07 },
+  'Ethiopia': { lat: 9.02, lng: 38.75 },
+  'Guatemala': { lat: 14.63, lng: -90.51 },
+  'Morocco': { lat: 33.97, lng: -6.85 },
+  'Egypt': { lat: 30.04, lng: 31.24 },
+  'Kenya': { lat: -1.29, lng: 36.82 },
 };
 
 function getCountryCoords(name) {
