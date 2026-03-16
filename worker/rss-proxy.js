@@ -1208,6 +1208,10 @@ const AMBIGUOUS_EXCLUDE = {
   'niger': /\b(?:nigeria|nigerian)\b/i,
   'malta': /\b(?:malta[,\s]+(?:montana|mt|new york|ny|ohio|oh|idaho|id|illinois|il)|malta\s+(?:bend|ridge|ave|avenue|drive))\b/i,
   'panama': /\b(?:panama\s+city\s+beach|panama\s+city[,\s]+(?:fl|florida)|panama[,\s]+(?:ny|new york|iowa|ok|oklahoma))\b/i,
+  'grenada': /\b(?:grenada[,\s]+(?:ms|miss|mississippi|county)|grenada\s+(?:school|lake|high school|middle school|elementary))\b/i,
+  'tonga': /\b(?:khyiris\s+tonga|tonga\s+(?:sack|tackle|defensive|linebacker|bears|browns|cardinals|nfl))\b/i,
+  'angola': /\b(?:angola[,\s]+(?:la|louisiana|indiana|in|ny|new york)|angola\s+(?:prison|penitentiary|correctional|rodeo|inmates?|state prison))\b/i,
+  'monaco': /\b(?:monaco\s+(?:haircut|salon|hairstyle|template|font))\b/i,
 };
 
 // Country-level false positive filters — reject articles from a country feed
@@ -1230,6 +1234,44 @@ const COUNTRY_FALSE_POSITIVE_FILTERS = {
     const hasUSPanama = /\bpanama city beach|panama city[,\s]+fl|panhandle|bay county|gulf coast.*panama|waffle house.*panama|panama city news herald|panama city.*florida|dolphins.*panhandle|daylight saving.*panama|ten bay|bay restaurants|school merger.*panama|panama.*school merger|panama emphasizes support/i.test(text);
     const hasPanamaCountry = /\bpanama canal|mulino|darien|panamanian|latin america|central america/i.test(text);
     return hasUSPanama && !hasPanamaCountry;
+  },
+  // Grenada: exclude Grenada County Mississippi references
+  'Grenada': (text) => {
+    const hasUSGrenada = /\b(?:mississippi|grenada county|grenada lake|grenada school|grenada high|ms\b)/i.test(text);
+    const hasGrenadaCountry = /\b(?:grenadian|st\.?\s*george'?s?|carriacou|keith mitchell|dickon mitchell|spice island|windward|caribbean.*grenada|grenada.*caribbean)\b/i.test(text);
+    return hasUSGrenada && !hasGrenadaCountry;
+  },
+  // Tonga: exclude NFL player Khyiris Tonga references
+  'Tonga': (text) => {
+    const hasNFLTonga = /\b(?:khyiris|nfl|bears|browns|cardinals|defensive tackle|linebacker|sack|draft pick)\b/i.test(text);
+    const hasTongaCountry = /\b(?:tongan|nuku'?alofa|pacific island|polynesia|tonga.*government|tonga.*king|king.*tonga)\b/i.test(text);
+    return hasNFLTonga && !hasTongaCountry;
+  },
+  // Angola: exclude Angola Prison Louisiana and US town references
+  'Angola': (text) => {
+    const hasUSAngola = /\b(?:louisiana|angola prison|angola penitentiary|angola correctional|angola rodeo|angola inmates?|state prison.*angola|angola.*state prison|angola[,\s]+(?:la|indiana|in|ny|new york))\b/i.test(text);
+    const hasAngolaCountry = /\b(?:angolan|luanda|mpla|unita|cabinda|kwanza|dos santos|joao lourenco)\b/i.test(text);
+    return hasUSAngola && !hasAngolaCountry;
+  },
+  // Poland: exclude US person/place references (Poland, Ohio; Poland Spring water; etc.)
+  'Poland': (text) => {
+    const hasUSPoland = /\b(?:poland[,\s]+(?:ohio|oh|maine|me|indiana|in|new york|ny)|poland spring|poland township|poland seminary|poland regional)\b/i.test(text);
+    const hasPolandCountry = /\b(?:polish|warsaw|krakow|duda|tusk|sejm|zloty|gdansk|wroclaw|katowice|poznan)\b/i.test(text);
+    return hasUSPoland && !hasPolandCountry;
+  },
+  // Samoa: exclude sports articles with no actual country connection
+  'Samoa': (text) => {
+    const hasSportsOnly = /\b(?:rugby|nfl|wrestling|wwe|sumo|mma|ufc|draft|touchdown|tackle|slam)\b/i.test(text);
+    const hasSamoaCountry = /\b(?:samoan government|apia|samoan.*minister|samoa.*election|samoa.*parliament|pacific island.*samoa|samoa.*climate|samoa.*economy)\b/i.test(text);
+    const hasSamoaDemonym = /\b(?:american samoa|samoan)\b/i.test(text);
+    // Only filter if it's sports-only AND no country-relevant terms AND no demonym
+    return hasSportsOnly && !hasSamoaCountry && !hasSamoaDemonym;
+  },
+  // Monaco: exclude person name references + F1 racing (Grand Prix is sports, not geopolitics)
+  'Monaco': (text) => {
+    const hasF1Monaco = /\b(?:grand prix|formula\s*(?:1|one)|f1|verstappen|leclerc|hamilton|race.*monaco|monaco.*race|qualifying|pit stop|pole position|podium|constructor)\b/i.test(text);
+    const hasMonacoCountry = /\b(?:monegasque|monaco.*government|prince albert|monaco.*economy|monte carlo.*casino|monaco.*tax|monaco.*law|monaco.*minister)\b/i.test(text);
+    return hasF1Monaco && !hasMonacoCountry;
   },
 };
 
@@ -1343,6 +1385,7 @@ const JUNK_SOURCE_PATTERNS = [
   /msn\s*weather/i,
   /accuweather/i,
   /metropolitan museum/i,
+  /gazette\s*xtra/i,
 ];
 
 // Per-country junk sources — articles from these sources are false positives for that country
