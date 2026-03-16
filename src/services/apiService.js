@@ -423,7 +423,6 @@ const NEWS_APIS = {
 };
 
 export const NEWS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes — matches Worker cron
-const apiFailures = {};
 let _rssFallbackAttempts = 0;
 const MAX_RSS_FALLBACK_ATTEMPTS = 3; // Stop trying RSS after 3 failures
 let _rssFallbackInProgress = false; // Prevent concurrent RSS fallback runs
@@ -1182,26 +1181,9 @@ function formatArticlesForDisplay(articles, countryName) {
 // Try a news API with timeout
 // ============================================================
 
-async function tryNewsAPI(apiName, url, parseResults, timeoutMs = 8000) {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!response.ok) return null;
-    const data = await response.json();
-    const results = parseResults(data);
-    if (results && results.length > 0) {
-      return results;
-    }
-  } catch (error) {
-    console.warn(`${apiName} failed:`, error.message);
-  }
-  return null;
-}
-
 // ============================================================
-// Fetch country-specific news (cached, multi-source fallback)
+// Fetch country-specific news — calls worker /country-news endpoint
+// with local DAILY_BRIEFING + Google News fallback
 // ============================================================
 
 export async function fetchCountryNews(countryName) {
@@ -1210,17 +1192,40 @@ export async function fetchCountryNews(countryName) {
   const cached = getCachedNews(countryName);
   if (cached) return cached;
 
-  // 1b. Serve precache instantly if available (DAILY_BRIEFING matches — no network wait)
+  // 2. Try worker /country-news endpoint (pre-built feeds from cron)
+  try {
+    const resp = await fetch(`${RSS_PROXY_BASE}/country-news?country=${encodeURIComponent(countryName)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.articles && data.articles.length > 0) {
+        // Format for display consistency
+        const articles = data.articles.map(a => ({
+          headline: a.headline || '',
+          source: formatSourceName(a.source || 'News'),
+          pubDate: a.pubDate || '',
+          url: a.url || '',
+          category: a.category || 'WORLD',
+          importance: a.importance || 'medium',
+          qualityScore: scoreHeadlineQuality(a.headline || ''),
+          geoPriority: scoreGeoPriority(a.headline || '')
+        }));
+        console.log('[Hegemon] fetchCountryNews', countryName, '- from worker:', articles.length);
+        setCachedNews(countryName, articles);
+        return articles;
+      }
+    }
+  } catch (err) {
+    console.warn('[Hegemon] Worker country-news failed:', err.message);
+  }
+
+  // 3. Fallback: serve precache if available
   if (_precacheReady && COUNTRY_NEWS_PRECACHE[countryName] && COUNTRY_NEWS_PRECACHE[countryName].length > 0) {
     const precached = [...COUNTRY_NEWS_PRECACHE[countryName]];
-    // Cache these so subsequent opens are instant too
     setCachedNews(countryName, precached);
-    // Enrich with network sources in background (updates cache for next open)
-    _enrichCountryNewsBackground(countryName, precached);
     return precached;
   }
 
-  // Collect all matching articles from multiple sources
+  // 4. Fallback: search DAILY_BRIEFING locally
   const allArticles = [];
   const seenHeadlines = new Set();
 
@@ -1231,32 +1236,24 @@ export async function fetchCountryNews(countryName) {
     allArticles.push(article);
   };
 
-  const formatBriefingArticle = (a) => {
-    const headline = a.title || a.headline;
-    return {
-      headline,
-      source: formatSourceName(a.source_id || a.source || 'News'),
-      pubDate: a.pubDate || '', // Never use a.time — it's a relative string like "30m ago"
-      url: a.link || a.url || '',
-      category: a.category || detectCategory(headline, a.description || ''),
-      qualityScore: scoreHeadlineQuality(headline),
-      geoPriority: scoreGeoPriority(headline)
-    };
-  };
-
-  // 2. DAILY_BRIEFING articles — search ALL, match headline + description
-  console.log('[Hegemon] DAILY_BRIEFING.length:', DAILY_BRIEFING ? DAILY_BRIEFING.length : 0);
   if (DAILY_BRIEFING && DAILY_BRIEFING.length > 0) {
     DAILY_BRIEFING.forEach(article => {
       if (isRelevantToCountry(article.title || article.headline, article.description || '', countryName)) {
-        addArticle(formatBriefingArticle(article));
+        const headline = article.title || article.headline;
+        addArticle({
+          headline,
+          source: formatSourceName(article.source_id || article.source || 'News'),
+          pubDate: article.pubDate || '',
+          url: article.link || article.url || '',
+          category: article.category || detectCategory(headline, article.description || ''),
+          qualityScore: scoreHeadlineQuality(headline),
+          geoPriority: scoreGeoPriority(headline)
+        });
       }
     });
   }
-  console.log('[Hegemon] fetchCountryNews', countryName, '- from DAILY_BRIEFING:', allArticles.length);
 
-  // 3. Google News RSS (always try, no early returns)
-  // For ambiguous country names, add disambiguation to search query
+  // 5. Fallback: Google News RSS
   const AMBIGUOUS_SEARCH_QUALIFIERS = {
     'Georgia': 'Georgia Caucasus Tbilisi country',
     'Chad': 'Chad Africa N\'Djamena country',
@@ -1269,89 +1266,17 @@ export async function fetchCountryNews(countryName) {
     const googleNewsUrl = RSS_FEEDS.search(searchQuery);
     const articles = await fetchRSS(googleNewsUrl, 'Google News');
     if (articles && articles.length > 0) {
-      const formatted = formatArticlesForDisplay(articles, countryName);
-      formatted.forEach(a => addArticle(a));
-    }
-  } catch (error) {
-    console.warn('Google News RSS failed:', error.message);
-  }
-
-  // 4. Backup APIs (always try all)
-  const apiSearchQuery = AMBIGUOUS_SEARCH_QUALIFIERS[countryName] || countryName;
-  const apiOrder = ['gnews', 'newsdata', 'mediastack'];
-  for (const apiName of apiOrder) {
-    const api = NEWS_APIS[apiName];
-    if (!api || !api.key) continue;
-    if (apiFailures[apiName] && (Date.now() - apiFailures[apiName]) < 5 * 60 * 1000) continue;
-    const url = api.buildUrl(api.key, apiSearchQuery);
-    const results = await tryNewsAPI(apiName, url, api.parseResults);
-    if (results) {
-      formatArticlesForDisplay(results, countryName).forEach(a => addArticle(a));
-    } else {
-      apiFailures[apiName] = Date.now();
-    }
-  }
-
-  // 5. Broader regional search
-  try {
-    const countryData = COUNTRIES[countryName];
-    if (countryData && countryData.region) {
-      const regionQuery = `${countryName} ${countryData.region} news`;
-      const regionUrl = RSS_FEEDS.search(regionQuery);
-      const articles = await fetchRSS(regionUrl, 'Google News');
-      if (articles && articles.length > 0) {
-        formatArticlesForDisplay(articles, countryName).forEach(a => addArticle(a));
-      }
-    }
-  } catch (error) {
-    console.warn('Regional search failed:', error.message);
-  }
-
-  // Sort by geopolitical priority
-  allArticles.sort((a, b) => (b.geoPriority || 0) - (a.geoPriority || 0));
-
-  console.log('[Hegemon] fetchCountryNews', countryName, '- total articles:', allArticles.length);
-  setCachedNews(countryName, allArticles);
-  return allArticles;
-}
-
-// Background enrichment — fetches network sources and updates cache silently
-async function _enrichCountryNewsBackground(countryName, precachedArticles) {
-  try {
-    const seenHeadlines = new Set(precachedArticles.map(a => (a.headline || '').toLowerCase().substring(0, 60)));
-    const extra = [];
-    const addExtra = (article) => {
-      const h = (article.headline || '').toLowerCase().substring(0, 60);
-      if (seenHeadlines.has(h)) return;
-      seenHeadlines.add(h);
-      extra.push(article);
-    };
-
-    const AMBIGUOUS_SEARCH_QUALIFIERS = {
-      'Georgia': 'Georgia Caucasus Tbilisi country',
-      'Chad': 'Chad Africa N\'Djamena country',
-      'Jordan': 'Jordan Middle East Amman country',
-      'Mali': 'Mali Africa Bamako country',
-      'Niger': 'Niger Africa Niamey country',
-    };
-
-    // Google News RSS
-    try {
-      const searchQuery = AMBIGUOUS_SEARCH_QUALIFIERS[countryName] || (countryName + ' news');
-      const googleNewsUrl = RSS_FEEDS.search(searchQuery);
-      const articles = await fetchRSS(googleNewsUrl, 'Google News');
-      if (articles && articles.length > 0) {
-        formatArticlesForDisplay(articles, countryName).forEach(a => addExtra(a));
-      }
-    } catch { /* silent */ }
-
-    if (extra.length > 0) {
-      const merged = [...precachedArticles, ...extra];
-      setCachedNews(countryName, merged);
+      formatArticlesForDisplay(articles, countryName).forEach(a => addArticle(a));
     }
   } catch {
-    // Background enrichment is best-effort
+    // silent
   }
+
+  allArticles.sort((a, b) => (b.geoPriority || 0) - (a.geoPriority || 0));
+
+  console.log('[Hegemon] fetchCountryNews', countryName, '- fallback total:', allArticles.length);
+  if (allArticles.length > 0) setCachedNews(countryName, allArticles);
+  return allArticles;
 }
 
 // Fetch news for non-state actor groups via Google News RSS
