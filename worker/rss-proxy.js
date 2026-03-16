@@ -814,17 +814,17 @@ const COUNTRY_DEMONYMS = {
   'Belgium': ['belgian', 'brussels'],
   'Bolivia': ['bolivian', 'la paz', 'arce'],
   'Bosnia and Herzegovina': ['bosnian', 'sarajevo'],
-  'Brazil': ['brazilian', 'brasilia', 'rio', 'sao paulo', 'lula'],
+  'Brazil': ['brazilian', 'brasilia', 'sao paulo', 'lula', 'rio de janeiro'],
   'Bulgaria': ['bulgarian', 'sofia'],
   'Burkina Faso': ['burkinabe', 'ouagadougou', 'traore', 'jnim'],
   'Cambodia': ['cambodian', 'phnom penh', 'hun manet'],
   'Cameroon': ['cameroonian', 'yaounde', 'biya'],
   'Canada': ['canadian', 'ottawa', 'toronto', 'trudeau'],
-  'Central African Republic': ['central african', 'bangui', 'wagner group'],
+  'Central African Republic': ['central african', 'bangui', 'touadera'],
   'Chad': ['chadian', "n'djamena", 'deby', 'lake chad'],
   'Chile': ['chilean', 'santiago', 'boric'],
   'China': ['chinese', 'beijing', 'xi jinping', 'ccp', 'prc', 'shanghai', 'guangzhou'],
-  'Colombia': ['colombian', 'bogota', 'petro', 'farc', 'medellin', 'cali'],
+  'Colombia': ['colombian', 'bogota', 'gustavo petro', 'medellin', 'cali', 'farc'],
   'Democratic Republic of Congo': ['congolese', 'kinshasa', 'drc', 'goma', 'm23', 'tshisekedi'],
   'DRC': ['congolese', 'kinshasa', 'drc', 'goma', 'm23', 'tshisekedi'],
   'Republic of Congo': ['congo-brazzaville', 'brazzaville'],
@@ -860,13 +860,13 @@ const COUNTRY_DEMONYMS = {
   'Indonesia': ['indonesian', 'jakarta', 'prabowo', 'subianto', 'java', 'sumatra', 'indonesia', 'bali', 'borneo', 'kalimantan', 'sulawesi', 'papua indonesia', 'jokowi'],
   'Iran': ['iranian', 'tehran', 'ayatollah', 'khamenei', 'irgc', 'pezeshkian', 'hormuz', 'isfahan'],
   'Iraq': ['iraqi', 'baghdad', 'kurdish', 'basra', 'erbil', 'mosul', 'kirkuk'],
-  'Ireland': ['irish', 'dublin', 'ireland', 'sinn fein', 'taoiseach', 'dail'],
+  'Ireland': ['irish', 'dublin', 'ireland', 'sinn fein', 'taoiseach'],
   'Israel': ['israeli', 'tel aviv', 'jerusalem', 'netanyahu', 'idf', 'knesset', 'haifa'],
   'Italy': ['italian', 'rome', 'meloni'],
   'Ivory Coast': ['ivorian', 'abidjan'],
   'Jamaica': ['jamaican', 'kingston'],
   'Japan': ['japanese', 'tokyo', 'kishida', 'okinawa'],
-  'Jordan': ['jordanian', 'amman', 'hashemite', 'abdullah'],
+  'Jordan': ['jordanian', 'amman', 'hashemite', 'king abdullah'],
   'Kazakhstan': ['kazakh', 'astana', 'almaty', 'tokayev'],
   'Kenya': ['kenyan', 'nairobi', 'ruto', 'mombasa'],
   'Kosovo': ['kosovar', 'pristina', 'kurti'],
@@ -889,7 +889,7 @@ const COUNTRY_DEMONYMS = {
   'Montenegro': ['montenegrin', 'podgorica'],
   'Morocco': ['moroccan', 'rabat', 'casablanca', 'mohammed vi'],
   'Mozambique': ['mozambican', 'maputo', 'cabo delgado', 'al-shabaab mozambique'],
-  'Myanmar': ['burmese', 'myanmar', 'yangon', 'junta', 'naypyidaw', 'min aung hlaing', 'rakhine', 'rohingya'],
+  'Myanmar': ['burmese', 'myanmar', 'yangon', 'naypyidaw', 'min aung hlaing', 'rakhine', 'rohingya', 'myanmar junta'],
   'Namibia': ['namibian', 'windhoek'],
   'Nepal': ['nepali', 'nepalese', 'kathmandu', 'nepal', 'pokhara', 'everest base camp'],
   'Netherlands': ['dutch', 'amsterdam', 'the hague'],
@@ -907,7 +907,7 @@ const COUNTRY_DEMONYMS = {
   'Papua New Guinea': ['papua new guinean', 'port moresby'],
   'Paraguay': ['paraguayan', 'asuncion'],
   'Peru': ['peruvian', 'lima', 'boluarte', 'cusco', 'arequipa', 'machu picchu', 'peruvian congress'],
-  'Philippines': ['filipino', 'philippine', 'manila', 'marcos', 'duterte', 'mindanao', 'philippines', 'davao', 'cebu'],
+  'Philippines': ['filipino', 'philippine', 'manila', 'marcos jr', 'duterte', 'mindanao', 'philippines', 'davao', 'cebu'],
   'Poland': ['polish', 'warsaw', 'tusk'],
   'Portugal': ['portuguese', 'lisbon'],
   'Qatar': ['qatari', 'doha', 'qatar', 'al thani', 'al udeid'],
@@ -924,13 +924,13 @@ const COUNTRY_DEMONYMS = {
   'Somalia': ['somali', 'mogadishu', 'al-shabaab', 'puntland'],
   'Somaliland': ['somalilander', 'hargeisa', 'somaliland'],
   'South Africa': ['south african', 'johannesburg', 'pretoria', 'cape town', 'ramaphosa', 'anc', 'south africa', 'durban', 'soweto', 'gnu coalition'],
-  'South Korea': ['south korean', 'seoul', 'korean'],
+  'South Korea': ['south korean', 'seoul', 'yoon suk yeol'],
   'South Sudan': ['south sudanese', 'juba', 'kiir'],
-  'Spain': ['spanish', 'madrid', 'barcelona', 'sanchez'],
+  'Spain': ['spanish', 'madrid', 'barcelona', 'pedro sanchez', 'moncloa'],
   'Sri Lanka': ['sri lankan', 'colombo', 'sri lanka', 'sinhalese', 'tamil tigers'],
   'Sudan': ['sudanese', 'khartoum', 'darfur', 'rsf', 'rapid support', 'al-burhan', 'hemedti', 'el-fasher', 'port sudan', 'omdurman'],
   'Sweden': ['swedish', 'stockholm'],
-  'Switzerland': ['swiss', 'bern', 'zurich', 'geneva'],
+  'Switzerland': ['swiss', 'bern', 'zurich'],
   'Syria': ['syrian', 'damascus', 'assad', 'aleppo', 'idlib', 'al-sharaa', 'hts', 'hayat tahrir', 'sdf', 'latakia', 'homs', 'deir ez-zor', 'raqqa', 'tartus'],
   'Taiwan': ['taiwanese', 'taipei', 'tsai ing-wen', 'lai ching-te'],
   'Tanzania': ['tanzanian', 'dodoma', 'dar es salaam'],
@@ -941,8 +941,8 @@ const COUNTRY_DEMONYMS = {
   'Uganda': ['ugandan', 'kampala', 'museveni'],
   'Ukraine': ['ukrainian', 'kyiv', 'zelensky', 'zelenskyy', 'kharkiv', 'odesa', 'syrskyi', 'bakhmut'],
   'United Arab Emirates': ['emirati', 'uae', 'dubai', 'abu dhabi', 'al dhafra', 'fujairah', 'united arab emirates', 'sharjah'],
-  'United Kingdom': ['british', 'uk', 'britain', 'london', 'parliament', 'westminster', 'starmer'],
-  'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'congress', 'white house', 'pentagon'],
+  'United Kingdom': ['british', 'uk', 'britain', 'london', 'starmer', 'downing street', 'house of commons', 'keir starmer'],
+  'United States': ['u.s.', 'american', 'washington', 'biden', 'trump', 'white house', 'pentagon', 'capitol hill'],
   'Uruguay': ['uruguayan', 'montevideo'],
   'Uzbekistan': ['uzbek', 'tashkent', 'mirziyoyev'],
   'Venezuela': ['venezuelan', 'caracas', 'maduro', 'guaido'],
@@ -1072,7 +1072,14 @@ function getCountryLookup() {
   _countryLookup = [];
   for (const [country, aliases] of Object.entries(COUNTRY_DEMONYMS)) {
     const countryLower = country.toLowerCase();
-    _countryLookup.push({ name: countryLower, terms: [countryLower, ...aliases] });
+    const allTerms = [countryLower, ...aliases];
+    // Pre-compile word-boundary regexes for ALL terms to prevent substring false matches
+    // (e.g., "dail" matching "daily", "lima" matching "climate", "modi" matching "commodity")
+    const termRegexes = allTerms.map(term => ({
+      term,
+      regex: new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b')
+    }));
+    _countryLookup.push({ name: countryLower, terms: allTerms, termRegexes });
   }
   return _countryLookup;
 }
@@ -1088,18 +1095,13 @@ function extractPrimaryCountry(headline) {
     }
   }
 
-  // Country names/demonyms — first non-stoplist match
+  // Country names/demonyms — first non-stoplist match (word-boundary regex for all terms)
   const lookup = getCountryLookup();
-  for (const { name, terms } of lookup) {
+  for (const { name, termRegexes } of lookup) {
     if (STOPLIST_ENTITIES.has(name)) continue;
-    for (const term of terms) {
+    for (const { term, regex } of termRegexes) {
       if (STOPLIST_ENTITIES.has(term)) continue;
-      if (term.length <= 3) {
-        const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-        if (regex.test(lower)) return name;
-      } else {
-        if (lower.includes(term)) return name;
-      }
+      if (regex.test(lower)) return name;
     }
   }
 
@@ -1120,9 +1122,9 @@ function extractAllCountries(text) {
   const lower = text.toLowerCase();
   const countries = new Set();
   const lookup = getCountryLookup();
-  for (const { name, terms } of lookup) {
-    for (const term of terms) {
-      if (lower.includes(term)) { countries.add(name); break; }
+  for (const { name, termRegexes } of lookup) {
+    for (const { regex } of termRegexes) {
+      if (regex.test(lower)) { countries.add(name); break; }
     }
   }
   return countries;
@@ -1170,8 +1172,8 @@ const COUNTRY_FALSE_POSITIVE_FILTERS = {
   },
   // Panama: exclude US "Panama City Beach" / Florida references
   'Panama': (text) => {
-    const hasUSPanama = /\bpanama city beach|spring break.*panama|waffle house.*panama|panama city[,\s]+fl/i.test(text);
-    const hasPanamaCountry = /\bpanama canal|mulino|darien|panamanian\b/i.test(text);
+    const hasUSPanama = /\bpanama city beach|panama city[,\s]+fl|panhandle|bay county|gulf coast.*panama|waffle house.*panama|panama city news herald|panama city.*florida|dolphins.*panhandle|daylight saving.*panama|ten bay|bay restaurants/i.test(text);
+    const hasPanamaCountry = /\bpanama canal|mulino|darien|panamanian|latin america|central america/i.test(text);
     return hasUSPanama && !hasPanamaCountry;
   },
 };
@@ -1198,16 +1200,11 @@ function matchArticleToCountries(article) {
     if (text.includes(geo)) matched.add(country);
   }
 
-  // Check COUNTRY_DEMONYMS
+  // Check COUNTRY_DEMONYMS (word-boundary regex for all terms)
   const lookup = getCountryLookup();
-  for (const { name, terms } of lookup) {
-    for (const term of terms) {
-      if (term.length <= 3) {
-        const regex = new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-        if (regex.test(text)) { matched.add(name); break; }
-      } else {
-        if (text.includes(term)) { matched.add(name); break; }
-      }
+  for (const { name, termRegexes } of lookup) {
+    for (const { regex } of termRegexes) {
+      if (regex.test(text)) { matched.add(name); break; }
     }
   }
 
@@ -1218,7 +1215,11 @@ function matchArticleToCountries(article) {
       const properCase = getCountryProperCase();
       const properName = properCase[country];
       const demonyms = properName ? COUNTRY_DEMONYMS[properName] : [];
-      const hasSpecificMatch = demonyms && demonyms.some(d => d !== country && text.includes(d));
+      const hasSpecificMatch = demonyms && demonyms.some(d => {
+        if (d === country) return false;
+        const re = new RegExp('\\b' + d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+        return re.test(text);
+      });
       if (!hasSpecificMatch) matched.delete(country);
     }
   }
@@ -1233,10 +1234,12 @@ const COUNTRY_NEWS_JUNK_PATTERNS = [
   /\b(?:beats?|defeats?|routs?|tops?|edges?|shuts? down|advances?|eliminates?|holds?|blanks?|sweeps?|rallies?)\b.*\b(?:in \d|[-–]\d|\d[-–]|\d-\d)/i,
   /\b(?:semifinal|quarterfinal|pool [a-d]|group stage|round of 16|championship game|friendly match|exhibition game)\b/i,
   /\bwins?\s+(?:gold|silver|bronze|medal|title|trophy|cup|race|series)\b/i,
+  /\b(?:classic final|advances in|nailbiter|shuts down.*stars|team usa advances|advances to final)\b/i,
+  /\b(?:club election|club president|elected president of)\b/i,
   /\b(?:wickets?|bowled|innings|pitching|batting|run chase|lbw|stumped|maiden over|six-wicket)\b/i,
   /\b(?:striker|goalkeeper|midfielder|hat-?trick|penalty kick|red card|yellow card|offside|stoppage time)\b/i,
-  // Crime in OTHER countries — "[nationality] man in [city]", deportation stories
-  /\b(?:arrested|charged|sentenced|deported|detained|accused)\b.*\b(?:in (?:new york|nyc|los angeles|chicago|miami|boston|london|toronto))\b/i,
+  // Crime in OTHER countries — "[nationality] man in [city/county]", deportation stories
+  /\b(?:arrested|charged|sentenced|deported|detained|accused|seized|smuggling)\b.*\b(?:in (?:new york|nyc|los angeles|chicago|miami|boston|london|toronto|houston|dallas|phoenix|san antonio|san diego|philadelphia|ohio|texas|florida|california|stark county|cuyahoga|hamilton county))\b/i,
   /\bice\s+(?:arrests?|detains?|deports?)\b/i,
   /\b(?:deported to|deportation to|deport\w+ from)\b/i,
   // Archaeology / ancient history
@@ -1252,10 +1255,12 @@ const COUNTRY_NEWS_JUNK_PATTERNS = [
   // "Finalissima" type cancelled match stories (about the cancellation, not the country)
   /\bfinalissima\b/i,
   // Reindeer racing, cherry blossoms, etc — local color not geopolitics
-  /\b(?:reindeer racing|cherry blossom|sakura season)\b/i,
-  // US domestic / spring break / local crime
+  /\b(?:reindeer racing|cherry blossom|sakura season|deaf curling)\b/i,
+  // US domestic / spring break / local crime / immigration enforcement
   /\bspring break\b/i,
   /\b(?:deported \d+ times|four-time deported|previously deported)\b/i,
+  /\b(?:illegal immigrant|illegal alien|charged for voting|voter fraud)\b.*\b(?:in (?:u\.?s\.?|america|united states))\b/i,
+  /\billegal\s+(?:immigrant|alien)\s+charged\b/i,
   // Encyclopedia / reference articles (Britannica, Wikipedia summaries)
   /\b(?:britannica|encyclopedia|wikipedia)\b/i,
   // Weather forecasts (not weather disasters)
@@ -1270,7 +1275,14 @@ const JUNK_SOURCE_PATTERNS = [
   /wikipedia/i,
   /msn\s*weather/i,
   /accuweather/i,
+  /metropolitan museum/i,
 ];
+
+// Per-country junk sources — articles from these sources are false positives for that country
+const COUNTRY_JUNK_SOURCES = {
+  'Panama': [/panama city news herald/i, /mypanhandle/i, /nwfdailynews/i],
+  'Malta': [/nbc montana/i, /times union/i, /non stop local/i, /daily inter lake/i, /kpax/i, /nbcmontana/i],
+};
 
 // Check if article is likely a false positive for country news
 function isCountryNewsFalsePositive(headline, countryName, source) {
@@ -1286,6 +1298,16 @@ function isCountryNewsFalsePositive(headline, countryName, source) {
     const srcLower = (source || '').toLowerCase();
     for (const pattern of JUNK_SOURCE_PATTERNS) {
       if (pattern.test(srcLower)) return true;
+    }
+  }
+
+  // Check per-country junk sources
+  if (source) {
+    const countryJunk = COUNTRY_JUNK_SOURCES[countryName];
+    if (countryJunk) {
+      for (const pattern of countryJunk) {
+        if (pattern.test(source)) return true;
+      }
     }
   }
 
@@ -1367,7 +1389,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
   // Merge with existing feeds
   const merged = {};
   const STALE_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
-  const MAX_PER_COUNTRY = 30;
+  const MAX_PER_COUNTRY = 40;
 
   // Process all country keys (both new and existing)
   const allCountryKeys = new Set([...Object.keys(countryFeeds), ...Object.keys(existing)]);
@@ -1478,9 +1500,9 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       sparse.push(country);
     } else if (SEVERE_COUNTRIES.has(country) && count < 10) {
       sparse.push(country);
-    } else if (STORMY_COUNTRIES.has(country) && count < 5) {
+    } else if (STORMY_COUNTRIES.has(country) && count < 7) {
       sparse.push(country);
-    } else if (count < 3) {
+    } else if (count < 7) {
       sparse.push(country);
     }
   }
@@ -1538,6 +1560,18 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'Bolivia': 'Bolivia news today',
       'Madagascar': 'Madagascar news today',
       'Qatar': 'Qatar news today',
+      'Dominican Republic': '"Dominican Republic" -baseball -WBC -classic',
+      'Austria': 'Austria news today',
+      'Sweden': 'Sweden news today',
+      'Argentina': 'Argentina news today',
+      'Poland': 'Poland news today',
+      'Ivory Coast': 'Ivory Coast Cote d\'Ivoire news',
+      'Malawi': 'Malawi news today',
+      'Gabon': 'Gabon news today',
+      'Mauritania': 'Mauritania news today',
+      'Spain': 'Spain news today',
+      'Finland': 'Finland news today',
+      'Italy': 'Italy news today',
     };
 
     const supplementResults = await Promise.allSettled(
