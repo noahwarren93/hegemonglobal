@@ -5,6 +5,7 @@ import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { COUNTRIES } from '../../data/countries';
 import { TRADE_ROUTES } from '../../data/tradeData';
+import { CHOKEPOINTS } from '../../data/chokepointData';
 import { latLngToVector3 } from '../Globe/GlobeView';
 
 // ============================================================
@@ -64,6 +65,7 @@ export function useTradeRoutes() {
   const tradeDotGroups = useRef([]);
   const tradeAnimFrame = useRef(null);
   const highlightedCountryRef = useRef(null);
+  const chokepointMeshesRef = useRef([]);
 
   const startTradeAnimation = useCallback(() => {
     if (tradeAnimFrame.current) cancelAnimationFrame(tradeAnimFrame.current);
@@ -83,6 +85,13 @@ export function useTradeRoutes() {
           p.y + (np.y - p.y) * frac,
           p.z + (np.z - p.z) * frac
         );
+      });
+      // Pulse chokepoint markers
+      const pulse = 1.0 + 0.25 * Math.sin(Date.now() * 0.003);
+      const opPulse = 0.7 + 0.25 * Math.sin(Date.now() * 0.003);
+      chokepointMeshesRef.current.forEach(m => {
+        m.scale.set(pulse, pulse, pulse);
+        if (m.material) m.material.opacity = opPulse;
       });
     }
     animateDots();
@@ -108,7 +117,9 @@ export function useTradeRoutes() {
     }
     tradeRouteMeshes.current = [];
     tradeDotGroups.current = [];
+    chokepointMeshesRef.current = [];
     window.tradeRouteMeshes = [];
+    window.chokepointMeshes = [];
   }, [stopTradeAnimation]);
 
   const showTradeRoutes = useCallback((highlightCountry) => {
@@ -168,6 +179,20 @@ export function useTradeRoutes() {
         }
       }
     });
+
+    // Chokepoint diamond markers
+    chokepointMeshesRef.current = [];
+    CHOKEPOINTS.forEach(cp => {
+      const geom = new THREE.OctahedronGeometry(0.03);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 });
+      const mesh = new THREE.Mesh(geom, mat);
+      const pos = latLngToVector3(cp.lat, cp.lng, 1.035);
+      mesh.position.copy(pos);
+      mesh.userData = { chokepoint: cp, isChokepoint: true };
+      tradeRouteGroup.current.add(mesh);
+      chokepointMeshesRef.current.push(mesh);
+    });
+    window.chokepointMeshes = chokepointMeshesRef.current;
 
     globeView.globe.add(tradeRouteGroup.current);
     // Sync to window globals so GlobeView hover handler can detect trade route lines

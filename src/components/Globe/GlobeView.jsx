@@ -252,6 +252,7 @@ export function dismissAllPopups() {
   const tt = document.getElementById('tooltip');
   if (tt) tt.style.display = 'none';
   if (typeof window.hideTradeRouteTooltip === 'function') window.hideTradeRouteTooltip();
+  if (typeof window.hideChokepointTooltip === 'function') window.hideChokepointTooltip();
   if (typeof window.closeTradeInfoPanel === 'function') window.closeTradeInfoPanel();
   if (typeof window.closeStatPopup === 'function') window.closeStatPopup();
   if (typeof window.closeSearchOverlay === 'function') window.closeSearchOverlay();
@@ -601,6 +602,17 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
         return null; // Block all country clicks when non-state actors active
       }
 
+      // 0.7) Chokepoint click — when trade routes active, check diamond markers
+      if (window.tradeRoutesActive && window.chokepointMeshes && window.chokepointMeshes.length > 0) {
+        const cpHits = raycaster.intersectObjects(window.chokepointMeshes);
+        if (cpHits.length > 0 && cpHits[0].object.userData.chokepoint) {
+          if (typeof window._onChokepointClick === 'function') {
+            window._onChokepointClick(cpHits[0].object.userData.chokepoint);
+          }
+          return 'chokepoint';
+        }
+      }
+
       // 1) Direct marker hit — always wins
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
       if (intersects.length > 0) {
@@ -675,6 +687,22 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       }
 
       const intersects = raycaster.intersectObjects(countryMeshesRef.current);
+
+      // Check chokepoint marker hover when trade routes are active
+      if (window.tradeRoutesActive && window.chokepointMeshes && window.chokepointMeshes.length > 0) {
+        const cpHits = raycaster.intersectObjects(window.chokepointMeshes);
+        if (cpHits.length > 0 && cpHits[0].object.userData.chokepoint) {
+          const cp = cpHits[0].object.userData.chokepoint;
+          if (typeof window.showChokepointTooltip === 'function') {
+            window.showChokepointTooltip(cp, event.clientX, event.clientY);
+          }
+          setTooltipData(null);
+          renderer.domElement.style.cursor = 'pointer';
+          return;
+        } else {
+          if (typeof window.hideChokepointTooltip === 'function') window.hideChokepointTooltip();
+        }
+      }
 
       // Check trade route line hover when trade routes are active
       if (window.tradeRoutesActive && window.tradeRouteMeshes && window.tradeRouteMeshes.length > 0) {
@@ -823,6 +851,7 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     function handleMouseLeave() {
       setTooltipData(null);
       if (typeof window.hideTradeRouteTooltip === 'function') window.hideTradeRouteTooltip();
+      if (typeof window.hideChokepointTooltip === 'function') window.hideChokepointTooltip();
     }
 
     // ---- Mouse drag rotation ----
@@ -1054,6 +1083,44 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
     return () => {
       delete window.showTradeRouteTooltip;
       delete window.hideTradeRouteTooltip;
+    };
+  }, []);
+
+  // Chokepoint tooltip functions (reuses tradeTooltipRef div)
+  useEffect(() => {
+    window.showChokepointTooltip = (cp, x, y) => {
+      const tt = tradeTooltipRef.current;
+      if (!tt) return;
+      const statusColor = cp.status === 'CLOSED' ? '#ef4444' : cp.status === 'RESTRICTED' ? '#f59e0b' : '#22c55e';
+      tt.innerHTML =
+        '<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:#f59e0b;">\u25C6 ' + cp.name + '</div>' +
+        '<div style="color:#d1d5db;margin-bottom:6px;font-size:9px;">' + cp.summary.slice(0, 120) + '...</div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Status:</span><span style="color:' + statusColor + ';font-weight:600;">' + cp.status + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#6b7280;">Daily Vessels:</span><span style="color:#e5e7eb;font-weight:600;">' + cp.dailyVessels + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Oil Volume:</span><span style="color:#e5e7eb;font-weight:600;">' + cp.oilVolume + '</span></div>';
+      tt.style.display = 'block';
+      const offset = 15;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const tw = tt.offsetWidth || 320;
+      const th = tt.offsetHeight || 200;
+      let posLeft = x + offset;
+      let posTop = y + offset;
+      if (posLeft + tw > vw - 10) posLeft = x - tw - offset;
+      if (posLeft < 10) posLeft = 10;
+      if (posTop + th > vh - 10) posTop = y - th - offset;
+      if (posTop < 10) posTop = 10;
+      tt.style.left = posLeft + 'px';
+      tt.style.top = posTop + 'px';
+    };
+    window.hideChokepointTooltip = () => {
+      // Only hide if not showing a trade route tooltip
+      const tt = tradeTooltipRef.current;
+      if (tt && tt.innerHTML.includes('\u25C6')) tt.style.display = 'none';
+    };
+    return () => {
+      delete window.showChokepointTooltip;
+      delete window.hideChokepointTooltip;
     };
   }, []);
 

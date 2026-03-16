@@ -16,6 +16,7 @@ import MilitaryBasesPanel from '../components/Military/MilitaryBasesPanel';
 import MilitaryCountryPopup from '../components/Military/MilitaryCountryPopup';
 import { useMilitaryOverlay } from '../components/Military/MilitaryOverlay';
 import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
+import ChokepointPanel from '../components/TradeRoutes/ChokepointPanel';
 import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
 import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS } from '../data/threatGroupData';
 
@@ -344,6 +345,10 @@ export default function HomePage() {
   const [selectedThreatGroup, setSelectedThreatGroup] = useState(null);
   const [threatGroupPanelOpen, setThreatGroupPanelOpen] = useState(false);
 
+  // --- Chokepoint panel ---
+  const [selectedChokepoint, setSelectedChokepoint] = useState(null);
+  const [chokepointPanelOpen, setChokepointPanelOpen] = useState(false);
+
   // --- Search ---
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -517,6 +522,15 @@ export default function HomePage() {
     return () => { delete window._onThreatGroupClick; };
   }, []);
 
+  // Register chokepoint click callback on window
+  useEffect(() => {
+    window._onChokepointClick = (cp) => {
+      setSelectedChokepoint(cp);
+      setChokepointPanelOpen(true);
+    };
+    return () => { delete window._onChokepointClick; };
+  }, []);
+
   // ============================================================
   // Handlers
   // ============================================================
@@ -602,6 +616,8 @@ export default function HomePage() {
       hideTradeRoutes();
       setTradeInfoCountry(null);
       setTradeInfoOpen(false);
+      setChokepointPanelOpen(false);
+      setSelectedChokepoint(null);
     }
   }, [tradeRoutesActive, militaryMode, threatGroupsActive, showTradeRoutes, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
@@ -777,6 +793,7 @@ export default function HomePage() {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         if (searchOpen) { setSearchOpen(false); return; }
+        if (chokepointPanelOpen) { setChokepointPanelOpen(false); setSelectedChokepoint(null); return; }
         if (threatGroupPanelOpen) { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); return; }
         if (milCountryPopupOpen) { setMilCountryPopupOpen(false); setMilCountryPopupName(null); return; }
         if (militaryInfoOpen) { setMilitaryInfoOpen(false); setSelectedInstallation(null); return; }
@@ -794,7 +811,7 @@ export default function HomePage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [searchOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
+  }, [searchOpen, chokepointPanelOpen, threatGroupPanelOpen, milCountryPopupOpen, militaryInfoOpen, statPopupOpen, stocksModalOpen, modalOpen, tosOpen, tradeInfoOpen]);
 
   // ============================================================
   // Render
@@ -963,6 +980,13 @@ export default function HomePage() {
             group={selectedThreatGroup}
             isOpen={threatGroupPanelOpen}
             onClose={() => { setThreatGroupPanelOpen(false); setSelectedThreatGroup(null); }}
+          />
+
+          {/* Chokepoint Panel */}
+          <ChokepointPanel
+            chokepoint={selectedChokepoint}
+            isOpen={chokepointPanelOpen}
+            onClose={() => { setChokepointPanelOpen(false); setSelectedChokepoint(null); }}
           />
 
           {/* Threat Groups Legend */}
