@@ -1049,13 +1049,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
     return (
       <>
-        {/* Breaking News — ALWAYS pinned, never removed by auto-refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(220,38,38,0.25) 0%, rgba(127,29,29,0.15) 50%, transparent 100%)', borderLeft: '3px solid #dc2626', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '1.5px' }}>BREAKING NEWS</span>
-        </div>
-        {renderBreakingCard()}
-
-        {/* Loading state — show after breaking card */}
+        {/* Loading state */}
         {DAILY_EVENTS.length === 0 && (
           <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
             {DAILY_BRIEFING.length === 0 ? 'Loading events...' : 'Clustering articles into events...'}
@@ -1072,6 +1066,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             </span>
           )}
         </div>
+        {renderBreakingCard()}
         {renderPakAfgCard()}
         {renderUkrRusCard()}
         {renderSudanCard()}
