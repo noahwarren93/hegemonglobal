@@ -1200,78 +1200,41 @@ function sharedTopics(topicsA, topicsB) {
 // Country News Feed System
 // ============================================================
 
-// Ambiguous country name exclusion patterns
-const AMBIGUOUS_EXCLUDE = {
-  'chad': /\bchad\s+(?:johnson|ochocinco|kelly|pennington|henne|wolf|gable|smith|michael|reed|green|brown|hurley|kroeger|daniels|benson|coleman|lowe|powers|morris|hart|harris|boseman|jordan|stahelski|everett)\b/i,
-  'georgia': /\b(?:georgia\s+(?:tech|bulldogs|state\s+university|peach|primary|runoff|senate\s+race|football)|(?:atlanta|savannah|augusta|macon)[,\s]+georgia)\b/i,
-  'jordan': /\b(?:michael\s+jordan|jordan\s+(?:peele|brand|peterson|spieth|love|clarkson|pickford|henderson|fisher|chiles|walsh|neely|poole|davis|thompson|travis))\b/i,
-  'niger': /\b(?:nigeria|nigerian)\b/i,
-  'malta': /\b(?:malta[,\s]+(?:montana|mt|new york|ny|ohio|oh|idaho|id|illinois|il)|malta\s+(?:bend|ridge|ave|avenue|drive))\b/i,
-  'panama': /\b(?:panama\s+city\s+beach|panama\s+city[,\s]+(?:fl|florida)|panama[,\s]+(?:ny|new york|iowa|ok|oklahoma))\b/i,
-  'grenada': /\b(?:grenada[,\s]+(?:ms|miss|mississippi|county)|grenada\s+(?:school|lake|high school|middle school|elementary))\b/i,
-  'tonga': /\b(?:khyiris\s+tonga|tonga\s+(?:sack|tackle|defensive|linebacker|bears|browns|cardinals|nfl))\b/i,
-  'angola': /\b(?:angola[,\s]+(?:la|louisiana|indiana|in|ny|new york)|angola\s+(?:prison|penitentiary|correctional|rodeo|inmates?|state prison))\b/i,
-  'monaco': /\b(?:monaco\s+(?:haircut|salon|hairstyle|template|font))\b/i,
+// WHITELIST approach for ambiguous country names.
+// For any country listed here, the article must contain at least one
+// country-specific term (capital, demonym, leader, regional ID) to be included.
+// Matching only the country name is NOT enough — too many false positives.
+const AMBIGUOUS_COUNTRY_WHITELIST = {
+  'grenada': /\b(?:caribbean|grenadian|st\.?\s*george'?s?|dickon\s+mitchell|caricom|oecs|west\s+indies|spice\s+isle|nutmeg|carriacou|windward)\b/i,
+  'tonga': /\b(?:tongan|nuku'?alofa|pacific\s+island|polynesi|oceania|hunga|volcanic|tonga.*kingdom|kingdom.*tonga|tupou)\b/i,
+  'monaco': /\b(?:monegasque|monte\s+carlo|prince\s+albert|principality|grand\s+prix\s+de\s+monaco|riviera|monaco.*government|monaco.*economy|monaco.*tax)\b/i,
+  'samoa': /\b(?:samoan|apia|pacific\s+island|polynesi|oceania|manu\s+samoa|samoa.*government|samoa.*parliament)\b/i,
+  'angola': /\b(?:angolan|luanda|mpla|cabinda|kwanza|unita|lourenco|dos\s+santos|angolan\s+government)\b/i,
+  'poland': /\b(?:polish|warsaw|tusk|duda|sejm|kaczynski|pis\b|nato.*poland|poland.*nato|krakow|gdansk|zloty|wroclaw)\b/i,
+  'panama': /\b(?:panamanian|panama\s+canal|mulino|darien|latin\s+america|central\s+america|panama.*government)\b/i,
+  'malta': /\b(?:maltese|valletta|mediterranean.*island|eu\s+member.*malta|malta.*eu|malta.*government|robert\s+abela)\b/i,
+  'chad': /\b(?:chadian|n'?djamena|sahel|deby|d[eé]by|lake\s+chad|chad.*government|chad.*military|chad.*junta)\b/i,
+  'georgia': /\b(?:georgian|tbilisi|caucasus|abkhazia|south\s+ossetia|saakashvili|ivanishvili|georgian\s+dream)\b/i,
+  'jordan': /\b(?:jordanian|amman|abdullah|hashemite|dead\s+sea|west\s+bank|jordan.*government|jordan.*king)\b/i,
+  'niger': /\b(?:nigerien|niamey|sahel|ecowas.*niger|niger.*ecowas|uranium|tiani|niger.*junta|niger.*coup)\b/i,
 };
 
 // Country-level false positive filters — reject articles from a country feed
 // if they clearly aren't about that country
 const COUNTRY_FALSE_POSITIVE_FILTERS = {
-  // Niger: exclude articles that mention Nigeria/Nigerian but NOT Niger-specific terms
-  'Niger': (text) => {
-    const hasNigeria = /\bnigeria|nigerian\b/i.test(text);
-    const hasNigerSpecific = /\bniamey|nigerien|niger republic|tiani|niger\s+(?:military|junta|coup|sahel)\b/i.test(text);
-    return hasNigeria && !hasNigerSpecific;
-  },
   // Denmark: exclude US domestic stories (Denmark is a town name in several US states)
   'Denmark': (text) => {
     const hasUSDenmark = /\b(?:virginia|south carolina|wisconsin|maine)\b/i.test(text);
     const hasDenmarkCountry = /\b(?:danish|copenhagen|danish government|frederiksen|greenland|nordic)\b/i.test(text);
     return hasUSDenmark && !hasDenmarkCountry;
   },
-  // Panama: exclude US "Panama City Beach" / Florida references
-  'Panama': (text) => {
-    const hasUSPanama = /\bpanama city beach|panama city[,\s]+fl|panhandle|bay county|gulf coast.*panama|waffle house.*panama|panama city news herald|panama city.*florida|dolphins.*panhandle|daylight saving.*panama|ten bay|bay restaurants|school merger.*panama|panama.*school merger|panama emphasizes support/i.test(text);
-    const hasPanamaCountry = /\bpanama canal|mulino|darien|panamanian|latin america|central america/i.test(text);
-    return hasUSPanama && !hasPanamaCountry;
-  },
-  // Grenada: exclude Grenada County Mississippi references
-  'Grenada': (text) => {
-    const hasUSGrenada = /\b(?:mississippi|grenada county|grenada lake|grenada school|grenada high|ms\b)/i.test(text);
-    const hasGrenadaCountry = /\b(?:grenadian|st\.?\s*george'?s?|carriacou|keith mitchell|dickon mitchell|spice island|windward|caribbean.*grenada|grenada.*caribbean)\b/i.test(text);
-    return hasUSGrenada && !hasGrenadaCountry;
-  },
-  // Tonga: exclude NFL player Khyiris Tonga references
-  'Tonga': (text) => {
-    const hasNFLTonga = /\b(?:khyiris|nfl|bears|browns|cardinals|defensive tackle|linebacker|sack|draft pick)\b/i.test(text);
-    const hasTongaCountry = /\b(?:tongan|nuku'?alofa|pacific island|polynesia|tonga.*government|tonga.*king|king.*tonga)\b/i.test(text);
-    return hasNFLTonga && !hasTongaCountry;
-  },
-  // Angola: exclude Angola Prison Louisiana and US town references
-  'Angola': (text) => {
-    const hasUSAngola = /\b(?:louisiana|angola prison|angola penitentiary|angola correctional|angola rodeo|angola inmates?|state prison.*angola|angola.*state prison|angola[,\s]+(?:la|indiana|in|ny|new york))\b/i.test(text);
-    const hasAngolaCountry = /\b(?:angolan|luanda|mpla|unita|cabinda|kwanza|dos santos|joao lourenco)\b/i.test(text);
-    return hasUSAngola && !hasAngolaCountry;
-  },
-  // Poland: exclude US person/place references (Poland, Ohio; Poland Spring water; etc.)
-  'Poland': (text) => {
-    const hasUSPoland = /\b(?:poland[,\s]+(?:ohio|oh|maine|me|indiana|in|new york|ny)|poland spring|poland township|poland seminary|poland regional)\b/i.test(text);
-    const hasPolandCountry = /\b(?:polish|warsaw|krakow|duda|tusk|sejm|zloty|gdansk|wroclaw|katowice|poznan)\b/i.test(text);
-    return hasUSPoland && !hasPolandCountry;
-  },
-  // Samoa: exclude sports articles with no actual country connection
-  'Samoa': (text) => {
-    const hasSportsOnly = /\b(?:rugby|nfl|wrestling|wwe|sumo|mma|ufc|draft|touchdown|tackle|slam)\b/i.test(text);
-    const hasSamoaCountry = /\b(?:samoan government|apia|samoan.*minister|samoa.*election|samoa.*parliament|pacific island.*samoa|samoa.*climate|samoa.*economy)\b/i.test(text);
-    const hasSamoaDemonym = /\b(?:american samoa|samoan)\b/i.test(text);
-    // Only filter if it's sports-only AND no country-relevant terms AND no demonym
-    return hasSportsOnly && !hasSamoaCountry && !hasSamoaDemonym;
-  },
-  // Monaco: exclude person name references + F1 racing (Grand Prix is sports, not geopolitics)
-  'Monaco': (text) => {
-    const hasF1Monaco = /\b(?:grand prix|formula\s*(?:1|one)|f1|verstappen|leclerc|hamilton|race.*monaco|monaco.*race|qualifying|pit stop|pole position|podium|constructor)\b/i.test(text);
-    const hasMonacoCountry = /\b(?:monegasque|monaco.*government|prince albert|monaco.*economy|monte carlo.*casino|monaco.*tax|monaco.*law|monaco.*minister)\b/i.test(text);
-    return hasF1Monaco && !hasMonacoCountry;
+  // Samoa Global News: articles from this source that don't mention Samoa/Samoan/Apia in headline
+  'Samoa': (text, source) => {
+    if (source && /samoa\s*global\s*news/i.test(source)) {
+      const hlHasSamoa = /\bsamoa|samoan|apia\b/i.test(text);
+      if (!hlHasSamoa) return true;
+    }
+    return false;
   },
 };
 
@@ -1305,19 +1268,12 @@ function matchArticleToCountries(article) {
     }
   }
 
-  // Remove false positives for ambiguous countries
-  for (const [country, excludeRE] of Object.entries(AMBIGUOUS_EXCLUDE)) {
-    if (matched.has(country) && excludeRE.test(text)) {
-      // Only remove if no specific demonym (not just the country name) matched
-      const properCase = getCountryProperCase();
-      const properName = properCase[country];
-      const demonyms = properName ? COUNTRY_DEMONYMS[properName] : [];
-      const hasSpecificMatch = demonyms && demonyms.some(d => {
-        if (d === country) return false;
-        const re = new RegExp('\\b' + d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
-        return re.test(text);
-      });
-      if (!hasSpecificMatch) matched.delete(country);
+  // Whitelist approach for ambiguous countries:
+  // If the country name is ambiguous, the article must ALSO contain
+  // at least one country-specific term (capital, demonym, leader, etc.)
+  for (const [country, whitelistRE] of Object.entries(AMBIGUOUS_COUNTRY_WHITELIST)) {
+    if (matched.has(country) && !whitelistRE.test(text)) {
+      matched.delete(country);
     }
   }
 
@@ -1386,6 +1342,9 @@ const JUNK_SOURCE_PATTERNS = [
   /accuweather/i,
   /metropolitan museum/i,
   /gazette\s*xtra/i,
+  /dailyrecordnews/i,
+  /herald\s*journal/i,
+  /post\s*journal/i,
 ];
 
 // Per-country junk sources — articles from these sources are false positives for that country
@@ -1423,7 +1382,7 @@ function isCountryNewsFalsePositive(headline, countryName, source) {
 
   // Check per-country false positive filters
   const filter = COUNTRY_FALSE_POSITIVE_FILTERS[countryName];
-  if (filter && filter(lower)) return true;
+  if (filter && filter(lower, source)) return true;
 
   return false;
 }
@@ -1547,15 +1506,16 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       if (isCountryNewsFalsePositive(hl, country, a.source)) return false;
       const artUrl = (a.url || '').toLowerCase();
       if (/britannica\.com|encyclopedia|wikipedia\.org|accuweather\.com|weather\.com/.test(artUrl)) return false;
-      // Targeted purge: specific mismatched articles from KV
+      // NOTE: whitelist NOT applied in retroactive filter — it's already applied at
+      // matchArticleToCountries() for RSS articles, and Google News supplement articles
+      // are pre-filtered by qualified search queries. Applying here would remove valid
+      // Google News supplement articles on subsequent cron runs.
       const countryLower = country.toLowerCase();
       const hlLower = hl.toLowerCase();
       // Germany: Ghana articles (GhanaWeb sports match on "Berlin" in "Union Berlin")
       if (countryLower === 'germany' && /\bghana\b/i.test(hl) && !/\bgerman|bundestag|bundeswehr\b/i.test(hlLower)) return false;
       // UK: parliament articles about other countries (old "parliament" demonym)
       if (countryLower === 'united kingdom' && /\bparliament|westminster\b/i.test(hlLower) && /\bmyanmar|vietnam|kyrgyzstan|azerbaijan|indonesia|kenya|nigeria|uganda|india\b/i.test(hlLower) && !/\buk|britain|british|london|starmer\b/i.test(hlLower)) return false;
-      // Angola: Sporting KC / MLS
-      if (countryLower === 'angola' && /\bsporting kc|sporting kansas|mls\b/i.test(hlLower)) return false;
       return true;
     });
 
@@ -1680,7 +1640,12 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'Zimbabwe': 'Zimbabwe news today',
       'Guyana': 'Guyana news today',
       'South Africa': 'South Africa news today',
-      'Panama': 'Panama news today',
+      'Panama': 'Panama canal Panamanian government',
+      'Grenada': 'Grenada Caribbean island CARICOM',
+      'Tonga': 'Tonga Pacific kingdom Polynesia',
+      'Monaco': 'Monaco principality Monte Carlo government',
+      'Samoa': 'Samoa Pacific island Apia Polynesia',
+      'Angola': 'Angola Luanda Angolan government Africa',
       'Singapore': 'Singapore news today',
       'Nepal': 'Nepal news today',
       'Malta': 'Malta Valletta EU Mediterranean',
@@ -1697,7 +1662,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'Austria': 'Austria news today',
       'Sweden': 'Sweden news today',
       'Argentina': 'Argentina news today',
-      'Poland': 'Poland news today',
+      'Poland': 'Poland Polish Warsaw government',
       'Ivory Coast': 'Ivory Coast Cote d\'Ivoire news',
       'Malawi': 'Malawi news today',
       'Gabon': 'Gabon news today',
@@ -1738,6 +1703,8 @@ async function buildCountryNewsFeeds(rawArticles, env) {
         const artText = (title + ' ' + (art.description || '')).toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => artText.includes(kw))) continue;
         if (isCountryNewsFalsePositive(title, country, art.source)) continue;
+        // NOTE: whitelist NOT applied here — Google News search is already qualified
+        // by GOOGLE_SEARCH_QUALIFIERS, so results are pre-filtered at query level
         existingHLs.add(hl);
         const nonAscii = (title.match(/[^\x20-\x7F]/g) || []).length;
         const isNonEnglish = title.length > 10 && nonAscii / title.length > 0.15;
@@ -3281,6 +3248,43 @@ export default {
         const count = data.analyses ? Object.keys(data.analyses).length : 0;
         return new Response(
           JSON.stringify({ status: 'ok', countryCount: count, lastUpdated: data.lastUpdated }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: err.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
+    // GET /purge-ambiguous — delete KV data for ambiguous countries
+    // ============================================================
+    if (url.pathname === '/purge-ambiguous' && request.method === 'GET') {
+      try {
+        const AMBIGUOUS_COUNTRIES = [
+          'Grenada', 'Tonga', 'Monaco', 'Samoa', 'Angola', 'Poland',
+          'Panama', 'Malta', 'Chad', 'Georgia', 'Jordan', 'Niger'
+        ];
+        const raw = await env.HEGEMON_CACHE.get('all_country_news');
+        if (raw) {
+          const allNews = JSON.parse(raw);
+          let purged = 0;
+          for (const country of AMBIGUOUS_COUNTRIES) {
+            if (allNews[country]) {
+              delete allNews[country];
+              purged++;
+            }
+          }
+          await env.HEGEMON_CACHE.put('all_country_news', JSON.stringify(allNews));
+          return new Response(
+            JSON.stringify({ status: 'ok', purged, countries: AMBIGUOUS_COUNTRIES }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ status: 'ok', purged: 0, message: 'no KV data found' }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (err) {
