@@ -1206,7 +1206,7 @@ function sharedTopics(topicsA, topicsB) {
 // Matching only the country name is NOT enough — too many false positives.
 const AMBIGUOUS_COUNTRY_WHITELIST = {
   'grenada': /\b(?:caribbean|grenadian|st\.?\s*george'?s?|dickon\s+mitchell|caricom|oecs|west\s+indies|spice\s+isle|nutmeg|carriacou|windward)\b/i,
-  'tonga': /\b(?:tongan|nuku'?alofa|pacific\s+island|polynesi|oceania|hunga|volcanic|tonga.*kingdom|kingdom.*tonga|tupou)\b/i,
+  'tonga': /\b(?:tongan|nuku'?alofa|pacific\s+island|polynesi|oceania|hunga|volcanic|tonga.*kingdom|kingdom.*tonga|tupou|tonga.*government|tonga.*minister|tonga.*parliament|tonga.*cyclone|tonga.*aid|tonga.*climate|south\s+pacific)\b/i,
   'monaco': /\b(?:monegasque|monte\s+carlo|prince\s+albert|principality|grand\s+prix\s+de\s+monaco|riviera|monaco.*government|monaco.*economy|monaco.*tax)\b/i,
   'samoa': /\b(?:samoan|apia|pacific\s+island|polynesi|oceania|manu\s+samoa|samoa.*government|samoa.*parliament)\b/i,
   'angola': /\b(?:angolan|luanda|mpla|cabinda|kwanza|unita|lourenco|dos\s+santos|angolan\s+government)\b/i,
@@ -1585,7 +1585,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
     'Panama', 'Singapore', 'Philippines', 'Sri Lanka', 'Peru'
   ]);
   // Countries that ALWAYS get Google News supplement regardless of article count
-  const ALWAYS_SUPPLEMENT = new Set(['Niger']);
+  const ALWAYS_SUPPLEMENT = new Set(['Niger', 'Tonga']);
   for (const country of Object.keys(COUNTRY_DEMONYMS)) {
     const count = (merged[country] || []).length;
     if (ALWAYS_SUPPLEMENT.has(country)) {
@@ -1657,7 +1657,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'South Africa': 'South Africa news today',
       'Panama': 'Panama canal Panamanian government',
       'Grenada': 'Grenada Caribbean island CARICOM',
-      'Tonga': 'Tonga Pacific kingdom Polynesia',
+      'Tonga': 'Tonga island nation OR Tongan OR Nukualofa',
       'Monaco': 'Monaco principality Monte Carlo government',
       'Samoa': 'Samoa Pacific island Apia Polynesia',
       'Angola': 'Angola Luanda Angolan government Africa',
