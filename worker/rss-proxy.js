@@ -1512,8 +1512,10 @@ async function buildCountryNewsFeeds(rawArticles, env) {
     // Retroactive filter: re-apply current filters to all articles (catches old KV holdovers)
     const cleaned = fresh.filter(a => {
       const hl = a.headline || a.title || '';
-      const artText = (hl + ' ' + (a.description || '')).toLowerCase();
-      if (IRRELEVANT_KEYWORDS.some(kw => artText.includes(kw))) return false;
+      // Check headline only for IRRELEVANT_KEYWORDS — descriptions from Google News
+      // contain HTML with related article titles that cause false positive filtering
+      const hlText = hl.toLowerCase();
+      if (IRRELEVANT_KEYWORDS.some(kw => hlText.includes(kw))) return false;
       if (isCountryNewsFalsePositive(hl, country, a.source)) return false;
       const artUrl = (a.url || '').toLowerCase();
       if (/britannica\.com|encyclopedia|wikipedia\.org|accuweather\.com|weather\.com/.test(artUrl)) return false;
@@ -1600,8 +1602,11 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       sparse.push(country);
     }
   }
-  // Sort: critical countries first, then severe, then priority, then by article count
+  // Sort: force-supplement first, then critical, severe, priority, then by article count
   sparse.sort((a, b) => {
+    const aForce = ALWAYS_SUPPLEMENT.has(a) ? -1 : 0;
+    const bForce = ALWAYS_SUPPLEMENT.has(b) ? -1 : 0;
+    if (aForce !== bForce) return aForce - bForce;
     const aCritical = CRITICAL_COUNTRIES.has(a) ? 0 : SEVERE_COUNTRIES.has(a) ? 1 : 2;
     const bCritical = CRITICAL_COUNTRIES.has(b) ? 0 : SEVERE_COUNTRIES.has(b) ? 1 : 2;
     if (aCritical !== bCritical) return aCritical - bCritical;
@@ -1634,7 +1639,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'Georgia': 'Georgia country Caucasus Tbilisi',
       'Chad': 'Chad country Africa N\'Djamena',
       'Jordan': 'Jordan country Middle East Amman',
-      'Niger': 'Niger Sahel junta coup Niamey CNSP Tiani',
+      'Niger': 'Niger Sahel OR Niamey OR Nigerien OR CNSP',
       'Mali': 'Mali country Africa Bamako',
       'Guinea': 'Guinea country Africa Conakry',
       'United Arab Emirates': 'UAE Dubai Abu Dhabi Emirati',
@@ -1714,8 +1719,9 @@ async function buildCountryNewsFeeds(rawArticles, env) {
         // Filter junk sources by URL
         const artUrl = (art.url || art.link || '').toLowerCase();
         if (/britannica\.com|encyclopedia|wikipedia\.org|accuweather\.com|weather\.com/.test(artUrl)) continue;
-        // Apply same filters as main pipeline
-        const artText = (title + ' ' + (art.description || '')).toLowerCase();
+        // Apply same filters as main pipeline (title-only for supplement — Google News
+        // descriptions contain HTML with related article titles that trigger false positives)
+        const artText = title.toLowerCase();
         if (IRRELEVANT_KEYWORDS.some(kw => artText.includes(kw))) continue;
         if (isCountryNewsFalsePositive(title, country, art.source)) continue;
         // NOTE: whitelist NOT applied here — Google News search is already qualified
