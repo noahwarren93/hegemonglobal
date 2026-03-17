@@ -605,6 +605,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Elections + Horizon tab state
   const [selectedElection, setSelectedElection] = useState(null);
+  const electionScrollRef = useRef(null);
   const horizonNowRef = useRef(null);
 
   // Travel tab state
@@ -653,13 +654,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // timeAgo() computes fresh each render — no setInterval needed
 
-  // Reset visible count on tab change
+  // Reset visible count + scroll position on tab change
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE); // eslint-disable-line react-hooks/set-state-in-effect
+    if (contentRef.current) contentRef.current.scrollTop = 0;
   }, [activeTab]);
 
-  // Auto-scroll to NOW divider when horizon tab activates
+  // Auto-scroll to scroll targets when elections/horizon tab activates
   useEffect(() => {
+    if (activeTab === 'elections') {
+      setTimeout(() => electionScrollRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 50);
+    }
     if (activeTab === 'horizon') {
       setTimeout(() => horizonNowRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 50);
     }
@@ -1119,33 +1124,40 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderElectionsTab = () => {
-    // 2 most recent results (newest first)
-    const recent = [...RECENT_ELECTIONS]
-      .sort((a, b) => parseSortDate(b.date).localeCompare(parseSortDate(a.date)))
-      .slice(0, 2);
+    // All past elections sorted ascending (oldest first, newest last — closest to divider)
+    const past = [...RECENT_ELECTIONS]
+      .sort((a, b) => parseSortDate(a.date).localeCompare(parseSortDate(b.date)));
     // All upcoming (soonest first)
     const upcoming = [...ELECTIONS]
       .sort((a, b) => parseSortDate(a.date).localeCompare(parseSortDate(b.date)));
 
+    // Place scroll ref before the last 2 past elections so they're visible by default
+    const scrollIdx = Math.max(0, past.length - 2);
+
     return (
       <>
-        {/* 2 most recent results */}
+        {/* All past elections — user scrolls up to see older ones */}
         <div className="election-section-label" style={{ color: '#22c55e' }}>RECENT RESULTS</div>
-        {recent.map((e, i) => (
-          <div key={'recent-' + i} className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => setSelectedElection(e)}>
-            <div className="election-header">
-              <span className="election-flag"><CountryFlag flag={e.flag} /></span>
-              <span className="election-country">{e.country}</span>
-              <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
+        {past.map((e, i) => (
+          <div key={'past-' + i}>
+            {i === scrollIdx && <div ref={electionScrollRef} />}
+            <div className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => setSelectedElection(e)}>
+              <div className="election-header">
+                <span className="election-flag"><CountryFlag flag={e.flag} /></span>
+                <span className="election-country">{e.country}</span>
+                <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
+              </div>
+              <div className="election-type">{e.type}</div>
+              {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600, margin: '4px 0' }}>{e.winner}</div>}
+              {e.result && <div className="election-stakes">{e.result}</div>}
             </div>
-            <div className="election-type">{e.type}</div>
-            {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600, margin: '4px 0' }}>{e.winner}</div>}
-            {e.result && <div className="election-stakes">{e.result}</div>}
           </div>
         ))}
 
+        {/* Divider */}
+        <div className="election-now-divider"><span>UPCOMING</span></div>
+
         {/* All upcoming elections */}
-        <div className="election-section-label" style={{ color: '#f97316', marginTop: '16px' }}>UPCOMING ELECTIONS</div>
         {upcoming.map((e, i) => (
           <div key={'upcoming-' + i} className="election-card" style={{ borderLeft: '3px solid #f97316' }} onClick={() => setSelectedElection(e)}>
             <div className="election-header">

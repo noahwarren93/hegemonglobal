@@ -21,13 +21,11 @@ export default function ElectionModal({ election, isOpen, onClose, onCountryClic
     setNews([]);
     fetchCountryNews(election.country).then(articles => {
       if (!cancelled) {
-        // Filter for election-related articles
         const electionKeywords = /election|vote|ballot|poll|candidate|campaign|party|coalition|parliament|congress|senate|runoff|incumbent|opposition/i;
         const relevant = (articles || []).filter(a => {
           const text = ((a.title || '') + ' ' + (a.headline || '')).toLowerCase();
           return electionKeywords.test(text);
         });
-        // Fall back to all articles if no election-specific ones found
         setNews((relevant.length >= 2 ? relevant : articles || []).slice(0, 8));
         setNewsLoading(false);
       }
@@ -55,7 +53,7 @@ export default function ElectionModal({ election, isOpen, onClose, onCountryClic
 
   return (
     <div className="modal-overlay active" onClick={(ev) => { if (ev.target === ev.currentTarget) onClose(); }}>
-      <div className="modal election-modal" style={{ maxWidth: '580px' }}>
+      <div className="modal election-modal" style={{ maxWidth: '600px' }}>
         {/* Header */}
         <div className="modal-header" style={{ padding: '16px 20px', borderLeft: `3px solid ${isPast ? '#22c55e' : '#f97316'}` }}>
           <div className="modal-titles" style={{ flex: 1 }}>
@@ -79,55 +77,77 @@ export default function ElectionModal({ election, isOpen, onClose, onCountryClic
         </div>
 
         {/* Body */}
-        <div className="modal-body" style={{ padding: '16px 20px' }}>
+        <div className="modal-body" style={{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }}>
 
-          {/* PAST: Results section */}
+          {/* ===== PAST ELECTION ===== */}
           {isPast && (
-            <div className="em-result-box">
-              <div className="em-section-label" style={{ color: '#22c55e' }}>ELECTION RESULT</div>
-              <div className="em-winner">{e.winner}</div>
-              {e.result && <div className="em-result-line">{e.result}</div>}
-              {e.summary && <div className="em-summary">{e.summary}</div>}
-            </div>
-          )}
-
-          {/* UPCOMING: Stakes + Candidates */}
-          {!isPast && (
             <>
-              <div className="em-stakes-box">
-                <div className="em-section-label" style={{ color: '#f97316' }}>WHAT&apos;S AT STAKE</div>
-                <div className="em-stakes-text">{e.stakes}</div>
+              {/* Results */}
+              <div className="em-result-box">
+                <div className="em-section-label" style={{ color: '#22c55e' }}>RESULTS</div>
+                <div className="em-winner">{e.winner}</div>
+                {e.result && <div className="em-result-line">{e.result}</div>}
+                {e.summary && <div className="em-summary">{e.summary}</div>}
               </div>
 
-              {e.candidates && e.candidates.length > 0 && (
+              {/* Party Breakdown */}
+              {e.parties && e.parties.length > 0 && (
                 <div style={{ marginTop: '14px' }}>
-                  <div className="em-section-label" style={{ color: '#06b6d4' }}>KEY CANDIDATES / PARTIES</div>
-                  <div className="em-candidates">
-                    {e.candidates.map((c, i) => (
-                      <div key={i} className="em-candidate">{c}</div>
+                  <div className="em-section-label" style={{ color: '#06b6d4' }}>POLITICAL PARTY BREAKDOWN</div>
+                  <div className="em-parties">
+                    {e.parties.map((p, i) => (
+                      <div key={i} className="em-party-card">
+                        <div className="em-party-header">
+                          <span className="em-party-name">{p.name}</span>
+                          <div className="em-party-stats">
+                            {p.seats && <span className="em-party-seats">{p.seats}</span>}
+                            {p.pct && <span className="em-party-pct">{p.pct}</span>}
+                          </div>
+                        </div>
+                        <div className="em-party-desc">{p.desc}</div>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* What Might Happen analysis */}
+              {/* Why It Matters */}
+              {e.significance && (
+                <div style={{ marginTop: '14px' }}>
+                  <div className="em-section-label" style={{ color: '#a78bfa' }}>WHY IT MATTERS</div>
+                  <div className="em-analysis-box">{e.significance}</div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ===== UPCOMING ELECTION ===== */}
+          {!isPast && (
+            <>
+              {/* Key Parties / Candidates */}
+              {e.candidates && e.candidates.length > 0 && (
+                <div>
+                  <div className="em-section-label" style={{ color: '#06b6d4' }}>KEY PARTIES / CANDIDATES</div>
+                  <div className="em-parties">
+                    {e.candidates.map((c, i) => (
+                      <div key={i} className="em-party-card">
+                        <div className="em-party-name">{c.name}</div>
+                        <div className="em-party-desc">{c.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* What to Watch */}
               <div style={{ marginTop: '14px' }}>
-                <div className="em-section-label" style={{ color: '#a78bfa' }}>WHAT MIGHT HAPPEN</div>
-                <div className="em-analysis-box">
-                  {e.analysis || getDefaultAnalysis(e)}
+                <div className="em-section-label" style={{ color: '#f97316' }}>WHAT TO WATCH</div>
+                <div className="em-stakes-box">
+                  <div className="em-stakes-text">{e.watchFor || e.stakes}</div>
                 </div>
               </div>
             </>
           )}
-
-          {/* Election Map Placeholder */}
-          <div style={{ marginTop: '14px' }}>
-            <div className="em-section-label" style={{ color: '#6b7280' }}>ELECTION MAP</div>
-            <div className="em-map-placeholder">
-              <div style={{ fontSize: '20px', marginBottom: '4px' }}>{e.flag}</div>
-              <div style={{ fontSize: '10px', color: '#4b5563' }}>Regional breakdown not yet available</div>
-            </div>
-          </div>
 
           {/* News section */}
           <div style={{ marginTop: '14px' }}>
@@ -163,12 +183,4 @@ export default function ElectionModal({ election, isOpen, onClose, onCountryClic
       </div>
     </div>
   );
-}
-
-function getDefaultAnalysis(e) {
-  const country = e.country || 'this country';
-  if (e.stakes) {
-    return `The ${e.type.toLowerCase()} in ${country} (${e.date}) will be closely watched by international observers. ${e.stakes} The outcome could shift regional dynamics and affect diplomatic relationships with major powers.`;
-  }
-  return `The ${e.type.toLowerCase()} in ${country} scheduled for ${e.date} will be a significant political event. Results may reshape domestic policy direction and international alignment.`;
 }

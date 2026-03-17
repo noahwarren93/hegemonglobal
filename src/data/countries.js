@@ -495,8 +495,8 @@ export const COUNTRIES = {
   'France': { lat: 46.23, lng: 2.21, flag: '🇫🇷', risk: 'cloudy', tags: [], region: 'Western Europe', pop: '68M', gdp: '$3.4T', leader: 'Emmanuel Macron', title: 'Political Fragmentation',
     nuclear: { warheads: '~290', status: 'Declared', source: 'SIPRI/FAS 2025', deployed: '~280 operational — submarine & air-launched' },
     analysis: {
-      what: 'France faces severe political instability. The 2024 snap elections produced a hung parliament, and France has cycled through multiple PMs—François Bayrou fell in September 2025 over the budget, and Sébastien Lecornu was appointed, briefly resigned, and was re-appointed in October 2025. Macron\'s centrist coalition is weakened with both the far-right (Le Pen) and far-left (Mélenchon) gaining ground. The economy struggles with high debt and sluggish growth.',
-      why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. The political paralysis hampers EU decision-making. France has committed troops to a potential Ukraine ceasefire monitoring force. Far-right gains would significantly impact EU and NATO.',
+      what: 'France faces severe political instability. The 2024 snap elections produced a hung parliament, and France has cycled through multiple PMs—François Bayrou fell in September 2025 over the budget, and Sébastien Lecornu was appointed, briefly resigned, and was re-appointed in October 2025. Macron\'s centrist coalition is weakened with both the nationalist right (Le Pen) and the left (Mélenchon) gaining ground. The economy struggles with high debt and sluggish growth.',
+      why: 'France is the EU\'s second-largest economy and a nuclear power with global reach. The political paralysis hampers EU decision-making. France has committed troops to a potential Ukraine ceasefire monitoring force. Nationalist gains would significantly impact EU and NATO.',
       next: 'Macron is a lame duck until 2027 elections. Watch for: PM Lecornu\'s survival, Le Pen\'s positioning, budget battles, and EU leadership role. France\'s political instability is increasingly a European problem.'
     },
 
@@ -504,7 +504,7 @@ export const COUNTRIES = {
 
   'Germany': { lat: 51.17, lng: 10.45, flag: '🇩🇪', risk: 'cloudy', tags: [], region: 'Western Europe', pop: '84M', gdp: '$5.0T', leader: 'Friedrich Merz', title: 'New Government',
     analysis: {
-      what: 'Friedrich Merz (CDU/CSU) became chancellor in May 2025 after winning the February 2025 election with the highest voter turnout since reunification (82.5%). He leads a grand coalition with the SPD. Germany faces structural economic challenges as its industrial model—based on cheap Russian energy and exports to China—has unraveled. The economy has stagnated. Energy transition costs are high. The far-right AfD remains a significant political force. Immigration and defense spending dominate policy debates.',
+      what: 'Friedrich Merz (CDU/CSU) became chancellor in May 2025 after winning the February 2025 election with the highest voter turnout since reunification (82.5%). He leads a grand coalition with the SPD. Germany faces structural economic challenges as its industrial model—based on cheap Russian energy and exports to China—has unraveled. The economy has stagnated. Energy transition costs are high. The right-wing populist AfD remains a significant political force. Immigration and defense spending dominate policy debates.',
       why: 'Germany is Europe\'s largest economy and the EU\'s de facto leader. German industry is central to European supply chains. Merz has signaled a more assertive foreign policy and increased defense spending. Political shifts here reshape the entire EU. Germany\'s economic recovery is critical for European stability.',
       next: 'Merz must revive the economy while managing coalition tensions with the SPD. Watch for: economic indicators, defense spending increases, AfD\'s trajectory, and EU leadership on Ukraine. Germany faces generational challenges requiring structural reform.'
     },
@@ -806,7 +806,7 @@ export const COUNTRIES = {
 
   'Romania': { lat: 45.94, lng: 24.97, flag: '🇷🇴', risk: 'cloudy', tags: [], region: 'Eastern Europe', pop: '19M', gdp: '$301B', leader: 'Nicusor Dan', title: 'NATO Frontline',
     analysis: {
-      what: 'Romania faces political uncertainty after a far-right candidate won the first round of presidential elections before it was annulled over alleged Russian interference. The country is a key NATO member bordering Ukraine, hosting US troops and missile defense. Economic growth has been strong but faces fiscal challenges.',
+      what: 'Romania faces political uncertainty after a nationalist candidate won the first round of presidential elections before it was annulled over alleged Russian interference. The country is a key NATO member bordering Ukraine, hosting US troops and missile defense. Economic growth has been strong but faces fiscal challenges.',
       why: 'Romania is on NATO\'s eastern flank, directly bordering Ukraine and Moldova. It hosts major US military facilities. The Black Sea coast is strategically important. Romanian politics serve as a bellwether for Russian influence operations in the EU.',
       next: 'The political crisis will take time to resolve with new elections. Watch for: Russian interference, NATO posture, and EU relations. Romania\'s stability matters for regional security.'
     },
@@ -824,7 +824,7 @@ export const COUNTRIES = {
 
   'Sweden': { lat: 62.5, lng: 16.0, flag: '🇸🇪', risk: 'cloudy', tags: [], region: 'Northern Europe', pop: '10M', gdp: '$585B', leader: 'Ulf Kristersson', title: 'NATO Member',
     analysis: {
-      what: 'Sweden ended over 200 years of neutrality by joining NATO in 2024, a historic shift prompted by Russia\'s invasion of Ukraine. The right-wing government relies on far-right support while maintaining centrist policies. Gang violence has become a major concern with shootings and bombings. The economy is stable with strong tech sector.',
+      what: 'Sweden ended over 200 years of neutrality by joining NATO in 2024, a historic shift prompted by Russia\'s invasion of Ukraine. The right-wing government relies on nationalist party support while maintaining centrist policies. Gang violence has become a major concern with shootings and bombings. The economy is stable with strong tech sector.',
       why: 'Sweden\'s NATO membership fundamentally changes Baltic Sea security dynamics. The country\'s defense industry (Saab) is globally significant. Sweden\'s experience with gang violence offers lessons for other countries. Nordic cooperation is strengthening.',
       next: 'NATO integration will deepen while addressing domestic security. Watch for: military investments, gang violence response, and Russia relations. Sweden\'s security posture has been transformed.'
     },
@@ -842,9 +842,9 @@ export const COUNTRIES = {
 
   'Austria': { lat: 47.52, lng: 14.55, flag: '🇦🇹', risk: 'cloudy', tags: [], region: 'Western Europe', pop: '9M', gdp: '$471B', leader: 'Christian Stocker', title: 'Three-Party Coalition',
     analysis: {
-      what: 'The far-right FPÖ won the 2024 election but Herbert Kickl failed to form a government as other parties refused to coalition with him. Chancellor Christian Stocker was sworn in March 2025 leading an unprecedented three-party coalition (ÖVP + SPD + Neos)—the first tripartite government since 1949. Austria maintains neutrality while being surrounded by NATO members. The economy has emerged from recession with growth resuming in 2026.',
-      why: 'Austria\'s political shifts reflect broader European far-right trends, though the centrist coalition blocked FPÖ from power. The country\'s neutrality creates complications for European defense. Austrian banking has historical ties to Eastern Europe. The country is a transit point for migration.',
-      next: 'The three-party coalition faces the challenge of maintaining unity across different ideological positions. Watch for: coalition stability, FPÖ opposition pressure, Russia policy, and migration debates. The next election will test whether the far-right can be contained.'
+      what: 'The right-wing populist FPÖ won the 2024 election but Herbert Kickl failed to form a government as other parties refused to coalition with him. Chancellor Christian Stocker was sworn in March 2025 leading an unprecedented three-party coalition (ÖVP + SPD + Neos)—the first tripartite government since 1949. Austria maintains neutrality while being surrounded by NATO members. The economy has emerged from recession with growth resuming in 2026.',
+      why: 'Austria\'s political shifts reflect broader European right-wing populist trends, though the centrist coalition blocked FPÖ from power. The country\'s neutrality creates complications for European defense. Austrian banking has historical ties to Eastern Europe. The country is a transit point for migration.',
+      next: 'The three-party coalition faces the challenge of maintaining unity across different ideological positions. Watch for: coalition stability, FPÖ opposition pressure, Russia policy, and migration debates. The next election will test whether the populist right can be contained.'
     },
 
   },
@@ -1188,29 +1188,134 @@ export const COUNTRIES = {
 // RECENT ELECTION RESULTS
 
 export const RECENT_ELECTIONS = [
-  { flag: '🇧🇩', country: 'Bangladesh', date: 'Feb 2026', type: 'General Election & Referendum', winner: 'Tarique Rahman - BNP (Center-Right)', result: 'BNP wins landslide (~211/299 seats)', summary: 'First election since 2024 July Revolution ousted Hasina. BNP wins majority; Jamaat-e-Islami (~70 seats) becomes main opposition. July Charter referendum passes with 72.9% approval. 47.9% turnout.' },
-  { flag: '🇩🇪', country: 'Germany', date: 'Feb 2026', type: 'Federal Election', winner: 'Friedrich Merz - CDU/CSU (Center-Right)', result: 'CDU/CSU wins plurality (~30%)', summary: 'Grand coalition likely with SPD. AfD surges to ~22% but remains excluded from government. Scholz era ends.' },
-  { flag: '🇯🇵', country: 'Japan', date: 'Feb 2026', type: 'Snap Election', winner: 'Sanae Takaichi - LDP (Right Wing)', result: 'LDP wins majority', summary: 'First female PM. Nationalist conservative takes power after snap election landslide.' },
-  { flag: '🇧🇾', country: 'Belarus', date: 'Jan 2026', type: 'Presidential Election', winner: 'Alexander Lukashenko (Authoritarian)', result: 'Lukashenko claims 86.8%', summary: 'Seventh term for Europe\'s longest-ruling leader. Opposition boycotted. No credible challengers permitted. EU refuses to recognize result.' },
-  { flag: '🇵🇹', country: 'Portugal', date: 'Jan 2026', type: 'Presidential Election', winner: 'Ana Gomes - PS (Left Wing)', result: 'Leftist victory', summary: 'Defeated far-right surge. Chega party gains but falls short.' },
-  { flag: '🇹🇭', country: 'Thailand', date: 'Jan 2026', type: 'Senate Elections', winner: 'Move Forward (Left Wing)', result: 'Progressive gains', summary: 'Reformist senators elected. Military influence declining.' },
-  { flag: '🇷🇴', country: 'Romania', date: 'Dec 2025', type: 'Presidential Election (Rerun)', winner: 'Crin Antonescu (Center-Right)', result: 'Pro-EU candidate wins rerun', summary: 'Rerun after annulled first round due to Russian interference. Pro-NATO, pro-EU candidate defeats nationalist challenger.' },
-  { flag: '🇨🇱', country: 'Chile', date: 'Oct 2025', type: 'Regional Governor Elections', winner: 'Mixed results', result: 'Center-right gains in key regions', summary: 'Boric\'s coalition loses ground. Center-right opposition consolidates ahead of 2025 presidential cycle.' },
-  { flag: '🇵🇱', country: 'Poland', date: 'May 2025', type: 'Presidential Election', winner: 'Rafał Trzaskowski - PO (Center-Right)', result: 'Trzaskowski wins runoff (~54%)', summary: 'Tusk-allied candidate defeats PiS rival. Consolidates pro-EU government control of both presidency and parliament.' },
-  { flag: '🇪🇨', country: 'Ecuador', date: 'Apr 2025', type: 'Presidential Election', winner: 'Daniel Noboa (Center-Right)', result: 'Noboa wins full term', summary: 'Young president wins full 4-year term after finishing predecessor\'s mandate. Continues hardline security approach against gangs.' },
+  { flag: '🇻🇳', country: 'Vietnam', date: 'Mar 2026', type: 'Legislative Elections', winner: 'Vietnamese Communist Party', result: '99.68% turnout. ~93% of elected candidates are VCP members.', summary: 'Single-party election confirms Communist Party control of all 500 National Assembly seats. To Lam consolidates power.',
+    parties: [
+      { name: 'Vietnamese Communist Party (VCP)', seats: '~500/500', pct: '~93% party members', desc: 'The sole legal ruling party. General Secretary To Lam consolidated power after a sweeping anti-corruption purge. All candidates were vetted by the party. No opposition parties are permitted in Vietnam.' },
+      { name: 'Non-Party Independents', seats: '~35/500', pct: '~7%', desc: 'A small number of nominal independents elected, all pre-approved by the VCP-controlled Fatherland Front. These members have no ability to oppose party policy and serve to give an appearance of pluralism.' },
+    ],
+    significance: 'The election confirmed To Lam\'s grip on power following his anti-corruption campaign that purged hundreds of officials. Vietnam\'s economic trajectory and delicate US-China balancing act will be shaped by the new Assembly\'s direction on market reforms and foreign investment.' },
+  { flag: '🇧🇩', country: 'Bangladesh', date: 'Feb 2026', type: 'General Election & Referendum', winner: 'Tarique Rahman - BNP (Center-Right)', result: 'BNP wins ~211/299 seats. 47.9% turnout.', summary: 'First election since the 2024 July Revolution ousted Sheikh Hasina. July Charter referendum passes with 72.9% approval.',
+    parties: [
+      { name: 'BNP (Bangladesh Nationalist Party)', seats: '~211/299', pct: '~48%', desc: 'Center-right party led by Tarique Rahman from exile. Advocates free-market economics, closer ties with the West and China, and democratic governance. Won a commanding majority on an anti-corruption, economic reform platform.' },
+      { name: 'Jamaat-e-Islami', seats: '~70/299', pct: '~20%', desc: 'Islamist conservative party that served as the main opposition bloc. Supports Sharia-influenced governance, social conservatism, and was a key ally in the July Revolution that toppled Hasina.' },
+      { name: 'Awami League (Boycotted)', seats: '0', pct: 'Boycotted', desc: 'The former ruling party of Sheikh Hasina boycotted the election. Historically center-left and secular nationalist, the party lost legitimacy after authoritarian overreach led to the 2024 revolution.' },
+    ],
+    significance: 'Bangladesh\'s first free election in years resets the country\'s democratic trajectory. BNP\'s landslide gives it a strong mandate to reshape foreign policy and pursue economic reforms, while Jamaat\'s showing signals growing Islamist influence in mainstream politics.' },
+  { flag: '🇹🇭', country: 'Thailand', date: 'Feb 2026', type: 'General Election', winner: 'Anutin Charnvirakul - Bhumjaithai (Center-Right)', result: 'Bhumjaithai wins 193 seats. People\'s Party second with 118 seats.', summary: 'PM Anutin consolidates power with dominating election win. Progressive People\'s Party becomes main opposition.',
+    parties: [
+      { name: 'Bhumjaithai Party', seats: '193', pct: 'Plurality', desc: 'Center-right party led by PM Anutin Charnvirakul. Pro-business, pragmatic conservative platform. Advocates infrastructure investment, tourism expansion, and maintaining stability. Allied with military establishment while presenting a civilian face.' },
+      { name: 'People\'s Party (formerly Move Forward)', seats: '118', pct: 'Second place', desc: 'Progressive opposition party advocating democratic reform, military accountability, and institutional modernization. Successor to the dissolved Move Forward Party. Strong support from young urban voters seeking structural change.' },
+      { name: 'Pheu Thai', seats: 'Third place', pct: 'Reduced', desc: 'Populist party linked to the Shinawatra political dynasty. Supports rural development, universal healthcare, and infrastructure investment. Lost ground as voters consolidated around Bhumjaithai and People\'s Party.' },
+    ],
+    significance: 'Anutin\'s victory maintains the conservative-military establishment\'s grip on Thai politics, though the People\'s Party\'s strong showing keeps pressure for democratic reform alive. Thailand remains politically polarized between establishment and reformist camps.' },
+  { flag: '🇵🇹', country: 'Portugal', date: 'Jan–Feb 2026', type: 'Presidential Election', winner: 'Antonio Jose Seguro - PS (Center-Left)', result: 'Seguro wins runoff 66.2% to 33.8% over Ventura (Chega).', summary: 'Socialist candidate defeats right-wing populist challenger in decisive runoff after close first round.',
+    parties: [
+      { name: 'PS (Socialist Party) - Antonio Jose Seguro', seats: 'President', pct: '66.2%', desc: 'Center-left party. Seguro is a veteran politician and former PS leader who advocates European integration, social cohesion, and institutional stability. Won decisively in the runoff as voters rallied against the populist right.' },
+      { name: 'Chega (Enough) - Andre Ventura', seats: 'Runner-up', pct: '33.8%', desc: 'Right-wing populist party. Anti-immigration, anti-corruption rhetoric, calls for tougher law enforcement. Made it to the runoff for the first time but was defeated by a wide margin as other parties\' voters consolidated behind Seguro.' },
+    ],
+    significance: 'Portugal bucked the European trend of right-wing populist victories, though Chega\'s advancement to the presidential runoff for the first time signals that populist sentiment is growing even in traditionally moderate Southern Europe.' },
+  { flag: '🇯🇵', country: 'Japan', date: 'Feb 2026', type: 'Snap Election', winner: 'Sanae Takaichi - LDP (Right Wing)', result: 'LDP wins 316/465 seats — first single-party supermajority since WWII.', summary: 'First female PM wins historic landslide, pledging constitutional revision and stronger defense posture.',
+    parties: [
+      { name: 'LDP (Liberal Democratic Party)', seats: '316/465', pct: '~46%', desc: 'Japan\'s dominant conservative party. Under Takaichi, the LDP won a historic supermajority — the first time a single party has held two-thirds of the lower house since WWII. Takaichi is Japan\'s first female PM, pushing assertive defense policy and constitutional revision.' },
+      { name: 'CDP (Constitutional Democratic Party)', seats: 'Opposition leader', pct: '~22%', desc: 'Center-left opposition party. Advocates pacifism, stronger social safety nets, and caution on constitutional revision. Suffered heavy losses as voters prioritized national security concerns.' },
+      { name: 'Komeito', seats: 'Coalition partner', pct: '~7%', desc: 'Buddhist-affiliated centrist party and LDP\'s longtime coalition partner. Moderates the LDP\'s more nationalist impulses, particularly on constitutional revision and military policy.' },
+    ],
+    significance: 'Takaichi\'s supermajority gives the LDP the power to pursue constitutional revision without needing other parties\' support. Her push for full military capability and increased defense spending could fundamentally reshape Japan\'s postwar pacifist identity and the US-Japan alliance.' },
+  { flag: '🇧🇾', country: 'Belarus', date: 'Jan 2025', type: 'Presidential Election', winner: 'Alexander Lukashenko (Authoritarian)', result: 'Lukashenko claims 86.8%. Opposition boycotted.', summary: 'Seventh term for Europe\'s longest-ruling leader. No credible challengers permitted. EU refuses to recognize result.',
+    parties: [
+      { name: 'Lukashenko (Independent/State)', seats: 'President', pct: '86.8%', desc: 'Has ruled since 1994 and maintains power through state control of media, security forces, and election machinery. Allowed Russian nuclear weapons on Belarusian soil. Fully aligned with Moscow.' },
+      { name: 'Opposition (In Exile)', seats: 'None', pct: 'Boycotted', desc: 'Led by Sviatlana Tsikhanouskaya from exile in Lithuania. The democratic opposition boycotted the election as illegitimate. Thousands of political prisoners remain jailed since the 2020 protests.' },
+    ],
+    significance: 'Belarus remains a Russian client state with no path to democratic transition while Lukashenko rules. The EU\'s refusal to recognize the result deepens Belarus\'s isolation and dependence on Moscow.' },
+  { flag: '🇩🇪', country: 'Germany', date: 'Feb 2025', type: 'Federal Election', winner: 'Friedrich Merz - CDU/CSU (Center-Right)', result: 'CDU/CSU wins 28.5%. Grand coalition with SPD. 82.5% turnout.', summary: 'Merz becomes chancellor (May 2025). AfD surges to second place but all parties refuse to govern with them.',
+    parties: [
+      { name: 'CDU/CSU (Christian Democrats)', seats: '208/630', pct: '28.5%', desc: 'Center-right coalition led by Friedrich Merz. Pro-business, pro-EU, advocates stronger defense spending and stricter immigration policy. Germany\'s traditional governing party returns to power after the Scholz era.' },
+      { name: 'AfD (Alternative for Germany)', seats: '152/630', pct: '20.8%', desc: 'Right-wing populist party. Euroskeptic, anti-immigration, calls for closer Russia ties and reduced climate spending. Surged to second place but remains excluded from coalition talks by all other parties.' },
+      { name: 'SPD (Social Democrats)', seats: '120/630', pct: '16.4%', desc: 'Center-left party of outgoing Chancellor Scholz. Supports the welfare state, workers\' rights, and European integration. Enters junior coalition with CDU/CSU despite historic low result.' },
+      { name: 'Greens / BSW', seats: 'Various', pct: '~20% combined', desc: 'The Greens (~11.6%) focus on climate and social justice. BSW (Wagenknecht Alliance, ~4.9%) is a left-wing populist party skeptical of NATO. FDP failed to clear the 5% threshold and left parliament.' },
+    ],
+    significance: 'Germany\'s political landscape has fractured. The AfD\'s rise to second place reflects deep voter frustration over immigration, economic stagnation, and the energy transition. Merz\'s grand coalition must revive Europe\'s largest economy while managing an assertive opposition.' },
+  { flag: '🇷🇴', country: 'Romania', date: 'May 2025', type: 'Presidential Election (Rerun)', winner: 'Nicusor Dan (Independent, Pro-EU)', result: 'Dan wins runoff 53.6% to 46.4% over Simion (AUR).', summary: 'Rerun after annulled Nov 2024 first round due to Russian TikTok interference. Pro-EU independent defeats nationalist challenger.',
+    parties: [
+      { name: 'Nicusor Dan (Independent)', seats: 'President', pct: '53.6%', desc: 'Independent pro-EU candidate and former mayor of Bucharest. Ran on a platform of Euro-Atlantic integration, anti-corruption, and countering Russian influence. Backed by PNL and USR voters in the runoff.' },
+      { name: 'AUR (Alliance for Romanian Unity) - George Simion', seats: 'Runner-up', pct: '46.4%', desc: 'Nationalist party that surged on anti-establishment and sovereigntist rhetoric. Skeptical of EU integration and NATO commitments. Simion advanced to the runoff after the original front-runner was disqualified.' },
+    ],
+    significance: 'The annulment and rerun demonstrated both the vulnerability of democracies to foreign information warfare and the resilience of institutions when they respond decisively. Romania\'s pro-Western orientation was preserved, though the close margin shows nationalist sentiment remains strong.' },
+  { flag: '🇵🇱', country: 'Poland', date: 'May–Jun 2025', type: 'Presidential Election', winner: 'Karol Nawrocki (PiS-backed, Conservative)', result: 'Nawrocki wins razor-thin runoff 50.89% to 49.11%.', summary: 'PiS-backed candidate defeats Trzaskowski in Poland\'s tightest presidential election in post-communist history.',
+    parties: [
+      { name: 'Karol Nawrocki (PiS-backed)', seats: 'President', pct: '50.89%', desc: 'Conservative historian and head of the Institute of National Remembrance, backed by PiS (Law and Justice). Supports traditional Catholic values, strong welfare state, and Polish sovereignty. His victory preserves PiS\'s presidential veto over Tusk\'s government.' },
+      { name: 'Rafał Trzaskowski - PO (Civic Platform)', seats: 'Runner-up', pct: '49.11%', desc: 'Center-right, pro-EU mayor of Warsaw backed by PM Tusk\'s coalition. Narrowly lost in the closest election in Polish history. His defeat means Tusk\'s government faces continued presidential obstruction on judicial and EU reforms.' },
+    ],
+    significance: 'Nawrocki\'s razor-thin victory creates a divided government — PM Tusk controls parliament but the president can veto legislation. Poland\'s EU reform agenda and judicial overhaul are now complicated by a hostile presidency.' },
+  { flag: '🇪🇨', country: 'Ecuador', date: 'Apr 2025', type: 'Presidential Election', winner: 'Daniel Noboa (Center-Right)', result: 'Noboa wins full 4-year term with ~55.6% in runoff.', summary: 'Young president wins convincingly on a security-first platform against gang violence.',
+    parties: [
+      { name: 'ADN (National Democratic Action) - Noboa', seats: 'President', pct: '55.6%', desc: 'Center-right party founded by Noboa. At 36, he is Ecuador\'s youngest president. Pursues aggressive anti-gang security operations, business-friendly economic policy, and international investment to stabilize the economy.' },
+      { name: 'Revolución Ciudadana - Luisa González', seats: 'Runner-up', pct: '~44%', desc: 'Left-wing populist movement of former president Rafael Correa. Supports state-led development, social spending, and regional solidarity with other Latin American left governments. Criticized Noboa\'s security crackdown as authoritarian.' },
+    ],
+    significance: 'Noboa\'s victory consolidates Ecuador\'s rightward shift as voters prioritize security over social spending. His military-backed crackdown on narco-gangs has broad public support but raises human rights concerns.' },
+  { flag: '🇺🇸', country: 'United States', date: 'Nov 2024', type: 'Presidential Election', winner: 'Donald Trump - Republican (Right-Wing)', result: 'Trump wins 312 electoral votes to Harris\'s 226. Republicans win Senate and House. 66.1% turnout.', summary: 'Republican sweep gives Trump unified government. Mandate for border security, tariffs, and America First foreign policy.',
+    parties: [
+      { name: 'Republican Party - Donald Trump', seats: '312 Electoral Votes', pct: '49.8%', desc: 'Right-wing populist party running on America First platform. Policies include mass deportation, universal tariffs, deregulation, tax cuts, and withdrawal from international climate agreements. Trump becomes the first president to win non-consecutive terms since Grover Cleveland (1893).' },
+      { name: 'Democratic Party - Kamala Harris', seats: '226 Electoral Votes', pct: '48.3%', desc: 'Center-left party. Harris replaced Biden as nominee after his late withdrawal. Ran on protecting democracy, reproductive rights, healthcare expansion, and climate action. Lost key swing states despite strong fundraising and voter enthusiasm.' },
+    ],
+    significance: 'First president to win non-consecutive terms since Grover Cleveland. Unified Republican control of the White House, Senate, and House enables rapid policy implementation on immigration, trade, and deregulation. Signals a shift toward unilateralism in foreign policy, with major implications for NATO, Ukraine support, and global trade architecture.' },
 ];
 
 // UPCOMING ELECTIONS DATA
 export const ELECTIONS = [
-  { flag: '🇻🇳', country: 'Vietnam', date: 'Mar 2026', type: 'Legislative Elections', stakes: 'Communist Party to affirm control. Economic reform direction at stake.' },
-  { flag: '🇨🇴', country: 'Colombia', date: 'May 2026', type: 'Presidential Election', stakes: 'Petro barred from re-election. Test of Latin America\'s left turn.' },
-  { flag: '🇱🇧', country: 'Lebanon', date: 'May 2026', type: 'Parliamentary Election', stakes: 'First test for new government. Hezbollah\'s role in question post-Gaza war.' },
-  { flag: '🇮🇱', country: 'Israel', date: 'Jun–Oct 2026', type: 'General Election', stakes: 'Legally due Oct 27 but widely expected earlier. Budget deadline may dissolve Knesset by summer.' },
-  { flag: '🇭🇺', country: 'Hungary', date: 'Apr 2026', type: 'Parliamentary Election', stakes: 'Orban faces toughest challenge from Tisza Party. EU relations at stake.' },
-  { flag: '🇧🇦', country: 'Bosnia', date: 'Oct 2026', type: 'General Elections', stakes: 'Ethnic tensions persist. Serb separatism and EU path in balance.' },
-  { flag: '🇧🇷', country: 'Brazil', date: 'Oct 2026', type: 'General Elections', stakes: 'Lula vs Bolsonaro family rematch. Democracy and Amazon at stake.' },
-  { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. All 435 House seats and 33 Senate seats.' },
-  { flag: '🇫🇷', country: 'France', date: 'Apr 2027', type: 'Presidential Election', stakes: 'Macron term-limited. Le Pen favored amid political fragmentation.' },
+  { flag: '🇨🇴', country: 'Colombia', date: 'May 2026', type: 'Presidential Election', stakes: 'Petro barred from re-election. Test of Latin America\'s left turn.',
+    candidates: [
+      { name: 'Center-Right Coalition', desc: 'Expected to field a candidate from the traditional establishment. Advocates market-friendly economics, stronger security cooperation with the US, and reversing Petro\'s social spending increases. Favored after strong parliamentary showing in March.' },
+      { name: 'Pacto Histórico (Left)', desc: 'President Petro\'s left-wing coalition must find a successor. Supports land reform, peace process expansion, social investment, and drug policy reform. Lost momentum after Petro\'s approval dropped below 30%.' },
+    ],
+    watchFor: 'Colombia is the test case for whether Latin America\'s left turn is sustainable. Petro\'s inability to run again leaves his coalition without a clear standard-bearer. The peace process with remaining armed groups and drug policy could reverse direction depending on the outcome.' },
+  { flag: '🇱🇧', country: 'Lebanon', date: '2028 (Postponed)', type: 'Parliamentary Election', stakes: 'Postponed for 2 years by Parliament (Mar 9, 2026) due to Israel-Hezbollah war aftermath. Hezbollah\'s role in question.',
+    candidates: [
+      { name: 'Hezbollah / Amal (Shia Bloc)', desc: 'Traditionally dominant force in Lebanese politics backed by Iran. Severely weakened after the Gaza war and Israeli military operations in southern Lebanon. Parliament voted to delay elections, which benefits Hezbollah by giving it time to rebuild political infrastructure.' },
+      { name: 'Lebanese Forces / Kataeb (Christian)', desc: 'Anti-Hezbollah Christian parties advocating Lebanese sovereignty, Western alignment, and Hezbollah disarmament. Opposed the postponement, arguing it denies voters the chance to reshape the post-war political landscape.' },
+      { name: 'Reform Movement (October 17)', desc: 'Cross-sectarian reformist bloc born from the 2019 protests. Advocates ending sectarian power-sharing, fighting corruption, and economic restructuring. Strongly opposed the postponement as a power grab by the establishment.' },
+    ],
+    watchFor: 'The 2-year postponement delays what would have been the first real test of Lebanon\'s post-war political balance. Watch for: reconstruction politics, Hezbollah rebuilding, and whether international pressure forces elections sooner than 2028.' },
+  { flag: '🇮🇱', country: 'Israel', date: 'Jun–Oct 2026', type: 'General Election', stakes: 'Legally due Oct 27 but widely expected earlier. Budget deadline may dissolve Knesset by summer.',
+    candidates: [
+      { name: 'Likud (Netanyahu)', desc: 'Right-wing party of PM Netanyahu. Security-first platform, settlement expansion, and opposition to Palestinian statehood. Coalition depends on religious and nationalist parties. Netanyahu faces ongoing corruption trial.' },
+      { name: 'National Unity (Gantz)', desc: 'Centrist party led by former Defense Minister Benny Gantz. Advocates pragmatic security policy, broader coalition governance, and engagement with moderate Arab states. Leading in polls since leaving Netanyahu\'s war cabinet.' },
+      { name: 'Yesh Atid (Lapid)', desc: 'Center-left secular party. Supports two-state solution framework, separation of religion and state, and middle-class economic relief. Could partner with Gantz to form a centrist government.' },
+    ],
+    watchFor: 'This election is a referendum on Netanyahu\'s leadership during and after the Gaza war. If the centrist opposition wins, expect a shift toward hostage deal prioritization, Gulf normalization, and reduced settler influence. A Netanyahu victory would deepen the nationalist-religious coalition.' },
+  { flag: '🇭🇺', country: 'Hungary', date: 'Apr 2026', type: 'Parliamentary Election', stakes: 'Orban faces toughest challenge in 14 years from Tisza Party. EU relations at stake.',
+    candidates: [
+      { name: 'Fidesz (Orban)', desc: 'National conservative party ruling since 2010. Orban\'s "illiberal democracy" model opposes EU federalism, mass immigration, and progressive social policies. Maintains close ties with Russia and China while clashing with Brussels on rule of law.' },
+      { name: 'Tisza Party (Magyar)', desc: 'New centrist opposition party led by Peter Magyar, a former Fidesz insider turned whistleblower. Advocates anti-corruption reforms, EU alignment, and democratic restoration. Polling within striking distance of Fidesz for the first time since 2010.' },
+    ],
+    watchFor: 'Hungary\'s most competitive election in over a decade. If Magyar\'s Tisza Party wins, it would end Orban\'s 16-year grip and potentially unblock EU decision-making on Ukraine aid and rule-of-law mechanisms. An Orban victory would further entrench Hungary\'s drift from Western democratic norms.' },
+  { flag: '🇧🇦', country: 'Bosnia', date: 'Oct 2026', type: 'General Elections', stakes: 'Ethnic tensions persist. Serb separatism and EU path in balance.',
+    candidates: [
+      { name: 'SNSD (Dodik, Serb)', desc: 'Serb nationalist party led by Milorad Dodik. Threatens Republika Srpska secession, opposes Bosnian state institutions, and maintains close ties with Russia and Serbia. Under US and UK sanctions for undermining the Dayton Agreement.' },
+      { name: 'SDA (Bosniak)', desc: 'Main Bosniak party. Supports Bosnian territorial integrity, EU integration, and strengthening the central state. Faces competition from reformist Bosniak parties that criticize SDA\'s nationalist approach.' },
+      { name: 'HDZ BiH (Croat)', desc: 'Croatian nationalist party allied with Zagreb. Demands a separate Croat entity within Bosnia. Controls key institutions through ethnic power-sharing rules and has blocked reforms that would weaken Croat autonomy.' },
+    ],
+    watchFor: 'Bosnia\'s elections test whether the country moves toward EU integration or further ethnic fragmentation. Dodik\'s separatist push could trigger a constitutional crisis. Watch for: Republika Srpska autonomy moves, EU membership application progress, and whether reformist alternatives to nationalist parties gain ground.' },
+  { flag: '🇧🇷', country: 'Brazil', date: 'Oct 2026', type: 'General Elections', stakes: 'Lula vs Bolsonaro family rematch. Democracy and Amazon at stake.',
+    candidates: [
+      { name: 'PT (Workers\' Party) - Lula', desc: 'Left-wing party of President Lula seeking re-election. Platform of poverty reduction, Amazon protection, industrial policy, and South-South diplomacy. Lula\'s approval has fluctuated around 50% amid economic challenges.' },
+      { name: 'PL (Liberal Party) - Bolsonaro Camp', desc: 'Right-wing party aligned with former President Bolsonaro. Pro-agribusiness, pro-gun, evangelical base, and skeptical of environmental regulation. Bolsonaro is banned from running until 2030, but his sons and allies may carry the flag.' },
+      { name: 'Center Bloc (Centrão)', desc: 'Pragmatic coalition of centrist parties that traditionally supports whichever government offers the most ministries and budget allocations. Controls a large Congressional bloc and will be kingmaker in any government formation.' },
+    ],
+    watchFor: 'Brazil\'s election will determine whether Lula\'s progressive agenda survives or the Bolsonaro movement returns to power through proxies. Key issues: Amazon deforestation policy, fiscal spending limits, democratic institutional strength, and Brazil\'s positioning between the US and China.' },
+  { flag: '🇺🇸', country: 'United States', date: 'Nov 2026', type: 'Midterm Elections', stakes: 'Control of Congress at stake. All 435 House seats and 33 Senate seats.',
+    candidates: [
+      { name: 'Republican Party', desc: 'Governing party of President Trump. Platform of immigration enforcement, tariff-based trade policy, reduced regulation, and tax cuts. Seeks to maintain or expand Congressional majorities to advance Trump\'s second-term agenda.' },
+      { name: 'Democratic Party', desc: 'Opposition party seeking to flip the House and limit Trump\'s agenda. Platform of healthcare access, climate action, reproductive rights, and democratic institutional safeguards. Historically, the president\'s party loses seats in midterms.' },
+    ],
+    watchFor: 'Midterms historically punish the president\'s party. If Democrats flip the House, Trump\'s legislative agenda stalls and Congressional oversight intensifies. A Republican hold would be a rare midterm win signaling durable political realignment. Watch for: Trump approval ratings, economic conditions, and whether any major crisis reshapes the race.' },
+  { flag: '🇫🇷', country: 'France', date: 'Apr 2027', type: 'Presidential Election', stakes: 'Macron term-limited. Le Pen favored amid political fragmentation.',
+    candidates: [
+      { name: 'RN (National Rally) - Le Pen', desc: 'Nationalist party led by Marine Le Pen. Anti-immigration, Euroskeptic, economically protectionist. Has moderated its image over the past decade and is the consistent frontrunner in polls. Le Pen would be France\'s first nationalist president since Vichy.' },
+      { name: 'Renaissance (Macronists)', desc: 'Centrist party of outgoing President Macron. Pro-EU, pro-business, reformist. Without Macron on the ballot, the party must find a successor who can hold the center together. PM Lecornu and several ministers are jockeying for position.' },
+      { name: 'LFI (La France Insoumise) - Mélenchon', desc: 'Left-wing populist party led by Jean-Luc Mélenchon. Advocates wealth redistribution, ecological planning, and breaking with NATO on some issues. Strong base among young and working-class urban voters.' },
+    ],
+    watchFor: 'France\'s presidential election is the most consequential in Europe. A Le Pen victory would upend EU governance, NATO cohesion, and Ukraine policy. The two-round system has historically blocked nationalist candidates in the runoff, but Le Pen has never been closer to the Élysée.' },
 ];
 
 // FORECASTS DATA
