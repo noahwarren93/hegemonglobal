@@ -1,41 +1,13 @@
 // ElectionModal.jsx - Election detail modal (center popup)
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { COUNTRIES } from '../../data/countries';
-import { fetchCountryNews } from '../../services/apiService';
 import CountryFlag from '../CountryFlag';
 
 const RISK_FG = { catastrophic: '#fca5a5', extreme: '#fcd34d', severe: '#fde047', stormy: '#c4b5fd', cloudy: '#93c5fd', clear: '#86efac' };
 const RISK_BG = { catastrophic: '#7f1d1d', extreme: '#78350f', severe: '#713f12', stormy: '#5b21b6', cloudy: '#1e3a5f', clear: '#14532d' };
 
 export default function ElectionModal({ election, isOpen, onClose, onCountryClick }) {
-  const [news, setNews] = useState([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-
-  // Fetch election-related news when modal opens
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (!isOpen || !election) { setNews([]); return; }
-    let cancelled = false;
-    setNewsLoading(true);
-    setNews([]);
-    fetchCountryNews(election.country).then(articles => {
-      if (!cancelled) {
-        const electionKeywords = /election|vote|ballot|poll|candidate|campaign|party|coalition|parliament|congress|senate|runoff|incumbent|opposition/i;
-        const relevant = (articles || []).filter(a => {
-          const text = ((a.title || '') + ' ' + (a.headline || '')).toLowerCase();
-          return electionKeywords.test(text);
-        });
-        setNews((relevant.length >= 2 ? relevant : articles || []).slice(0, 8));
-        setNewsLoading(false);
-      }
-    }).catch(() => {
-      if (!cancelled) { setNews([]); setNewsLoading(false); }
-    });
-    return () => { cancelled = true; };
-  }, [isOpen, election]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -148,30 +120,6 @@ export default function ElectionModal({ election, isOpen, onClose, onCountryClic
               </div>
             </>
           )}
-
-          {/* News section */}
-          <div style={{ marginTop: '14px' }}>
-            <div className="em-section-label" style={{ color: '#06b6d4' }}>
-              RELATED NEWS {!newsLoading && news.length > 0 && `(${news.length})`}
-            </div>
-            {newsLoading ? (
-              <div className="em-news-loading">
-                <span className="em-spinner" />
-                Loading election news...
-              </div>
-            ) : news.length === 0 ? (
-              <div className="em-news-empty">No recent election news found</div>
-            ) : (
-              <div className="em-news-list">
-                {news.map((article, i) => (
-                  <div key={i} className="em-news-item" onClick={() => article.url && article.url !== '#' && window.open(article.url, '_blank')}>
-                    <div className="em-news-source">{article.source}</div>
-                    <div className="em-news-headline">{article.title || article.headline}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* View Country Profile button */}
           {onCountryClick && (
