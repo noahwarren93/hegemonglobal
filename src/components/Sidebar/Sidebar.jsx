@@ -9,6 +9,7 @@ import { onEventsUpdated, AI_TIMELINE_DATA, AI_DEATH_TOLL_FLOORS } from '../../s
 import { adjustFontSize, resetFontSize } from '../Globe/GlobeView';
 import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
+import ElectionModal from '../Modals/ElectionModal';
 import CountryFlag from '../CountryFlag';
 
 
@@ -574,6 +575,14 @@ const ITEMS_PER_PAGE = 15;
 
 const CAT_COLORS = { summit: '#06b6d4', election: '#a78bfa', treaty: '#f59e0b', military: '#ef4444', economic: '#22c55e', sanctions: '#f97316' };
 
+const MONTH_MAP = { Jan:'01', Feb:'02', Mar:'03', Apr:'04', May:'05', Jun:'06',
+                    Jul:'07', Aug:'08', Sep:'09', Oct:'10', Nov:'11', Dec:'12' };
+function parseSortDate(dateStr) {
+  const match = dateStr.match(/([A-Z][a-z]{2})[\s\-–].*?(\d{4})/);
+  if (match) return `${match[2]}-${MONTH_MAP[match[1]] || '01'}-01`;
+  return '9999-12-31';
+}
+
 const NUCLEAR_ARSENALS = [
   { country: 'Russia', flag: '\u{1F1F7}\u{1F1FA}', warheads: '~5,580' },
   { country: 'United States', flag: '\u{1F1FA}\u{1F1F8}', warheads: '~5,044' },
@@ -593,6 +602,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventsVersion, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
+
+  // Elections + Horizon tab state
+  const [selectedElection, setSelectedElection] = useState(null);
+  const horizonNowRef = useRef(null);
 
   // Travel tab state
   const [travelSearch, setTravelSearch] = useState('');
@@ -643,6 +656,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   // Reset visible count on tab change
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [activeTab]);
+
+  // Auto-scroll to NOW divider when horizon tab activates
+  useEffect(() => {
+    if (activeTab === 'horizon') {
+      setTimeout(() => horizonNowRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 50);
+    }
   }, [activeTab]);
 
   const loadMore = useCallback(() => {
@@ -1098,29 +1118,36 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
-  const renderElectionsTab = () => (
-    <>
-      {RECENT_ELECTIONS && RECENT_ELECTIONS.length > 0 && (
-        <div>
-          <div style={{ fontSize: '9px', color: '#22c55e', fontWeight: 600, letterSpacing: '1px', marginBottom: '12px' }}>RECENT RESULTS</div>
-          {RECENT_ELECTIONS.map((e, i) => (
-            <div key={i} className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => handleCountryClick(e.country)}>
-              <div className="election-header">
-                <span className="election-flag"><CountryFlag flag={e.flag} /></span>
-                <span className="election-country">{e.country}</span>
-                <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
-              </div>
-              <div className="election-type">{e.type}</div>
-              {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600, margin: '4px 0' }}>{e.winner}</div>}
-              {e.summary && <div className="election-stakes">{e.summary}</div>}
+  const renderElectionsTab = () => {
+    // 2 most recent results (newest first)
+    const recent = [...RECENT_ELECTIONS]
+      .sort((a, b) => parseSortDate(b.date).localeCompare(parseSortDate(a.date)))
+      .slice(0, 2);
+    // All upcoming (soonest first)
+    const upcoming = [...ELECTIONS]
+      .sort((a, b) => parseSortDate(a.date).localeCompare(parseSortDate(b.date)));
+
+    return (
+      <>
+        {/* 2 most recent results */}
+        <div className="election-section-label" style={{ color: '#22c55e' }}>RECENT RESULTS</div>
+        {recent.map((e, i) => (
+          <div key={'recent-' + i} className="election-card" style={{ borderLeft: '3px solid #22c55e' }} onClick={() => setSelectedElection(e)}>
+            <div className="election-header">
+              <span className="election-flag"><CountryFlag flag={e.flag} /></span>
+              <span className="election-country">{e.country}</span>
+              <span className="election-date" style={{ color: '#22c55e' }}>{e.date}</span>
             </div>
-          ))}
-        </div>
-      )}
-      <div>
-        <div style={{ fontSize: '9px', color: '#f97316', fontWeight: 600, letterSpacing: '1px', margin: '20px 0 12px' }}>UPCOMING ELECTIONS</div>
-        {ELECTIONS.map((e, i) => (
-          <div key={i} className="election-card" style={{ borderLeft: '3px solid #f97316' }} onClick={() => handleCountryClick(e.country)}>
+            <div className="election-type">{e.type}</div>
+            {e.winner && <div style={{ fontSize: '10px', color: '#22c55e', fontWeight: 600, margin: '4px 0' }}>{e.winner}</div>}
+            {e.result && <div className="election-stakes">{e.result}</div>}
+          </div>
+        ))}
+
+        {/* All upcoming elections */}
+        <div className="election-section-label" style={{ color: '#f97316', marginTop: '16px' }}>UPCOMING ELECTIONS</div>
+        {upcoming.map((e, i) => (
+          <div key={'upcoming-' + i} className="election-card" style={{ borderLeft: '3px solid #f97316' }} onClick={() => setSelectedElection(e)}>
             <div className="election-header">
               <span className="election-flag"><CountryFlag flag={e.flag} /></span>
               <span className="election-country">{e.country}</span>
@@ -1130,9 +1157,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
             {e.stakes && <div className="election-stakes">{e.stakes}</div>}
           </div>
         ))}
-      </div>
-    </>
-  );
+      </>
+    );
+  };
 
   const renderForecastTab = () => {
     const riskFg = { catastrophic: '#fca5a5', extreme: '#fcd34d', severe: '#fde047', stormy: '#c4b5fd', cloudy: '#93c5fd', clear: '#86efac' };
@@ -1172,38 +1199,40 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderHorizonTab = () => {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-
+    const todayStr = new Date().toISOString().split('T')[0];
+    // Past: ascending (oldest at top, newest closest to NOW divider)
+    const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => a.date.localeCompare(b.date));
     const upcoming = HORIZON_EVENTS.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
 
-    const renderEvent = (e) => {
+    const renderEventCard = (e, isPastEvent) => {
       const d = new Date(e.date + 'T12:00:00');
       const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
       const day = d.getDate();
       const color = CAT_COLORS[e.category] || '#6b7280';
 
-      const diffMs = new Date(e.date + 'T00:00:00') - new Date(todayStr + 'T00:00:00');
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
       let countdown = null;
-      if (diffDays === 0) countdown = <span style={{ color: '#22c55e', fontWeight: 700, fontSize: '8px' }}>TODAY</span>;
-      else if (diffDays === 1) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>TOMORROW</span>;
-      else if (diffDays > 1 && diffDays <= 7) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>{diffDays} Days</span>;
-      else if (diffDays > 7 && diffDays <= 30) { const w = Math.ceil(diffDays / 7); countdown = <span style={{ color: '#6b7280', fontSize: '8px' }}>{w} Week{w === 1 ? '' : 's'}</span>; }
-      else if (diffDays > 30) { const mo = Math.ceil(diffDays / 30); countdown = <span style={{ color: '#4b5563', fontSize: '8px' }}>{mo} Month{mo === 1 ? '' : 's'}</span>; }
+      if (!isPastEvent) {
+        const diffMs = new Date(e.date + 'T00:00:00') - new Date(todayStr + 'T00:00:00');
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) countdown = <span style={{ color: '#22c55e', fontWeight: 700, fontSize: '8px' }}>TODAY</span>;
+        else if (diffDays === 1) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>TOMORROW</span>;
+        else if (diffDays <= 7) countdown = <span style={{ color: '#f59e0b', fontSize: '8px' }}>{diffDays} Days</span>;
+        else if (diffDays <= 30) { const w = Math.ceil(diffDays / 7); countdown = <span style={{ color: '#6b7280', fontSize: '8px' }}>{w} Week{w === 1 ? '' : 's'}</span>; }
+        else { const mo = Math.ceil(diffDays / 30); countdown = <span style={{ color: '#4b5563', fontSize: '8px' }}>{mo} Month{mo === 1 ? '' : 's'}</span>; }
+      }
 
       return (
-        <div key={e.date + e.name} style={{ display: 'flex', gap: '10px', padding: '10px 8px', borderBottom: '1px solid #111827' }}>
-          <div style={{ minWidth: '42px', textAlign: 'center' }}>
-            <div style={{ fontSize: '9px', fontWeight: 700, color, letterSpacing: '0.5px' }}>{month}</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#e5e7eb', lineHeight: 1.1 }}>{day}</div>
+        <div key={e.date + e.name} className={`horizon-event-card${isPastEvent ? ' past' : ''}`}>
+          <div className="horizon-date-badge">
+            <div className="horizon-date-month" style={{ color }}>{month}</div>
+            <div className="horizon-date-day">{day}</div>
             {countdown && <div style={{ marginTop: '2px' }}>{countdown}</div>}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#e5e7eb', lineHeight: 1.3, marginBottom: '3px' }}>{e.name}</div>
-            <div style={{ fontSize: '9px', color: '#9ca3af', marginBottom: '3px' }}>{e.location}</div>
-            {e.description && <div style={{ fontSize: '9px', color: '#6b7280', lineHeight: 1.5 }}>{e.description}</div>}
+          <div className="horizon-event-content">
+            <div className="horizon-event-name">{e.name}</div>
+            <div className="horizon-event-location">{e.location}</div>
+            {e.outcome && <div className="horizon-event-outcome">{e.outcome}</div>}
+            {!e.outcome && e.description && <div className="horizon-event-desc">{e.description}</div>}
           </div>
         </div>
       );
@@ -1227,7 +1256,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         {/* Header */}
         <div style={{ padding: '8px 12px', background: 'linear-gradient(90deg,rgba(6,182,212,0.12) 0%,transparent 100%)', borderLeft: '3px solid #06b6d4', marginBottom: '12px' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4', letterSpacing: '1px' }}>LOOKING AHEAD</div>
-          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{upcoming.length} upcoming events tracked</div>
+          <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>{HORIZON_EVENTS.length} events tracked ({past.length} past, {upcoming.length} upcoming)</div>
         </div>
 
         {/* Category legend */}
@@ -1240,6 +1269,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           ))}
         </div>
 
+        {/* Past events */}
+        {past.length > 0 && (
+          <>
+            <div className="horizon-section-label" style={{ color: '#22c55e', padding: '6px 8px' }}>PAST EVENTS</div>
+            {past.map(e => renderEventCard(e, true))}
+          </>
+        )}
+
+        {/* NOW divider */}
+        <div className="horizon-now-divider" ref={horizonNowRef}><span>NOW</span></div>
+
         {/* Upcoming events grouped by month */}
         {groupedUpcoming.map((item, i) => {
           if (item.type === 'header') {
@@ -1249,7 +1289,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
               </div>
             );
           }
-          return renderEvent(item.event);
+          return renderEventCard(item.event, false);
         })}
       </>
     );
@@ -2264,6 +2304,14 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         event={selectedEvent}
         isOpen={!!selectedEvent}
         onClose={() => setSelectedEvent(null)}
+      />
+
+      {/* Election Detail Modal */}
+      <ElectionModal
+        election={selectedElection}
+        isOpen={!!selectedElection}
+        onClose={() => setSelectedElection(null)}
+        onCountryClick={handleCountryClick}
       />
     </>
   );

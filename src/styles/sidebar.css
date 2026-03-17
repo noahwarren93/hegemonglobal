@@ -177,3 +177,210 @@
     .newsletter-story-meta { font-size: 8px; color: #6b7280; margin-top: 4px; display: flex; gap: 8px; }
 
     /* TOS button moved to trade-routes.css (.globe-tool-btn) */
+
+    /* ============================================================
+       NOW DIVIDERS — Elections & Horizon
+       ============================================================ */
+    .election-now-divider, .horizon-now-divider {
+      display: flex; align-items: center; gap: 10px; padding: 10px 0; margin: 8px 0;
+    }
+    .election-now-divider::before, .election-now-divider::after,
+    .horizon-now-divider::before, .horizon-now-divider::after {
+      content: ''; flex: 1; height: 1px; background: #06b6d4;
+    }
+    .election-now-divider span, .horizon-now-divider span {
+      font-size: 9px; font-weight: 700; color: #06b6d4; letter-spacing: 2px;
+    }
+
+    /* Section labels */
+    .election-section-label, .horizon-section-label {
+      font-size: 9px; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; margin-top: 4px;
+    }
+
+    /* ============================================================
+       DETAIL VIEWS — shared classes (Elections + Horizon)
+       ============================================================ */
+    .detail-back {
+      font-size: 10px; color: #06b6d4; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;
+    }
+    .detail-back:hover { color: #22d3ee; }
+
+    .detail-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .detail-header .detail-flag { font-size: 28px; }
+
+    .detail-country {
+      font-size: 14px; font-weight: 700; color: #e5e7eb;
+    }
+    .detail-risk-badge {
+      font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; margin-left: auto;
+    }
+
+    .detail-type { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+    .detail-date { font-size: 10px; color: #06b6d4; font-weight: 600; margin-bottom: 12px; }
+
+    .detail-result-box {
+      background: #14532d22; border: 1px solid #22c55e33; border-left: 3px solid #22c55e;
+      border-radius: 8px; padding: 10px; margin-bottom: 12px;
+    }
+    .detail-winner { font-size: 11px; color: #22c55e; font-weight: 600; margin-bottom: 4px; }
+    .detail-result { font-size: 10px; color: #86efac; margin-bottom: 4px; }
+    .detail-summary { font-size: 10px; color: #9ca3af; line-height: 1.5; }
+
+    .detail-stakes-box {
+      background: #9a341222; border: 1px solid #f9731633; border-left: 3px solid #f97316;
+      border-radius: 8px; padding: 10px; margin-bottom: 12px;
+    }
+    .detail-stakes { font-size: 10px; color: #fdba74; line-height: 1.5; }
+
+    .detail-section-title {
+      font-size: 9px; font-weight: 600; color: #9ca3af; letter-spacing: 1px; margin: 14px 0 8px; text-transform: uppercase;
+    }
+
+    .detail-candidates { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+    .detail-candidate {
+      font-size: 10px; color: #d1d5db; padding: 6px 8px; background: #0d0d14; border-radius: 6px; border: 1px solid #1f293755;
+    }
+
+    /* ============================================================
+       ELECTION DETAIL — News section
+       ============================================================ */
+    .detail-news-section { margin-top: 8px; }
+
+    .detail-news-item {
+      padding: 8px 0; border-bottom: 1px solid #111827; cursor: pointer;
+    }
+    .detail-news-item:hover { background: #1f293722; }
+    .detail-news-item:last-child { border-bottom: none; }
+
+    .detail-news-source { font-size: 8px; color: #6b7280; margin-bottom: 2px; }
+    .detail-news-headline { font-size: 10px; color: #d1d5db; line-height: 1.4; }
+
+    .detail-loading {
+      font-size: 10px; color: #6b7280; text-align: center; padding: 16px 0;
+    }
+    .detail-no-news {
+      font-size: 10px; color: #4b5563; text-align: center; padding: 12px 0;
+    }
+
+    .detail-view-country {
+      display: block; width: 100%; margin-top: 14px; padding: 8px; font-size: 10px; font-weight: 600;
+      color: #06b6d4; background: #06b6d411; border: 1px solid #06b6d433; border-radius: 6px;
+      cursor: pointer; text-align: center;
+    }
+    .detail-view-country:hover { background: #06b6d422; border-color: #06b6d4; }
+
+    /* ============================================================
+       HORIZON — Clickable event cards
+       ============================================================ */
+    .horizon-event-card {
+      display: flex; gap: 10px; padding: 10px 8px; border-bottom: 1px solid #111827; cursor: pointer; transition: background 0.15s;
+    }
+    .horizon-event-card:hover { background: #1f293722; }
+    .horizon-event-card.past { opacity: 0.7; }
+
+    .horizon-date-badge { min-width: 42px; text-align: center; }
+    .horizon-date-month { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; }
+    .horizon-date-day { font-size: 18px; font-weight: 700; color: #e5e7eb; line-height: 1.1; }
+
+    .horizon-event-content { flex: 1; min-width: 0; }
+    .horizon-event-name { font-size: 10px; font-weight: 600; color: #e5e7eb; line-height: 1.3; margin-bottom: 3px; }
+    .horizon-event-location { font-size: 9px; color: #9ca3af; margin-bottom: 3px; }
+    .horizon-event-desc { font-size: 9px; color: #6b7280; line-height: 1.5; }
+    .horizon-event-outcome { font-size: 9px; color: #22c55e; line-height: 1.4; margin-top: 4px; font-weight: 500; }
+
+    /* ============================================================
+       HORIZON DETAIL VIEW
+       ============================================================ */
+    .horizon-detail-name { font-size: 16px; font-weight: 700; color: #e5e7eb; margin-bottom: 10px; line-height: 1.3; }
+
+    .horizon-detail-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .horizon-detail-date { font-size: 10px; color: #9ca3af; }
+    .horizon-detail-cat {
+      font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase;
+    }
+
+    .horizon-detail-location { font-size: 10px; color: #6b7280; margin-bottom: 12px; }
+
+    .horizon-detail-desc {
+      font-size: 11px; color: #d1d5db; line-height: 1.6; margin-bottom: 14px;
+      padding: 10px; background: #0d0d14; border-radius: 8px; border: 1px solid #1f293755;
+    }
+
+    .horizon-detail-outcome-box {
+      background: #14532d22; border: 1px solid #22c55e33; border-left: 3px solid #22c55e;
+      border-radius: 8px; padding: 10px;
+    }
+    .horizon-detail-outcome-label {
+      font-size: 8px; font-weight: 700; color: #22c55e; letter-spacing: 1px; margin-bottom: 4px;
+    }
+    .horizon-detail-outcome {
+      font-size: 10px; color: #86efac; line-height: 1.5;
+    }
+
+    /* ============================================================
+       ELECTION MODAL — Center popup
+       ============================================================ */
+    .election-modal { max-width: 580px; }
+
+    .em-section-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;
+    }
+
+    .em-result-box {
+      background: #14532d18; border: 1px solid #22c55e33; border-left: 3px solid #22c55e;
+      border-radius: 8px; padding: 12px; margin-bottom: 14px;
+    }
+    .em-winner { font-size: 13px; color: #22c55e; font-weight: 700; margin-bottom: 4px; }
+    .em-result-line { font-size: 11px; color: #86efac; margin-bottom: 6px; }
+    .em-summary { font-size: 11px; color: #9ca3af; line-height: 1.6; }
+
+    .em-stakes-box {
+      background: #9a341218; border: 1px solid #f9731633; border-left: 3px solid #f97316;
+      border-radius: 8px; padding: 12px; margin-bottom: 14px;
+    }
+    .em-stakes-text { font-size: 11px; color: #fdba74; line-height: 1.6; }
+
+    .em-candidates { display: flex; flex-direction: column; gap: 4px; }
+    .em-candidate {
+      font-size: 11px; color: #d1d5db; padding: 8px 10px; background: #0d0d14;
+      border-radius: 6px; border: 1px solid #1f293755; line-height: 1.5;
+    }
+
+    .em-analysis-box {
+      font-size: 11px; color: #d1d5db; line-height: 1.6; padding: 12px;
+      background: #0d0d14; border-radius: 8px; border: 1px solid #1f293755;
+      border-left: 3px solid #a78bfa;
+    }
+
+    .em-map-placeholder {
+      background: #0d0d14; border: 1px dashed #1f2937; border-radius: 8px;
+      padding: 24px; text-align: center;
+    }
+
+    .em-news-loading {
+      font-size: 11px; color: #6b7280; text-align: center; padding: 16px 0;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .em-spinner {
+      display: inline-block; width: 12px; height: 12px;
+      border: 1.5px solid #374151; border-top-color: #06b6d4;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .em-news-empty { font-size: 11px; color: #4b5563; text-align: center; padding: 16px 0; }
+
+    .em-news-list { display: flex; flex-direction: column; gap: 2px; }
+    .em-news-item {
+      padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+    }
+    .em-news-item:hover { background: #1f293733; }
+    .em-news-source { font-size: 8px; color: #6b7280; margin-bottom: 2px; }
+    .em-news-headline { font-size: 11px; color: #d1d5db; line-height: 1.4; }
+
+    .em-view-country {
+      display: block; width: 100%; margin-top: 14px; padding: 10px; font-size: 11px; font-weight: 600;
+      color: #06b6d4; background: #06b6d411; border: 1px solid #06b6d433; border-radius: 6px;
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .em-view-country:hover { background: #06b6d422; border-color: #06b6d4; }
