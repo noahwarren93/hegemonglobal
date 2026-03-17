@@ -1236,6 +1236,12 @@ const COUNTRY_FALSE_POSITIVE_FILTERS = {
     }
     return false;
   },
+  // Ireland: exclude articles where "Ireland" is a person's surname (Kathy Ireland, Chris Ireland, etc.)
+  'Ireland': (text) => {
+    const surnameMatch = /\b(?:kathy|chris|dan|john|mike|david|james|robert|bill|tom|mark|steve|jeff|brian|scott|tim|andy|amy|kim|lisa|jay|sam|ben|joe|pat|ryan|sean|kevin|drew|jack|neal|josh|greg|adam|eric|matt|nick|paul|rick|peter|frank)\s+ireland\b/i.test(text);
+    const hasIrelandCountry = /\b(?:irish|dublin|taoiseach|sinn f[eé]in|fianna|fine gael|dáil|cork|belfast|northern ireland|galway|limerick|tipperary|kerry)\b/i.test(text);
+    return surnameMatch && !hasIrelandCountry;
+  },
 };
 
 let _properCaseMap = null;
@@ -1331,6 +1337,11 @@ const COUNTRY_NEWS_JUNK_PATTERNS = [
   /\brotc\b.*\b(?:killed|instructor|cadet)\b/i,
   // Headlines that are just dates (no content)
   /^(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4}$/i,
+  // Barça Legends / FC Barcelona exhibition tours (Dominican Republic etc.)
+  /\b(?:bar[cç]a\s*legends?|fc\s*barcelona\s*legends?|barcelona\s*legends?)\b/i,
+  // Six Nations rugby — not geopolitics
+  /\b(?:six\s*nations?\s*(?:title|rugby|championship|standings)?)\b/i,
+  /\b(?:ireland|scotland|england|wales|france|italy)\s+v\.?\s+(?:ireland|scotland|england|wales|france|italy)\b.*\b(?:rugby|six\s*nations?|twickenham|murrayfield|aviva\s*stadium|stade\s*de\s*france|principality\s*stadium)\b/i,
 ];
 
 // Sources that should never appear in country news feeds (encyclopedias, reference)
