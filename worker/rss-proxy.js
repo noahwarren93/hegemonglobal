@@ -1584,9 +1584,13 @@ async function buildCountryNewsFeeds(rawArticles, env) {
     'Thailand', 'Indonesia', 'Zimbabwe', 'South Africa', 'Nepal', 'Guyana',
     'Panama', 'Singapore', 'Philippines', 'Sri Lanka', 'Peru'
   ]);
+  // Countries that ALWAYS get Google News supplement regardless of article count
+  const ALWAYS_SUPPLEMENT = new Set(['Niger']);
   for (const country of Object.keys(COUNTRY_DEMONYMS)) {
     const count = (merged[country] || []).length;
-    if (CRITICAL_COUNTRIES.has(country) && count < 15) {
+    if (ALWAYS_SUPPLEMENT.has(country)) {
+      sparse.push(country);
+    } else if (CRITICAL_COUNTRIES.has(country) && count < 15) {
       sparse.push(country);
     } else if (SEVERE_COUNTRIES.has(country) && count < 10) {
       sparse.push(country);
@@ -1630,7 +1634,7 @@ async function buildCountryNewsFeeds(rawArticles, env) {
       'Georgia': 'Georgia country Caucasus Tbilisi',
       'Chad': 'Chad country Africa N\'Djamena',
       'Jordan': 'Jordan country Middle East Amman',
-      'Niger': 'Niger country Africa Niamey Sahel',
+      'Niger': 'Niger Sahel junta coup Niamey CNSP Tiani',
       'Mali': 'Mali country Africa Bamako',
       'Guinea': 'Guinea country Africa Conakry',
       'United Arab Emirates': 'UAE Dubai Abu Dhabi Emirati',

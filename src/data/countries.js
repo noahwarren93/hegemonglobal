@@ -849,6 +849,14 @@ export const COUNTRIES = {
 
   },
 
+  'Azerbaijan': { lat: 40.14, lng: 47.58, flag: '🇦🇿', risk: 'stormy', tags: ['Post-Conflict', 'Energy State'], region: 'Caucasus', pop: '10M', gdp: '$78B', leader: 'Ilham Aliyev', title: 'Post-Karabakh Consolidation',
+    analysis: {
+      what: 'Azerbaijan seized full control of Nagorno-Karabakh in September 2023, forcing the exodus of over 100,000 ethnic Armenians and dissolving the self-declared republic. President Aliyev has consolidated power domestically and leveraged this military victory to demand a peace treaty with Armenia on Azerbaijani terms, including a land corridor (Zangezur) through southern Armenia. Azerbaijan hosted COP29 in Baku in November 2024 despite criticism of its human rights record. The country continues to expand energy exports to Europe as an alternative to Russian gas via the Southern Gas Corridor (TAP/TANAP pipelines).',
+      why: 'Azerbaijan is a critical energy supplier for Europe\'s diversification from Russian gas. The Karabakh victory reshaped the South Caucasus balance of power, sidelining Russia\'s traditional role as mediator. Aliyev\'s authoritarian governance, press freedom crackdowns, and political prisoner detentions draw Western criticism but are overlooked due to energy needs. Turkey\'s close military alliance with Azerbaijan creates a powerful bloc.',
+      next: 'Watch for: Armenia-Azerbaijan peace treaty negotiations (Zangezur corridor remains the key sticking point), European gas expansion deals, human rights pressure, and potential border provocations. Aliyev faces no domestic opposition but may push further territorial demands on Armenia.'
+    },
+  },
+
   'Chile': { lat: -30.0, lng: -71.0, flag: '🇨🇱', risk: 'cloudy', tags: [], region: 'South America', pop: '19M', gdp: '$301B', leader: 'Jose Antonio Kast', title: 'Presidential Transition',
     analysis: {
       what: 'President Boric leads a left-wing government that has struggled to deliver promised reforms after two constitutional referendums failed. The economy is stable but growth is weak. Migration from Venezuela and Haiti has strained services. Chile remains the world\'s largest copper producer with lithium reserves gaining importance.',
