@@ -257,6 +257,326 @@ export function getStateMediaLabel(source) {
   return null;
 }
 
+// Source type and geographic origin tags — every formatSourceName display name tagged
+export const SOURCE_TAGS = {
+  // ── Wire services ──
+  'Reuters': { type: 'wire', geo: 'GB' },
+  'AP News': { type: 'wire', geo: 'US' },
+  'AFP': { type: 'wire', geo: 'FR' },
+  'UPI': { type: 'wire', geo: 'US' },
+  'PTI': { type: 'wire', geo: 'IN' },
+  'ANI': { type: 'wire', geo: 'IN' },
+  'IANS': { type: 'wire', geo: 'IN' },
+  'DPA': { type: 'wire', geo: 'DE' },
+  'EFE': { type: 'wire', geo: 'ES' },
+  'ANSA': { type: 'wire', geo: 'IT' },
+  'Kyodo News': { type: 'wire', geo: 'JP' },
+  'Yonhap': { type: 'wire', geo: 'KR' },
+  'UNIAN': { type: 'wire', geo: 'UA' },
+
+  // ── Public broadcasters (state-funded, editorially independent) ──
+  'BBC News': { type: 'public', geo: 'GB' },
+  'NPR': { type: 'public', geo: 'US' },
+  'PBS': { type: 'public', geo: 'US' },
+  'ABC Australia': { type: 'public', geo: 'AU' },
+  'Deutsche Welle': { type: 'public', geo: 'DE' },
+  'France 24': { type: 'public', geo: 'FR' },
+  'RNZ': { type: 'public', geo: 'NZ' },
+  'Al Jazeera': { type: 'public', geo: 'QA' },
+  'NHK World': { type: 'public', geo: 'JP' },
+  'CBC News': { type: 'public', geo: 'CA' },
+  'RTÉ': { type: 'public', geo: 'IE' },
+  'CNA': { type: 'public', geo: 'SG' },
+
+  // ── Legacy media (papers of record) ──
+  'NY Times': { type: 'legacy', geo: 'US' },
+  'Washington Post': { type: 'legacy', geo: 'US' },
+  'Wall Street Journal': { type: 'legacy', geo: 'US' },
+  'Financial Times': { type: 'legacy', geo: 'GB' },
+  'The Guardian': { type: 'legacy', geo: 'GB' },
+  'The Telegraph': { type: 'legacy', geo: 'GB' },
+  'USA Today': { type: 'legacy', geo: 'US' },
+  'LA Times': { type: 'legacy', geo: 'US' },
+  'Chicago Tribune': { type: 'legacy', geo: 'US' },
+  'Le Monde': { type: 'legacy', geo: 'FR' },
+  'Der Spiegel': { type: 'legacy', geo: 'DE' },
+  'El País': { type: 'legacy', geo: 'ES' },
+  'Irish Times': { type: 'legacy', geo: 'IE' },
+  'Asahi Shimbun': { type: 'legacy', geo: 'JP' },
+  'South China Morning Post': { type: 'legacy', geo: 'HK' },
+  'Globe and Mail': { type: 'legacy', geo: 'CA' },
+  'Sydney Morning Herald': { type: 'legacy', geo: 'AU' },
+  'The Australian': { type: 'legacy', geo: 'AU' },
+  'O Globo': { type: 'legacy', geo: 'BR' },
+  'Folha': { type: 'legacy', geo: 'BR' },
+  'Clarín': { type: 'legacy', geo: 'AR' },
+  'La Nación': { type: 'legacy', geo: 'AR' },
+  'Haaretz': { type: 'legacy', geo: 'IL' },
+  'Jerusalem Post': { type: 'legacy', geo: 'IL' },
+  'The Atlantic': { type: 'legacy', geo: 'US' },
+  'The New Yorker': { type: 'legacy', geo: 'US' },
+  'Mail & Guardian': { type: 'legacy', geo: 'ZA' },
+
+  // ── Cable / TV news ──
+  'CNN': { type: 'cable', geo: 'US' },
+  'Fox News': { type: 'cable', geo: 'US' },
+  'MSNBC': { type: 'cable', geo: 'US' },
+  'ABC News': { type: 'cable', geo: 'US' },
+  'NBC News': { type: 'cable', geo: 'US' },
+  'CBS News': { type: 'cable', geo: 'US' },
+  'Sky News': { type: 'cable', geo: 'GB' },
+  'Newsmax': { type: 'cable', geo: 'US' },
+  'Euronews': { type: 'cable', geo: 'FR' },
+  'Nine News': { type: 'cable', geo: 'AU' },
+  'NDTV': { type: 'cable', geo: 'IN' },
+
+  // ── Digital-native outlets ──
+  'Axios': { type: 'digital', geo: 'US' },
+  'Politico': { type: 'digital', geo: 'US' },
+  'Politico EU': { type: 'digital', geo: 'BE' },
+  'Vox': { type: 'digital', geo: 'US' },
+  'Slate': { type: 'digital', geo: 'US' },
+  'The Intercept': { type: 'digital', geo: 'US' },
+  'Semafor': { type: 'digital', geo: 'US' },
+  'The Hill': { type: 'digital', geo: 'US' },
+  'HuffPost': { type: 'digital', geo: 'US' },
+  'BuzzFeed': { type: 'digital', geo: 'US' },
+  'The Independent': { type: 'digital', geo: 'GB' },
+  'Daily Beast': { type: 'digital', geo: 'US' },
+  'Mediaite': { type: 'digital', geo: 'US' },
+  'Puck': { type: 'digital', geo: 'US' },
+  'Mother Jones': { type: 'digital', geo: 'US' },
+  'Insider': { type: 'digital', geo: 'US' },
+  'Raw Story': { type: 'digital', geo: 'US' },
+  'Breitbart': { type: 'digital', geo: 'US' },
+  'Daily Wire': { type: 'digital', geo: 'US' },
+  'National Review': { type: 'digital', geo: 'US' },
+  'Kyiv Independent': { type: 'digital', geo: 'UA' },
+  'Kyiv Post': { type: 'digital', geo: 'UA' },
+  'Times of Israel': { type: 'digital', geo: 'IL' },
+  'Middle East Eye': { type: 'digital', geo: 'GB' },
+  'Middle East Monitor': { type: 'digital', geo: 'GB' },
+  'The Print': { type: 'digital', geo: 'IN' },
+  'The Wire': { type: 'digital', geo: 'IN' },
+  'Scroll': { type: 'digital', geo: 'IN' },
+  'Firstpost': { type: 'digital', geo: 'IN' },
+  'Rappler': { type: 'digital', geo: 'PH' },
+  'Dutch News': { type: 'digital', geo: 'NL' },
+  'The Local': { type: 'digital', geo: 'SE' },
+  'IOL': { type: 'digital', geo: 'ZA' },
+  'News24': { type: 'digital', geo: 'ZA' },
+  'Premium Times': { type: 'digital', geo: 'NG' },
+  'Legit News': { type: 'digital', geo: 'NG' },
+  'Daily Nigerian': { type: 'digital', geo: 'NG' },
+  'Stuff NZ': { type: 'digital', geo: 'NZ' },
+  'Al Bawaba': { type: 'digital', geo: 'JO' },
+  'Middle East Star': { type: 'digital', geo: 'TR' },
+  'Africa News': { type: 'digital', geo: 'FR' },
+  'Onet': { type: 'digital', geo: 'PL' },
+  'RM Outlook': { type: 'digital', geo: 'RO' },
+
+  // ── Regional / domestic papers ──
+  'Times of India': { type: 'regional', geo: 'IN' },
+  'Hindustan Times': { type: 'regional', geo: 'IN' },
+  'India Today': { type: 'regional', geo: 'IN' },
+  'The Hindu': { type: 'regional', geo: 'IN' },
+  'Indian Express': { type: 'regional', geo: 'IN' },
+  'Deccan Herald': { type: 'regional', geo: 'IN' },
+  'Mathrubhumi': { type: 'regional', geo: 'IN' },
+  'Dawn': { type: 'regional', geo: 'PK' },
+  'Express Tribune': { type: 'regional', geo: 'PK' },
+  'Geo News': { type: 'regional', geo: 'PK' },
+  'ARY News': { type: 'regional', geo: 'PK' },
+  'The News': { type: 'regional', geo: 'PK' },
+  'Pakistan Today': { type: 'regional', geo: 'PK' },
+  'Straits Times': { type: 'regional', geo: 'SG' },
+  'Japan Times': { type: 'regional', geo: 'JP' },
+  'Korea Herald': { type: 'regional', geo: 'KR' },
+  'Korea Times': { type: 'regional', geo: 'KR' },
+  'Bangkok Post': { type: 'regional', geo: 'TH' },
+  'Jakarta Post': { type: 'regional', geo: 'ID' },
+  'PhilStar': { type: 'regional', geo: 'PH' },
+  'Inquirer': { type: 'regional', geo: 'PH' },
+  'Manila Times': { type: 'regional', geo: 'PH' },
+  'The Star Malaysia': { type: 'regional', geo: 'MY' },
+  'VnExpress': { type: 'regional', geo: 'VN' },
+  'Taipei Times': { type: 'regional', geo: 'TW' },
+  'Tempo': { type: 'regional', geo: 'ID' },
+  'Daily Star Bangladesh': { type: 'regional', geo: 'BD' },
+  'Buenos Aires Herald': { type: 'regional', geo: 'AR' },
+  'NZ Herald': { type: 'regional', geo: 'NZ' },
+  'El Universal': { type: 'regional', geo: 'MX' },
+  'Milenio': { type: 'regional', geo: 'MX' },
+  'Reforma': { type: 'regional', geo: 'MX' },
+  'Nation Kenya': { type: 'regional', geo: 'KE' },
+  'Daily Nation': { type: 'regional', geo: 'KE' },
+  'East African': { type: 'regional', geo: 'KE' },
+  'Standard Media': { type: 'regional', geo: 'KE' },
+  'Times Live': { type: 'regional', geo: 'ZA' },
+  'Punch Nigeria': { type: 'regional', geo: 'NG' },
+  'Vanguard Nigeria': { type: 'regional', geo: 'NG' },
+  'The Nation': { type: 'regional', geo: 'NG' },
+  'Report Azerbaijan': { type: 'regional', geo: 'AZ' },
+  'RMF24': { type: 'regional', geo: 'PL' },
+
+  // ── Tabloid press ──
+  'Daily Mail': { type: 'tabloid', geo: 'GB' },
+  'Daily Mail UK': { type: 'tabloid', geo: 'GB' },
+  'New York Post': { type: 'tabloid', geo: 'US' },
+  'The Sun': { type: 'tabloid', geo: 'GB' },
+  'Daily Express': { type: 'tabloid', geo: 'GB' },
+  'Metro UK': { type: 'tabloid', geo: 'GB' },
+  'The Mirror': { type: 'tabloid', geo: 'GB' },
+  'Evening Standard': { type: 'tabloid', geo: 'GB' },
+
+  // ── Trade / business / industry ──
+  'Bloomberg': { type: 'trade', geo: 'US' },
+  'CNBC': { type: 'trade', geo: 'US' },
+  'The Economist': { type: 'trade', geo: 'GB' },
+  'MarketWatch': { type: 'trade', geo: 'US' },
+  'Forbes': { type: 'trade', geo: 'US' },
+  'Fortune': { type: 'trade', geo: 'US' },
+  'Business Insider': { type: 'trade', geo: 'US' },
+  'Barrons': { type: 'trade', geo: 'US' },
+  'Benzinga': { type: 'trade', geo: 'US' },
+  'InvestorPlace': { type: 'trade', geo: 'US' },
+  'Seeking Alpha': { type: 'trade', geo: 'US' },
+  'TheStreet': { type: 'trade', geo: 'US' },
+  'Investopedia': { type: 'trade', geo: 'US' },
+  'Kiplinger': { type: 'trade', geo: 'US' },
+  'Biz Journals': { type: 'trade', geo: 'US' },
+  'IB Times': { type: 'trade', geo: 'US' },
+  'Nikkei Asia': { type: 'trade', geo: 'JP' },
+  'Live Mint': { type: 'trade', geo: 'IN' },
+  'Money Control': { type: 'trade', geo: 'IN' },
+  'Economic Times': { type: 'trade', geo: 'IN' },
+  'Defense One': { type: 'trade', geo: 'US' },
+  'Defense News': { type: 'trade', geo: 'US' },
+  'Breaking Defense': { type: 'trade', geo: 'US' },
+  'OilPrice': { type: 'trade', geo: 'US' },
+  'Hellenic Shipping': { type: 'trade', geo: 'GR' },
+  'Lloyds List': { type: 'trade', geo: 'GB' },
+  'TechCrunch': { type: 'trade', geo: 'US' },
+  'The Verge': { type: 'trade', geo: 'US' },
+  'Wired': { type: 'trade', geo: 'US' },
+  'Ars Technica': { type: 'trade', geo: 'US' },
+  'Engadget': { type: 'trade', geo: 'US' },
+  'CNET': { type: 'trade', geo: 'US' },
+  'ZDNet': { type: 'trade', geo: 'US' },
+  'Toms Hardware': { type: 'trade', geo: 'US' },
+  'Gizmodo': { type: 'trade', geo: 'US' },
+  'Mashable': { type: 'trade', geo: 'US' },
+  'VentureBeat': { type: 'trade', geo: 'US' },
+  'London Loves Business': { type: 'trade', geo: 'GB' },
+  'City A.M.': { type: 'trade', geo: 'GB' },
+  'Zawya': { type: 'trade', geo: 'AE' },
+  'MENAFN': { type: 'trade', geo: 'JO' },
+  'ESPN': { type: 'trade', geo: 'US' },
+  'CBS Sports': { type: 'trade', geo: 'US' },
+  'Sports Illustrated': { type: 'trade', geo: 'US' },
+  'Yardbarker': { type: 'trade', geo: 'US' },
+
+  // ── State-controlled media ──
+  'CGTN': { type: 'state', geo: 'CN' },
+  'Xinhua': { type: 'state', geo: 'CN' },
+  'China Daily': { type: 'state', geo: 'CN' },
+  'Global Times': { type: 'state', geo: 'CN' },
+  'TASS': { type: 'state', geo: 'RU' },
+  'RT': { type: 'state', geo: 'RU' },
+  'RIA Novosti': { type: 'state', geo: 'RU' },
+  'Pravda': { type: 'state', geo: 'RU' },
+  'Tehran Times': { type: 'state', geo: 'IR' },
+  'Press TV': { type: 'state', geo: 'IR' },
+  'Mehr News': { type: 'state', geo: 'IR' },
+  'TRT World': { type: 'state', geo: 'TR' },
+  'Anadolu Agency': { type: 'state', geo: 'TR' },
+  'Daily Sabah': { type: 'state', geo: 'TR' },
+  'WION': { type: 'state', geo: 'IN' },
+  'Al Arabiya': { type: 'state', geo: 'SA' },
+  'Arab News': { type: 'state', geo: 'SA' },
+  'Gulf News': { type: 'state', geo: 'AE' },
+  'The National': { type: 'state', geo: 'AE' },
+  'Vietnam News': { type: 'state', geo: 'VN' },
+  'Bernama': { type: 'state', geo: 'MY' },
+  'Sahara Press': { type: 'state', geo: 'EH' },
+
+  // ── Think tank / academic / policy ──
+  'Foreign Affairs': { type: 'think', geo: 'US' },
+  'Foreign Policy': { type: 'think', geo: 'US' },
+  'The Conversation': { type: 'think', geo: 'AU' },
+
+  // ── Aggregators / news magazines ──
+  'Newsweek': { type: 'agg', geo: 'US' },
+  'TIME': { type: 'agg', geo: 'US' },
+  'BizToc': { type: 'agg', geo: 'US' },
+};
+
+const TAG_TYPE_COLORS = {
+  wire: '#059669', public: '#2563eb', legacy: '#475569', cable: '#6366f1',
+  digital: '#0891b2', regional: '#0d9488', tabloid: '#ca8a04', trade: '#7c3aed',
+  state: '#dc2626', think: '#d97706', agg: '#6b7280'
+};
+
+const TAG_TYPE_LABELS = {
+  wire: 'Wire Service', public: 'Public Media', legacy: 'Legacy Media', cable: 'Cable News',
+  digital: 'Digital Media', regional: 'Regional Media', tabloid: 'Tabloid', trade: 'Trade/Industry',
+  state: 'State Media', think: 'Think Tank', agg: 'Aggregator'
+};
+
+export function getSourceTag(source) {
+  if (!source) return null;
+  if (SOURCE_TAGS[source]) return SOURCE_TAGS[source];
+  const srcLower = source.toLowerCase();
+  let bestKey = null, bestLen = 0;
+  for (const k of Object.keys(SOURCE_TAGS)) {
+    if (k.length < 3) continue;
+    const kLower = k.toLowerCase();
+    if (srcLower.includes(kLower) || kLower.includes(srcLower)) {
+      if (k.length > bestLen) { bestLen = k.length; bestKey = k; }
+    }
+  }
+  return bestKey ? SOURCE_TAGS[bestKey] : null;
+}
+
+export function renderSourceTag(source) {
+  const tag = getSourceTag(source);
+  if (!tag) return '';
+  const bg = TAG_TYPE_COLORS[tag.type] || '#6b7280';
+  const label = TAG_TYPE_LABELS[tag.type] || tag.type;
+  return `<span style="font-size:7px;color:#fff;font-weight:600;white-space:nowrap;background:${bg};padding:1px 5px;border-radius:3px;">${label}\u00a0·\u00a0${tag.geo}</span>`;
+}
+
+export function renderUnifiedSourceTag(source) {
+  const cred = getSourceCredibility(source);
+  if (!cred || cred === 'blocked') return '';
+  const tag = getSourceTag(source);
+
+  // State media → "State Media · GEO" in red
+  if (cred === 'state') {
+    const geo = tag ? tag.geo : '';
+    const label = geo ? `State Media\u00a0·\u00a0${geo}` : 'State Media';
+    return `<span style="font-size:7px;color:#fff;font-weight:600;white-space:nowrap;background:#dc2626;padding:1px 5px;border-radius:3px;">${label}</span>`;
+  }
+  // State-affiliated → "State-Affiliated · GEO" in orange
+  if (cred === 'state-affiliated') {
+    const geo = tag ? tag.geo : '';
+    const label = geo ? `State-Affiliated\u00a0·\u00a0${geo}` : 'State-Affiliated';
+    return `<span style="font-size:7px;color:#fff;font-weight:600;white-space:nowrap;background:#f97316;padding:1px 5px;border-radius:3px;">${label}</span>`;
+  }
+  // Tabloid → "Tabloid" in amber, no geo
+  if (cred === 'tabloid') {
+    return `<span style="font-size:7px;color:#fff;font-weight:600;white-space:nowrap;background:#ca8a04;padding:1px 5px;border-radius:3px;">Tabloid</span>`;
+  }
+  // SOURCE_TAGS entry → type label only, no geo
+  if (tag) {
+    const bg = TAG_TYPE_COLORS[tag.type] || '#6b7280';
+    const label = TAG_TYPE_LABELS[tag.type] || tag.type;
+    return `<span style="font-size:7px;color:#fff;font-weight:600;white-space:nowrap;background:${bg};padding:1px 5px;border-radius:3px;">${label}</span>`;
+  }
+  // Fallback → "Independent" in dim gray
+  return `<span style="font-size:7px;color:#d1d5db;font-weight:600;white-space:nowrap;background:#374151;padding:1px 5px;border-radius:3px;">Independent</span>`;
+}
+
 // Extract the effective display source from an article (handles Google News embedding)
 function getEffectiveSource(article) {
   let source = article.source || '';

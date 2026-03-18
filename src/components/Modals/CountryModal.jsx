@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../../data/countries';
-import { renderCredibilityTag, renderTrendChart, getStateMediaLabel, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST, getSourceCredibility } from '../../utils/riskColors';
+import { renderUnifiedSourceTag, renderTrendChart, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST, getSourceCredibility } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
 
@@ -272,24 +272,16 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
 
   // Helper: render a single news item
   const renderNewsItem = (article, i) => {
-    const stateLabel = getStateMediaLabel(article.source);
     return (
       <div key={i} className="news-item">
         <div className="news-meta">
           {article.category && (
             <span className={`card-cat ${article.category}`} style={{ fontSize: '7px', padding: '1px 4px' }}>{article.category}</span>
           )}
-          <span className="news-source">
-            {article.source}
-            {stateLabel && (
-              <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', marginLeft: '6px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                {stateLabel}
-              </span>
-            )}
-          </span>
+          <span className="news-source">{article.source}</span>
+          <span dangerouslySetInnerHTML={{ __html: renderUnifiedSourceTag(article.source) }} />
           <span className="news-time">{article.pubDate ? timeAgo(article.pubDate) : (article.time || '')}</span>
         </div>
-        <span dangerouslySetInnerHTML={{ __html: renderCredibilityTag(article.source) }} />
         <div className="news-headline">
           {article.url && article.url !== '#' ? (
             <a href={article.url} target="_blank" rel="noopener noreferrer" className="news-link" style={{ fontSize: '12px' }}>{article.headline}</a>

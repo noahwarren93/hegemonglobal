@@ -1,7 +1,7 @@
 // EventModal.jsx - Event detail modal with AI summary and source list
 
 import { useEffect, useState } from 'react';
-import { renderCredibilityTag, getStateMediaLabel, timeAgo } from '../../utils/riskColors';
+import { renderUnifiedSourceTag, timeAgo } from '../../utils/riskColors';
 
 const CAT_BORDER = {
   CONFLICT: '#ef4444', CRISIS: '#f97316', SECURITY: '#eab308',
@@ -181,12 +181,7 @@ export default function EventModal({ event, isOpen, onClose }) {
               <div key={i} className="news-item">
                 <div className="news-meta">
                   <span className="news-source">{artSource}</span>
-                  {getStateMediaLabel(artSource) && (
-                    <span style={{ fontSize: '7px', color: '#f59e0b', background: '#78350f', padding: '1px 4px', borderRadius: '3px', fontWeight: 600, letterSpacing: '0.3px' }}>
-                      {getStateMediaLabel(artSource)}
-                    </span>
-                  )}
-                  <span dangerouslySetInnerHTML={{ __html: renderCredibilityTag(artSource) }} />
+                  <span dangerouslySetInnerHTML={{ __html: renderUnifiedSourceTag(artSource) }} />
                   <span className="news-time">{article.time || ''}</span>
                 </div>
                 <div className="news-headline">
