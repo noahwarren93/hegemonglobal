@@ -114,7 +114,7 @@ export const CREDIBILITY_COLORS = {
   'wire': '#059669',
   'state': '#ef4444',
   'state-affiliated': '#f97316',
-  'independent': '#3b82f6',
+  'independent': '#374151',
   'tabloid': '#eab308',
   'specialist': '#8b5cf6'
 };
@@ -194,12 +194,12 @@ export function getSourceCredibility(source) {
 
 const CREDIBILITY_TEXT_COLORS = {
   'wire': '#fff', 'state': '#fff', 'state-affiliated': '#000',
-  'independent': '#fff', 'tabloid': '#fff', 'specialist': '#fff'
+  'independent': '#d1d5db', 'tabloid': '#fff', 'specialist': '#fff'
 };
 
 export function renderCredibilityTag(source) {
   const cred = getSourceCredibility(source);
-  if (!cred || cred === 'blocked' || cred === 'independent') return '';
+  if (!cred || cred === 'blocked') return '';
   const bg = CREDIBILITY_COLORS[cred] || '#6b7280';
   const text = CREDIBILITY_TEXT_COLORS[cred] || '#fff';
   const label = CREDIBILITY_LABELS[cred] || cred;
