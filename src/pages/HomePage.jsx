@@ -18,7 +18,7 @@ import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
 import ChokepointPanel from '../components/TradeRoutes/ChokepointPanel';
 import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
-import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS } from '../data/threatGroupData';
+import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS, THREAT_GROUPS } from '../data/threatGroupData';
 
 const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
 const TOSModal = lazy(() => import('../components/Modals/TOSModal'));
@@ -29,7 +29,7 @@ const ComparePanel = lazy(() => import('../components/Compare/ComparePanel'));
 // Search Overlay Component
 // ============================================================
 
-function SearchOverlay({ isOpen, onClose, onSelect }) {
+function SearchOverlay({ isOpen, onClose, onSelect, onSelectThreatGroup }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
 
@@ -42,20 +42,35 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
   }, [isOpen]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const results = useMemo(() => {
+  const countryResults = useMemo(() => {
     if (!query || query.length < 1) return [];
     const q = query.toLowerCase();
     return Object.entries(COUNTRIES)
       .filter(([name, c]) => {
         if (name.toLowerCase().includes(q)) return true;
         if (c.region.toLowerCase().includes(q)) return true;
-        // Check demonyms/aliases (e.g. "gaza" → Palestine, "hamas" → Palestine)
         const aliases = COUNTRY_DEMONYMS[name];
         if (aliases && aliases.some(alias => alias.includes(q) || q.includes(alias))) return true;
         return false;
       })
-      .slice(0, 12);
+      .slice(0, 8);
   }, [query]);
+
+  const threatResults = useMemo(() => {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    return THREAT_GROUPS
+      .filter(g => {
+        if (g.name.toLowerCase().includes(q)) return true;
+        if (g.territory && g.territory.toLowerCase().includes(q)) return true;
+        if (g.type.toLowerCase().includes(q)) return true;
+        if (g.searchTerms && g.searchTerms.some(t => t.includes(q) || q.includes(t))) return true;
+        return false;
+      })
+      .slice(0, 6);
+  }, [query]);
+
+  const hasResults = countryResults.length > 0 || threatResults.length > 0;
 
   if (!isOpen) return null;
 
@@ -65,13 +80,13 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search countries..."
+          placeholder="Search countries & threat groups..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') onClose();
-            if (e.key === 'Enter' && results.length > 0) {
-              onSelect(results[0][0]);
+            if (e.key === 'Enter' && countryResults.length > 0) {
+              onSelect(countryResults[0][0]);
               onClose();
             }
           }}
@@ -79,21 +94,49 @@ function SearchOverlay({ isOpen, onClose, onSelect }) {
         <button onClick={onClose}>&times;</button>
       </div>
       <div className="search-overlay-results">
-        {results.map(([name, c]) => (
-          <div
-            key={name}
-            className="search-overlay-item"
-            onClick={() => { onSelect(name); onClose(); }}
-          >
-            <span><CountryFlag flag={c.flag} /> {name}</span>
-            <span style={{ fontSize: '9px', color: RISK_COLORS[c.risk]?.hex || '#888' }}>
-              {c.risk.toUpperCase()}
-            </span>
-          </div>
-        ))}
-        {query && results.length === 0 && (
+        {countryResults.length > 0 && (
+          <>
+            {threatResults.length > 0 && (
+              <div style={{ padding: '4px 12px 2px', fontSize: '8px', fontWeight: 700, color: '#4b5563', letterSpacing: '1px', textTransform: 'uppercase' }}>Countries</div>
+            )}
+            {countryResults.map(([name, c]) => (
+              <div
+                key={name}
+                className="search-overlay-item"
+                onClick={() => { onSelect(name); onClose(); }}
+              >
+                <span><CountryFlag flag={c.flag} /> {name}</span>
+                <span style={{ fontSize: '9px', color: RISK_COLORS[c.risk]?.hex || '#888' }}>
+                  {c.risk.toUpperCase()}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+        {threatResults.length > 0 && (
+          <>
+            <div style={{ padding: '4px 12px 2px', fontSize: '8px', fontWeight: 700, color: '#4b5563', letterSpacing: '1px', textTransform: 'uppercase', borderTop: countryResults.length > 0 ? '1px solid #1f2937' : 'none', marginTop: countryResults.length > 0 ? '4px' : 0, paddingTop: countryResults.length > 0 ? '6px' : '4px' }}>Threat Groups</div>
+            {threatResults.map(g => (
+              <div
+                key={g.id}
+                className="search-overlay-item"
+                onClick={() => { onSelectThreatGroup(g); onClose(); }}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: THREAT_TYPE_COLORS[g.type] || '#888', flexShrink: 0 }} />
+                  {g.name}
+                </span>
+                <span style={{ fontSize: '8px', color: THREAT_TYPE_COLORS[g.type] || '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {THREAT_TYPE_LABELS[g.type] || g.type}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+        {query && !hasResults && (
           <div style={{ padding: '12px', color: '#6b7280', fontSize: '11px', textAlign: 'center' }}>
-            No countries found
+            No results found
           </div>
         )}
       </div>
@@ -713,6 +756,34 @@ export default function HomePage() {
     }
   }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, showThreatGroups, hideThreatGroups, hideTradeRoutes, hideMilitary]);
 
+  // Select a threat group from search — activate overlay if needed, then open panel
+  const handleSearchThreatGroup = useCallback((group) => {
+    if (!threatGroupsActive) {
+      setThreatGroupsActive(true);
+      if (tradeRoutesActive) {
+        setTradeRoutesActive(false);
+        window.tradeRoutesActive = false;
+        hideTradeRoutes();
+      }
+      if (compareMode) {
+        setCompareMode(false);
+        setCompareCountries([]);
+      }
+      if (militaryMode) {
+        setMilitaryMode(false);
+        setMilitaryPanelOpen(false);
+        hideMilitary();
+        setMilitaryInfoOpen(false);
+        setSelectedInstallation(null);
+        setMilCountryPopupOpen(false);
+        setMilCountryPopupName(null);
+      }
+      showThreatGroups();
+    }
+    setSelectedThreatGroup(group);
+    setThreatGroupPanelOpen(true);
+  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, showThreatGroups, hideTradeRoutes, hideMilitary]);
+
   // Fly globe to a lat/lng and open military info panel
   const handleMilitaryBaseSelect = useCallback((installation) => {
     // Fly the globe to the installation
@@ -925,6 +996,7 @@ export default function HomePage() {
             isOpen={searchOpen}
             onClose={() => setSearchOpen(false)}
             onSelect={handleCountryClick}
+            onSelectThreatGroup={handleSearchThreatGroup}
           />
 
           {/* Military Bases List Panel */}
@@ -1017,6 +1089,7 @@ export default function HomePage() {
             setStatPopupType(type);
             setStatPopupOpen(prev => prev && statPopupType === type ? false : true);
           }} />
+
         </div>
 
         {/* ===== Sidebar (right) ===== */}
