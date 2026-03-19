@@ -605,6 +605,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // Elections + Horizon tab state
   const [selectedElection, setSelectedElection] = useState(null);
+  const [selectedHorizonEvent, setSelectedHorizonEvent] = useState(null);
   const electionScrollRef = useRef(null);
   const horizonNowRef = useRef(null);
 
@@ -654,21 +655,23 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   // timeAgo() computes fresh each render — no setInterval needed
 
-  // Reset visible count + scroll position on tab change
+  // Reset visible count + scroll position on tab change; clear detail views
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE); // eslint-disable-line react-hooks/set-state-in-effect
+    setSelectedElection(null);
+    setSelectedHorizonEvent(null);
     if (contentRef.current) contentRef.current.scrollTop = 0;
   }, [activeTab]);
 
-  // Auto-scroll to scroll targets when elections/horizon tab activates
+  // Auto-scroll to scroll targets when elections/horizon tab activates (skip if detail view open)
   useEffect(() => {
-    if (activeTab === 'elections') {
+    if (activeTab === 'elections' && !selectedElection) {
       setTimeout(() => electionScrollRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 50);
     }
-    if (activeTab === 'horizon') {
+    if (activeTab === 'horizon' && !selectedHorizonEvent) {
       setTimeout(() => horizonNowRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 50);
     }
-  }, [activeTab]);
+  }, [activeTab, selectedElection, selectedHorizonEvent]);
 
   const loadMore = useCallback(() => {
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
@@ -1210,7 +1213,39 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
+  const renderHorizonDetail = () => {
+    const e = selectedHorizonEvent;
+    const d = new Date(e.date + 'T12:00:00');
+    const fullDate = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const color = CAT_COLORS[e.category] || '#6b7280';
+    const isPast = e.date < new Date().toISOString().split('T')[0];
+
+    return (
+      <>
+        <div className="detail-back" onClick={() => setSelectedHorizonEvent(null)}>
+          ← Back to timeline
+        </div>
+        <div className="horizon-detail-name">{e.name}</div>
+        <div className="horizon-detail-meta">
+          <span className="horizon-detail-date">{fullDate}</span>
+          <span className="horizon-detail-cat" style={{ background: color + '22', color }}>{e.category.toUpperCase()}</span>
+          {isPast && <span style={{ fontSize: '8px', padding: '2px 6px', borderRadius: '4px', fontWeight: 600, background: '#14532d44', color: '#22c55e' }}>PAST</span>}
+        </div>
+        <div className="horizon-detail-location">{e.location}</div>
+        <div className="horizon-detail-desc">{e.description}</div>
+        {e.outcome && (
+          <div className="horizon-detail-outcome-box">
+            <div className="horizon-detail-outcome-label">OUTCOME</div>
+            <div className="horizon-detail-outcome">{e.outcome}</div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   const renderHorizonTab = () => {
+    if (selectedHorizonEvent) return renderHorizonDetail();
+
     const todayStr = new Date().toISOString().split('T')[0];
     // Past: ascending (oldest at top, newest closest to NOW divider)
     const past = HORIZON_EVENTS.filter(e => e.date < todayStr).sort((a, b) => a.date.localeCompare(b.date));
@@ -1234,7 +1269,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       }
 
       return (
-        <div key={e.date + e.name} className={`horizon-event-card${isPastEvent ? ' past' : ''}`}>
+        <div key={e.date + e.name} className={`horizon-event-card${isPastEvent ? ' past' : ''}`} onClick={() => setSelectedHorizonEvent(e)}>
           <div className="horizon-date-badge">
             <div className="horizon-date-month" style={{ color }}>{month}</div>
             <div className="horizon-date-day">{day}</div>
