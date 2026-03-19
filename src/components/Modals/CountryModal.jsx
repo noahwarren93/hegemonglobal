@@ -243,6 +243,8 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   if (country.pop) facts.push({ label: 'Population', value: country.pop });
   if (country.gdp) facts.push({ label: 'GDP', value: country.gdp });
   if (country.leader) facts.push({ label: 'Leader', value: country.leader });
+  if (country.capital) facts.push({ label: 'Capital', value: country.capital });
+  if (country.currency) facts.push({ label: 'Currency', value: country.currency });
 
   // Build analysis blocks
   const analysisBlocks = [];
