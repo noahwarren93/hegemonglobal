@@ -38,7 +38,12 @@ const conflictTimeAgo = (key) => {
 
 // Pakistan-Afghanistan War Timeline
 const PAK_AFG_TIMELINE_BASE = [
+  // March 19 — Day 22
+  { time: '2026-03-19T12:00:00Z', text: 'Pakistan and Afghanistan agree to 5-day Eid al-Fitr ceasefire pause — brokered by Saudi Arabia, Qatar and Turkey' },
+  // March 16 — Day 19
+  { time: '2026-03-16T10:00:00Z', text: 'Pakistani airstrike allegedly hits Kabul\'s Omar Addiction Treatment Hospital — UN says 143 killed, Taliban claims 400. Pakistan denies targeting hospital.' },
   // March 14 — Day 17
+  { time: '2026-03-14T16:00:00Z', text: 'Pakistan strikes Afghan military facilities in Kandahar after Taliban drone attacks on Quetta, Kohat and Rawalpindi' },
   { time: '2026-03-14T14:00:00Z', text: 'Pakistan claims 850+ Taliban killed total — ground forces advance 8 km into Khost province' },
   { time: '2026-03-14T08:00:00Z', text: 'UNHCR reports 180,000 Afghans displaced — 42 border crossing points closed, humanitarian crisis deepening' },
   // March 13 — Day 16
@@ -60,6 +65,7 @@ const PAK_AFG_TIMELINE_BASE = [
   { time: '2026-03-08T14:00:00Z', text: 'PAF conducts 45 aerial strikes across Paktia and Khost — heaviest day of strikes since March 6' },
   { time: '2026-03-08T08:00:00Z', text: 'Pakistan claims 680+ Taliban killed total — updates destroyed infrastructure count to 312 checkposts' },
   // March 7 — Day 10
+  { time: '2026-03-07T18:00:00Z', text: 'Pakistan airstrikes destroy Taliban border positions. Taliban attacks 28 locations along the Durand Line.' },
   { time: '2026-03-07T16:00:00Z', text: 'Coalition of 11 nations urges ceasefire — China, Russia, Saudi Arabia, Turkey, Bangladesh call for immediate de-escalation' },
   { time: '2026-03-07T12:00:00Z', text: 'Pakistan demands "verifiable assurance" from Taliban before any ceasefire — operations will not stop on basis of promises alone' },
   { time: '2026-03-07T08:00:00Z', text: 'UNHCR reports 115,000 Afghans displaced — massive surge from 66,000 three days prior, 3,000 displaced in Pakistan' },
@@ -107,7 +113,7 @@ const PAK_AFG_WAR_KW = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'talib
 const PAK_AFG_INTEL = {
   what: 'Pakistan declared "open war" on Afghanistan on February 27, 2026, launching Operation Ghazab Lil Haq ("Righteous Fury") with massive airstrikes on Kabul, Kandahar, and Paktia. The operation followed months of escalating TTP terrorism inside Pakistan and cross-border clashes along the Durand Line. On February 26, Afghan Taliban forces attacked 53 locations along the 2,600 km border, capturing multiple Pakistani outposts. Pakistan responded with full-scale air and ground operations, striking 46+ locations including Bagram Airfield (confirmed by NYT satellite imagery). Pakistan claims 527+ Taliban fighters killed and 755+ injured, with 237 checkposts destroyed and 205 vehicles eliminated. Afghanistan claims 110 civilians killed including 65 women and children. Afghan Taliban retaliated by striking deep into Pakistan \u2014 hitting Nur Khan Airbase in Rawalpindi, the 12th Division HQ in Quetta, and camps in Mohmand Agency. Pakistan claims to have seized 32 sq km of Afghan territory (the "Ghudwana Enclave"). Over 115,000 Afghans have been displaced, with 3,000 displaced in Pakistan.',
   why: 'This is the first conventional inter-state war between Pakistan and Afghanistan\'s Taliban government \u2014 a regime Pakistan itself helped bring to power. Pakistan is a nuclear-armed state of 231 million people; Afghanistan is already in humanitarian crisis. The war threatens to destabilize the entire South Asian region. Pakistan has rejected all dialogue ("There won\'t be any talks"). WFP has suspended food distribution across 46 districts affecting 160,000 people. Health facilities including an IOM transit centre have been damaged. The conflict creates a refugee crisis on top of Afghanistan\'s existing displacement of millions. Both sides\' casualty claims are unverifiable \u2014 the fog of war is thick.',
-  outlook: 'No ceasefire is in sight. Pakistan has explicitly rejected negotiations. Turkey has offered to mediate but neither side has accepted. The war is entering its second week with sustained air and ground operations. Key risks: further Afghan strikes on Pakistani military infrastructure, escalation to Pakistani cities, humanitarian catastrophe in border provinces, and the nuclear dimension \u2014 Pakistan possesses ~170 nuclear warheads. China has called for restraint given its CPEC investments in Pakistan. The international community is urging de-escalation but has limited leverage over either side.',
+  outlook: 'A 5-day Eid al-Fitr ceasefire pause was agreed on March 19, brokered by Saudi Arabia, Qatar and Turkey \u2014 the first halt in fighting since the war began. However, both sides retain full military posture and the underlying dispute is unresolved. The March 16 hospital strike in Kabul (143+ killed per UN) has intensified international pressure. Key risks: ceasefire collapse after Eid, further Afghan strikes on Pakistani military infrastructure, humanitarian catastrophe in border provinces, and the nuclear dimension \u2014 Pakistan possesses ~170 nuclear warheads. China has called for restraint given its CPEC investments in Pakistan.',
 };
 
 // Russia-Ukraine War Timeline
@@ -156,6 +162,10 @@ const UKR_RUS_INTEL = {
 // Sudan Civil War Timeline
 const SUDAN_TIMELINE_BASE = [
   // March 2026
+  { time: '2026-03-19T12:00:00Z', text: 'Chad orders total border closure and retaliation after RSF drone strike kills 17 funeral-goers in Chadian border town' },
+  { time: '2026-03-18T12:00:00Z', text: 'RSF militants attack SAF stronghold near Chadian border, killing dozens' },
+  { time: '2026-03-17T14:00:00Z', text: 'Half a billion dollars in medical supplies stranded in Dubai as Middle East war disrupts shipping to Sudan' },
+  { time: '2026-03-17T08:00:00Z', text: 'UN Security Council sanctions four RSF commanders including Hemedti\'s brother Abdul Rahim Dagalo' },
   { time: '2026-03-14T12:00:00Z', text: 'SAF airstrikes hit RSF positions in El-Fasher \u2014 34 RSF fighters killed, civilians caught in crossfire' },
   { time: '2026-03-14T06:00:00Z', text: 'UNICEF reports 4.6 million children acutely malnourished in Sudan \u2014 worst child hunger crisis on record' },
   { time: '2026-03-13T12:00:00Z', text: 'RSF loses control of Madani in Gezira state \u2014 SAF ground forces retake provincial capital after 3-month siege' },
