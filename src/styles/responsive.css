@@ -10,11 +10,12 @@
 
     /* === 1200px: Sidebar narrows, watchlist shrinks === */
     @media (max-width: 1200px) {
+      :root { --sidebar-width: 300px; }
       .sidebar { width: 300px; }
-      .header { right: 300px; }
-      .header-right { right: 320px; }
-      .globe-tools { right: 320px; }
-      .search-overlay { right: 320px; }
+      .header { right: var(--sidebar-width); }
+      .header-right { right: calc(var(--sidebar-width) + 20px); }
+      .globe-tools { right: calc(var(--sidebar-width) + 20px); }
+      .search-overlay { right: calc(var(--sidebar-width) + 20px); }
       .mil-bases-panel { width: 210px; max-height: 450px; }
       .watchlist { width: 160px; padding: 10px; }
       .watchlist-title { font-size: 8px; margin-bottom: 8px; }
@@ -26,11 +27,12 @@
 
     /* === 900px: Further compaction === */
     @media (max-width: 900px) {
+      :root { --sidebar-width: 280px; }
       .sidebar { width: 280px; }
-      .header { right: 280px; }
-      .header-right { right: 300px; }
-      .globe-tools { right: 300px; }
-      .search-overlay { right: 300px; }
+      .header { right: var(--sidebar-width); }
+      .header-right { right: calc(var(--sidebar-width) + 20px); }
+      .globe-tools { right: calc(var(--sidebar-width) + 20px); }
+      .search-overlay { right: calc(var(--sidebar-width) + 20px); }
       .watchlist { width: 145px; }
       .legend { display: none; }
       .nuclear-arsenals-box { display: none; }

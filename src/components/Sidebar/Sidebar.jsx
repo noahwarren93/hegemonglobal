@@ -567,19 +567,6 @@ function filterBriefingForTimeline(countryKW, actionKW, excludeKW) {
 }
 
 // Banner war keyword filter — used by getStableTopStories to prevent duplicates
-const BANNER_IRAN_KW = ['iran', 'iranian', 'tehran', 'khamenei', 'irgc', 'strait of hormuz', 'epic fury', 'roaring lion', 'hezbollah', 'houthi', 'ras tanura', 'pezeshkian', 'beirut'];
-const BANNER_PAK_AFG_KW = ['pakistan', 'pakistani', 'afghanistan', 'afghan', 'taliban', 'kabul', 'kandahar', 'durand', 'ghazab', 'bagram', 'islamabad'];
-const BANNER_UKR_RUS_KW = ['ukraine', 'ukrainian', 'kyiv', 'zelensky', 'donbas', 'crimea', 'russia', 'russian', 'moscow', 'kremlin'];
-const BANNER_SUDAN_KW = ['sudan', 'sudanese', 'darfur', 'khartoum', 'el-fasher', 'rsf', 'rapid support', 'burhan', 'hemedti'];
-
-function isBannerWar(e) {
-  const text = ((e.headline || '') + ' ' + (e.articles || []).map(a => (a.headline || '')).join(' ')).toLowerCase();
-  return BANNER_IRAN_KW.some(kw => text.includes(kw)) ||
-    BANNER_PAK_AFG_KW.some(kw => text.includes(kw)) ||
-    BANNER_UKR_RUS_KW.some(kw => text.includes(kw)) ||
-    BANNER_SUDAN_KW.some(kw => text.includes(kw));
-}
-
 const TABS = [
   { id: 'events', label: 'Events' },
   { id: 'newsletter', label: 'Brief' },
@@ -757,14 +744,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       >
         {/* Header row: category + sources badge + time */}
         <div className="card-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="card-header__left">
             <span className={`card-cat ${event.category}`}>{event.category}</span>
             {event.sourceCount > 1 && (
-              <span style={{
-                fontSize: '7px', fontWeight: 700, color: '#06b6d4',
-                background: 'rgba(6,182,212,0.15)', padding: '2px 5px',
-                borderRadius: '3px', letterSpacing: '0.3px'
-              }}>
+              <span className="source-count-badge">
                 {event.sourceCount} sources
               </span>
             )}
@@ -779,15 +762,13 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
         {/* Brief preview from summary below headline */}
         {preview && (
-          <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '3px', lineHeight: 1.5 }}>
-            {preview}
-          </div>
+          <div className="card-preview">{preview}</div>
         )}
 
         {/* Loading indicator */}
         {event.summaryLoading && (
-          <div style={{ fontSize: '8px', color: '#06b6d4', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ display: 'inline-block', width: '7px', height: '7px', border: '1.5px solid #374151', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div className="ai-loading-indicator ai-loading-indicator--card">
+            <span className="ai-loading-spinner" />
             Updating...
           </div>
         )}
@@ -1001,10 +982,7 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
     );
   };
 
-  // Top Stories: filter out war-banner events, return empty (all wars have dedicated banners)
-  const getStableTopStories = useCallback((events) => {
-    return events.filter(e => !isBannerWar(e)).slice(0, 0);
-  }, []);
+  // All wars have dedicated banner cards — no separate "top stories" section needed
 
   // Auto-merge live Iran war articles from RSS feeds into the timeline
   const WAR_TIMELINE = useMemo(() => {
@@ -1087,26 +1065,23 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
 
   const renderEventsTab = () => {
     const nonBreaking = DAILY_EVENTS.filter(e => !e.breaking);
-    const topEvents = DAILY_EVENTS.length > 0 ? getStableTopStories(nonBreaking) : [];
-    const topIds = new Set(topEvents.map(e => e.id));
-    const remaining = nonBreaking.filter(e => !topIds.has(e.id));
-    const restEvents = remaining.slice(0, visibleCount);
+    const restEvents = nonBreaking.slice(0, visibleCount);
 
     return (
       <>
         {/* Loading state */}
         {DAILY_EVENTS.length === 0 && (
-          <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'center', padding: '20px' }}>
+          <div className="events-loading">
             {DAILY_BRIEFING.length === 0 ? 'Loading events...' : 'Clustering articles into events...'}
           </div>
         )}
 
         {/* Top Stories — persistent war banners + dynamic RSS stories */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'linear-gradient(90deg, rgba(239,68,68,0.15) 0%, transparent 100%)', borderLeft: '3px solid #ef4444', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', letterSpacing: '1px' }}>TOP STORIES</span>
+        <div className="section-divider section-divider--red">
+          <span className="section-divider__title section-divider__title--red">TOP STORIES</span>
           {DAILY_EVENTS.some(e => e.summaryLoading) && (
-            <span style={{ fontSize: '8px', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <span style={{ display: 'inline-block', width: '6px', height: '6px', border: '1.5px solid #1f2937', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <span className="ai-loading-indicator">
+              <span className="ai-loading-spinner" />
               AI summaries loading
             </span>
           )}
@@ -1115,21 +1090,17 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
         {renderPakAfgCard()}
         {renderUkrRusCard()}
         {renderSudanCard()}
-        {topEvents.map(event => renderEventCard(event, true))}
 
         {/* Latest Updates */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(59,130,246,0.1)', borderLeft: '3px solid #3b82f6', margin: '14px 0 10px 0' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>LATEST UPDATES</span>
-          <span style={{ fontSize: '9px', color: '#6b7280' }}>({DAILY_EVENTS.length} events from {DAILY_BRIEFING.length} articles)</span>
+        <div className="section-divider section-divider--blue">
+          <span className="section-divider__title section-divider__title--blue">LATEST UPDATES</span>
+          <span className="section-divider__meta">({DAILY_EVENTS.length} events from {DAILY_BRIEFING.length} articles)</span>
         </div>
         {restEvents.map(event => renderEventCard(event, false))}
 
-        {visibleCount < remaining.length && (
-          <button onClick={loadMore} style={{
-            width: '100%', padding: '12px', marginTop: '10px', background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', border: '1px solid #374151',
-            borderRadius: '8px', color: '#9ca3af', cursor: 'pointer', fontSize: '11px', fontWeight: 600
-          }}>
-            LOAD MORE ({remaining.length - visibleCount} remaining)
+        {visibleCount < nonBreaking.length && (
+          <button onClick={loadMore} className="load-more-btn">
+            LOAD MORE ({nonBreaking.length - visibleCount} remaining)
           </button>
         )}
       </>

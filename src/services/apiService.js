@@ -11,6 +11,9 @@ import { clusterArticles } from './eventsService';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
 
+// Pre-compile IRRELEVANT_KEYWORDS into a single regex for O(1) matching (456 entries)
+const _IRRELEVANT_RE = new RegExp(IRRELEVANT_KEYWORDS.map(kw => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+
 // ============================================================
 // HTML Entity Decoder
 // ============================================================
@@ -170,7 +173,7 @@ const RSS_FEEDS = {
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'New York Times' },
     { url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml', source: 'Wall Street Journal' },
     { url: 'https://news.google.com/rss/search?q=site:washingtonpost.com+world+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Washington Post' },
-    { url: 'http://rss.cnn.com/rss/edition_world.rss', source: 'CNN' },
+    { url: 'https://rss.cnn.com/rss/edition_world.rss', source: 'CNN' },
     { url: 'https://feeds.npr.org/1004/rss.xml', source: 'NPR' },
     { url: 'https://www.pbs.org/newshour/feeds/rss/world', source: 'PBS NewsHour' },
     { url: 'https://abcnews.go.com/abcnews/internationalheadlines', source: 'ABC News' },
@@ -178,7 +181,7 @@ const RSS_FEEDS = {
     { url: 'https://feeds.nbcnews.com/nbcnews/public/world', source: 'NBC News' },
     { url: 'https://news.google.com/rss/search?q=site:bloomberg.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'Bloomberg' },
     { url: 'https://www.cnbc.com/id/100727362/device/rss/rss.html', source: 'CNBC' },
-    { url: 'http://rssfeeds.usatoday.com/UsatodaycomWorld-TopStories', source: 'USA Today' },
+    { url: 'https://rssfeeds.usatoday.com/UsatodaycomWorld-TopStories', source: 'USA Today' },
     { url: 'https://time.com/feed/', source: 'Time' },
     { url: 'https://www.newsweek.com/rss', source: 'Newsweek' },
     { url: 'https://news.google.com/rss/search?q=site:theatlantic.com+when:1d&hl=en-US&gl=US&ceid=US:en', source: 'The Atlantic' },
@@ -426,6 +429,7 @@ export const NEWS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes — matches Wor
 let _rssFallbackAttempts = 0;
 const MAX_RSS_FALLBACK_ATTEMPTS = 3; // Stop trying RSS after 3 failures
 let _rssFallbackInProgress = false; // Prevent concurrent RSS fallback runs
+const _sideEffectTimers = []; // Track setTimeout IDs for cleanup
 
 // ============================================================
 // localStorage News Cache (show cached immediately, fetch in background)
@@ -922,9 +926,7 @@ export function isRelevantToCountry(title, description, countryName) {
   if (TV_LISTING_RE.test(title || '')) return false;
   if (TV_SOURCE_RE.test(text)) return false;
 
-  for (const kw of IRRELEVANT_KEYWORDS) {
-    if (text.includes(kw)) return false;
-  }
+  if (_IRRELEVANT_RE.test(text)) return false;
 
   const countryTerms = COUNTRY_DEMONYMS[countryName] || [countryLower];
   const allTerms = [countryLower, ...countryTerms];
@@ -1593,16 +1595,18 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
   const preGenerated = await fetchPreGeneratedEvents();
   if (preGenerated) {
     // Trigger side effects
-    setTimeout(() => {
-      saveBriefingSnapshot();
-      seedPastBriefingIfEmpty();
-    }, 50);
-    setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500);
-    setTimeout(() => fetchCountryAnalyses(), 1000);
-    setTimeout(() => fetchDataCorrections(), 1500);
-    setTimeout(() => preComputeCountryNews(), 1800);
-    setTimeout(() => fetchTimelineUpdates(), 2000);
-    setTimeout(() => pushCountrySnapshot(), 3000);
+    // Clear any previously queued side-effect timers before scheduling new ones
+    _sideEffectTimers.forEach(id => clearTimeout(id));
+    _sideEffectTimers.length = 0;
+    _sideEffectTimers.push(
+      setTimeout(() => { saveBriefingSnapshot(); seedPastBriefingIfEmpty(); }, 50),
+      setTimeout(() => updateDynamicRisks(DAILY_BRIEFING), 500),
+      setTimeout(() => fetchCountryAnalyses(), 1000),
+      setTimeout(() => fetchDataCorrections(), 1500),
+      setTimeout(() => preComputeCountryNews(), 1800),
+      setTimeout(() => fetchTimelineUpdates(), 2000),
+      setTimeout(() => pushCountrySnapshot(), 3000)
+    );
 
     if (onStatusUpdate) onStatusUpdate('complete');
     if (onComplete) onComplete(DAILY_BRIEFING);
@@ -1662,7 +1666,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         const article = allArticles[i];
         const title = article.title || '';
         const text = (title + ' ' + (article.description || '')).toLowerCase();
-        if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) continue;
+        if (_IRRELEVANT_RE.test(text)) continue;
         const category = detectCategory(title, article.description);
         if (category === 'SPORTS') continue;
         const fullText = title + ' ' + (article.description || '');
@@ -1721,7 +1725,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
       await yieldToMain(1);
 
       // Build new briefing (300 cap)
-      const newArticles = uniqueArticles.slice(0, 300).map(article => {
+      const newArticles = uniqueArticles.slice(0, 200).map(article => {
         const category = detectCategory(article.title, article.description);
         const importance = ['CONFLICT', 'CRISIS', 'SECURITY'].includes(category) ? 'high' : 'medium';
         const sourceName = formatSourceName(article.source_id);
@@ -1837,7 +1841,7 @@ export async function fetchLiveNews({ onStatusUpdate, onComplete } = {}) {
         if (results && results.length > 0) {
           const fallbackArticles = results.filter(article => {
             const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-            if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+            if (_IRRELEVANT_RE.test(text)) return false;
             return GEOPOLITICAL_SIGNALS.some(sig => text.includes(sig));
           }).map(article => ({
             time: timeAgo(article.pubDate),

@@ -353,7 +353,7 @@ function scoreEvent(event) {
 // Main Clustering Function
 // ============================================================
 
-const HARD_CAP = 40;
+const HARD_CAP = 8;
 
 function _yieldToMain() {
   if (typeof requestAnimationFrame !== 'function') {
