@@ -566,7 +566,6 @@ function filterBriefingForTimeline(countryKW, actionKW, excludeKW) {
   return entries;
 }
 
-// Banner war keyword filter — used by getStableTopStories to prevent duplicates
 const TABS = [
   { id: 'events', label: 'Events' },
   { id: 'newsletter', label: 'Brief' },

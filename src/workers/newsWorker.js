@@ -8,6 +8,7 @@ import {
 import { clusterArticles } from '../services/eventsService';
 
 const RSS_PROXY_BASE = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
+const _IRRELEVANT_RE = new RegExp(IRRELEVANT_KEYWORDS.map(kw => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 
 // ============================================================
 // RSS Feed Configuration (duplicated from apiService — worker can't import it)
@@ -40,7 +41,7 @@ const RSS_FEEDS = {
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
     { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK World' },
     { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap' },
-    { url: 'http://www.news.cn/english/rss/worldrss.xml', source: 'Xinhua' },
+    { url: 'https://www.news.cn/english/rss/worldrss.xml', source: 'Xinhua' },
     { url: 'https://www.rt.com/rss/news/', source: 'RT' },
     { url: 'https://www.france24.com/en/rss', source: 'France 24' },
     { url: 'https://rss.dw.com/rdf/rss-en-world', source: 'Deutsche Welle' },
@@ -381,7 +382,7 @@ function isArticleRelevant(article) {
   // Block headlines too short to be real articles
   if (title.length < 15) return false;
   const text = (title + ' ' + (article.description || '')).toLowerCase();
-  if (IRRELEVANT_KEYWORDS.some(kw => text.includes(kw))) return false;
+  if (_IRRELEVANT_RE.test(text)) return false;
   if (detectCategory(title, article.description) === 'SPORTS') return false;
   // Block celebrity/entertainment headlines
   if (/\b(meghan markle|markle|kardashian|kim kardashian|kanye west|jenner|prince harry|royal baby|duchess of sussex|kate middleton|celebrity gossip|red carpet fashion)\b/i.test(title)) return false;
