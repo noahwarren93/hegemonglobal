@@ -59,20 +59,20 @@ export const COUNTRIES = {
 
   'Sudan': { lat: 12.86, lng: 30.22, flag: '🇸🇩', risk: 'catastrophic', tags: ['Civil War', 'Humanitarian Crisis'], region: 'Africa', pop: '46M', gdp: '$34B', leader: 'Abdel Fattah al-Burhan (SAF) / Mohamed Hamdan Dagalo (RSF) — Disputed', capital: 'Khartoum', currency: 'Sudanese Pound (SDG)', title: 'Civil War',
     casualties: {
-      total: '400,000+',
-      label: 'Killed since Apr 2023',
-      lastUpdated: 'Sep 2025 update',
+      total: '150,000+',
+      label: 'Killed since Apr 2023 (violence, famine, disease — widely disputed)',
+      lastUpdated: 'Mar 2026',
       source: 'Multiple estimates',
       contested: true,
       sources: [
-        { name: 'ACLED (documented)', figure: '28,700+', note: 'Verified fatalities through Nov 2024 — acknowledged undercount' },
-        { name: 'Academic study (capture-recapture)', figure: '~62,000+', note: '26,000+ in Khartoum State alone through Jun 2024' },
-        { name: 'US Special Envoy', figure: '~400,000+', note: 'Updated September 2025 estimate' },
-        { name: 'Displacement', figure: '15M displaced', note: 'World\'s largest displacement crisis — 11.6M internal, 4M cross-border' }
+        { name: 'ACLED (documented violence)', figure: '28,700+', note: 'Verified fatalities through Nov 2024 — acknowledged significant undercount' },
+        { name: 'London School of Hygiene study', figure: '61,000+ in Khartoum State alone', note: 'Capture-recapture methodology — violence, famine and disease deaths' },
+        { name: 'Combined estimates', figure: '150,000+', note: 'Violence + famine + disease combined — true figure likely higher' },
+        { name: 'Displacement', figure: '14-15M displaced', note: 'World\'s largest displacement crisis — 9.3M internal, 4.3M cross-border refugees' }
       ]
     },
     analysis: {
-      what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Hemedti. Fighting has devastated Khartoum and spread across the country, particularly in Darfur where the RSF has captured all five state capitals including El Fasher. An estimated 400,000+ people have been killed and 13.6 million displaced—the world\'s largest displacement crisis. Mass killings, sexual violence, and ethnic cleansing have been documented. Famine conditions are spreading with hospitals non-functional.',
+      what: 'Civil war erupted in April 2023 between the Sudanese Armed Forces (SAF) led by General al-Burhan and the paramilitary Rapid Support Forces (RSF) led by Hemedti. Fighting has devastated Khartoum and spread across the country, particularly in Darfur where the RSF has captured all five state capitals including El Fasher. An estimated 150,000+ people have been killed (combining violence, famine and disease) and 14-15 million displaced (9.3M internal, 4.3M cross-border)—the world\'s largest displacement crisis. A London School of Hygiene study found 61,000 died in Khartoum State alone. Some 33.7 million need humanitarian assistance—two-thirds of the population—with 25.6 million facing acute hunger. Mass killings, sexual violence, and ethnic cleansing have been documented.',
       why: 'Sudan\'s collapse threatens to destabilize the entire Horn of Africa and Sahel region. The RSF has links to Wagner Group/Russia and receives UAE support, while SAF has Egyptian and Iranian backing—making this a proxy battlefield. Sudan controls strategic Red Sea coastline and Nile water resources critical to Egypt. The humanitarian catastrophe rivals Yemen and Gaza in severity but receives far less attention.',
       next: 'Neither side appears capable of decisive military victory, suggesting prolonged conflict. The country may fragment into competing zones of control. Without sustained international pressure and humanitarian access, mass starvation is likely. Long-term scenarios include partition, failed state status, or exhaustion-driven negotiations.'
     },
@@ -134,16 +134,17 @@ export const COUNTRIES = {
 
   'Afghanistan': { lat: 33.94, lng: 67.71, flag: '🇦🇫', risk: 'catastrophic', tags: ['Armed Conflict', 'Humanitarian Crisis', 'Authoritarian Crackdown'], region: 'Central Asia', pop: '41M', gdp: '$14B', leader: 'Hibatullah Akhundzada (Taliban)', capital: 'Kabul', currency: 'Afghan Afghani (AFN)', title: 'Active War — Pakistan Conflict',
     casualties: {
-      total: '110+ civilians',
-      label: 'Afghan civilians killed since Feb 27 (Afghan govt claim)',
-      lastUpdated: 'March 2026',
-      source: 'Afghan government / UNOCHA',
+      total: '185+ civilians',
+      label: 'Civilian casualties since Feb 26 (56 killed, 129 injured — UN verified)',
+      lastUpdated: 'Mar 2026',
+      source: 'UN / Afghan government / Pakistan military',
       contested: true,
       sources: [
-        { name: 'Afghan government', figure: '110 civilians killed', note: 'Including 65 women and children, 123 wounded' },
-        { name: 'UNOCHA (verified)', figure: '56 civilian deaths', note: '129 injuries confirmed across 10 provinces' },
-        { name: 'Pakistan military (claimed)', figure: '481 Taliban killed', note: '696+ injured — unverifiable, likely inflated' },
-        { name: 'Displacement', figure: '66,000 displaced', note: '16,370 families across 6 provinces — UNOCHA confirmed' }
+        { name: 'UN (verified)', figure: '56 civilian deaths, 129 injuries', note: 'Including 24 children and 6 women — across 10 provinces since Feb 26' },
+        { name: 'Kabul hospital strike (Mar 16)', figure: '143 killed (UN) / 400 (Taliban claim)', note: 'Omar Addiction Treatment Hospital — Pakistan denies targeting hospital' },
+        { name: 'Pakistan military (claimed)', figure: '684 Taliban killed', note: 'Unverifiable — likely inflated' },
+        { name: 'Taliban (claimed)', figure: '100+ Pakistani soldiers killed', note: 'Unverifiable — likely includes border police and paramilitaries' },
+        { name: 'Displacement (UNHCR)', figure: '115,000+ displaced in Afghanistan', note: '3,000+ displaced in Pakistan from border clashes' }
       ]
     },
     analysis: {
@@ -310,13 +311,13 @@ export const COUNTRIES = {
     casualties: {
       total: '12-27+',
       label: 'Pakistani soldiers killed since Feb 26 (Pakistan official)',
-      lastUpdated: 'March 2026',
+      lastUpdated: 'Mar 2026',
       source: 'Pakistan military / Afghan claims',
       contested: true,
       sources: [
-        { name: 'Pakistan military (official)', figure: '12-27 soldiers killed', note: 'Pakistan acknowledges limited losses' },
-        { name: 'Afghan government (claimed)', figure: '150+ Pakistani soldiers killed', note: 'Unverifiable — likely includes border police and paramilitaries' },
-        { name: 'Pakistan military (claimed kills)', figure: '481 Taliban fighters killed', note: '696+ injured, 130+ posts destroyed — unverifiable' }
+        { name: 'Pakistan military (official)', figure: '12-27 soldiers killed', note: 'Pakistan acknowledges limited losses — true figure likely higher' },
+        { name: 'Taliban (claimed)', figure: '100+ Pakistani soldiers killed', note: 'Unverifiable — likely includes border police and paramilitaries' },
+        { name: 'Pakistan military (claimed kills)', figure: '684 Taliban fighters killed', note: 'Unverifiable, likely inflated' }
       ]
     },
     analysis: {
