@@ -470,11 +470,20 @@ function dedupeTimeline(entries) {
   return result;
 }
 
-// Extract a numeric value from a stat string like "1,332+", "~150,000", "7", etc.
+// Extract a numeric value from a stat string like "1,332+", "~150,000", "14-15M", "~2M", "13.6 million", etc.
 function parseStatNum(val) {
   if (val == null) return NaN;
-  const s = String(val).replace(/[^0-9.]/g, '');
-  return parseFloat(s) || NaN;
+  const s = String(val).trim();
+  // Extract the first number (with optional commas and decimals)
+  const numMatch = s.match(/([\d,]+\.?\d*)/);
+  if (!numMatch) return NaN;
+  const num = parseFloat(numMatch[1].replace(/,/g, ''));
+  if (isNaN(num)) return NaN;
+  // Check for million/M or thousand/K suffixes anywhere in the string
+  const lower = s.toLowerCase();
+  if (/\bmillion\b/.test(lower) || /\d[\s\d\-\u2013]*m\b/i.test(s)) return num * 1_000_000;
+  if (/\bthousand\b/.test(lower) || /\d[\s\d\-\u2013]*k\b/i.test(s)) return num * 1_000;
+  return num;
 }
 
 // Search AI stats object for a value matching keyword patterns

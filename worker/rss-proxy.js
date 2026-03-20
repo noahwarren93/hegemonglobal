@@ -1043,12 +1043,12 @@ Return stats with EXACTLY these keys (use null if not mentioned):
   sudan: {
     name: 'Sudan Civil War',
     keywords: TIMELINE_SUDAN_KW,
-    statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned.
+    statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned. IMPORTANT: Sudan displacement is 14-15 million — do NOT use per-incident displacement figures.
 Return stats with EXACTLY these keys (use null if not mentioned):
 {
-  "total_killed": "cumulative total deaths (e.g. '150,000+')",
+  "total_killed": "cumulative total deaths from violence, famine, disease combined (e.g. '150,000+')",
   "civilian_killed": "cumulative civilian deaths",
-  "displaced": "total displaced persons (e.g. '13.6 million')",
+  "displaced": "total displaced persons — should be in millions (e.g. '14-15 million')",
   "rsf_territory": "territory held by RSF if mentioned"
 }`
   },
@@ -1058,9 +1058,9 @@ Return stats with EXACTLY these keys (use null if not mentioned):
     statsPrompt: `For stats, extract the LATEST CUMULATIVE figures. Always use the HIGHEST total number mentioned.
 Return stats with EXACTLY these keys (use null if not mentioned):
 {
-  "afghan_civilian_killed": "cumulative Afghan civilian deaths (e.g. '110+')",
-  "taliban_killed": "cumulative Taliban deaths (e.g. '527+')",
-  "displaced": "total displaced persons (e.g. '115,000')",
+  "afghan_civilian_killed": "cumulative Afghan civilian deaths (e.g. '185+')",
+  "taliban_killed": "cumulative Taliban deaths per Pakistan claims (e.g. '684+')",
+  "displaced": "total displaced persons (e.g. '115,000+')",
   "pakistani_killed": "cumulative Pakistani military deaths"
 }`
   },
@@ -3507,8 +3507,15 @@ Return ONLY valid JSON in this format:
 
         const parseFloorNum = (val) => {
           if (val == null) return NaN;
-          const s = String(val).replace(/[^0-9.]/g, '');
-          return parseFloat(s) || NaN;
+          const s = String(val).trim();
+          const numMatch = s.match(/([\d,]+\.?\d*)/);
+          if (!numMatch) return NaN;
+          const num = parseFloat(numMatch[1].replace(/,/g, ''));
+          if (isNaN(num)) return NaN;
+          const lower = s.toLowerCase();
+          if (/\bmillion\b/.test(lower) || /\d[\s\d\-\u2013]*m\b/i.test(s)) return num * 1_000_000;
+          if (/\bthousand\b/.test(lower) || /\d[\s\d\-\u2013]*k\b/i.test(s)) return num * 1_000;
+          return num;
         };
 
         // Merge each conflict's stats into floors (only upward)
