@@ -3767,6 +3767,611 @@ Return ONLY the JSON array, no other text.`;
     }
 
     // ============================================================
+    // GET /api/economic-data — World Bank indicators + risk scoring
+    // ============================================================
+    if (url.pathname === '/api/economic-data' && request.method === 'GET') {
+      try {
+        // Check KV cache first (skip with ?refresh=1)
+        const forceRefresh = url.searchParams.get('refresh') === '1';
+        if (!forceRefresh) {
+          const cached = await env.HEGEMON_CACHE.get('economic_data');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed._ts && (Date.now() - parsed._ts < 86400000)) {
+              return new Response(cached, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
+        }
+
+        // Credit ratings (S&P equivalent, hardcoded ~60 major countries)
+        const CREDIT_RATINGS = {
+          USA: 'AA+', GBR: 'AA', DEU: 'AAA', FRA: 'AA-', JPN: 'A+', CAN: 'AAA', AUS: 'AAA',
+          CHN: 'A+', IND: 'BBB-', BRA: 'BB', RUS: 'NR', KOR: 'AA', MEX: 'BBB', IDN: 'BBB',
+          TUR: 'B+', ZAF: 'BB-', SAU: 'A', ARE: 'AA-', ISR: 'A+', EGY: 'B-', NGA: 'B-',
+          ARG: 'CCC', VEN: 'SD', PAK: 'CCC+', BGD: 'B-', UKR: 'CC', COL: 'BB+', PER: 'BBB',
+          CHL: 'A', PHL: 'BBB+', THA: 'BBB+', VNM: 'BB+', MYS: 'A-', SGP: 'AAA', POL: 'A-',
+          ROU: 'BBB-', HUN: 'BBB-', CZE: 'AA-', GRC: 'BBB-', PRT: 'A-', IRL: 'AA', NOR: 'AAA',
+          SWE: 'AAA', DNK: 'AAA', FIN: 'AA+', AUT: 'AA+', BEL: 'AA', NLD: 'AAA', CHE: 'AAA',
+          ESP: 'A', ITA: 'BBB', KEN: 'B', ETH: 'CCC-', IRQ: 'B-', LBN: 'SD', LKA: 'CCC+',
+          BOL: 'CCC+', ECU: 'B-', GEO: 'BB', SRB: 'BB+', QAT: 'AA', KWT: 'A+', BHR: 'B+',
+          OMN: 'BB+', JOR: 'B+', TUN: 'CCC+', MAR: 'BB+', NZL: 'AA+', HRV: 'BBB+', BGR: 'BBB',
+          SVN: 'A', SVK: 'A+', EST: 'A+', LVA: 'A-', LTU: 'A', ISL: 'A', MLT: 'A-',
+          CRI: 'BB-', URY: 'BBB', PAN: 'BBB', DOM: 'BB', GTM: 'BB', HND: 'BB-', PRY: 'BB',
+          JAM: 'BB-', BWA: 'BBB+', GHA: 'CCC+', SEN: 'B+', TZA: 'B+', UGA: 'B', RWA: 'B+',
+          MOZ: 'CCC+', AGO: 'B-', ZMB: 'CCC+', CMR: 'B-', CIV: 'BB-', AZE: 'BB+', KAZ: 'BBB',
+          UZB: 'BB-', MNG: 'B', MMR: 'NR', AFG: 'NR', PRK: 'NR', SYR: 'NR', SDN: 'NR',
+          SOM: 'NR', SSD: 'NR', YEM: 'NR', HTI: 'NR', CUB: 'NR', LBY: 'NR', ERI: 'NR'
+        };
+
+        // Jan 1 2026 exchange rates (for YTD currency change calculation)
+        const JAN1_RATES = {
+          EUR: 0.96, GBP: 0.80, JPY: 157.3, CNY: 7.30, INR: 85.6, BRL: 6.19, MXN: 20.7,
+          KRW: 1472, ZAR: 18.8, TRY: 35.2, RUB: 101.5, ARS: 1030, EGP: 50.8, NGN: 1535,
+          PKR: 278.5, BDT: 121, IDR: 16100, THB: 34.2, PHP: 58.0, VND: 25400, MYR: 4.48,
+          SGD: 1.36, AUD: 1.60, NZD: 1.78, CAD: 1.44, CHF: 0.90, NOK: 11.3, SEK: 11.1,
+          DKK: 7.15, PLN: 4.11, CZK: 24.2, HUF: 399, RON: 4.78, BGN: 1.87, HRK: 7.24,
+          RSD: 112, GEL: 2.86, UAH: 41.5, MDL: 19.2, ALL: 93.5, BAM: 1.87, MKD: 59,
+          ISK: 139, SAR: 3.75, AED: 3.67, QAR: 3.64, KWD: 0.31, BHD: 0.38, OMR: 0.39,
+          JOD: 0.71, ILS: 3.64, LBP: 89500, IRR: 42100, IQD: 1310, SYP: 13000, YER: 250,
+          AFN: 68.5, MMK: 2100, PKR2: 278.5, LKR: 296, NPR: 137, KHR: 4050, LAK: 22000,
+          CLP: 990, PEN: 3.78, COP: 4410, BOB: 6.91, PYG: 7800, UYU: 44.2, GYD: 209,
+          SRD: 36.5, BZD: 2.0, TTD: 6.8, JMD: 158, DOP: 60.5, GTQ: 7.72, HNL: 25.3,
+          NIO: 36.8, CRC: 508, PAB: 1.0, KES: 154, ETB: 57.5, TZS: 2505, UGX: 3665,
+          RWF: 1380, MZN: 63.8, AOA: 920, ZMW: 28.2, GHS: 16.2, XOF: 630, XAF: 630,
+          MAD: 10.1, TND: 3.18, DZD: 135, BWP: 13.8, NAD: 18.8, ZWL: 5800, MGA: 4700,
+          MUR: 46.5, SCR: 14.2, MNT: 3450, KZT: 523, UZS: 12900, KGS: 89.5, TJS: 10.9,
+          TMT: 3.5, AZN: 1.70, AMD: 396, TWD: 32.8
+        };
+
+        // Map alpha3 to currency code
+        const CURRENCY_MAP = {
+          USA: 'USD', GBR: 'GBP', DEU: 'EUR', FRA: 'EUR', JPN: 'JPY', CAN: 'CAD', AUS: 'AUD',
+          CHN: 'CNY', IND: 'INR', BRA: 'BRL', RUS: 'RUB', KOR: 'KRW', MEX: 'MXN', IDN: 'IDR',
+          TUR: 'TRY', ZAF: 'ZAR', SAU: 'SAR', ARE: 'AED', ISR: 'ILS', EGY: 'EGP', NGA: 'NGN',
+          ARG: 'ARS', VEN: 'VES', PAK: 'PKR', BGD: 'BDT', UKR: 'UAH', COL: 'COP', PER: 'PEN',
+          CHL: 'CLP', PHL: 'PHP', THA: 'THB', VNM: 'VND', MYS: 'MYR', SGP: 'SGD', POL: 'PLN',
+          ROU: 'RON', HUN: 'HUF', CZE: 'CZK', GRC: 'EUR', PRT: 'EUR', IRL: 'EUR', NOR: 'NOK',
+          SWE: 'SEK', DNK: 'DKK', FIN: 'EUR', AUT: 'EUR', BEL: 'EUR', NLD: 'EUR', CHE: 'CHF',
+          ESP: 'EUR', ITA: 'EUR', KEN: 'KES', ETH: 'ETB', IRQ: 'IQD', LBN: 'LBP', LKA: 'LKR',
+          BOL: 'BOB', ECU: 'USD', GEO: 'GEL', SRB: 'RSD', QAT: 'QAR', KWT: 'KWD', BHR: 'BHD',
+          OMN: 'OMR', JOR: 'JOD', TUN: 'TND', MAR: 'MAD', NZL: 'NZD', HRV: 'EUR', BGR: 'BGN',
+          SVN: 'EUR', SVK: 'EUR', EST: 'EUR', LVA: 'EUR', LTU: 'EUR', ISL: 'ISK', MLT: 'EUR',
+          CRI: 'CRC', URY: 'UYU', PAN: 'PAB', DOM: 'DOP', GTM: 'GTQ', HND: 'HNL', PRY: 'PYG',
+          JAM: 'JMD', BWA: 'BWP', GHA: 'GHS', SEN: 'XOF', TZA: 'TZS', UGA: 'UGX', RWA: 'RWF',
+          MOZ: 'MZN', AGO: 'AOA', ZMB: 'ZMW', CMR: 'XAF', CIV: 'XOF', AZE: 'AZN', KAZ: 'KZT',
+          UZB: 'UZS', MNG: 'MNT', MMR: 'MMK', AFG: 'AFN', SDN: 'SDG', SOM: 'SOS', YEM: 'YER',
+          HTI: 'HTG', NIC: 'NIO', ZWE: 'ZWL', NPL: 'NPR', KHM: 'KHR', LAO: 'LAK', TWN: 'TWD',
+          MDA: 'MDL', BLR: 'BYN', ALB: 'ALL', BIH: 'BAM', MKD: 'MKD', DZA: 'DZD', LBY: 'LYD',
+          IRN: 'IRR', SYR: 'SYP', CUB: 'CUP', PRK: 'KPW', ERI: 'ERN', SSD: 'SSP', PSE: 'ILS',
+          SLV: 'USD', GUY: 'GYD', BFA: 'XOF', MLI: 'XOF', NER: 'XOF', GIN: 'GNF', CAF: 'XAF',
+          COD: 'CDF', TCD: 'XAF', DJI: 'DJF', GAB: 'XAF', COG: 'XAF', GNQ: 'XAF', TGO: 'XOF',
+          BEN: 'XOF', GMB: 'GMD', GNB: 'XOF', MRT: 'MRU', CPV: 'CVE', MUS: 'MUR', SYC: 'SCR',
+          MDG: 'MGA', BDI: 'BIF', SLE: 'SLE', LBR: 'LRD', MWI: 'MWK', NAD: 'NAD',
+          SUR: 'SRD', BLZ: 'BZD', TTO: 'TTD', BHS: 'BSD', BRB: 'BBD',
+          BTN: 'BTN', MDV: 'MVR', TLS: 'USD', PNG: 'PGK', FJI: 'FJD', SLB: 'SBD',
+          VUT: 'VUV', WSM: 'WST', TON: 'TOP', KGZ: 'KGS', TJK: 'TJS', TKM: 'TMT',
+          AND: 'EUR', MNE: 'EUR', XKX: 'EUR', LUX: 'EUR', CYP: 'EUR',
+          KIR: 'AUD', MHL: 'USD', FSM: 'USD', PLW: 'USD', NRU: 'AUD', TUV: 'AUD',
+          SWZ: 'SZL', LSO: 'LSL', LIE: 'CHF', MCO: 'EUR', SMR: 'EUR', STP: 'STN',
+          KNA: 'XCD', LCA: 'XCD', VCT: 'XCD', ATG: 'XCD', DMA: 'XCD', GRD: 'XCD',
+          COM: 'KMF', GRL: 'DKK', ESH: 'MAD'
+        };
+
+        // Fetch World Bank indicators in parallel
+        const WB_INDICATORS = [
+          'NY.GDP.MKTP.KD.ZG',  // GDP growth
+          'FP.CPI.TOTL.ZG',     // Inflation
+          'GC.DOD.TOTL.GD.ZS',  // Debt/GDP
+          'SL.UEM.TOTL.ZS',     // Unemployment
+          'FR.INR.RINR'          // Real interest rate
+        ];
+
+        const fetchWBIndicator = async (indicatorId) => {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 10000);
+          try {
+            const resp = await fetch(
+              `https://api.worldbank.org/v2/country/all/indicator/${indicatorId}?format=json&per_page=300&date=2022:2025&mrv=1`,
+              { signal: controller.signal }
+            );
+            clearTimeout(timer);
+            if (!resp.ok) return {};
+            const data = await resp.json();
+            const results = {};
+            if (data && data[1]) {
+              for (const entry of data[1]) {
+                if (entry.value !== null && entry.countryiso3code) {
+                  results[entry.countryiso3code] = entry.value;
+                }
+              }
+            }
+            return results;
+          } catch {
+            clearTimeout(timer);
+            return {};
+          }
+        };
+
+        // Fetch exchange rates
+        const fetchExchangeRates = async () => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000);
+            const resp = await fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal });
+            clearTimeout(timer);
+            if (!resp.ok) return {};
+            const data = await resp.json();
+            return data.rates || {};
+          } catch {
+            return {};
+          }
+        };
+
+        const [gdpData, inflationData, debtData, unempData, interestData, currentRates] = await Promise.all([
+          fetchWBIndicator(WB_INDICATORS[0]),
+          fetchWBIndicator(WB_INDICATORS[1]),
+          fetchWBIndicator(WB_INDICATORS[2]),
+          fetchWBIndicator(WB_INDICATORS[3]),
+          fetchWBIndicator(WB_INDICATORS[4]),
+          fetchExchangeRates()
+        ]);
+
+        // Risk scoring functions — tightened thresholds
+        const scoreInflation = (v) => {
+          if (v === null || v === undefined) return null;
+          if (v < 2) return 0; if (v < 3) return 10; if (v < 5) return 25; if (v < 8) return 40;
+          if (v < 15) return 55; if (v < 30) return 70; if (v < 50) return 85; return 100;
+        };
+        const scoreDebt = (v) => {
+          if (v === null || v === undefined) return null;
+          if (v < 30) return 0; if (v < 50) return 15; if (v < 70) return 30; if (v < 90) return 45;
+          if (v < 110) return 60; if (v < 130) return 75; return 90;
+        };
+        const scoreGDP = (v) => {
+          if (v === null || v === undefined) return null;
+          if (v > 4) return 0; if (v >= 3) return 10; if (v >= 2) return 20; if (v >= 1) return 35;
+          if (v >= 0) return 50; if (v >= -1) return 65; if (v >= -3) return 80; return 100;
+        };
+        const scoreCurrency = (ytdPctLoss) => {
+          if (ytdPctLoss === null || ytdPctLoss === undefined) return null;
+          const loss = Math.max(0, ytdPctLoss);
+          if (loss < 1) return 0; if (loss < 3) return 10; if (loss < 8) return 25; if (loss < 15) return 45;
+          if (loss < 25) return 65; if (loss < 40) return 80; return 95;
+        };
+        const scoreUnemp = (v) => {
+          if (v === null || v === undefined) return null;
+          if (v < 3) return 0; if (v < 5) return 15; if (v < 7) return 30; if (v < 10) return 45;
+          if (v < 15) return 60; if (v < 25) return 80; return 95;
+        };
+
+        const tierFromScore = (s) => {
+          if (s < 12) return 'clear';
+          if (s < 22) return 'cloudy';
+          if (s < 35) return 'stormy';
+          if (s < 50) return 'severe';
+          if (s < 65) return 'extreme';
+          return 'catastrophic';
+        };
+
+        // ECONOMIC OVERRIDES — manual corrections for countries where formula is unreliable
+        // These REPLACE formula scores entirely when present
+        const ECONOMIC_OVERRIDES = {
+          // CATASTROPHIC (riskScore ~85-96)
+          CUB: { tier: 'catastrophic', riskScore: 91, note: 'US embargo, dual currency collapse, rationing, no foreign investment' },
+          VEN: { tier: 'catastrophic', riskScore: 93, note: 'Hyperinflation 200%+, GDP collapsed 75%, sanctions' },
+          PRK: { tier: 'catastrophic', riskScore: 96, note: 'Hermit state — isolated command economy, sanctions' },
+          SDN: { tier: 'catastrophic', riskScore: 92, note: 'Active civil war — economy collapsed, currency freefall' },
+          SYR: { tier: 'catastrophic', riskScore: 95, note: 'War-ravaged, sanctions, currency collapsed 98%' },
+          YEM: { tier: 'catastrophic', riskScore: 90, note: 'Active conflict, famine, no functioning economy' },
+          SOM: { tier: 'catastrophic', riskScore: 88, note: 'No functioning central government or economy' },
+          SSD: { tier: 'catastrophic', riskScore: 93, note: 'Civil war, hyperinflation, oil dependency' },
+          AFG: { tier: 'catastrophic', riskScore: 87, note: 'Taliban takeover collapsed GDP 20%+, frozen reserves' },
+          MMR: { tier: 'catastrophic', riskScore: 85, note: 'Civil war, sanctions, currency collapse' },
+          ERI: { tier: 'catastrophic', riskScore: 86, note: 'One of world\'s poorest, isolated, no private sector' },
+          ZWE: { tier: 'catastrophic', riskScore: 89, note: 'Chronic hyperinflation cycles, currency worthless' },
+          LBN: { tier: 'catastrophic', riskScore: 94, note: 'Banking system collapsed, currency lost 98% value' },
+          // EXTREME (riskScore ~55-68)
+          HTI: { tier: 'extreme', riskScore: 68, note: 'Political collapse, gang control, no functioning economy' },
+          COD: { tier: 'extreme', riskScore: 62, note: 'Conflict, extreme poverty despite mineral wealth' },
+          LBY: { tier: 'extreme', riskScore: 63, note: 'Civil war, oil disruption, no unified government' },
+          IRN: { tier: 'extreme', riskScore: 64, note: 'Sanctions, 40%+ inflation, currency crashed, active war' },
+          PSE: { tier: 'extreme', riskScore: 66, note: 'Occupation, blockade, war destruction' },
+          ARG: { tier: 'extreme', riskScore: 67, note: '200%+ inflation, serial defaulter, capital controls' },
+          TUR: { tier: 'extreme', riskScore: 60, note: '60%+ inflation, lira crashed 80% in 5 years' },
+          PAK: { tier: 'extreme', riskScore: 58, note: 'IMF dependent, 30%+ inflation, depleted reserves' },
+          LKA: { tier: 'extreme', riskScore: 59, note: 'Sovereign default 2022, still restructuring debt' },
+          ETH: { tier: 'extreme', riskScore: 61, note: 'War-damaged, severe forex shortage, debt distress' },
+          MWI: { tier: 'extreme', riskScore: 57, note: 'Currency devalued 44%, inflation 30%+' },
+          LAO: { tier: 'extreme', riskScore: 56, note: 'Currency collapsed, debt crisis, China dependency' },
+          // EXTREME additions (Sahel juntas — fragile but functioning economies)
+          BFA: { tier: 'extreme', riskScore: 65, note: 'Military junta, jihadist insurgency, economic fragility' },
+          NER: { tier: 'extreme', riskScore: 64, note: 'Military coup, ECOWAS sanctions aftermath, fragile economy' },
+          MLI: { tier: 'extreme', riskScore: 63, note: 'Military junta, jihadist war, sanctions aftermath' },
+          // SEVERE additions
+          TCD: { tier: 'severe', riskScore: 48, note: 'Political instability, extreme poverty, conflict spillover' },
+          CAF: { tier: 'extreme', riskScore: 65, note: 'Civil war, Russian mercenaries, no functioning economy' },
+          BDI: { tier: 'extreme', riskScore: 58, note: 'One of poorest countries, political repression, isolation' },
+          // SEVERE (riskScore ~42-52)
+          EGY: { tier: 'severe', riskScore: 50, note: 'Massive devaluation, IMF program, 35%+ inflation' },
+          NGA: { tier: 'severe', riskScore: 48, note: 'Naira devaluation, fuel subsidy shock, 30% inflation' },
+          GHA: { tier: 'severe', riskScore: 46, note: 'Debt restructuring, high inflation, IMF program' },
+          KEN: { tier: 'severe', riskScore: 44, note: 'Debt servicing 60%+ of revenue, fiscal stress' },
+          BGD: { tier: 'severe', riskScore: 42, note: 'Post-crisis economic uncertainty, forex pressure' },
+          TUN: { tier: 'severe', riskScore: 43, note: 'Economic stagnation, high debt, brain drain' },
+          MOZ: { tier: 'severe', riskScore: 45, note: 'Hidden debt scandal, insurgency, extreme poverty' },
+          CMR: { tier: 'severe', riskScore: 42, note: 'Anglophone crisis, Boko Haram, economic strain' },
+          UGA: { tier: 'severe', riskScore: 41, note: 'Debt distress, authoritarian rule, oil dependency' },
+          TZA: { tier: 'severe', riskScore: 40, note: 'Economic controls, limited forex, state intervention' },
+          ZMB: { tier: 'severe', riskScore: 44, note: 'Debt restructuring, copper dependency, fiscal stress' },
+          PNG: { tier: 'severe', riskScore: 41, note: 'Tribal violence, resource curse, extreme poverty' },
+          // ── MAJOR ECONOMY OVERRIDES (formula misses debt/structural issues) ──
+          // CLEAR (formula underrates)
+          CHE: { tier: 'clear', riskScore: 5, note: 'Strongest fundamentals globally, massive reserves, AAA rated' },
+          NOR: { tier: 'clear', riskScore: 6, note: 'Oil wealth, $1.7T sovereign fund, AAA rated' },
+          SGP: { tier: 'clear', riskScore: 5, note: 'Best-run economy, massive reserves; debt is technical/domestic' },
+          // CLOUDY — strong economies with manageable risks
+          KOR: { tier: 'cloudy', riskScore: 18, note: 'Household debt 100%+ GDP, aging demographics, chip dependency' },
+          MYS: { tier: 'cloudy', riskScore: 16, note: 'Solid growth, moderate debt, commodity exposure' },
+          POL: { tier: 'cloudy', riskScore: 18, note: 'EU growth engine, but inflation legacy and fiscal spending' },
+          VNM: { tier: 'cloudy', riskScore: 18, note: 'Strong manufacturing growth, but still developing economy' },
+          TWN: { tier: 'cloudy', riskScore: 15, note: 'Strong tech economy, low debt, geopolitical risk only' },
+          EST: { tier: 'cloudy', riskScore: 14, note: 'Advanced digital economy, EU/NATO member, strong institutions' },
+          ISL: { tier: 'cloudy', riskScore: 13, note: 'Wealthy Nordic economy, recovered from 2008, small but resilient' },
+          SWE: { tier: 'cloudy', riskScore: 14, note: 'Strong Nordic economy, some housing market concerns' },
+          AUT: { tier: 'cloudy', riskScore: 15, note: 'Strong EU economy, tourism, manufacturing, stable institutions' },
+          BEL: { tier: 'cloudy', riskScore: 18, note: 'EU core economy, high debt 105% GDP but stable, political complexity' },
+          KWT: { tier: 'cloudy', riskScore: 15, note: 'Massive oil wealth, sovereign fund, low debt, but oil dependent' },
+          BHR: { tier: 'cloudy', riskScore: 16, note: 'Over 100% debt-to-GDP, needs Saudi financial support' },
+          LVA: { tier: 'cloudy', riskScore: 18, note: 'EU/NATO Baltic state, moderate growth, some inequality' },
+          ROU: { tier: 'cloudy', riskScore: 20, note: 'EU member, strong growth, but fiscal deficit, emigration' },
+          KHM: { tier: 'cloudy', riskScore: 18, note: 'Developing garment/tourism economy, authoritarian but growing' },
+          MDV: { tier: 'cloudy', riskScore: 16, note: 'High debt, climate vulnerable, tourism dependent' },
+          MAR: { tier: 'cloudy', riskScore: 15, note: 'Developing but stable, manufacturing hub, 9% unemployment' },
+          // STORMY — significant structural risks or vulnerabilities
+          CHN: { tier: 'stormy', riskScore: 35, note: 'Property crisis, local govt debt 100T yuan, deflation risk, youth unemployment 20%+' },
+          JPN: { tier: 'stormy', riskScore: 30, note: '260% debt-to-GDP, near-zero growth, yen weakness, aging crisis' },
+          ITA: { tier: 'stormy', riskScore: 33, note: '140%+ debt-to-GDP, sluggish growth, banking sector fragility' },
+          ESP: { tier: 'stormy', riskScore: 28, note: '13% unemployment, 110% debt-to-GDP, regional tensions' },
+          MEX: { tier: 'stormy', riskScore: 28, note: 'Nearshoring boom offset by fiscal expansion, security costs, peso pressure' },
+          THA: { tier: 'stormy', riskScore: 32, note: 'Political instability, household debt 90% GDP, tourism dependency' },
+          PER: { tier: 'stormy', riskScore: 30, note: 'Political instability, mining dependency, social unrest' },
+          PHL: { tier: 'stormy', riskScore: 28, note: 'Remittance dependency, 20%+ poverty, inflation pressure' },
+          SRB: { tier: 'stormy', riskScore: 28, note: 'EU candidate but Kosovo tensions, fiscal pressure, brain drain' },
+          IRQ: { tier: 'stormy', riskScore: 35, note: 'Oil dependency 95%, corruption, militia influence on economy' },
+          USA: { tier: 'stormy', riskScore: 30, note: '123% debt-to-GDP, strong growth offsets, reserve currency advantage' },
+          GBR: { tier: 'stormy', riskScore: 28, note: 'Post-Brexit drag, 100% debt-to-GDP, but diversified economy' },
+          DEU: { tier: 'stormy', riskScore: 25, note: 'Manufacturing recession, energy transition costs, but diversified' },
+          FRA: { tier: 'stormy', riskScore: 25, note: '113% debt-to-GDP, social spending pressure, pension reform tensions' },
+          BRA: { tier: 'stormy', riskScore: 28, note: '77% debt-to-GDP, fiscal pressure, high interest rates, but growing' },
+          IND: { tier: 'stormy', riskScore: 24, note: '6.5% growth but fiscal deficit 5.6% GDP, inequality, rupee pressure' },
+          CAN: { tier: 'stormy', riskScore: 22, note: 'Housing bubble risk, resource dependency, China trade exposure' },
+          CHL: { tier: 'stormy', riskScore: 24, note: 'Copper dependency, social spending pressure, constitutional uncertainty' },
+          COL: { tier: 'stormy', riskScore: 33, note: 'Security issues, coca economy, fiscal pressure, peso volatility' },
+          BLR: { tier: 'stormy', riskScore: 32, note: 'Heavy Western sanctions, Russia vassal state, capital controls' },
+          NIC: { tier: 'stormy', riskScore: 28, note: 'US/EU sanctions, authoritarian, capital flight, isolation' },
+          RWA: { tier: 'stormy', riskScore: 25, note: 'Strong growth but very poor, aid-dependent, authoritarian' },
+          JOR: { tier: 'stormy', riskScore: 24, note: '17% unemployment, 90% debt-to-GDP, refugee burden, aid-dependent' },
+          DZA: { tier: 'stormy', riskScore: 28, note: 'Oil/gas dependency, 12% unemployment, political rigidity, youth bulge' },
+          SEN: { tier: 'stormy', riskScore: 28, note: 'Developing economy, poverty, youth unemployment, new oil potential' },
+          BEN: { tier: 'stormy', riskScore: 25, note: 'Poor West African economy, limited diversification, port transit hub' },
+          XKX: { tier: 'stormy', riskScore: 26, note: 'Disputed statehood, very poor, diaspora remittance dependent' },
+          TGO: { tier: 'stormy', riskScore: 26, note: 'Poor West African economy, limited industry, political tensions' },
+          TKM: { tier: 'stormy', riskScore: 30, note: 'Authoritarian closed economy, hydrocarbon dependent, Dutch disease' },
+          GTM: { tier: 'stormy', riskScore: 28, note: 'High poverty, violence, corruption, inequality, remittance dependent' },
+          KGZ: { tier: 'stormy', riskScore: 25, note: 'Poor, remittance dependent on Russia, political instability' },
+          CIV: { tier: 'stormy', riskScore: 25, note: 'Post-conflict recovery, strong growth but poverty persists' },
+          TJK: { tier: 'stormy', riskScore: 28, note: 'Very poor, 30%+ GDP from remittances, authoritarian' },
+          AZE: { tier: 'stormy', riskScore: 25, note: 'Oil/gas dependent, authoritarian, Dutch disease, Nagorno-Karabakh costs' },
+          BWA: { tier: 'stormy', riskScore: 28, note: 'Africa success story, diamond wealth, but HIV/AIDS burden, diamond dependency' },
+          AGO: { tier: 'stormy', riskScore: 34, note: '28% inflation, oil-only economy, extreme poverty, corruption' },
+          // SEVERE — serious economic distress
+          GRC: { tier: 'severe', riskScore: 45, note: '170%+ debt-to-GDP, 11% unemployment, austerity legacy, brain drain' },
+          RUS: { tier: 'severe', riskScore: 50, note: 'War economy, Western sanctions, capital flight, real inflation 15%+' },
+          UKR: { tier: 'severe', riskScore: 52, note: 'Active war zone, GDP crashed 30%+, infrastructure destroyed' },
+          ZAF: { tier: 'severe', riskScore: 45, note: '30%+ unemployment, load shedding crisis, stagnant GDP, inequality' },
+          LBR: { tier: 'severe', riskScore: 40, note: 'One of poorest countries, post-civil war, barely functioning economy' },
+          SLE: { tier: 'severe', riskScore: 40, note: 'One of poorest countries, post-Ebola/civil war, underdeveloped' },
+          GIN: { tier: 'severe', riskScore: 38, note: 'Military junta, extreme poverty, mining dependency, political instability' },
+          COG: { tier: 'severe', riskScore: 38, note: 'Oil dependent, poverty, corruption, authoritarian, debt distress' },
+          GMB: { tier: 'severe', riskScore: 35, note: 'Very poor, tourism dependent, limited economy, democratic transition' },
+          COM: { tier: 'severe', riskScore: 35, note: 'One of poorest countries, volcanic islands, political instability' },
+          GNB: { tier: 'severe', riskScore: 38, note: 'One of poorest, drug trafficking hub, political instability, coups' },
+          MDG: { tier: 'severe', riskScore: 40, note: 'One of poorest countries on Earth, political instability, deforestation' },
+          // Countries with NO or insufficient World Bank data — must have overrides to avoid grey dots
+          SML: { tier: 'severe', riskScore: 42, note: 'Unrecognized breakaway state, no international financial integration, livestock economy' },
+          ESH: { tier: 'severe', riskScore: 44, note: 'Disputed territory, no sovereign economy, Moroccan-controlled phosphate extraction' },
+          GRL: { tier: 'cloudy', riskScore: 14, note: 'Danish autonomous territory, heavily subsidized, fishing/mining economy' },
+          TUV: { tier: 'stormy', riskScore: 26, note: 'Tiny Pacific island, climate-vulnerable, .tv domain revenue, aid-dependent' },
+          LIE: { tier: 'clear', riskScore: 4, note: 'Wealthy microstate, major financial center, low taxes, high GDP per capita' },
+          BTN: { tier: 'cloudy', riskScore: 18, note: 'Small Himalayan kingdom, hydropower economy, stable but very poor' },
+          VUT: { tier: 'stormy', riskScore: 26, note: 'Pacific island, climate-vulnerable, aid-dependent, cyclone-prone' },
+          TON: { tier: 'stormy', riskScore: 26, note: 'Pacific island, remittance-dependent, climate-vulnerable' },
+          MHL: { tier: 'stormy', riskScore: 28, note: 'Pacific island, US Compact funding, climate-vulnerable, rising seas' },
+          FSM: { tier: 'stormy', riskScore: 28, note: 'Pacific island, US Compact funding, subsistence economy' },
+          PLW: { tier: 'cloudy', riskScore: 18, note: 'Pacific island, tourism-dependent, US Compact, small but stable' },
+          NRU: { tier: 'stormy', riskScore: 30, note: 'Tiny island, depleted phosphate, detention center income, limited economy' },
+          AND: { tier: 'clear', riskScore: 8, note: 'Wealthy European microstate, tourism and banking sector' },
+          ATG: { tier: 'cloudy', riskScore: 18, note: 'Caribbean tourism economy, hurricane-vulnerable, CBI program' },
+          DMA: { tier: 'stormy', riskScore: 24, note: 'Small Caribbean island, hurricane-vulnerable, CBI program' },
+          SWZ: { tier: 'severe', riskScore: 42, note: '34% unemployment, tiny kingdom, HIV/AIDS crisis, monarchy' },
+          GRD: { tier: 'cloudy', riskScore: 16, note: 'Small Caribbean island, tourism recovery, hurricane-vulnerable' },
+          MCO: { tier: 'clear', riskScore: 4, note: 'Extremely wealthy microstate, finance and tourism hub' },
+          SMR: { tier: 'clear', riskScore: 6, note: 'Wealthy European microstate, light industry, stable' },
+          KNA: { tier: 'cloudy', riskScore: 16, note: 'Small Caribbean, CBI program, tourism-dependent' },
+          // Final audit corrections — formula artifacts and tier mismatches
+          PRY: { tier: 'cloudy', riskScore: 16, note: 'Developing economy, 25% poverty, informal sector, but stable growth' },
+          HND: { tier: 'stormy', riskScore: 25, note: 'One of poorest in Americas, high violence, 75% poverty, remittance dependent' },
+          CRI: { tier: 'cloudy', riskScore: 12, note: '68% debt-to-GDP, fiscal pressure, but most stable Central American economy' },
+          BGR: { tier: 'cloudy', riskScore: 14, note: 'Poorest EU member, low wages, but growing and converging toward EU' },
+          CYP: { tier: 'cloudy', riskScore: 12, note: 'Post-banking crisis recovery, EU member, tourism/services economy' },
+          MLT: { tier: 'clear', riskScore: 8, note: 'Small EU economy, gaming/finance sector, stable institutions' },
+          LUX: { tier: 'clear', riskScore: 8, note: 'Wealthiest per capita globally, EU financial center, AAA rated' },
+          MDA: { tier: 'stormy', riskScore: 24, note: 'Europe poorest country, war-adjacent, energy crisis, Transnistria' },
+          MRT: { tier: 'stormy', riskScore: 26, note: 'Poor Saharan country, mining/fishing economy, slavery legacy' },
+          KIR: { tier: 'stormy', riskScore: 28, note: 'One of least developed countries, climate-vulnerable, tiny GDP, rising seas' },
+        };
+
+        // Build per-country economic data
+        // Collect all alpha3 codes we have ANY data for
+        const allCodes = new Set([
+          ...Object.keys(gdpData), ...Object.keys(inflationData),
+          ...Object.keys(debtData), ...Object.keys(unempData), ...Object.keys(interestData),
+          ...Object.keys(ECONOMIC_OVERRIDES)
+        ]);
+
+        const countries = {};
+        for (const code of allCodes) {
+          const gdp = gdpData[code] ?? null;
+          const inflation = inflationData[code] ?? null;
+          const debt = debtData[code] ?? null;
+          const unemp = unempData[code] ?? null;
+          const interest = interestData[code] ?? null;
+          const credit = CREDIT_RATINGS[code] || null;
+
+          // Currency YTD change
+          let currencyYtd = null;
+          const currCode = CURRENCY_MAP[code];
+          if (currCode && currCode !== 'USD' && currentRates[currCode] && JAN1_RATES[currCode]) {
+            const jan1 = JAN1_RATES[currCode];
+            const now = currentRates[currCode];
+            // Higher rate = weaker currency (more units per USD)
+            currencyYtd = ((now - jan1) / jan1) * 100;
+          }
+
+          // Compute risk score (weighted average of available components)
+          const components = [
+            { score: scoreInflation(inflation), weight: 25 },
+            { score: scoreDebt(debt), weight: 20 },
+            { score: scoreGDP(gdp), weight: 20 },
+            { score: scoreCurrency(currencyYtd), weight: 20 },
+            { score: scoreUnemp(unemp), weight: 15 }
+          ];
+          const available = components.filter(c => c.score !== null);
+          let riskScore = null;
+          let tier = null;
+          let conflictOverride = false;
+          if (available.length >= 3) {
+            const totalWeight = available.reduce((s, c) => s + c.weight, 0);
+            riskScore = Math.round(available.reduce((s, c) => s + (c.score * c.weight), 0) / totalWeight);
+            tier = tierFromScore(riskScore);
+          }
+
+          // Apply economic overrides — REPLACES formula score when present
+          if (ECONOMIC_OVERRIDES[code]) {
+            riskScore = ECONOMIC_OVERRIDES[code].riskScore;
+            tier = ECONOMIC_OVERRIDES[code].tier;
+            conflictOverride = true;
+          }
+
+          countries[code] = {
+            gdpGrowth: gdp !== null ? Math.round(gdp * 100) / 100 : null,
+            inflation: inflation !== null ? Math.round(inflation * 100) / 100 : null,
+            debtGdp: debt !== null ? Math.round(debt * 100) / 100 : null,
+            unemployment: unemp !== null ? Math.round(unemp * 100) / 100 : null,
+            interestRate: interest !== null ? Math.round(interest * 100) / 100 : null,
+            creditRating: credit,
+            currencyYtd: currencyYtd !== null ? Math.round(currencyYtd * 100) / 100 : null,
+            currencyCode: currCode || null,
+            riskScore,
+            tier,
+            conflictOverride: conflictOverride || undefined,
+            overrideNote: conflictOverride ? ECONOMIC_OVERRIDES[code].note : undefined
+          };
+        }
+
+        const result = { countries, _ts: Date.now() };
+        const resultJson = JSON.stringify(result);
+
+        // Cache in KV for 24h
+        try {
+          await env.HEGEMON_CACHE.put('economic_data', resultJson, { expirationTtl: 86400 });
+        } catch { /* KV write failure is non-fatal */ }
+
+        return new Response(resultJson, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (err) {
+        console.error('Economic data error:', err);
+        // Try returning stale cache
+        try {
+          const stale = await env.HEGEMON_CACHE.get('economic_data');
+          if (stale) return new Response(stale, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ countries: {} }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ============================================================
+    // GET /api/economic-calendar — Forex Factory weekly calendar
+    // ============================================================
+    if (url.pathname === '/api/economic-calendar' && request.method === 'GET') {
+      try {
+        // Check KV cache (6 hour TTL)
+        const cached = await env.HEGEMON_CACHE.get('economic_calendar');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed._ts && (Date.now() - parsed._ts < 21600000)) {
+            return new Response(cached, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        const resp = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
+          headers: { 'User-Agent': 'Hegemon-Calendar/1.0' },
+          cf: { cacheTtl: 3600 }
+        });
+        if (!resp.ok) throw new Error('Calendar fetch failed: ' + resp.status);
+        const rawEvents = await resp.json();
+
+        // Map country names to alpha3 codes
+        const CALENDAR_COUNTRY_MAP = {
+          'USD': 'USA', 'EUR': 'DEU', 'GBP': 'GBR', 'JPY': 'JPN', 'CAD': 'CAN',
+          'AUD': 'AUS', 'NZD': 'NZL', 'CHF': 'CHE', 'CNY': 'CHN', 'INR': 'IND',
+          'BRL': 'BRA', 'MXN': 'MEX', 'ZAR': 'ZAF', 'KRW': 'KOR', 'TRY': 'TUR',
+          'RUB': 'RUS', 'SGD': 'SGP', 'HKD': 'HKG', 'SEK': 'SWE', 'NOK': 'NOR',
+          'DKK': 'DNK', 'PLN': 'POL', 'THB': 'THA', 'IDR': 'IDN', 'PHP': 'PHL',
+          'CZK': 'CZE', 'HUF': 'HUN', 'ILS': 'ISR', 'CLP': 'CHL', 'COP': 'COL',
+          'PEN': 'PER', 'ARS': 'ARG', 'NGN': 'NGA', 'EGP': 'EGY', 'PKR': 'PAK',
+          'TWD': 'TWN', 'MYR': 'MYS', 'VND': 'VNM', 'SAR': 'SAU', 'AED': 'ARE',
+          'RON': 'ROU', 'BGN': 'BGR', 'HRK': 'HRV', 'RSD': 'SRB', 'ISK': 'ISL',
+        };
+
+        const events = (rawEvents || []).map(e => ({
+          title: e.title || '',
+          country: CALENDAR_COUNTRY_MAP[e.country] || e.country || '',
+          date: e.date || '',
+          impact: e.impact || '',
+          forecast: e.forecast || '',
+          previous: e.previous || '',
+        })).filter(e => e.title && e.date);
+
+        const result = { events, _ts: Date.now() };
+        await env.HEGEMON_CACHE.put('economic_calendar', JSON.stringify(result), { expirationTtl: 86400 });
+
+        return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (err) {
+        console.error('Calendar error:', err);
+        // Return stale cache if available
+        try {
+          const stale = await env.HEGEMON_CACHE.get('economic_calendar');
+          if (stale) return new Response(stale, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ events: [] }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ============================================================
+    // GET /api/economic-brief?country=XX — AI economic analysis
+    // ============================================================
+    if (url.pathname === '/api/economic-brief' && request.method === 'GET') {
+      const countryCode = (url.searchParams.get('country') || '').toUpperCase();
+      if (!countryCode || countryCode.length !== 3) {
+        return new Response(
+          JSON.stringify({ error: 'Missing or invalid country parameter (ISO alpha-3)' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        // Check KV cache
+        const cacheKey = `econ_brief_${countryCode}`;
+        const cached = await env.HEGEMON_CACHE.get(cacheKey);
+        if (cached) {
+          return new Response(cached, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // Get economic data for this country
+        let econData = {};
+        try {
+          const raw = await env.HEGEMON_CACHE.get('economic_data');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            econData = (parsed.countries && parsed.countries[countryCode]) || {};
+          }
+        } catch { /* ignore */ }
+
+        const apiKey = env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+          return new Response(
+            JSON.stringify({ error: 'API key not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const indicators = [
+          econData.gdpGrowth !== null ? `GDP Growth: ${econData.gdpGrowth}%` : null,
+          econData.inflation !== null ? `Inflation: ${econData.inflation}%` : null,
+          econData.debtGdp !== null ? `Debt/GDP: ${econData.debtGdp}%` : null,
+          econData.unemployment !== null ? `Unemployment: ${econData.unemployment}%` : null,
+          econData.interestRate !== null ? `Real Interest Rate: ${econData.interestRate}%` : null,
+          econData.creditRating ? `Credit Rating: ${econData.creditRating}` : null,
+          econData.currencyYtd !== null ? `Currency YTD Change: ${econData.currencyYtd > 0 ? '+' : ''}${econData.currencyYtd}%` : null,
+          econData.riskScore !== null ? `Economic Risk Score: ${econData.riskScore}/100 (${econData.tier})` : null
+        ].filter(Boolean).join('\n');
+
+        const prompt = `You are an economic analyst for Hegemon, a geopolitical risk monitoring platform. Today is ${new Date().toISOString().split('T')[0]}.
+
+Country: ${countryCode}
+Current Economic Indicators:
+${indicators || 'Limited data available'}
+${econData.conflictOverride ? `Override note: ${econData.overrideNote}` : ''}
+
+Provide a brief economic analysis in exactly 3 sections plus upcoming events. Each section should be 2-3 sentences. Be specific, use numbers, and focus on actionable intelligence.
+
+1. SNAPSHOT: Current economic situation — growth trajectory, monetary policy stance, fiscal health.
+2. RISKS: Key economic vulnerabilities — what could go wrong, structural weaknesses, external shocks.
+3. OUTLOOK: 6-12 month economic forecast — likely trajectory, catalysts for change, investor implications.
+4. UPCOMING: List 3-5 upcoming economic events or dates to watch for this country in the next 30-60 days. Include central bank decisions, GDP releases, inflation data, debt maturities, IMF reviews, elections with economic impact, trade deal deadlines, or earnings seasons. Use approximate dates.
+
+Respond with ONLY a JSON object: {"snapshot": "...", "risks": "...", "outlook": "...", "upcoming": [{"date": "YYYY-MM-DD", "event": "..."}, ...]}`;
+
+        const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 400,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        if (!anthropicResponse.ok) {
+          return new Response(
+            JSON.stringify({ snapshot: 'Economic analysis temporarily unavailable.', risks: '', outlook: '' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const aiResult = await anthropicResponse.json();
+        const text = aiResult.content?.[0]?.text || '{}';
+
+        let brief;
+        try {
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          brief = jsonMatch ? JSON.parse(jsonMatch[0]) : { snapshot: text, risks: '', outlook: '' };
+        } catch {
+          brief = { snapshot: text.substring(0, 500), risks: '', outlook: '' };
+        }
+
+        const briefJson = JSON.stringify(brief);
+
+        // Cache for 48h
+        try {
+          await env.HEGEMON_CACHE.put(cacheKey, briefJson, { expirationTtl: 172800 });
+        } catch { /* non-fatal */ }
+
+        return new Response(briefJson, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (err) {
+        console.error('Economic brief error:', err);
+        return new Response(
+          JSON.stringify({ snapshot: 'Analysis temporarily unavailable.', risks: '', outlook: '' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ============================================================
     // GET /stock?symbols= — Yahoo Finance proxy
     // ============================================================
     if (url.pathname === '/stock' && request.method === 'GET') {
