@@ -11,6 +11,7 @@ import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
 import ElectionModal from '../Modals/ElectionModal';
 import CountryFlag from '../CountryFlag';
+import { fetchEconomicNews } from '../../services/economicService';
 
 
 // ============================================================
@@ -620,6 +621,22 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   const [travelStartDate, setTravelStartDate] = useState('');
   const [travelEndDate, setTravelEndDate] = useState('');
   const [travelSuggestions, setTravelSuggestions] = useState([]);
+
+  // Reset events filter when economic mode turns off; fetch economic news when it activates
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!economicMode) {
+      setEventsFilter('all');
+      return;
+    }
+    // Fetch economic news from server-side endpoint (pre-aggregated + deduplicated)
+    if (econArticles.length === 0) {
+      fetchEconomicNews().then(articles => {
+        setEconArticles((articles || []).map(a => ({ ...a, isEconomic: true })));
+      });
+    }
+  }, [economicMode, econArticles.length]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Expose toggleBriefDropdown globally — copied verbatim from original news.js.
   // Inline onclick handlers in dangerouslySetInnerHTML need this on window.

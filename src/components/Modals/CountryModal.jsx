@@ -323,6 +323,214 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
 
         {/* Body */}
         <div className="modal-body">
+          {/* ===== Economic Mode Content ===== */}
+          {economicMode && (
+            <>
+              {/* Override note banner */}
+              {countryEcon?.overrideNote && (
+                <div style={{ padding: '6px 10px', marginBottom: '8px', background: 'rgba(234,179,8,0.08)', borderLeft: '3px solid #eab308', borderRadius: '4px', fontSize: '10px', color: '#eab308', lineHeight: '1.4' }}>
+                  <span style={{ fontWeight: 700 }}>Analyst Note:</span> {countryEcon.overrideNote}
+                </div>
+              )}
+
+              {/* Economic Indicators Grid */}
+              <div className="section-title">Economic Indicators</div>
+              <div className="econ-indicators-grid">
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">GDP Growth</div>
+                  <div className={`econ-indicator-value ${countryEcon?.gdpGrowth != null ? indicatorColorInvert(countryEcon.gdpGrowth, [3, 1]) : 'no-data'}`}>
+                    {countryEcon?.gdpGrowth != null ? <>{countryEcon.gdpGrowth}%{countryEcon.gdpGrowthEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Inflation</div>
+                  <div className={`econ-indicator-value ${countryEcon?.inflation != null ? indicatorColor(countryEcon.inflation, [5, 10]) : 'no-data'}`}>
+                    {countryEcon?.inflation != null ? <>{countryEcon.inflation}%{countryEcon.inflationEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Debt/GDP</div>
+                  <div className={`econ-indicator-value ${countryEcon?.debtGdp != null ? indicatorColor(countryEcon.debtGdp, [60, 90]) : 'no-data'}`}>
+                    {countryEcon?.debtGdp != null ? <>{countryEcon.debtGdp}%{countryEcon.debtGdpEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Unemployment</div>
+                  <div className={`econ-indicator-value ${countryEcon?.unemployment != null ? indicatorColor(countryEcon.unemployment, [7, 12]) : 'no-data'}`}>
+                    {countryEcon?.unemployment != null ? <>{countryEcon.unemployment}%{countryEcon.unemploymentEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Interest Rate</div>
+                  <div className={`econ-indicator-value ${countryEcon?.interestRate != null ? 'neutral' : 'no-data'}`}>
+                    {countryEcon?.interestRate != null ? `${countryEcon.interestRate}%` : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Credit Rating</div>
+                  <div className={`econ-indicator-value ${countryEcon?.creditRating ? 'neutral' : 'no-data'}`}>
+                    {countryEcon?.creditRating || <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Currency YTD</div>
+                  <div className={`econ-indicator-value ${countryEcon?.currencyYtd != null ? (countryEcon.currencyYtd > 5 ? 'bad' : countryEcon.currencyYtd > 2 ? 'warn' : 'good') : 'no-data'}`}>
+                    {countryEcon?.currencyYtd != null ? `${countryEcon.currencyYtd > 0 ? '+' : ''}${countryEcon.currencyYtd}%` : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+                <div className="econ-indicator">
+                  <div className="econ-indicator-label">Risk Score</div>
+                  <div className={`econ-indicator-value ${countryEcon?.riskScore != null ? (countryEcon.riskScore > 55 ? 'bad' : countryEcon.riskScore > 25 ? 'warn' : 'good') : 'no-data'}`}>
+                    {countryEcon?.riskScore != null ? `${countryEcon.riskScore}/100` : <span className="no-data-text">No data</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Economic Snapshot from Claude (right below indicators) */}
+              {econBriefLoading && (
+                <div style={{ marginBottom: '12px' }}>
+                  {econBriefTimeout && (
+                    <div style={{ color: '#f59e0b', fontSize: '10px', marginBottom: '8px' }}>Analysis loading slowly — cached results will appear shortly</div>
+                  )}
+                  {['Economic Snapshot', 'Key Risks', 'Outlook'].map(label => (
+                    <div key={label} className="econ-analysis-block" style={{ opacity: 0.5 }}>
+                      <div className="econ-analysis-header">{label}</div>
+                      <div className="econ-skeleton-line" style={{ width: '95%' }} />
+                      <div className="econ-skeleton-line" style={{ width: '80%' }} />
+                      <div className="econ-skeleton-line" style={{ width: '60%' }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {econBrief && (
+                <>
+                  {econBrief.snapshot && (
+                    <div className="econ-analysis-block">
+                      <div className="econ-analysis-header">Economic Snapshot</div>
+                      <p className="econ-analysis-text">{econBrief.snapshot}</p>
+                    </div>
+                  )}
+                  {econBrief.risks && (
+                    <div className="econ-analysis-block">
+                      <div className="econ-analysis-header">Key Risks</div>
+                      <p className="econ-analysis-text">{econBrief.risks}</p>
+                    </div>
+                  )}
+                  {econBrief.outlook && (
+                    <div className="econ-analysis-block">
+                      <div className="econ-analysis-header">Outlook</div>
+                      <p className="econ-analysis-text">{econBrief.outlook}</p>
+                    </div>
+                  )}
+                </>
+              )}
+              {!econBriefLoading && !econBrief && (
+                <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '12px' }}>Economic analysis unavailable.</div>
+              )}
+
+              {/* Upcoming Economic Events */}
+              {econBrief && econBrief.upcoming && econBrief.upcoming.length > 0 && (
+                <div style={{ marginTop: '12px' }}>
+                  <div className="section-title">Upcoming Economic Events</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {econBrief.upcoming.map((evt, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '6px 8px', background: 'rgba(34,197,94,0.05)', borderRadius: '4px', borderLeft: '2px solid rgba(34,197,94,0.3)' }}>
+                        <div style={{ minWidth: '60px', fontSize: '9px', fontWeight: 700, color: '#22c55e', whiteSpace: 'nowrap' }}>
+                          {evt.date ? new Date(evt.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#d1d5db', lineHeight: '1.3' }}>{evt.event}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Economic News */}
+              {!newsLoading && (topStories.length > 0 || latestCoverage.length > 0) && (
+                <div style={{ marginTop: '12px' }}>
+                  <div className="section-title">Economic News</div>
+                  {[...topStories, ...latestCoverage]
+                    .filter(a => ECONOMIC_KEYWORDS_RE.test(a.headline || ''))
+                    .slice(0, 5)
+                    .map((article, i) => renderNewsItem(cleanNewsDisplay(article), `econ-${i}`))}
+                  {[...topStories, ...latestCoverage].filter(a => ECONOMIC_KEYWORDS_RE.test(a.headline || '')).length === 0 && (
+                    <div style={{ color: '#6b7280', fontSize: '11px' }}>No recent economic coverage</div>
+                  )}
+                </div>
+              )}
+
+              {/* Forex Factory Calendar Events */}
+              {!econBriefLoading && (
+                <div style={{ marginTop: '12px' }}>
+                  <div className="section-title">This Week&apos;s Calendar</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {calendarEvents.length === 0 ? (
+                      <div style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', padding: '6px 8px' }}>No upcoming events scheduled this week</div>
+                    ) : calendarEvents.map((evt, i) => {
+                      const d = new Date(evt.date);
+                      const impactColor = evt.impact === 'High' ? '#ef4444' : evt.impact === 'Medium' ? '#eab308' : '#6b7280';
+                      return (
+                        <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '5px 8px', background: '#111827', borderRadius: '4px', borderLeft: `2px solid ${impactColor}` }}>
+                          <div style={{ minWidth: '70px', fontSize: '9px', color: '#9ca3af', whiteSpace: 'nowrap' }}>
+                            {d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </div>
+                          <div style={{ flex: 1, fontSize: '10px', color: '#d1d5db', lineHeight: '1.3' }}>{evt.title}</div>
+                          <div style={{ fontSize: '7px', fontWeight: 700, color: impactColor, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{evt.impact}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* IG Economic Calendar Link */}
+              <a
+                href="https://www.ig.com/uk/economic-calendar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="research-link"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}
+              >
+                <div>
+                  <div className="research-name" style={{ color: '#22c55e' }}>IG Economic Calendar</div>
+                  <div className="research-desc">Full calendar with all global economic events</div>
+                </div>
+                <span className="research-arrow">&#8599;</span>
+              </a>
+
+              {/* Condensed Conflict Assessment Accordion (ISSUE 8) */}
+              <div className="conflict-accordion-toggle" onClick={() => setConflictExpanded(!conflictExpanded)}>
+                <span className="conflict-accordion-title">Conflict Assessment</span>
+                <span className={`conflict-accordion-chevron${conflictExpanded ? ' open' : ''}`}>&#9660;</span>
+              </div>
+              <div className={`conflict-accordion-body${conflictExpanded ? ' open' : ''}`}>
+                <div style={{ padding: '8px 0' }}>
+                  {/* Conflict risk badge */}
+                  <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff', fontSize: '9px', marginBottom: '8px', display: 'inline-block' }}>
+                    {country.risk.toUpperCase()}
+                  </span>
+                  {/* First 2-3 sentences of analysis.what */}
+                  {country.analysis && (
+                    <p style={{ fontSize: '11px', color: '#d1d5db', lineHeight: '1.4', margin: '6px 0 0' }}>
+                      {(typeof country.analysis === 'string' ? country.analysis : (country.analysis.what || '')).split('. ').slice(0, 3).join('. ')}.
+                    </p>
+                  )}
+                  {/* Conflict tags */}
+                  {country.tags && country.tags.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                      {country.tags.map((tag, i) => (
+                        <span key={i} className="country-tag" style={{ background: TAG_COLORS[tag]?.bg, color: TAG_COLORS[tag]?.text, fontSize: '8px' }}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Full conflict content (shown when NOT in economic mode) */}
+          {!economicMode && (
+          <>
           {/* Facts Grid */}
           {facts.length > 0 && (
             <div className="facts-grid" style={{ marginBottom: '16px' }}>

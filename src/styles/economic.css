@@ -1,0 +1,327 @@
+/* economic.css — Economic overlay styles */
+
+/* ===== Filter Pills (Events tab) ===== */
+.econ-filter-pills {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.econ-filter-pill {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid #1f2937;
+  background: transparent;
+  color: #9ca3af;
+  transition: all 0.15s ease;
+}
+
+.econ-filter-pill:hover {
+  border-color: #374151;
+  color: #d1d5db;
+}
+
+.econ-filter-pill.active {
+  background: #1f2937;
+  border-color: #06b6d4;
+  color: #06b6d4;
+}
+
+.econ-filter-pill.active-conflict {
+  background: #1f2937;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.econ-filter-pill.active-economic {
+  background: #1f2937;
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+/* ===== ECON Badge on event cards ===== */
+.econ-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ===== Dual Risk Alert Box ===== */
+.dual-risk-alert {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(34, 197, 94, 0.08));
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.dual-risk-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dual-risk-alert-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #22c55e);
+  flex-shrink: 0;
+}
+
+.dual-risk-alert-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #f87171;
+}
+
+.dual-risk-country {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.dual-risk-country:hover {
+  opacity: 0.8;
+}
+
+.dual-risk-name {
+  font-size: 10px;
+  color: #e5e7eb;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.dual-risk-badges {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dual-risk-badge {
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dual-risk-badge.conflict {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dual-risk-badge.economic {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* ===== Economic Indicators in Modal ===== */
+.econ-indicators-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.econ-indicator {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.econ-indicator-label {
+  font-size: 8px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.econ-indicator-value {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.econ-indicator-value.good { color: #22c55e; }
+.econ-indicator-value.warn { color: #eab308; }
+.econ-indicator-value.bad { color: #ef4444; }
+.econ-indicator-value.neutral { color: #9ca3af; }
+.econ-indicator-value.no-data { color: #4b5563; }
+
+.no-data-text {
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  font-family: inherit;
+}
+
+.est-badge {
+  font-size: 8px;
+  font-weight: 500;
+  color: #eab308;
+  margin-left: 3px;
+  opacity: 0.8;
+}
+
+/* ===== Economic Analysis Blocks ===== */
+.econ-analysis-block {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.econ-analysis-header {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #22c55e;
+  margin-bottom: 6px;
+}
+
+.econ-analysis-text {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #d1d5db;
+  margin: 0;
+}
+
+/* ===== Economic Risk Badge (modal header) ===== */
+.econ-risk-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  margin-left: 6px;
+}
+
+/* ===== Economic Legend ===== */
+.econ-legend-title {
+  color: #22c55e;
+}
+
+/* ===== Conflict Accordion (when economic mode active) ===== */
+.conflict-accordion-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background 0.15s;
+}
+
+.conflict-accordion-toggle:hover {
+  background: #1a2332;
+}
+
+.conflict-accordion-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.conflict-accordion-chevron {
+  color: #6b7280;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.conflict-accordion-chevron.open {
+  transform: rotate(180deg);
+}
+
+.conflict-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.conflict-accordion-body.open {
+  max-height: 2000px;
+}
+
+/* ===== BETA Badge ===== */
+.beta-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  vertical-align: middle;
+  margin-left: 4px;
+  line-height: 1;
+}
+
+/* ===== Skeleton Loading ===== */
+.econ-skeleton-line {
+  height: 10px;
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.econ-skeleton-line:last-child {
+  width: 60%;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .econ-indicators-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
