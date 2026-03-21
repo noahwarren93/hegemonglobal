@@ -5,13 +5,23 @@ import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../..
 import { renderUnifiedSourceTag, renderTrendChart, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST, getSourceCredibility } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
+import { COUNTRY_CODES } from '../../data/countryCodes';
+import { fetchEconomicBrief, getEconomicDataForCountry } from '../../services/economicService';
 
-export default function CountryModal({ countryName, isOpen, onClose }) {
+// Economic keyword filter for news
+const ECONOMIC_KEYWORDS_RE = /\b(gdp|inflation|interest rate|central bank|federal reserve|ecb|imf|world bank|recession|deficit|debt|bond|treasury|fiscal|monetary|currency|devaluation|tariff|trade war|sanctions?|unemployment|jobs report|stock market|credit rating|default|bailout|austerity|stimulus|quantitative|exchange rate)\b/i;
+
+export default function CountryModal({ countryName, isOpen, onClose, economicMode, economicData }) {
   const [topStories, setTopStories] = useState([]);
   const [latestCoverage, setLatestCoverage] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [sanctionsOpen, setSanctionsOpen] = useState(false);
   const [casualtiesExpanded, setCasualtiesExpanded] = useState(false);
+  const [econBrief, setEconBrief] = useState(null);
+  const [econBriefLoading, setEconBriefLoading] = useState(false);
+  const [econBriefTimeout, setEconBriefTimeout] = useState(false);
+  const [conflictExpanded, setConflictExpanded] = useState(false);
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
   const country = countryName ? COUNTRIES[countryName] : null;
 
@@ -222,6 +232,43 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   }, [isOpen, countryName]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  // Fetch economic brief + calendar when in economic mode
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (isOpen && countryName && economicMode) {
+      const codes = COUNTRY_CODES[countryName];
+      if (codes) {
+        setEconBriefLoading(true);
+        setEconBrief(null);
+        setEconBriefTimeout(false);
+        setConflictExpanded(false);
+        setCalendarEvents([]);
+        const timeoutId = setTimeout(() => setEconBriefTimeout(true), 8000);
+        fetchEconomicBrief(codes.alpha3).then(data => {
+          clearTimeout(timeoutId);
+          setEconBrief(data);
+          setEconBriefLoading(false);
+          setEconBriefTimeout(false);
+        }).catch(() => { clearTimeout(timeoutId); setEconBriefLoading(false); });
+        // Fetch Forex Factory calendar events for this country
+        fetch('https://hegemon-rss-proxy.hegemonglobal.workers.dev/api/economic-calendar')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.events) {
+              const now = new Date();
+              const countryEvents = data.events
+                .filter(e => e.country === codes.alpha3 && new Date(e.date) >= now)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 8);
+              setCalendarEvents(countryEvents);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [isOpen, countryName, economicMode]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -233,6 +280,25 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   if (!isOpen || !country || !countryName) return null;
+
+  // Economic data for this country
+  const countryEcon = economicMode ? getEconomicDataForCountry(economicData, countryName) : null;
+
+  // Helper: color class for indicator values
+  const indicatorColor = (value, thresholds) => {
+    if (value === null || value === undefined) return 'neutral';
+    const [goodMax, warnMax] = thresholds;
+    if (value <= goodMax) return 'good';
+    if (value <= warnMax) return 'warn';
+    return 'bad';
+  };
+  const indicatorColorInvert = (value, thresholds) => {
+    if (value === null || value === undefined) return 'neutral';
+    const [goodMin, warnMin] = thresholds;
+    if (value >= goodMin) return 'good';
+    if (value >= warnMin) return 'warn';
+    return 'bad';
+  };
 
   const sanctions = SANCTIONS_DATA[countryName];
   const researchSources = getResearchSources(countryName);
@@ -293,9 +359,24 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
     );
   };
 
+  const ECON_TIER_COLORS_MAP = { catastrophic: '#dc2626', extreme: '#f97316', severe: '#eab308', stormy: '#8b5cf6', cloudy: '#3b82f6', clear: '#22c55e' };
+
   return (
     <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
+        {/* Green tinted header bar for economic mode */}
+        {economicMode && (
+          <div style={{ background: 'linear-gradient(90deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 50%, transparent 100%)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(34,197,94,0.2)' }}>
+            <span style={{ fontSize: '18px', fontWeight: 800, color: ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              {countryEcon?.tier || 'N/A'}
+            </span>
+            <span style={{ fontSize: '9px', color: '#9ca3af' }}>Economic Risk</span>
+            <span className="beta-badge">BETA</span>
+            {countryEcon?.riskScore != null && (
+              <span style={{ fontSize: '10px', color: '#6b7280', marginLeft: 'auto' }}>Score: {countryEcon.riskScore}/100</span>
+            )}
+          </div>
+        )}
         {/* Header */}
         <div className="modal-header">
           <span className="modal-flag"><CountryFlag flag={country.flag} /></span>
@@ -305,6 +386,11 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
               <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff' }}>
                 {country.risk.toUpperCase()}
               </span>
+              {economicMode && (
+                <span className="econ-risk-badge" style={{ background: `${ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280'}22`, color: ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280', border: `1px solid ${ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280'}40` }}>
+                  ECON: {countryEcon?.tier ? countryEcon.tier.toUpperCase() : 'N/A'}
+                </span>
+              )}
               {country.tags && country.tags.length > 0 && (
                 <div className="country-tags">
                   {country.tags.map((tag, i) => (
@@ -708,6 +794,8 @@ export default function CountryModal({ countryName, isOpen, onClose }) {
                 </a>
               ))}
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

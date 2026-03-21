@@ -601,13 +601,56 @@ const NUCLEAR_ARSENALS = [
   { country: 'North Korea', flag: '\u{1F1F0}\u{1F1F5}', warheads: '~50' },
 ];
 
-export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating, militaryMode }) {
+// Economic keywords for event filtering
+const ECONOMIC_KEYWORDS = ['gdp', 'inflation', 'interest rate', 'central bank', 'federal reserve', 'ecb', 'imf', 'world bank', 'recession', 'deficit', 'debt', 'bond', 'treasury', 'fiscal', 'monetary', 'currency', 'devaluation', 'tariff', 'trade war', 'unemployment', 'jobs report', 'stock market', 'credit rating', 'default', 'bailout', 'austerity', 'stimulus', 'quantitative', 'exchange rate', 'economic', 'economy', 'banking', 'financial', 'market crash', 'bear market'];
+const ECONOMIC_RE = new RegExp(ECONOMIC_KEYWORDS.join('|'), 'i');
+
+// Stopwords for headline dedup clustering
+const DEDUP_STOP = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','up','about','into','over','after','is','are','was','were','be','been','being','has','have','had','do','does','did','will','would','could','should','may','might','shall','can','need','must','not','no','its','it','that','this','as','if','than','so','just','also','how','what','when','where','who','why','which','all','each','every','both','few','more','most','other','some','such','only','own','same','very','new','says','said','could','will','may','global','war','economic','economy','amid','report','reports','news','now','out','get','gets','set','back','top','two','one','first']);
+
+/** Deduplicate articles by headline similarity — cluster by 3+ shared significant words */
+function deduplicateArticles(articles) {
+  if (articles.length <= 1) return articles;
+  const getWords = (text) => {
+    return (text || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !DEDUP_STOP.has(w));
+  };
+  const clusters = []; // each cluster = array of articles
+  for (const article of articles) {
+    const words = new Set(getWords(article.headline || article.title || ''));
+    let matched = false;
+    for (const cluster of clusters) {
+      const clusterWords = new Set(getWords(cluster[0].headline || cluster[0].title || ''));
+      let shared = 0;
+      for (const w of words) { if (clusterWords.has(w)) shared++; }
+      if (shared >= 3) {
+        cluster.push(article);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) clusters.push([article]);
+  }
+  // Pick best article per cluster: most sources, then most recent
+  return clusters.map(cluster => {
+    cluster.sort((a, b) => {
+      const sa = a.sourceCount || 1, sb = b.sourceCount || 1;
+      if (sb !== sa) return sb - sa;
+      const da = new Date(a.pubDate || 0), db = new Date(b.pubDate || 0);
+      return db - da;
+    });
+    return cluster[0];
+  });
+}
+
+export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData, stocksLastUpdated, stocksUpdating, militaryMode, economicMode }) {
   const [activeTab, setActiveTab] = useState('events');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [newsTimestamp, setNewsTimestamp] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventsVersion, setEventsVersion] = useState(0); // force re-render when summaries arrive
   const contentRef = useRef(null);
+  const [eventsFilter, setEventsFilter] = useState('all'); // 'all'|'conflict'|'economic'
+  const [econArticles, setEconArticles] = useState([]); // supplementary economic news
 
   // Elections + Horizon tab state
   const [selectedElection, setSelectedElection] = useState(null);
@@ -752,10 +795,11 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       <div
         key={event.id}
         className="card"
-        onClick={() => setSelectedEvent(event)}
+        onClick={() => event.isEconomic && event.url ? window.open(event.url, '_blank') : setSelectedEvent(event)}
         style={{
           cursor: 'pointer',
-          ...(isTopStory ? { borderLeft: `2px solid ${catBorderColor(event.category)}` } : {})
+          ...(isTopStory ? { borderLeft: `2px solid ${catBorderColor(event.category)}` } : {}),
+          ...(event.isEconomic ? { borderLeft: '2px solid #22c55e33' } : {})
         }}
       >
         {/* Header row: category + sources badge + time */}
@@ -766,6 +810,9 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
               <span className="source-count-badge">
                 {event.sourceCount} sources
               </span>
+            )}
+            {economicMode && ECONOMIC_RE.test(event.headline || event.title || '') && (
+              <span className="econ-badge">ECON</span>
             )}
           </div>
           <span className="card-time">{event.time}</span>
@@ -1080,11 +1127,42 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
   };
 
   const renderEventsTab = () => {
-    const nonBreaking = DAILY_EVENTS.filter(e => !e.breaking);
+    let nonBreaking = DAILY_EVENTS.filter(e => !e.breaking);
+
+    // Apply filter when in economic mode
+    if (economicMode && eventsFilter === 'economic') {
+      // Show articles matching ECONOMIC_RE from existing feed + supplementary economic articles
+      const fromFeed = nonBreaking
+        .filter(e => ECONOMIC_RE.test(e.headline || e.title || ''))
+        .map(e => ({ ...e, isEconomic: true }));
+      const supplementary = econArticles.map((a, i) => ({
+        ...a,
+        id: `econ-supp-${i}`,
+        title: a.headline,
+        category: 'ECONOMY',
+        time: a.pubDate ? timeAgo(a.pubDate) : 'Recent',
+        sourceCount: 1,
+        importance: 3,
+        isEconomic: true,
+      }));
+      nonBreaking = deduplicateArticles([...fromFeed, ...supplementary]);
+    } else if (economicMode && eventsFilter === 'conflict') {
+      nonBreaking = nonBreaking.filter(e => !ECONOMIC_RE.test(e.headline || e.title || ''));
+    }
+
     const restEvents = nonBreaking.slice(0, visibleCount);
 
     return (
       <>
+        {/* Filter pills (only in economic mode) */}
+        {economicMode && (
+          <div className="econ-filter-pills">
+            <button className={`econ-filter-pill${eventsFilter === 'all' ? ' active' : ''}`} onClick={() => setEventsFilter('all')}>All</button>
+            <button className={`econ-filter-pill${eventsFilter === 'conflict' ? ' active-conflict' : ''}`} onClick={() => setEventsFilter('conflict')}>Conflict</button>
+            <button className={`econ-filter-pill${eventsFilter === 'economic' ? ' active-economic' : ''}`} onClick={() => setEventsFilter('economic')}>Economic</button>
+          </div>
+        )}
+
         {/* Loading state */}
         {DAILY_EVENTS.length === 0 && (
           <div className="events-loading">
@@ -1092,25 +1170,49 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
           </div>
         )}
 
-        {/* Top Stories — persistent war banners + dynamic RSS stories */}
-        <div className="section-divider section-divider--red">
-          <span className="section-divider__title section-divider__title--red">TOP STORIES</span>
-          {DAILY_EVENTS.some(e => e.summaryLoading) && (
-            <span className="ai-loading-indicator">
-              <span className="ai-loading-spinner" />
-              AI summaries loading
-            </span>
-          )}
-        </div>
-        {renderBreakingCard()}
-        {renderPakAfgCard()}
-        {renderUkrRusCard()}
-        {renderSudanCard()}
+        {/* Top Stories — show economic headlines ONLY when economic filter is selected */}
+        {economicMode && eventsFilter === 'economic' ? (
+          <>
+            <div className="section-divider" style={{ borderColor: '#22c55e33' }}>
+              <span className="section-divider__title" style={{ color: '#22c55e' }}>ECONOMIC HEADLINES</span>
+            </div>
+            {econArticles.length > 0 ? deduplicateArticles(econArticles).slice(0, 8).map((a, i) => (
+              <div key={`econ-hl-${i}`} className="card" style={{ cursor: 'pointer', borderLeft: '2px solid #22c55e33' }} onClick={() => a.url && window.open(a.url, '_blank')}>
+                <div className="card-header">
+                  <div className="card-header__left">
+                    <span className="econ-badge">ECON</span>
+                    <span style={{ fontSize: '8px', color: '#6b7280' }}>{a.source}</span>
+                  </div>
+                  <span className="card-time">{a.pubDate ? timeAgo(a.pubDate) : ''}</span>
+                </div>
+                <div className="card-headline">{a.headline}</div>
+              </div>
+            )) : (
+              <div style={{ color: '#6b7280', fontSize: '10px', padding: '8px 12px' }}>Limited economic coverage — loading headlines...</div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="section-divider section-divider--red">
+              <span className="section-divider__title section-divider__title--red">TOP STORIES</span>
+              {DAILY_EVENTS.some(e => e.summaryLoading) && (
+                <span className="ai-loading-indicator">
+                  <span className="ai-loading-spinner" />
+                  AI summaries loading
+                </span>
+              )}
+            </div>
+            {renderBreakingCard()}
+            {renderPakAfgCard()}
+            {renderUkrRusCard()}
+            {renderSudanCard()}
+          </>
+        )}
 
         {/* Latest Updates */}
         <div className="section-divider section-divider--blue">
           <span className="section-divider__title section-divider__title--blue">LATEST UPDATES</span>
-          <span className="section-divider__meta">({DAILY_EVENTS.length} events from {DAILY_BRIEFING.length} articles)</span>
+          <span className="section-divider__meta">({nonBreaking.length} events{eventsFilter !== 'all' ? ` (${eventsFilter})` : ''} from {DAILY_BRIEFING.length} articles)</span>
         </div>
         {restEvents.map(event => renderEventCard(event, false))}
 
