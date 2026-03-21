@@ -5,8 +5,25 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { COUNTRIES } from '../../data/countries';
 import { RISK_COLORS, CONFLICT_ZONES, addConflictZones, animateConflictZones } from '../../utils/riskColors';
+import { COUNTRY_CODES } from '../../data/countryCodes';
 import Tooltip from './Tooltip';
 import { flagToHTML } from '../CountryFlag';
+
+// Build economic tooltip data when overlay is active
+function buildEconTooltip(name, cdata) {
+  const econData = window._economicData;
+  const codes = COUNTRY_CODES[name];
+  const econ = codes && econData?.countries ? econData.countries[codes.alpha3] : null;
+  if (econ && econ.tier) {
+    const parts = [];
+    if (econ.gdpGrowth != null) parts.push(`GDP: ${econ.gdpGrowth}%`);
+    if (econ.inflation != null) parts.push(`Infl: ${econ.inflation}%`);
+    if (econ.unemployment != null) parts.push(`Unemp: ${econ.unemployment}%`);
+    if (econ.debtGdp != null) parts.push(`Debt: ${econ.debtGdp}%`);
+    return { name, flag: cdata.flag, econTier: econ.tier, econSubtitle: parts.join(' | ') || 'Score: ' + econ.riskScore };
+  }
+  return { name, flag: cdata.flag, econTier: 'none', econSubtitle: 'No economic data available' };
+}
 
 // ============================================================
 // Exported helpers (pure functions, no component state needed)
@@ -859,7 +876,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
       if (visibleIntersects.length > 0) {
         const ud = visibleIntersects[0].object.userData;
         if (ud && ud.data && ud.name) {
-          setTooltipData({ name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title });
+          const ttData = window.economicOverlayActive
+            ? buildEconTooltip(ud.name, ud.data)
+            : { name: ud.name, flag: ud.data.flag, risk: ud.data.risk, region: ud.data.region, title: ud.data.title };
+          setTooltipData(ttData);
           setMousePos({ x: event.clientX, y: event.clientY });
           if (onCountryHoverRef.current) onCountryHoverRef.current(ud.name, event);
         }
@@ -873,7 +893,10 @@ export default function GlobeView({ onCountryClick, onCountryHover, compareMode 
           if (country) {
             const cdata = COUNTRIES[country];
             if (cdata) {
-              setTooltipData({ name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title });
+              const ttData = window.economicOverlayActive
+                ? buildEconTooltip(country, cdata)
+                : { name: country, flag: cdata.flag, risk: cdata.risk, region: cdata.region, title: cdata.title };
+              setTooltipData(ttData);
               setMousePos({ x: event.clientX, y: event.clientY });
               if (onCountryHoverRef.current) onCountryHoverRef.current(country, event);
             }

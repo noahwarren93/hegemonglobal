@@ -4,6 +4,11 @@
 import { useRef, useEffect } from 'react';
 import CountryFlag from '../CountryFlag';
 
+const ECON_TIER_COLORS = {
+  catastrophic: '#dc2626', extreme: '#f97316', severe: '#eab308',
+  stormy: '#8b5cf6', cloudy: '#3b82f6', clear: '#22c55e'
+};
+
 export function positionTooltip(el, cx, cy) {
   const offset = 15;
   const vw = window.innerWidth;
@@ -50,6 +55,19 @@ export default function Tooltip({ data, mousePos }) {
           {data.activities && <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: 1 }}>Activities: {data.activities}</div>}
           {data.articleCount > 0 && <div style={{ fontSize: '9px', color: '#06b6d4', marginTop: 2 }}>{data.articleCount} recent article{data.articleCount > 1 ? 's' : ''}</div>}
           <div className="tooltip-hint">Click for intel</div>
+        </>
+      ) : data && data.econTier ? (
+        <>
+          <div className="tooltip-name">
+            <CountryFlag flag={data.flag} /> {data.name}{' '}
+            <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', background: 'rgba(34,197,94,0.15)', color: ECON_TIER_COLORS[data.econTier] || '#9ca3af', border: `1px solid ${ECON_TIER_COLORS[data.econTier] || '#374151'}40` }}>
+              {data.econTier.toUpperCase()}
+            </span>
+          </div>
+          <div className="tooltip-region" style={{ color: '#9ca3af' }}>
+            {data.econSubtitle || 'Economic data unavailable'}
+          </div>
+          <div className="tooltip-hint">Click for economic details</div>
         </>
       ) : data ? (
         <>
