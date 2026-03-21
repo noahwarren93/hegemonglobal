@@ -412,55 +412,62 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
           {/* ===== Economic Mode Content ===== */}
           {economicMode && (
             <>
+              {/* Override note banner */}
+              {countryEcon?.overrideNote && (
+                <div style={{ padding: '6px 10px', marginBottom: '8px', background: 'rgba(234,179,8,0.08)', borderLeft: '3px solid #eab308', borderRadius: '4px', fontSize: '10px', color: '#eab308', lineHeight: '1.4' }}>
+                  <span style={{ fontWeight: 700 }}>Analyst Note:</span> {countryEcon.overrideNote}
+                </div>
+              )}
+
               {/* Economic Indicators Grid */}
               <div className="section-title">Economic Indicators</div>
               <div className="econ-indicators-grid">
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">GDP Growth</div>
-                  <div className={`econ-indicator-value ${indicatorColorInvert(countryEcon?.gdpGrowth, [3, 1])}`}>
-                    {countryEcon?.gdpGrowth != null ? `${countryEcon.gdpGrowth}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.gdpGrowth != null ? indicatorColorInvert(countryEcon.gdpGrowth, [3, 1]) : 'no-data'}`}>
+                    {countryEcon?.gdpGrowth != null ? <>{countryEcon.gdpGrowth}%{countryEcon.gdpGrowthEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Inflation</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.inflation, [5, 10])}`}>
-                    {countryEcon?.inflation != null ? `${countryEcon.inflation}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.inflation != null ? indicatorColor(countryEcon.inflation, [5, 10]) : 'no-data'}`}>
+                    {countryEcon?.inflation != null ? <>{countryEcon.inflation}%{countryEcon.inflationEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Debt/GDP</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.debtGdp, [60, 90])}`}>
-                    {countryEcon?.debtGdp != null ? `${countryEcon.debtGdp}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.debtGdp != null ? indicatorColor(countryEcon.debtGdp, [60, 90]) : 'no-data'}`}>
+                    {countryEcon?.debtGdp != null ? <>{countryEcon.debtGdp}%{countryEcon.debtGdpEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Unemployment</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.unemployment, [7, 12])}`}>
-                    {countryEcon?.unemployment != null ? `${countryEcon.unemployment}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.unemployment != null ? indicatorColor(countryEcon.unemployment, [7, 12]) : 'no-data'}`}>
+                    {countryEcon?.unemployment != null ? <>{countryEcon.unemployment}%{countryEcon.unemploymentEst && <span className="est-badge">est.</span>}</> : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Interest Rate</div>
-                  <div className={`econ-indicator-value neutral`}>
-                    {countryEcon?.interestRate != null ? `${countryEcon.interestRate}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.interestRate != null ? 'neutral' : 'no-data'}`}>
+                    {countryEcon?.interestRate != null ? `${countryEcon.interestRate}%` : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Credit Rating</div>
-                  <div className={`econ-indicator-value neutral`}>
-                    {countryEcon?.creditRating || 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.creditRating ? 'neutral' : 'no-data'}`}>
+                    {countryEcon?.creditRating || <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Currency YTD</div>
-                  <div className={`econ-indicator-value ${countryEcon?.currencyYtd != null ? (countryEcon.currencyYtd > 5 ? 'bad' : countryEcon.currencyYtd > 2 ? 'warn' : 'good') : 'neutral'}`}>
-                    {countryEcon?.currencyYtd != null ? `${countryEcon.currencyYtd > 0 ? '+' : ''}${countryEcon.currencyYtd}%` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.currencyYtd != null ? (countryEcon.currencyYtd > 5 ? 'bad' : countryEcon.currencyYtd > 2 ? 'warn' : 'good') : 'no-data'}`}>
+                    {countryEcon?.currencyYtd != null ? `${countryEcon.currencyYtd > 0 ? '+' : ''}${countryEcon.currencyYtd}%` : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
                 <div className="econ-indicator">
                   <div className="econ-indicator-label">Risk Score</div>
-                  <div className={`econ-indicator-value ${countryEcon?.riskScore != null ? (countryEcon.riskScore > 55 ? 'bad' : countryEcon.riskScore > 25 ? 'warn' : 'good') : 'neutral'}`}>
-                    {countryEcon?.riskScore != null ? `${countryEcon.riskScore}/100` : 'N/A'}
+                  <div className={`econ-indicator-value ${countryEcon?.riskScore != null ? (countryEcon.riskScore > 55 ? 'bad' : countryEcon.riskScore > 25 ? 'warn' : 'good') : 'no-data'}`}>
+                    {countryEcon?.riskScore != null ? `${countryEcon.riskScore}/100` : <span className="no-data-text">No data</span>}
                   </div>
                 </div>
               </div>

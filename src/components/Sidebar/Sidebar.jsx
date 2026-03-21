@@ -11,6 +11,7 @@ import StocksTab from '../Stocks/StocksTab';
 import EventModal from '../Modals/EventModal';
 import ElectionModal from '../Modals/ElectionModal';
 import CountryFlag from '../CountryFlag';
+import { fetchEconomicNews } from '../../services/economicService';
 
 
 // ============================================================
@@ -671,32 +672,10 @@ export default function Sidebar({ onCountryClick, onOpenStocksModal, stocksData,
       setEventsFilter('all');
       return;
     }
-    // Fetch supplementary economic news from Google News RSS via worker proxy
+    // Fetch economic news from server-side endpoint (pre-aggregated + deduplicated)
     if (econArticles.length === 0) {
-      const queries = ['global+economy+news', 'central+bank+interest+rates', 'inflation+economic+crisis', 'trade+war+sanctions+tariffs', 'stock+market+crash+rally', 'currency+devaluation+emerging+markets', 'IMF+debt+restructuring', 'recession+GDP+growth'];
-      const proxy = 'https://hegemon-rss-proxy.hegemonglobal.workers.dev';
-      Promise.all(
-        queries.map(q =>
-          fetch(`${proxy}/rss?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`)}`)
-            .then(r => r.ok ? r.json() : null)
-            .catch(() => null)
-        )
-      ).then(results => {
-        const articles = [];
-        const seen = new Set();
-        for (const data of results) {
-          if (!data || !data.items) continue;
-          for (const item of data.items.slice(0, 8)) {
-            const title = (item.title || '').trim();
-            const link = (item.link || '').trim();
-            const pubDate = (item.pubDate || '').trim();
-            const source = (item.source || 'Google News').trim();
-            if (!title || seen.has(title.substring(0, 50).toLowerCase())) continue;
-            seen.add(title.substring(0, 50).toLowerCase());
-            articles.push({ headline: title, url: link, pubDate, source, isEconomic: true });
-          }
-        }
-        setEconArticles(articles.slice(0, 30));
+      fetchEconomicNews().then(articles => {
+        setEconArticles((articles || []).map(a => ({ ...a, isEconomic: true })));
       });
     }
   }, [economicMode, econArticles.length]);

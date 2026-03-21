@@ -76,6 +76,26 @@ export function prefetchTopBriefs() {
   });
 }
 
+// Fetch economic news from server-side endpoint (cached 30min)
+export async function fetchEconomicNews() {
+  const cached = cacheGet('hegemon_econ_news');
+  if (cached) return cached;
+
+  try {
+    const resp = await fetch(`${WORKER_BASE}/api/economic-news`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const articles = data.articles || [];
+    if (articles.length > 0) {
+      cacheSet('hegemon_econ_news', articles, 1800000); // 30 min
+    }
+    return articles;
+  } catch (err) {
+    console.warn('Economic news fetch failed:', err.message);
+    return [];
+  }
+}
+
 // Lookup helper: get economic data for a country by display name
 export function getEconomicDataForCountry(econData, displayName) {
   if (!econData || !econData.countries) return null;

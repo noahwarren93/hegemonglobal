@@ -177,6 +177,22 @@
 .econ-indicator-value.warn { color: #eab308; }
 .econ-indicator-value.bad { color: #ef4444; }
 .econ-indicator-value.neutral { color: #9ca3af; }
+.econ-indicator-value.no-data { color: #4b5563; }
+
+.no-data-text {
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  font-family: inherit;
+}
+
+.est-badge {
+  font-size: 8px;
+  font-weight: 500;
+  color: #eab308;
+  margin-left: 3px;
+  opacity: 0.8;
+}
 
 /* ===== Economic Analysis Blocks ===== */
 .econ-analysis-block {
