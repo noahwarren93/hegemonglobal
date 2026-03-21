@@ -284,33 +284,6 @@
   max-height: 2000px;
 }
 
-/* ===== Economic Panel Close Button ===== */
-.econ-close-btn {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(31, 41, 55, 0.9);
-  color: #9ca3af;
-  font-size: 11px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-  z-index: 2;
-  padding: 0;
-}
-
-.econ-close-btn:hover {
-  background: rgba(55, 65, 81, 0.95);
-  color: #f3f4f6;
-}
-
 /* ===== BETA Badge ===== */
 .beta-badge {
   display: inline-block;

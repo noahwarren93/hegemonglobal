@@ -396,12 +396,7 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
 
   if (economicMode) {
     return (
-      <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible', position: 'relative' }}>
-        <button
-          onClick={onToggleEconomic}
-          className="econ-close-btn"
-          title="Close Economic Overlay"
-        >&#x2715;</button>
+      <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible' }}>
         {/* Toggle pills */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
           <button
