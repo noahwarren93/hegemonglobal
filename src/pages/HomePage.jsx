@@ -18,9 +18,6 @@ import ThreatGroupPanel from '../components/ThreatGroups/ThreatGroupPanel';
 import ChokepointPanel from '../components/TradeRoutes/ChokepointPanel';
 import TradeInfoPanel from '../components/TradeRoutes/TradeInfoPanel';
 import { useThreatGroupOverlay } from '../components/ThreatGroups/ThreatGroupOverlay';
-import { useEconomicOverlay } from '../components/Economic/EconomicOverlay';
-import { fetchEconomicData, prefetchTopBriefs } from '../services/economicService';
-import { COUNTRY_CODES } from '../data/countryCodes';
 import { THREAT_TYPE_COLORS, THREAT_TYPE_LABELS, THREAT_GROUPS } from '../data/threatGroupData';
 
 const CountryModal = lazy(() => import('../components/Modals/CountryModal'));
@@ -151,49 +148,9 @@ function SearchOverlay({ isOpen, onClose, onSelect, onSelectThreatGroup }) {
 // Stats Bar Component
 // ============================================================
 
-function StatsBar({ onStatClick, economicMode, economicData }) {
+function StatsBar({ onStatClick }) {
   const stats = useMemo(() => computeStats(), []);
   const total = Object.keys(COUNTRIES).length;
-
-  const econStats = useMemo(() => {
-    if (!economicMode || !economicData?.countries) return null;
-    let critical = 0, high = 0, stable = 0, noData = 0;
-    const apiCountries = economicData.countries;
-    // Iterate over OUR 199 countries, not the API's 250+ entries
-    Object.entries(COUNTRIES).forEach(([name]) => {
-      const codes = COUNTRY_CODES[name];
-      const econ = codes ? apiCountries[codes.alpha3] : null;
-      const tier = econ?.tier;
-      if (tier === 'catastrophic' || tier === 'extreme') critical++;
-      else if (tier === 'severe' || tier === 'stormy') high++;
-      else if (tier === 'cloudy' || tier === 'clear') stable++;
-      else noData++;
-    });
-    return { critical, high, stable, noData };
-  }, [economicMode, economicData]);
-
-  if (economicMode && econStats) {
-    return (
-      <div className="stats">
-        <div className="stat-card" onClick={() => onStatClick && onStatClick('critical')}>
-          <div className="stat-value" style={{ color: '#ef4444' }}>{econStats.critical}</div>
-          <div className="stat-label">Econ Critical</div>
-        </div>
-        <div className="stat-card" onClick={() => onStatClick && onStatClick('high')}>
-          <div className="stat-value" style={{ color: '#f97316' }}>{econStats.high}</div>
-          <div className="stat-label">Econ High</div>
-        </div>
-        <div className="stat-card" onClick={() => onStatClick && onStatClick('stable')}>
-          <div className="stat-value" style={{ color: '#22c55e' }}>{econStats.stable}</div>
-          <div className="stat-label">Econ Stable</div>
-        </div>
-        <div className="stat-card" onClick={() => onStatClick && onStatClick('total')}>
-          <div className="stat-value" style={{ color: '#6b7280' }}>{econStats.noData}</div>
-          <div className="stat-label">No Data</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="stats">
@@ -293,8 +250,7 @@ function StatPopup({ type, isOpen, onClose, onCountryClick }) {
 // Watchlist Component
 // ============================================================
 
-function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, militaryMode, onToggleMilitary, threatGroupsActive, onToggleThreatGroups, economicMode, onToggleEconomic, economicData }) {
-  const [watchlistView, setWatchlistView] = useState('economic'); // 'economic' | 'dual'
+function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, compareMode, onToggleCompare, compareCountries, militaryMode, onToggleMilitary, threatGroupsActive, onToggleThreatGroups }) {
   const watchlistCountries = useMemo(() => {
     return Object.entries(COUNTRIES)
       .filter(([, c]) => c.risk === 'catastrophic' || c.risk === 'extreme')
@@ -303,176 +259,6 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
         return tierDiff !== 0 ? tierDiff : a[0].localeCompare(b[0]);
       });
   }, []);
-
-  // Economic watchlist: top 15 worst countries by economic risk score
-  const econWatchlist = useMemo(() => {
-    if (!economicMode || !economicData?.countries) return [];
-    const worstTiers = new Set(['catastrophic', 'extreme']);
-    const result = [];
-    Object.entries(COUNTRIES).forEach(([name, c]) => {
-      const codes = COUNTRY_CODES[name];
-      if (!codes) return;
-      const econ = economicData.countries[codes.alpha3];
-      if (econ && econ.tier && worstTiers.has(econ.tier)) {
-        // Find top concerning indicator
-        let topIndicator = null;
-        let topIndicatorScore = -1;
-        if (econ.inflation != null) {
-          const s = econ.inflation >= 50 ? 100 : econ.inflation >= 15 ? 70 : econ.inflation >= 8 ? 55 : econ.inflation >= 5 ? 40 : 0;
-          if (s > topIndicatorScore) { topIndicatorScore = s; topIndicator = `Inflation: ${econ.inflation.toFixed(1)}%`; }
-        }
-        if (econ.unemployment != null) {
-          const s = econ.unemployment >= 25 ? 95 : econ.unemployment >= 15 ? 60 : econ.unemployment >= 10 ? 45 : 0;
-          if (s > topIndicatorScore) { topIndicatorScore = s; topIndicator = `Unemployment: ${econ.unemployment.toFixed(1)}%`; }
-        }
-        if (econ.debtGdp != null) {
-          const s = econ.debtGdp >= 130 ? 90 : econ.debtGdp >= 110 ? 60 : econ.debtGdp >= 90 ? 45 : 0;
-          if (s > topIndicatorScore) { topIndicatorScore = s; topIndicator = `Debt/GDP: ${econ.debtGdp.toFixed(0)}%`; }
-        }
-        if (econ.gdpGrowth != null) {
-          const s = econ.gdpGrowth < -3 ? 100 : econ.gdpGrowth < 0 ? 50 : 0;
-          if (s > topIndicatorScore) { topIndicatorScore = s; topIndicator = `GDP Growth: ${econ.gdpGrowth.toFixed(1)}%`; }
-        }
-        if (econ.overrideNote) {
-          topIndicator = econ.overrideNote;
-        }
-        result.push({ name, flag: c.flag, tier: econ.tier, score: econ.riskScore || 0, topIndicator });
-      }
-    });
-    // Sort: catastrophic first (by score desc), then extreme (by score desc)
-    result.sort((a, b) => b.score - a.score);
-    return result;
-  }, [economicMode, economicData]);
-
-  // Dual risk: countries severe+ on BOTH conflict AND economic
-  const dualRisk = useMemo(() => {
-    if (!economicMode || !economicData?.countries) return [];
-    const severeOrWorse = new Set(['catastrophic', 'extreme', 'severe']);
-    const result = [];
-    Object.entries(COUNTRIES).forEach(([name, c]) => {
-      if (!severeOrWorse.has(c.risk)) return;
-      const codes = COUNTRY_CODES[name];
-      if (!codes) return;
-      const econ = economicData.countries[codes.alpha3];
-      if (econ && econ.tier && severeOrWorse.has(econ.tier)) {
-        result.push({ name, flag: c.flag, conflictRisk: c.risk, econTier: econ.tier });
-      }
-    });
-    return result;
-  }, [economicMode, economicData]);
-
-  const ECON_TIER_COLORS = { catastrophic: '#dc2626', extreme: '#f97316', severe: '#eab308', stormy: '#8b5cf6', cloudy: '#3b82f6', clear: '#22c55e' };
-  const TIER_ABBR = { catastrophic: 'CAT', extreme: 'EXT', severe: 'SEV', stormy: 'STM', cloudy: 'CLD', clear: 'CLR' };
-  const RISK_ABBR = { catastrophic: 'CAT', extreme: 'EXT', severe: 'SEV', stormy: 'STM', cloudy: 'CLD', clear: 'CLR' };
-
-  const buttons = (
-    <div style={{ borderTop: '1px solid #1f293766', paddingTop: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <button className={`globe-feature-btn${economicMode ? ' active' : ''}`} onClick={onToggleEconomic} style={economicMode ? { borderColor: '#22c55e', color: '#22c55e' } : undefined}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Economy
-        <span className="beta-badge">BETA</span>
-      </button>
-      <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={onToggleTradeRoutes}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Trade Routes
-      </button>
-      <button className={`globe-feature-btn${compareMode ? ' active' : ''}`} onClick={onToggleCompare} style={{ position: 'relative' }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Compare Mode
-        {compareMode && compareCountries.length === 0 && (
-          <div className="compare-hint">Click countries on the globe to compare</div>
-        )}
-      </button>
-      <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={onToggleMilitary}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
-        Military
-      </button>
-      <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={onToggleThreatGroups}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Non-State Actors
-      </button>
-    </div>
-  );
-
-  if (economicMode) {
-    return (
-      <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible' }}>
-        {/* Toggle pills */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-          <button
-            onClick={() => setWatchlistView('economic')}
-            style={{
-              flex: 1, padding: '4px 0', fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px',
-              textTransform: 'uppercase', border: '1px solid', borderRadius: 4, cursor: 'pointer',
-              background: watchlistView === 'economic' ? 'rgba(34,197,94,0.15)' : 'transparent',
-              borderColor: watchlistView === 'economic' ? '#22c55e' : '#374151',
-              color: watchlistView === 'economic' ? '#22c55e' : '#6b7280'
-            }}
-          >Worst Economies</button>
-          <button
-            onClick={() => setWatchlistView('dual')}
-            style={{
-              flex: 1, padding: '4px 0', fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px',
-              textTransform: 'uppercase', border: '1px solid', borderRadius: 4, cursor: 'pointer',
-              position: 'relative',
-              background: watchlistView === 'dual' ? 'rgba(239,68,68,0.15)' : 'transparent',
-              borderColor: watchlistView === 'dual' ? '#ef4444' : '#374151',
-              color: watchlistView === 'dual' ? '#ef4444' : '#6b7280'
-            }}
-          >
-            Dual Risk
-            {dualRisk.length > 0 && (
-              <span style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: '#ef4444', color: '#fff', fontSize: '7px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {dualRisk.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Economic Watchlist view */}
-        {watchlistView === 'economic' && (
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-            {econWatchlist.length > 0 ? econWatchlist.map(c => (
-              <div key={c.name} className="watchlist-item" onClick={() => onCountryClick(c.name)} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 2 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="wl-country"><CountryFlag flag={c.flag} /> {c.name}</span>
-                  <span style={{ fontSize: '8px', fontWeight: 700, padding: '2px 5px', borderRadius: '3px', textTransform: 'uppercase', background: `${ECON_TIER_COLORS[c.tier]}18`, color: ECON_TIER_COLORS[c.tier], border: `1px solid ${ECON_TIER_COLORS[c.tier]}40` }}>
-                    {TIER_ABBR[c.tier] || c.tier.toUpperCase()}
-                  </span>
-                </div>
-                {c.topIndicator && (
-                  <div style={{ fontSize: '8px', color: '#9ca3af', paddingLeft: 18, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {c.topIndicator}
-                  </div>
-                )}
-              </div>
-            )) : (
-              <div style={{ color: '#6b7280', fontSize: '10px', padding: '6px 0' }}>No countries at elevated economic risk</div>
-            )}
-          </div>
-        )}
-
-        {/* Dual Risk view */}
-        {watchlistView === 'dual' && (
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-            {dualRisk.length > 0 ? dualRisk.map(c => (
-              <div key={c.name} className="dual-risk-country" onClick={() => onCountryClick(c.name)}>
-                <span className="dual-risk-name"><CountryFlag flag={c.flag} /> {c.name}</span>
-                <div className="dual-risk-badges">
-                  <span className="dual-risk-badge conflict">{RISK_ABBR[c.conflictRisk] || c.conflictRisk.substring(0, 3).toUpperCase()}</span>
-                  <span className="dual-risk-badge economic">{TIER_ABBR[c.econTier] || c.econTier.substring(0, 3).toUpperCase()}</span>
-                </div>
-              </div>
-            )) : (
-              <div style={{ color: '#6b7280', fontSize: '10px', padding: '6px 0' }}>No countries at severe+ on both conflict and economic scales</div>
-            )}
-          </div>
-        )}
-
-        {buttons}
-      </div>
-    );
-  }
 
   return (
     <div className="watchlist" style={{ maxHeight: 'none', overflow: 'visible' }}>
@@ -485,7 +271,27 @@ function Watchlist({ onCountryClick, tradeRoutesActive, onToggleTradeRoutes, com
           </div>
         ))}
       </div>
-      {buttons}
+      <div style={{ borderTop: '1px solid #1f293766', paddingTop: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={onToggleTradeRoutes}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Trade Routes
+        </button>
+        <button className={`globe-feature-btn${compareMode ? ' active' : ''}`} onClick={onToggleCompare} style={{ position: 'relative' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Compare Mode
+          {compareMode && compareCountries.length === 0 && (
+            <div className="compare-hint">Click countries on the globe to compare</div>
+          )}
+        </button>
+        <button className={`globe-feature-btn${militaryMode ? ' active' : ''}`} onClick={onToggleMilitary}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7v6c0 5.55 4.84 10.74 10 12 5.16-1.26 10-6.45 10-12V7l-10-5z"/></svg>
+          Military
+        </button>
+        <button className={`globe-feature-btn${threatGroupsActive ? ' active' : ''}`} onClick={onToggleThreatGroups}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Non-State Actors
+        </button>
+      </div>
     </div>
   );
 }
@@ -580,10 +386,6 @@ export default function HomePage() {
   const [selectedThreatGroup, setSelectedThreatGroup] = useState(null);
   const [threatGroupPanelOpen, setThreatGroupPanelOpen] = useState(false);
 
-  // --- Economic overlay ---
-  const [economicMode, setEconomicMode] = useState(false);
-  const [economicData, setEconomicData] = useState(null);
-
   // --- Chokepoint panel ---
   const [selectedChokepoint, setSelectedChokepoint] = useState(null);
   const [chokepointPanelOpen, setChokepointPanelOpen] = useState(false);
@@ -627,9 +429,6 @@ export default function HomePage() {
 
   // --- Threat groups overlay hook ---
   const { showThreatGroups, hideThreatGroups } = useThreatGroupOverlay();
-
-  // --- Economic overlay hook ---
-  const { showEconomic, hideEconomic } = useEconomicOverlay();
 
   // ============================================================
   // Initialize on mount
@@ -832,7 +631,7 @@ export default function HomePage() {
     setTradeRoutesActive(newState);
     window.tradeRoutesActive = newState;
     if (newState) {
-      // Deactivate compare mode, military mode, threat groups, and economic
+      // Deactivate compare mode, military mode, and threat groups
       setCompareMode(false);
       setCompareCountries([]);
       if (militaryMode) {
@@ -849,7 +648,6 @@ export default function HomePage() {
         setThreatGroupPanelOpen(false);
         setSelectedThreatGroup(null);
       }
-      if (economicMode) { setEconomicMode(false); hideEconomic(); }
       showTradeRoutes();
     } else {
       hideTradeRoutes();
@@ -858,7 +656,7 @@ export default function HomePage() {
       setTradeInfoPanelOpen(false);
       setTradeInfoCountry(null);
     }
-  }, [tradeRoutesActive, militaryMode, threatGroupsActive, economicMode, showTradeRoutes, hideTradeRoutes, hideMilitary, hideThreatGroups, hideEconomic]);
+  }, [tradeRoutesActive, militaryMode, threatGroupsActive, showTradeRoutes, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
   // Toggle compare mode
   const handleToggleCompare = useCallback(() => {
@@ -868,7 +666,7 @@ export default function HomePage() {
         setCompareCountries([]);
         return false;
       }
-      // Turning on — deactivate trade routes, military, threat groups, and economic
+      // Turning on — deactivate trade routes, military, and threat groups
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
@@ -889,17 +687,16 @@ export default function HomePage() {
         setThreatGroupPanelOpen(false);
         setSelectedThreatGroup(null);
       }
-      if (economicMode) { setEconomicMode(false); hideEconomic(); }
       return true;
     });
-  }, [tradeRoutesActive, militaryMode, threatGroupsActive, economicMode, hideTradeRoutes, hideMilitary, hideThreatGroups, hideEconomic]);
+  }, [tradeRoutesActive, militaryMode, threatGroupsActive, hideTradeRoutes, hideMilitary, hideThreatGroups]);
 
   // Toggle military overlay
   const handleToggleMilitary = useCallback(() => {
     const newState = !militaryMode;
     setMilitaryMode(newState);
     if (newState) {
-      // Deactivate trade routes, compare mode, threat groups, and economic
+      // Deactivate trade routes, compare mode, and threat groups
       if (tradeRoutesActive) {
         setTradeRoutesActive(false);
         window.tradeRoutesActive = false;
@@ -915,7 +712,6 @@ export default function HomePage() {
         setThreatGroupPanelOpen(false);
         setSelectedThreatGroup(null);
       }
-      if (economicMode) { setEconomicMode(false); hideEconomic(); }
       showMilitary();
       setMilitaryPanelOpen(true);
     } else {
@@ -926,7 +722,7 @@ export default function HomePage() {
       setMilCountryPopupOpen(false);
       setMilCountryPopupName(null);
     }
-  }, [militaryMode, tradeRoutesActive, compareMode, threatGroupsActive, economicMode, showMilitary, hideMilitary, hideTradeRoutes, hideThreatGroups, hideEconomic]);
+  }, [militaryMode, tradeRoutesActive, compareMode, threatGroupsActive, showMilitary, hideMilitary, hideTradeRoutes, hideThreatGroups]);
 
   // Toggle threat groups overlay
   const handleToggleThreatGroups = useCallback(() => {
@@ -952,58 +748,13 @@ export default function HomePage() {
         setMilCountryPopupOpen(false);
         setMilCountryPopupName(null);
       }
-      if (economicMode) { setEconomicMode(false); hideEconomic(); }
       showThreatGroups();
     } else {
       hideThreatGroups();
       setThreatGroupPanelOpen(false);
       setSelectedThreatGroup(null);
     }
-  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, economicMode, showThreatGroups, hideThreatGroups, hideTradeRoutes, hideMilitary, hideEconomic]);
-
-  // Toggle economic overlay
-  const handleToggleEconomic = useCallback(async () => {
-    const newState = !economicMode;
-    setEconomicMode(newState);
-    if (newState) {
-      // Deactivate other overlays
-      if (tradeRoutesActive) {
-        setTradeRoutesActive(false);
-        window.tradeRoutesActive = false;
-        hideTradeRoutes();
-      }
-      if (compareMode) {
-        setCompareMode(false);
-        setCompareCountries([]);
-      }
-      if (militaryMode) {
-        setMilitaryMode(false);
-        setMilitaryPanelOpen(false);
-        hideMilitary();
-        setMilitaryInfoOpen(false);
-        setSelectedInstallation(null);
-        setMilCountryPopupOpen(false);
-        setMilCountryPopupName(null);
-      }
-      if (threatGroupsActive) {
-        setThreatGroupsActive(false);
-        hideThreatGroups();
-        setThreatGroupPanelOpen(false);
-        setSelectedThreatGroup(null);
-      }
-      // Fetch economic data if not already loaded
-      let data = economicData;
-      if (!data) {
-        data = await fetchEconomicData();
-        setEconomicData(data);
-      }
-      showEconomic(data);
-      // Pre-fetch briefs for top 20 countries in background
-      prefetchTopBriefs();
-    } else {
-      hideEconomic();
-    }
-  }, [economicMode, economicData, tradeRoutesActive, compareMode, militaryMode, threatGroupsActive, showEconomic, hideEconomic, hideTradeRoutes, hideMilitary, hideThreatGroups]);
+  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, showThreatGroups, hideThreatGroups, hideTradeRoutes, hideMilitary]);
 
   // Select a threat group from search — activate overlay if needed, then open panel
   const handleSearchThreatGroup = useCallback((group) => {
@@ -1027,12 +778,11 @@ export default function HomePage() {
         setMilCountryPopupOpen(false);
         setMilCountryPopupName(null);
       }
-      if (economicMode) { setEconomicMode(false); hideEconomic(); }
       showThreatGroups();
     }
     setSelectedThreatGroup(group);
     setThreatGroupPanelOpen(true);
-  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, economicMode, showThreatGroups, hideTradeRoutes, hideMilitary, hideEconomic]);
+  }, [threatGroupsActive, tradeRoutesActive, compareMode, militaryMode, showThreatGroups, hideTradeRoutes, hideMilitary]);
 
   // Fly globe to a lat/lng and open military info panel
   const handleMilitaryBaseSelect = useCallback((installation) => {
@@ -1179,20 +929,13 @@ export default function HomePage() {
             onToggleMilitary={handleToggleMilitary}
             threatGroupsActive={threatGroupsActive}
             onToggleThreatGroups={handleToggleThreatGroups}
-            economicMode={economicMode}
-            onToggleEconomic={handleToggleEconomic}
-            economicData={economicData}
           />
 
-          {/* Risk Legend (hidden when overlays are active) */}
-          {!threatGroupsActive && !tradeRoutesActive && !economicMode && <RiskLegend />}
+          {/* Risk Legend (hidden when non-state actors or trade routes overlay is active) */}
+          {!threatGroupsActive && !tradeRoutesActive && <RiskLegend />}
 
           {/* Mobile Feature Buttons (hidden on desktop, shown ≤768px above stats bar) */}
           <div className="mobile-feature-btns">
-            <button className={`globe-feature-btn${economicMode ? ' active' : ''}`} onClick={handleToggleEconomic} style={economicMode ? { borderColor: '#22c55e', color: '#22c55e' } : undefined}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              Econ <span className="beta-badge">BETA</span>
-            </button>
             <button className={`globe-feature-btn${tradeRoutesActive ? ' active' : ''}`} onClick={handleToggleTradeRoutes}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Trade Routes
@@ -1317,20 +1060,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Economic Risk Legend */}
-          {economicMode && (
-            <div className="threat-legend">
-              <div className="threat-legend-title econ-legend-title">ECONOMIC RISK <span className="beta-badge">BETA</span></div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#dc2626' }} />Catastrophic</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#f97316' }} />Extreme</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#eab308' }} />Severe</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#8b5cf6' }} />Stormy</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#3b82f6' }} />Cloudy</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#22c55e' }} />Clear</div>
-              <div className="threat-legend-item"><div className="threat-legend-dot" style={{ background: '#444444', opacity: 0.4 }} />No Data</div>
-            </div>
-          )}
-
           {/* Threat Groups Legend */}
           {threatGroupsActive && (
             <div className="threat-legend">
@@ -1356,14 +1085,10 @@ export default function HomePage() {
           />
 
           {/* Stats Bar */}
-          <StatsBar
-            onStatClick={(type) => {
-              setStatPopupType(type);
-              setStatPopupOpen(prev => prev && statPopupType === type ? false : true);
-            }}
-            economicMode={economicMode}
-            economicData={economicData}
-          />
+          <StatsBar onStatClick={(type) => {
+            setStatPopupType(type);
+            setStatPopupOpen(prev => prev && statPopupType === type ? false : true);
+          }} />
 
         </div>
 
@@ -1375,7 +1100,6 @@ export default function HomePage() {
           stocksLastUpdated={stocksLastUpdated}
           stocksUpdating={stocksUpdating}
           militaryMode={militaryMode}
-          economicMode={economicMode}
         />
       </div>
 
@@ -1386,8 +1110,6 @@ export default function HomePage() {
             countryName={selectedCountry}
             isOpen={modalOpen}
             onClose={() => { setModalOpen(false); setSelectedCountry(null); }}
-            economicMode={economicMode}
-            economicData={economicData}
           />
         )}
 

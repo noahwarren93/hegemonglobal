@@ -5,23 +5,13 @@ import { COUNTRIES, SANCTIONS_DATA, TAG_COLORS, getResearchSources } from '../..
 import { renderUnifiedSourceTag, renderTrendChart, timeAgo, SPORTS_HEADLINE_RE, SOURCE_BLOCKLIST, getSourceCredibility } from '../../utils/riskColors';
 import CountryFlag from '../CountryFlag';
 import { fetchCountryNews } from '../../services/apiService';
-import { COUNTRY_CODES } from '../../data/countryCodes';
-import { fetchEconomicBrief, getEconomicDataForCountry } from '../../services/economicService';
 
-// Economic keyword filter for news
-const ECONOMIC_KEYWORDS_RE = /\b(gdp|inflation|interest rate|central bank|federal reserve|ecb|imf|world bank|recession|deficit|debt|bond|treasury|fiscal|monetary|currency|devaluation|tariff|trade war|sanctions?|unemployment|jobs report|stock market|credit rating|default|bailout|austerity|stimulus|quantitative|exchange rate)\b/i;
-
-export default function CountryModal({ countryName, isOpen, onClose, economicMode, economicData }) {
+export default function CountryModal({ countryName, isOpen, onClose }) {
   const [topStories, setTopStories] = useState([]);
   const [latestCoverage, setLatestCoverage] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [sanctionsOpen, setSanctionsOpen] = useState(false);
   const [casualtiesExpanded, setCasualtiesExpanded] = useState(false);
-  const [econBrief, setEconBrief] = useState(null);
-  const [econBriefLoading, setEconBriefLoading] = useState(false);
-  const [econBriefTimeout, setEconBriefTimeout] = useState(false);
-  const [conflictExpanded, setConflictExpanded] = useState(false);
-  const [calendarEvents, setCalendarEvents] = useState([]);
 
   const country = countryName ? COUNTRIES[countryName] : null;
 
@@ -232,43 +222,6 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
   }, [isOpen, countryName]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Fetch economic brief + calendar when in economic mode
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    if (isOpen && countryName && economicMode) {
-      const codes = COUNTRY_CODES[countryName];
-      if (codes) {
-        setEconBriefLoading(true);
-        setEconBrief(null);
-        setEconBriefTimeout(false);
-        setConflictExpanded(false);
-        setCalendarEvents([]);
-        const timeoutId = setTimeout(() => setEconBriefTimeout(true), 8000);
-        fetchEconomicBrief(codes.alpha3).then(data => {
-          clearTimeout(timeoutId);
-          setEconBrief(data);
-          setEconBriefLoading(false);
-          setEconBriefTimeout(false);
-        }).catch(() => { clearTimeout(timeoutId); setEconBriefLoading(false); });
-        // Fetch Forex Factory calendar events for this country
-        fetch('https://hegemon-rss-proxy.hegemonglobal.workers.dev/api/economic-calendar')
-          .then(r => r.ok ? r.json() : null)
-          .then(data => {
-            if (data?.events) {
-              const now = new Date();
-              const countryEvents = data.events
-                .filter(e => e.country === codes.alpha3 && new Date(e.date) >= now)
-                .sort((a, b) => new Date(a.date) - new Date(b.date))
-                .slice(0, 8);
-              setCalendarEvents(countryEvents);
-            }
-          })
-          .catch(() => {});
-      }
-    }
-  }, [isOpen, countryName, economicMode]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -280,25 +233,6 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
   }, [isOpen, onClose]);
 
   if (!isOpen || !country || !countryName) return null;
-
-  // Economic data for this country
-  const countryEcon = economicMode ? getEconomicDataForCountry(economicData, countryName) : null;
-
-  // Helper: color class for indicator values
-  const indicatorColor = (value, thresholds) => {
-    if (value === null || value === undefined) return 'neutral';
-    const [goodMax, warnMax] = thresholds;
-    if (value <= goodMax) return 'good';
-    if (value <= warnMax) return 'warn';
-    return 'bad';
-  };
-  const indicatorColorInvert = (value, thresholds) => {
-    if (value === null || value === undefined) return 'neutral';
-    const [goodMin, warnMin] = thresholds;
-    if (value >= goodMin) return 'good';
-    if (value >= warnMin) return 'warn';
-    return 'bad';
-  };
 
   const sanctions = SANCTIONS_DATA[countryName];
   const researchSources = getResearchSources(countryName);
@@ -359,24 +293,9 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
     );
   };
 
-  const ECON_TIER_COLORS_MAP = { catastrophic: '#dc2626', extreme: '#f97316', severe: '#eab308', stormy: '#8b5cf6', cloudy: '#3b82f6', clear: '#22c55e' };
-
   return (
     <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
-        {/* Green tinted header bar for economic mode */}
-        {economicMode && (
-          <div style={{ background: 'linear-gradient(90deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 50%, transparent 100%)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(34,197,94,0.2)' }}>
-            <span style={{ fontSize: '18px', fontWeight: 800, color: ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              {countryEcon?.tier || 'N/A'}
-            </span>
-            <span style={{ fontSize: '9px', color: '#9ca3af' }}>Economic Risk</span>
-            <span className="beta-badge">BETA</span>
-            {countryEcon?.riskScore != null && (
-              <span style={{ fontSize: '10px', color: '#6b7280', marginLeft: 'auto' }}>Score: {countryEcon.riskScore}/100</span>
-            )}
-          </div>
-        )}
         {/* Header */}
         <div className="modal-header">
           <span className="modal-flag"><CountryFlag flag={country.flag} /></span>
@@ -386,11 +305,6 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
               <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff' }}>
                 {country.risk.toUpperCase()}
               </span>
-              {economicMode && (
-                <span className="econ-risk-badge" style={{ background: `${ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280'}22`, color: ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280', border: `1px solid ${ECON_TIER_COLORS_MAP[countryEcon?.tier] || '#6b7280'}40` }}>
-                  ECON: {countryEcon?.tier ? countryEcon.tier.toUpperCase() : 'N/A'}
-                </span>
-              )}
               {country.tags && country.tags.length > 0 && (
                 <div className="country-tags">
                   {country.tags.map((tag, i) => (
@@ -409,207 +323,6 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
 
         {/* Body */}
         <div className="modal-body">
-          {/* ===== Economic Mode Content ===== */}
-          {economicMode && (
-            <>
-              {/* Economic Indicators Grid */}
-              <div className="section-title">Economic Indicators</div>
-              <div className="econ-indicators-grid">
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">GDP Growth</div>
-                  <div className={`econ-indicator-value ${indicatorColorInvert(countryEcon?.gdpGrowth, [3, 1])}`}>
-                    {countryEcon?.gdpGrowth != null ? `${countryEcon.gdpGrowth}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Inflation</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.inflation, [5, 10])}`}>
-                    {countryEcon?.inflation != null ? `${countryEcon.inflation}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Debt/GDP</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.debtGdp, [60, 90])}`}>
-                    {countryEcon?.debtGdp != null ? `${countryEcon.debtGdp}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Unemployment</div>
-                  <div className={`econ-indicator-value ${indicatorColor(countryEcon?.unemployment, [7, 12])}`}>
-                    {countryEcon?.unemployment != null ? `${countryEcon.unemployment}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Interest Rate</div>
-                  <div className={`econ-indicator-value neutral`}>
-                    {countryEcon?.interestRate != null ? `${countryEcon.interestRate}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Credit Rating</div>
-                  <div className={`econ-indicator-value neutral`}>
-                    {countryEcon?.creditRating || 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Currency YTD</div>
-                  <div className={`econ-indicator-value ${countryEcon?.currencyYtd != null ? (countryEcon.currencyYtd > 5 ? 'bad' : countryEcon.currencyYtd > 2 ? 'warn' : 'good') : 'neutral'}`}>
-                    {countryEcon?.currencyYtd != null ? `${countryEcon.currencyYtd > 0 ? '+' : ''}${countryEcon.currencyYtd}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="econ-indicator">
-                  <div className="econ-indicator-label">Risk Score</div>
-                  <div className={`econ-indicator-value ${countryEcon?.riskScore != null ? (countryEcon.riskScore > 55 ? 'bad' : countryEcon.riskScore > 25 ? 'warn' : 'good') : 'neutral'}`}>
-                    {countryEcon?.riskScore != null ? `${countryEcon.riskScore}/100` : 'N/A'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Economic Snapshot from Claude (right below indicators) */}
-              {econBriefLoading && (
-                <div style={{ marginBottom: '12px' }}>
-                  {econBriefTimeout && (
-                    <div style={{ color: '#f59e0b', fontSize: '10px', marginBottom: '8px' }}>Analysis loading slowly — cached results will appear shortly</div>
-                  )}
-                  {['Economic Snapshot', 'Key Risks', 'Outlook'].map(label => (
-                    <div key={label} className="econ-analysis-block" style={{ opacity: 0.5 }}>
-                      <div className="econ-analysis-header">{label}</div>
-                      <div className="econ-skeleton-line" style={{ width: '95%' }} />
-                      <div className="econ-skeleton-line" style={{ width: '80%' }} />
-                      <div className="econ-skeleton-line" style={{ width: '60%' }} />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {econBrief && (
-                <>
-                  {econBrief.snapshot && (
-                    <div className="econ-analysis-block">
-                      <div className="econ-analysis-header">Economic Snapshot</div>
-                      <p className="econ-analysis-text">{econBrief.snapshot}</p>
-                    </div>
-                  )}
-                  {econBrief.risks && (
-                    <div className="econ-analysis-block">
-                      <div className="econ-analysis-header">Key Risks</div>
-                      <p className="econ-analysis-text">{econBrief.risks}</p>
-                    </div>
-                  )}
-                  {econBrief.outlook && (
-                    <div className="econ-analysis-block">
-                      <div className="econ-analysis-header">Outlook</div>
-                      <p className="econ-analysis-text">{econBrief.outlook}</p>
-                    </div>
-                  )}
-                </>
-              )}
-              {!econBriefLoading && !econBrief && (
-                <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '12px' }}>Economic analysis unavailable.</div>
-              )}
-
-              {/* Upcoming Economic Events */}
-              {econBrief && econBrief.upcoming && econBrief.upcoming.length > 0 && (
-                <div style={{ marginTop: '12px' }}>
-                  <div className="section-title">Upcoming Economic Events</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {econBrief.upcoming.map((evt, i) => (
-                      <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '6px 8px', background: 'rgba(34,197,94,0.05)', borderRadius: '4px', borderLeft: '2px solid rgba(34,197,94,0.3)' }}>
-                        <div style={{ minWidth: '60px', fontSize: '9px', fontWeight: 700, color: '#22c55e', whiteSpace: 'nowrap' }}>
-                          {evt.date ? new Date(evt.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#d1d5db', lineHeight: '1.3' }}>{evt.event}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Economic News */}
-              {!newsLoading && (topStories.length > 0 || latestCoverage.length > 0) && (
-                <div style={{ marginTop: '12px' }}>
-                  <div className="section-title">Economic News</div>
-                  {[...topStories, ...latestCoverage]
-                    .filter(a => ECONOMIC_KEYWORDS_RE.test(a.headline || ''))
-                    .slice(0, 5)
-                    .map((article, i) => renderNewsItem(cleanNewsDisplay(article), `econ-${i}`))}
-                  {[...topStories, ...latestCoverage].filter(a => ECONOMIC_KEYWORDS_RE.test(a.headline || '')).length === 0 && (
-                    <div style={{ color: '#6b7280', fontSize: '11px' }}>No recent economic coverage</div>
-                  )}
-                </div>
-              )}
-
-              {/* Forex Factory Calendar Events */}
-              {!econBriefLoading && (
-                <div style={{ marginTop: '12px' }}>
-                  <div className="section-title">This Week&apos;s Calendar</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {calendarEvents.length === 0 ? (
-                      <div style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', padding: '6px 8px' }}>No upcoming events scheduled this week</div>
-                    ) : calendarEvents.map((evt, i) => {
-                      const d = new Date(evt.date);
-                      const impactColor = evt.impact === 'High' ? '#ef4444' : evt.impact === 'Medium' ? '#eab308' : '#6b7280';
-                      return (
-                        <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '5px 8px', background: '#111827', borderRadius: '4px', borderLeft: `2px solid ${impactColor}` }}>
-                          <div style={{ minWidth: '70px', fontSize: '9px', color: '#9ca3af', whiteSpace: 'nowrap' }}>
-                            {d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                          </div>
-                          <div style={{ flex: 1, fontSize: '10px', color: '#d1d5db', lineHeight: '1.3' }}>{evt.title}</div>
-                          <div style={{ fontSize: '7px', fontWeight: 700, color: impactColor, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{evt.impact}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* IG Economic Calendar Link */}
-              <a
-                href="https://www.ig.com/uk/economic-calendar"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="research-link"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}
-              >
-                <div>
-                  <div className="research-name" style={{ color: '#22c55e' }}>IG Economic Calendar</div>
-                  <div className="research-desc">Full calendar with all global economic events</div>
-                </div>
-                <span className="research-arrow">&#8599;</span>
-              </a>
-
-              {/* Condensed Conflict Assessment Accordion (ISSUE 8) */}
-              <div className="conflict-accordion-toggle" onClick={() => setConflictExpanded(!conflictExpanded)}>
-                <span className="conflict-accordion-title">Conflict Assessment</span>
-                <span className={`conflict-accordion-chevron${conflictExpanded ? ' open' : ''}`}>&#9660;</span>
-              </div>
-              <div className={`conflict-accordion-body${conflictExpanded ? ' open' : ''}`}>
-                <div style={{ padding: '8px 0' }}>
-                  {/* Conflict risk badge */}
-                  <span className={`modal-risk risk-${country.risk}`} style={{ color: '#fff', fontSize: '9px', marginBottom: '8px', display: 'inline-block' }}>
-                    {country.risk.toUpperCase()}
-                  </span>
-                  {/* First 2-3 sentences of analysis.what */}
-                  {country.analysis && (
-                    <p style={{ fontSize: '11px', color: '#d1d5db', lineHeight: '1.4', margin: '6px 0 0' }}>
-                      {(typeof country.analysis === 'string' ? country.analysis : (country.analysis.what || '')).split('. ').slice(0, 3).join('. ')}.
-                    </p>
-                  )}
-                  {/* Conflict tags */}
-                  {country.tags && country.tags.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-                      {country.tags.map((tag, i) => (
-                        <span key={i} className="country-tag" style={{ background: TAG_COLORS[tag]?.bg, color: TAG_COLORS[tag]?.text, fontSize: '8px' }}>{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Full conflict content (shown when NOT in economic mode) */}
-          {!economicMode && (
-          <>
           {/* Facts Grid */}
           {facts.length > 0 && (
             <div className="facts-grid" style={{ marginBottom: '16px' }}>
@@ -787,8 +500,6 @@ export default function CountryModal({ countryName, isOpen, onClose, economicMod
                 </a>
               ))}
             </div>
-          )}
-          </>
           )}
         </div>
       </div>
